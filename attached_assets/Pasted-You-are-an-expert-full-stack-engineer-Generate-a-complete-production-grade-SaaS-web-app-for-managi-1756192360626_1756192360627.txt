@@ -1,0 +1,171 @@
+You are an expert full-stack engineer. Generate a complete, production-grade SaaS web app for managing Romanian immigration workflows (work permit → visa D/AM → residence permit). The app must cover: client onboarding, document collection, submission tracking (digital + courier), reminders, custom document requirements, and PDF generation. Build everything end-to-end: backend, frontend, DB schema/migrations, background jobs, email service, file storage, auth, and tests.
+
+====================
+PRODUCT REQUIREMENTS
+====================
+Core actors & roles
+- Admin (our staff): configures workflows, defines custom document requirements, assigns documents to client owners, tracks global status, sees SLAs, manages reminders.
+- Client Owner (Employer/company): owns a “Client Profile”, invited users, and assigned foreign workers. Uploads company docs, pays fees, sees what’s pending on their side.
+- Worker (Foreigner): uploads personal docs, sees their own checklist and status.
+- Read-only Stakeholder (optional): view only for internal auditor/manager.
+
+Main features
+1) Client Profiles: Each owner is linked to exactly one Client Profile (company info: name, CUI, ONRC data, address, contact, CAEN). Profile holds linked Workers.
+2) Stages (Romania-specific): 
+   A) Labor-market test (AJOFM/ANOFM) 
+   B) Work permit at IGI 
+   C) Long-stay visa at consulate (D/AM) 
+   D) Residence permit (permis de ședere/permis unic) at IGI.
+   Each stage has: required documents, checklists, deadlines, fees, institution, and submission method (digital/courier/in-person).
+3) Document Types:
+   - Standard (predefined by us for each stage) with auto-populate placeholders.
+   - Custom (created by Admin ad hoc), assignable to any Client Profile or Worker.
+4) Document status flow (per item): Not Started → Awaiting Upload (Owner/Worker) → Submitted by User → Received by Admin → Submitted to Institution (Digital/Courier) → Accepted/Rejected. Store timestamps and who did what.
+5) Auto-populate: From registration forms (company + worker), fill placeholders into standard templates (e.g., IGI forms, power of attorney, work offer). Render final as PDF server-side. Do NOT expose original DOCX to users; only PDF.
+6) Template viewer: Users preview templates (readonly) and see which fields will be filled. Use PDF.js for previews.
+7) Reminders: Admin sets frequencies (daily/weekly/custom, and X days before deadline). System emails users for missing docs, upcoming deadlines, or expiries (work permit/visa/residence). Include in-app notifications.
+8) Submission logging: Allow Admin to mark “submitted digitally” (with reference/receipt number + upload) or “submitted by courier” (AWB + carrier). Show both to users and admins in a timeline.
+9) Audit trail: Every view/download/upload/action recorded (user, timestamp, IP if available).
+10) Search & Filters: Global search by client, worker, CUI, passport, stage, status. Filters for “overdue”, “awaiting admin”, “awaiting client”, “expiring in ≤30 days”.
+11) Security & GDPR (architecture below).
+
+==============
+TECH CHOICES
+==============
+- Monorepo with: 
+  /apps/api  (Node.js + Express + TypeScript)
+  /apps/web  (Next.js + TypeScript)
+  /packages/ui (shared components), /packages/types (Zod schemas & TS types)
+- ORM: Prisma + PostgreSQL
+- Queue/Jobs: BullMQ + Redis for reminders & nightly tasks
+- Auth: JWT (httpOnly cookies) + role-based access control. Include email/password login and invite-by-email flows. Password hashing with argon2.
+- File storage: S3-compatible (Hetzner Object Storage) via signed URLs. NEVER store PII files in the repo.
+- PDF generation: docxtemplater (server-side) for merge + pdf-lib (or LibreOffice headless in Docker if needed) → output PDF only. Provide watermarking option with user email/subscription ID.
+- Viewer: PDF.js in frontend for previews.
+- Email: Mailjet EU or Postmark EU region. Templated emails (MJML) for reminders, invites, and status changes.
+- Validation: Zod on both server and client.
+- Testing: Vitest + Supertest (API), Playwright (E2E). Include basic smoke tests.
+- Lint/format: ESLint + Prettier.
+- Docker: docker-compose.yml to run API, DB, Redis, and a local S3 (minio) for dev.
+- Env management: .env.example with all variables.
+
+===================
+DATA MODEL (Prisma)
+===================
+- User(id, email, hash, role: [ADMIN, OWNER, WORKER, VIEWER], invitedById?, createdAt)
+- ClientProfile(id, companyName, CUI, address, CAEN, contactEmail, ownerUserId(FK), createdAt)
+- Worker(id, clientProfileId(FK), firstName, lastName, dob, nationality, passportNumber, passportExpiry, email, phone, createdAt)
+- Stage(id, key: [AJOFM, IGI_WORK_PERMIT, CONSULATE_VISA, IGI_RESIDENCE], title, description, order)
+- Requirement(id, stageId, type: [STANDARD, CUSTOM], title, description, required: bool, autoPopulate: bool, templateKey?, dueRule JSON (absolute date or “x days before stage date”), createdByUserId)
+- Assignment(id, requirementId, clientProfileId, workerId?, assignedToRole: [OWNER, WORKER], status: [NOT_STARTED, AWAITING_UPLOAD, SUBMITTED_BY_USER, RECEIVED_BY_ADMIN, SUBMITTED_TO_INSTITUTION_DIGITAL, SUBMITTED_TO_INSTITUTION_COURIER, ACCEPTED, REJECTED], institution, submissionChannel, receiptNumber?, courierAwb?, courierName?, submittedAt?, approvedAt?, rejectedReason?, createdAt, updatedAt)
+- DocumentFile(id, assignmentId, kind: [USER_UPLOAD, ADMIN_RECEIPT, GENERATED_PDF], s3Key, fileName, mimeType, uploadedByUserId, createdAt)
+- ReminderRule(id, scope: [GLOBAL, CLIENT, STAGE], frequency: CRON string or presets, daysBeforeDue?, active: bool, createdByUserId)
+- ReminderLog(id, userId, assignmentId?, email, subject, sentAt, status)
+- AuditLog(id, userId?, action, entityType, entityId, ip, metadata JSON, createdAt)
+
+Indexes on foreign keys and search fields (CUI, passportNumber).
+
+=========================
+ENDPOINTS (Express API)
+=========================
+Auth
+- POST /api/auth/register (email, password, role=OWNER)
+- POST /api/auth/login
+- POST /api/auth/invite (admin→invite OWNER/WORKER; emails link)
+- POST /api/auth/accept-invite (set password)
+- POST /api/auth/logout
+Profiles & Users
+- GET /api/me
+- GET /api/clients (admin) | GET /api/clients/:id
+- POST /api/clients (admin or owner during onboarding)
+Workers
+- POST /api/clients/:id/workers
+- GET /api/clients/:id/workers
+Stages & Requirements
+- GET /api/stages
+- GET /api/clients/:id/requirements (expanded to Assignments with status)
+- POST /api/requirements (admin creates CUSTOM)
+Assignments & Files
+- POST /api/assignments/:id/upload (signed URL + create DocumentFile)
+- POST /api/assignments/:id/mark-submitted (user)
+- POST /api/assignments/:id/mark-received (admin)
+- POST /api/assignments/:id/mark-institution-submitted (admin; channel=digital|courier; ref data)
+- POST /api/assignments/:id/mark-accepted
+- POST /api/assignments/:id/mark-rejected (reason)
+Templates & Generation
+- GET /api/templates (list STANDARD templates metadata)
+- POST /api/templates/generate (templateKey, clientProfileId, workerId?) → returns PDF (watermarked). No raw DOCX exposed.
+Reminders
+- POST /api/reminders (admin creates/updates rules)
+- GET /api/reminders (list)
+- Worker/owner email reminders run via BullMQ jobs
+Search
+- GET /api/search?q=... (clients, workers, assignments)
+Audit
+- GET /api/audit (admin)
+
+All endpoints enforce RBAC: owner sees only their ClientProfile and associated workers; worker sees only self; admin sees everything.
+
+=================
+FRONTEND (Next.js)
+=================
+- Public: Landing, Login, Accept Invite, Privacy, Terms.
+- Owner dashboard: 
+  - “My Client Profile” card (company + CUI)
+  - Workers list; add/edit workers
+  - Stages with progress bars; each stage opens “Checklist” (Assignments table)
+  - Each row shows: Required?, Assigned to (Owner/Worker), Status, Due date, Institution, Actions (Upload, Mark Submitted), Preview (PDF.js for generated docs), History (timeline)
+- Worker dashboard:
+  - Personal checklist, deadlines, upload area, status, timeline
+- Admin dashboard:
+  - Global Kanban (columns: Awaiting Client, Awaiting Admin, Submitted to Institution, Approved, Rejected)
+  - Filters (stage, overdue, expiring in 30d, client, worker)
+  - Create Custom Requirement; assign to client/worker with due rule
+  - Reminder rules (frequency presets; cron)
+  - Submissions screen: mark digital/courier submissions, add receipt/AWB, upload proof, enter reference number
+  - Audit logs
+- Notifications center + email settings per user.
+
+=====================
+REMINDERS & SCHEDULES
+=====================
+- Background worker (BullMQ) with queues:
+  - reminder: evaluate ReminderRule against Assignments due dates; send emails via Mailjet/Postmark EU; store ReminderLog
+  - expiry: detect permits/visas expiring within 30/60/90 days; notify
+- Admin UI to pause rules, preview recipients, and force-run.
+
+==========================
+SECURITY & GDPR MEASURES
+==========================
+- DO NOT store PII files or DB on Replit in production. For development, use dummy data.
+- Production: PostgreSQL + Redis + Object Storage must be in EU (Hetzner/OVH). Provide env vars for external endpoints and DPAs must be assumed in place.
+- All uploads use S3 signed PUT URLs; files are private by default.
+- httpOnly cookies for JWT; CSRF protection; rate limiting on auth routes; password hashing with argon2.
+- Role-based authorization on every API handler.
+- Audit logs for every access to files and sensitive endpoints.
+- Provide /docs/privacy.md and /docs/dpa-template.md drafts.
+
+==========================
+DEV EXPERIENCE & SCRIPTS
+==========================
+- Provide README with: dev setup, env vars, running docker-compose (Postgres, Redis, MinIO), seeding sample data (one Client, one Worker, standard Romanian immigration stages & standard requirements with templateKeys).
+- Provide npm scripts:
+  - api:dev, web:dev, dev (concurrently both), prisma:migrate, prisma:seed, worker:dev, test, e2e
+- Include minimal tests: one API auth test, one upload flow test (signed URL), one PDF generation test, and one Playwright e2e (owner uploads; admin marks submitted).
+- Provide .env.example with:
+  DATABASE_URL, REDIS_URL, S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY, MAIL_FROM, MAIL_API_KEY, JWT_SECRET, APP_URL, COOKIE_SECRET, WATERMARK_TOGGLE.
+- Include Dockerfiles for api and worker; docker-compose.yml for api, db, redis, minio, worker, web (optional).
+
+=====================
+ACCEPTANCE CRITERIA
+=====================
+- Running `docker compose up` boots DB, Redis, MinIO, API, worker; web runs with `npm run web:dev`.
+- I can register/login as OWNER, create Client Profile, add Worker, see default Romanian stages and standard requirements.
+- I can upload a file to an Assignment, see status changes, and timeline updates.
+- Admin can create a custom requirement and assign it to a specific client/worker with a due date; it appears in their checklist.
+- Admin can set a weekly reminder rule; a job enqueues and “sends” emails (log in dev).
+- Generating a STANDARD template returns a watermarked PDF; template is never downloadable as DOCX.
+- PDF viewer works in the browser.
+- Basic tests pass.
+
+Now scaffold the repository with all code, configs, and docs as specified.
