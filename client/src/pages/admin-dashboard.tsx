@@ -83,14 +83,6 @@ export default function AdminDashboard() {
     enabled: isAuthenticated && !isLoading && user?.role === 'ADMIN' && !!selectedWorkflowClient?.id,
   });
 
-  // Debug logging
-  console.log('Admin Dashboard Workers Debug:', {
-    selectedWorkflowClientId: selectedWorkflowClient?.id,
-    clientWorkersData: clientWorkers,
-    workersLoading,
-    workersError: workersError?.message,
-    queryEnabled: isAuthenticated && !isLoading && user?.role === 'ADMIN' && !!selectedWorkflowClient?.id
-  });
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -996,23 +988,10 @@ export default function AdminDashboard() {
                                 </div>
                               </div>
 
-                              {/* Quick Status Overview */}
-                              <div className="mt-3 flex space-x-1">
-                                {[
-                                  { stage: 'ajofm', status: assignment.ajofmStatus || 'pending' },
-                                  { stage: 'work-permit', status: assignment.workPermitStatus || 'pending' },
-                                  { stage: 'visa', status: assignment.visaStatus || 'pending' },
-                                  { stage: 'residence', status: assignment.residenceStatus || 'pending' }
-                                ].map((step, stepIndex) => (
-                                  <div key={step.stage} className="flex-1">
-                                    <div className={`h-1.5 rounded-full ${
-                                      step.status === 'completed' ? 'bg-green-500' :
-                                      step.status === 'in-progress' ? 'bg-blue-500' :
-                                      step.status === 'pending' ? 'bg-orange-500' :
-                                      'bg-gray-300'
-                                    }`}></div>
-                                  </div>
-                                ))}
+                              {/* Worker Basic Info */}
+                              <div className="mt-3 flex space-x-4 text-sm text-gray-500">
+                                <span><i className="fas fa-id-card mr-1"></i>DOB: {new Date(worker.dob).toLocaleDateString()}</span>
+                                <span><i className="fas fa-calendar mr-1"></i>Passport Exp: {new Date(worker.passportExpiry).toLocaleDateString()}</span>
                               </div>
                             </div>
                           ))}
