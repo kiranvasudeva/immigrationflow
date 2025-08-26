@@ -45,14 +45,16 @@ export default function ClientProfile() {
     enabled: !!clientId && isAuthenticated,
   });
 
-  // Fetch workers for this client
+  // Fetch workers for this client  
   const { data: workers, isLoading: workersLoading, error: workersError } = useQuery({
     queryKey: ['/api/clients', clientId, 'workers'],
     enabled: !!clientId && isAuthenticated,
+    staleTime: 0, // Always fetch fresh data for debugging
     retry: (failureCount, error) => {
+      console.log('Workers query retry attempt:', failureCount, error);
       if (isUnauthorizedError(error as Error)) {
         toast({
-          title: "Unauthorized",
+          title: "Unauthorized", 
           description: "You are logged out. Logging in again...",
           variant: "destructive",
         });
@@ -62,6 +64,12 @@ export default function ClientProfile() {
         return false;
       }
       return failureCount < 3;
+    },
+    onError: (error) => {
+      console.error('Workers query error:', error);
+    },
+    onSuccess: (data) => {
+      console.log('Workers query success:', data);
     }
   });
 
@@ -72,8 +80,14 @@ export default function ClientProfile() {
     workersLoading,
     workersData: workers,
     workersError: workersError?.message,
-    enabled: !!clientId && isAuthenticated
+    enabled: !!clientId && isAuthenticated,
+    queryKey: ['/api/clients', clientId, 'workers']
   });
+
+  // Force debug the query when clientId is available
+  if (clientId && isAuthenticated) {
+    console.log('Query should be enabled for clientId:', clientId);
+  }
 
   // Update client mutation
   const updateClientMutation = useMutation({
