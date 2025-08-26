@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Building, Mail, Phone, MapPin, CreditCard, Edit, Save, X } from "lucide-react";
+import { ArrowLeft, Building, Mail, Phone, MapPin, CreditCard, Edit, Save, X, User, Plus } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useTranslation } from "@/contexts/LanguageContext";
 
@@ -30,17 +30,24 @@ export default function ClientProfile() {
   const [formData, setFormData] = useState({
     legalName: '',
     cui: '',
-    registrationNumber: '',
+    caen: '',
     legalAddress: '',
-    adminName: '',
     contactEmail: '',
+    registrationNumber: '',
     phoneNumber: '',
+    adminName: '',
     bankIban: ''
   });
 
   // Fetch client data
   const { data: client, isLoading: clientLoading, error: clientError } = useQuery({
     queryKey: ['/api/clients', clientId],
+    enabled: !!clientId && isAuthenticated,
+  });
+
+  // Fetch workers for this client
+  const { data: workers, isLoading: workersLoading } = useQuery({
+    queryKey: ['/api/clients', clientId, 'workers'],
     enabled: !!clientId && isAuthenticated,
     retry: (failureCount, error) => {
       if (isUnauthorizedError(error as Error)) {
@@ -99,11 +106,12 @@ export default function ClientProfile() {
       setFormData({
         legalName: client.legalName || '',
         cui: client.cui || '',
-        registrationNumber: client.registrationNumber || '',
+        caen: client.caen || '',
         legalAddress: client.legalAddress || '',
-        adminName: client.adminName || '',
         contactEmail: client.contactEmail || '',
+        registrationNumber: client.registrationNumber || '',
         phoneNumber: client.phoneNumber || '',
+        adminName: client.adminName || '',
         bankIban: client.bankIban || ''
       });
     }
@@ -118,11 +126,12 @@ export default function ClientProfile() {
       setFormData({
         legalName: client.legalName || '',
         cui: client.cui || '',
-        registrationNumber: client.registrationNumber || '',
+        caen: client.caen || '',
         legalAddress: client.legalAddress || '',
-        adminName: client.adminName || '',
         contactEmail: client.contactEmail || '',
+        registrationNumber: client.registrationNumber || '',
         phoneNumber: client.phoneNumber || '',
+        adminName: client.adminName || '',
         bankIban: client.bankIban || ''
       });
     }
@@ -267,7 +276,7 @@ export default function ClientProfile() {
                             <Input
                               value={formData.cui}
                               onChange={(e) => setFormData({ ...formData, cui: e.target.value })}
-                              placeholder="Unique fiscal code"
+                              placeholder="RO12345678"
                               data-testid="input-cui"
                             />
                           ) : (
@@ -279,18 +288,18 @@ export default function ClientProfile() {
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Registration Number
+                            CAEN Code
                           </label>
                           {isEditing ? (
                             <Input
-                              value={formData.registrationNumber}
-                              onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
-                              placeholder="Commercial registration number"
-                              data-testid="input-registration-number"
+                              value={formData.caen}
+                              onChange={(e) => setFormData({ ...formData, caen: e.target.value })}
+                              placeholder="6201"
+                              data-testid="input-caen"
                             />
                           ) : (
-                            <p className="text-gray-900" data-testid="text-registration-number">
-                              {client?.registrationNumber || 'Not provided'}
+                            <p className="text-gray-900" data-testid="text-caen">
+                              {client?.caen || 'Not provided'}
                             </p>
                           )}
                         </div>
@@ -311,6 +320,24 @@ export default function ClientProfile() {
                         ) : (
                           <p className="text-gray-900" data-testid="text-legal-address">
                             {client?.legalAddress || 'Not provided'}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Registration Number
+                        </label>
+                        {isEditing ? (
+                          <Input
+                            value={formData.registrationNumber}
+                            onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
+                            placeholder="J40/15234/2018"
+                            data-testid="input-registration-number"
+                          />
+                        ) : (
+                          <p className="text-gray-900" data-testid="text-registration-number">
+                            {client?.registrationNumber || 'Not provided'}
                           </p>
                         )}
                       </div>
@@ -401,6 +428,66 @@ export default function ClientProfile() {
                     </CardContent>
                   </Card>
 
+                  {/* Workers Section */}
+                  <Card className="lg:col-span-2">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle>Workers</CardTitle>
+                      <Button variant="outline" size="sm" data-testid="button-add-worker">
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Worker
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      {workersLoading ? (
+                        <div className="flex justify-center py-4">
+                          <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+                        </div>
+                      ) : workers && workers.length > 0 ? (
+                        <div className="space-y-3">
+                          {workers.map((worker) => (
+                            <div 
+                              key={worker.id} 
+                              className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                              onClick={() => setLocation(`/workers/${worker.id}`)}
+                              data-testid={`worker-card-${worker.id}`}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                  <User className="h-5 w-5 text-green-600" />
+                                </div>
+                                <div>
+                                  <h4 className="font-medium text-gray-900" data-testid={`worker-name-${worker.id}`}>
+                                    {worker.firstName} {worker.lastName}
+                                  </h4>
+                                  <p className="text-sm text-gray-600" data-testid={`worker-nationality-${worker.id}`}>
+                                    {worker.nationality} • {worker.email}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <Badge variant="outline" className="mb-1">
+                                  {worker.passportNumber}
+                                </Badge>
+                                <p className="text-xs text-gray-500">
+                                  Expires: {new Date(worker.passportExpiry).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <User className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-gray-600 mb-4">No workers assigned to this client</p>
+                          <Button variant="outline" size="sm" data-testid="button-add-first-worker">
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add First Worker
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
                   {/* Status and Statistics */}
                   <Card className="lg:col-span-2">
                     <CardHeader>
@@ -410,9 +497,9 @@ export default function ClientProfile() {
                       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div className="text-center p-4 bg-blue-50 rounded-lg">
                           <p className="text-2xl font-bold text-blue-600" data-testid="stat-active-workers">
-                            {client?.activeWorkers || 0}
+                            {workers?.length || 0}
                           </p>
-                          <p className="text-sm text-blue-600">Active Workers</p>
+                          <p className="text-sm text-blue-600">Total Workers</p>
                         </div>
                         <div className="text-center p-4 bg-green-50 rounded-lg">
                           <p className="text-2xl font-bold text-green-600" data-testid="stat-completed-cases">
