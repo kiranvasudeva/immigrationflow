@@ -30,6 +30,7 @@ export default function AdminDashboard() {
   const [clientFilter, setClientFilter] = useState("all");
   const [workerFilter, setWorkerFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
   
   // Navigation states
   const [activeSection, setActiveSection] = useState<string>("overview");
@@ -1226,6 +1227,48 @@ export default function AdminDashboard() {
               {/* Clients Section */}
               {activeSection === "clients" && (
                 <div className="space-y-6">
+                  {/* Search and Filter Bar */}
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+                        <div className="flex-1">
+                          <Input
+                            placeholder="Search clients by name, CUI, or email..."
+                            value={clientSearchTerm}
+                            onChange={(e) => setClientSearchTerm(e.target.value)}
+                            className="w-full"
+                            data-testid="input-client-search"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger className="w-40" data-testid="select-client-status-filter">
+                              <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Statuses</SelectItem>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="inactive">Inactive</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setClientSearchTerm("");
+                              setStatusFilter("all");
+                            }}
+                            data-testid="button-clear-filters"
+                          >
+                            <i className="fas fa-times mr-2"></i>
+                            Clear
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Clients List */}
                   <Card>
                     <CardContent className="p-6">
                       {!showNewClientForm ? (
@@ -1234,38 +1277,58 @@ export default function AdminDashboard() {
                             <div className="text-center py-8">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                             </div>
-                          ) : clients.length === 0 ? (
-                            <div className="text-center py-8">
-                              <i className="fas fa-building text-gray-400 text-3xl mb-4"></i>
-                              <p className="text-secondary">No clients found</p>
-                            </div>
-                          ) : (
-                            <div className="space-y-3">
-                              {clients.map((client: any) => (
-                                <div 
-                                  key={client.id}
-                                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                                  onClick={() => setSelectedClient(client)}
-                                  data-testid={`client-${client.id}`}
-                                >
-                                  <div className="flex items-center space-x-4">
-                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                      <i className="fas fa-building text-primary"></i>
+                          ) : (() => {
+                            const filteredClients = clients.filter((client: any) => {
+                              const matchesSearch = !clientSearchTerm || 
+                                client.legalName?.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                                client.cui?.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                                client.contactEmail?.toLowerCase().includes(clientSearchTerm.toLowerCase());
+                              
+                              const matchesStatus = statusFilter === "all" || 
+                                (client.status || "active").toLowerCase() === statusFilter.toLowerCase();
+                              
+                              return matchesSearch && matchesStatus;
+                            });
+
+                            return filteredClients.length === 0 ? (
+                              <div className="text-center py-8">
+                                <i className="fas fa-building text-gray-400 text-3xl mb-4"></i>
+                                <p className="text-secondary">
+                                  {clientSearchTerm || statusFilter !== "all" 
+                                    ? "No clients match your filters"
+                                    : "No clients found"
+                                  }
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="space-y-3">
+                                {filteredClients.map((client: any) => (
+                                  <div 
+                                    key={client.id}
+                                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                                    onClick={() => setSelectedClient(client)}
+                                    data-testid={`client-${client.id}`}
+                                  >
+                                    <div className="flex items-center space-x-4">
+                                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <i className="fas fa-building text-primary"></i>
+                                      </div>
+                                      <div>
+                                        <p className="font-medium">{client.legalName}</p>
+                                        <p className="text-sm text-secondary">CUI: {client.cui}</p>
+                                        <p className="text-xs text-gray-500">{client.contactEmail}</p>
+                                      </div>
                                     </div>
-                                    <div>
-                                      <p className="font-medium">{client.legalName}</p>
-                                      <p className="text-sm text-secondary">CUI: {client.cui}</p>
+                                    <div className="text-right">
+                                      <p className="text-sm font-medium">{client.activeWorkers || 0} workers</p>
+                                      <p className="text-xs text-secondary capitalize">{client.status || "active"}</p>
+                                      <ChevronRight className="h-4 w-4 text-gray-400 mt-1" />
                                     </div>
                                   </div>
-                                  <div className="text-right">
-                                    <p className="text-sm font-medium">{client.activeWorkers || 0} workers</p>
-                                    <p className="text-xs text-secondary">{client.status}</p>
-                                    <ChevronRight className="h-4 w-4 text-gray-400 mt-1" />
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                                ))}
+                              </div>
+                            );
+                          })()}
                         </div>
                       ) : (
                         <div>Client form would go here</div>
