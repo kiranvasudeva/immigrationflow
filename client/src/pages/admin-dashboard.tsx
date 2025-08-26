@@ -1810,7 +1810,16 @@ export default function AdminDashboard() {
                         const updatedWorker = await response.json();
                         setSelectedWorker((prev: any) => ({
                           ...prev,
-                          worker: updatedWorker
+                          worker: updatedWorker,
+                          // Also update the top-level fields for immediate UI refresh
+                          firstName: updatedWorker.firstName,
+                          lastName: updatedWorker.lastName,
+                          nationality: updatedWorker.nationality,
+                          email: updatedWorker.email,
+                          phone: updatedWorker.phone,
+                          passportNumber: updatedWorker.passportNumber,
+                          dob: updatedWorker.dob,
+                          passportExpiry: updatedWorker.passportExpiry
                         }));
                         
                         // Invalidate and refetch assignments to update all worker data throughout the app
