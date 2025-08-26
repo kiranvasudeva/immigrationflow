@@ -94,22 +94,22 @@ export default function AdminDashboard() {
           title={t('dashboard.admin.title') || "Admin Dashboard"}
           subtitle={t('dashboard.admin.subtitle') || "Global workflow management and oversight"}
           actions={
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <Input 
                 placeholder={t('common.searchPlaceholder') || 'Search clients, workers, CUI...'} 
-                className="w-80"
+                className="w-full sm:w-80"
                 data-testid="input-global-search"
               />
-              <Button data-testid="button-new-client">
+              <Button data-testid="button-new-client" className="shrink-0">
                 <i className="fas fa-plus mr-2"></i>{t('action.newClient') || 'New Client'}
               </Button>
             </div>
           }
         />
 
-        <div className="p-8">
+        <div className="p-4 lg:p-8 max-w-full overflow-x-hidden">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-8">
             <Card data-testid="card-total-clients">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -196,13 +196,13 @@ export default function AdminDashboard() {
               <CollapsibleContent>
                 <CardContent className="p-6">
                   {/* Filters */}
-                  <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex flex-wrap gap-2 lg:gap-4 mb-6 p-3 lg:p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-2">
                       <Filter className="h-4 w-4 text-gray-500" />
                       <span className="text-sm font-medium">{t('common.filters') || 'Filters'}:</span>
                     </div>
                     <Select value={clientFilter} onValueChange={setClientFilter}>
-                      <SelectTrigger className="w-48" data-testid="select-client-filter">
+                      <SelectTrigger className="w-full sm:w-48" data-testid="select-client-filter">
                         <SelectValue placeholder={t('common.allClients') || 'All Clients'} />
                       </SelectTrigger>
                       <SelectContent>
@@ -212,7 +212,7 @@ export default function AdminDashboard() {
                       </SelectContent>
                     </Select>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-48" data-testid="select-status-filter">
+                      <SelectTrigger className="w-full sm:w-48" data-testid="select-status-filter">
                         <SelectValue placeholder={t('common.allStatuses') || 'All Statuses'} />
                       </SelectTrigger>
                       <SelectContent>
@@ -266,13 +266,13 @@ export default function AdminDashboard() {
               <CollapsibleContent>
                 <CardContent className="p-6">
                   {/* Filters */}
-                  <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex flex-wrap gap-2 lg:gap-4 mb-6 p-3 lg:p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-2">
                       <Filter className="h-4 w-4 text-gray-500" />
                       <span className="text-sm font-medium">{t('common.filters') || 'Filters'}:</span>
                     </div>
                     <Select value={workerFilter} onValueChange={setWorkerFilter}>
-                      <SelectTrigger className="w-48" data-testid="select-worker-filter">
+                      <SelectTrigger className="w-full sm:w-48" data-testid="select-worker-filter">
                         <SelectValue placeholder={t('common.allWorkers') || 'All Workers'} />
                       </SelectTrigger>
                       <SelectContent>
@@ -283,7 +283,7 @@ export default function AdminDashboard() {
                       </SelectContent>
                     </Select>
                     <Select>
-                      <SelectTrigger className="w-48" data-testid="select-stage-filter">
+                      <SelectTrigger className="w-full sm:w-48" data-testid="select-stage-filter">
                         <SelectValue placeholder={t('common.allStages') || 'All Stages'} />
                       </SelectTrigger>
                       <SelectContent>
@@ -319,13 +319,13 @@ export default function AdminDashboard() {
               <CollapsibleContent>
                 <CardContent className="p-6">
                   {/* Filters */}
-                  <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex flex-wrap gap-2 lg:gap-4 mb-6 p-3 lg:p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-2">
                       <Filter className="h-4 w-4 text-gray-500" />
                       <span className="text-sm font-medium">{t('common.filters') || 'Filters'}:</span>
                     </div>
                     <Select>
-                      <SelectTrigger className="w-48" data-testid="select-activity-client-filter">
+                      <SelectTrigger className="w-full sm:w-48" data-testid="select-activity-client-filter">
                         <SelectValue placeholder={t('common.allClients') || 'All Clients'} />
                       </SelectTrigger>
                       <SelectContent>
@@ -336,7 +336,7 @@ export default function AdminDashboard() {
                       </SelectContent>
                     </Select>
                     <Select>
-                      <SelectTrigger className="w-48" data-testid="select-activity-type-filter">
+                      <SelectTrigger className="w-full sm:w-48" data-testid="select-activity-type-filter">
                         <SelectValue placeholder={t('common.allActivities') || 'All Activities'} />
                       </SelectTrigger>
                       <SelectContent>
