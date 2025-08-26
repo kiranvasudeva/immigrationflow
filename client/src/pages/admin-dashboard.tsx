@@ -1003,6 +1003,16 @@ export default function AdminDashboard() {
                   {/* Worker Detail Flowchart */}
                   {selectedWorkerDetail && (
                     <div className="space-y-6">
+                      {/* Back Button */}
+                      <button
+                        onClick={() => setSelectedWorkerDetail(null)}
+                        className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                        data-testid="back-to-workers"
+                      >
+                        <i className="fas fa-arrow-left mr-2"></i>
+                        Back to Workers List
+                      </button>
+
                       {/* Worker Header */}
                       <div className="bg-green-50 rounded-lg p-6">
                         <div className="flex items-start justify-between">
@@ -1011,23 +1021,26 @@ export default function AdminDashboard() {
                               <i className="fas fa-user text-white text-xl"></i>
                             </div>
                             <div>
-                              <h3 className="text-xl font-bold text-gray-900">{selectedWorkerDetail.worker?.fullName}</h3>
+                              <h3 className="text-xl font-bold text-gray-900">{selectedWorkerDetail.firstName} {selectedWorkerDetail.lastName}</h3>
                               <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                                <span><i className="fas fa-flag mr-1"></i>{selectedWorkerDetail.worker?.nationality}</span>
-                                <span><i className="fas fa-briefcase mr-1"></i>{selectedWorkerDetail.jobTitle}</span>
+                                <span><i className="fas fa-flag mr-1"></i>{selectedWorkerDetail.nationality}</span>
+                                <span><i className="fas fa-envelope mr-1"></i>{selectedWorkerDetail.email}</span>
                                 <span><i className="fas fa-building mr-1"></i>{selectedWorkflowClient.companyName}</span>
+                              </div>
+                              <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                                <span><i className="fas fa-id-card mr-1"></i>Passport: {selectedWorkerDetail.passportNumber}</span>
+                                <span><i className="fas fa-calendar mr-1"></i>DOB: {new Date(selectedWorkerDetail.dob).toLocaleDateString()}</span>
+                                <span><i className="fas fa-phone mr-1"></i>{selectedWorkerDetail.phone}</span>
                               </div>
                             </div>
                           </div>
                           <div className="text-right">
-                            <span className={`px-3 py-2 rounded-full text-sm font-medium ${
-                              selectedWorkerDetail.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              selectedWorkerDetail.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                              selectedWorkerDetail.status === 'pending' ? 'bg-orange-100 text-orange-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {selectedWorkerDetail.status?.replace('-', ' ')?.toUpperCase() || 'UNKNOWN'}
+                            <span className="px-3 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                              ACTIVE WORKER
                             </span>
+                            <div className="mt-1 text-xs text-gray-500">
+                              Passport Expires: {new Date(selectedWorkerDetail.passportExpiry).toLocaleDateString()}
+                            </div>
                           </div>
                         </div>
                       </div>
