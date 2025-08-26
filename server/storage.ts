@@ -8,6 +8,14 @@ import {
   documentFiles,
   reminderRules,
   auditLogs,
+  documentTemplates,
+  templateFields,
+  payments,
+  ocrResults,
+  workflowRules,
+  apiIntegrations,
+  translations,
+  analyticsEvents,
   type User,
   type UpsertUser,
   type ClientProfile,
@@ -22,6 +30,19 @@ import {
   type DocumentFile,
   type ReminderRule,
   type AuditLog,
+  type DocumentTemplate,
+  type InsertDocumentTemplate,
+  type TemplateField,
+  type InsertTemplateField,
+  type Payment,
+  type InsertPayment,
+  type OcrResult,
+  type WorkflowRule,
+  type InsertWorkflowRule,
+  type ApiIntegration,
+  type Translation,
+  type InsertTranslation,
+  type AnalyticsEvent,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, like, desc, asc, count, sql } from "drizzle-orm";
@@ -73,6 +94,42 @@ export interface IStorage {
   // Audit operations
   createAuditLog(log: Omit<AuditLog, 'id' | 'createdAt'>): Promise<AuditLog>;
   getAuditLogs(limit?: number): Promise<AuditLog[]>;
+  
+  // Document Template operations
+  getAllDocumentTemplates(): Promise<DocumentTemplate[]>;
+  getDocumentTemplate(id: string): Promise<DocumentTemplate | undefined>;
+  createDocumentTemplate(template: InsertDocumentTemplate): Promise<DocumentTemplate>;
+  updateDocumentTemplate(id: string, updates: Partial<InsertDocumentTemplate>): Promise<DocumentTemplate>;
+  deleteDocumentTemplate(id: string): Promise<void>;
+  getTemplateFields(templateId: string): Promise<TemplateField[]>;
+  createTemplateField(field: InsertTemplateField): Promise<TemplateField>;
+  updateTemplateFields(templateId: string, fields: InsertTemplateField[]): Promise<TemplateField[]>;
+  
+  // Payment operations
+  getPayment(id: string): Promise<Payment | undefined>;
+  getPaymentsByClient(clientId: string): Promise<Payment[]>;
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  updatePayment(id: string, updates: Partial<InsertPayment>): Promise<Payment>;
+  
+  // OCR operations
+  getOcrResult(documentFileId: string): Promise<OcrResult | undefined>;
+  createOcrResult(result: Omit<OcrResult, 'id' | 'createdAt'>): Promise<OcrResult>;
+  updateOcrResult(id: string, updates: Partial<OcrResult>): Promise<OcrResult>;
+  
+  // Workflow operations
+  getAllWorkflowRules(): Promise<WorkflowRule[]>;
+  getWorkflowRule(id: string): Promise<WorkflowRule | undefined>;
+  createWorkflowRule(rule: InsertWorkflowRule): Promise<WorkflowRule>;
+  updateWorkflowRule(id: string, updates: Partial<InsertWorkflowRule>): Promise<WorkflowRule>;
+  
+  // Translation operations
+  getTranslations(language?: string): Promise<Translation[]>;
+  createTranslation(translation: InsertTranslation): Promise<Translation>;
+  updateTranslation(id: string, updates: Partial<InsertTranslation>): Promise<Translation>;
+  
+  // Analytics operations
+  createAnalyticsEvent(event: Omit<AnalyticsEvent, 'id' | 'createdAt'>): Promise<AnalyticsEvent>;
+  getAnalyticsEvents(filters?: { eventType?: string; userId?: string; clientProfileId?: string }): Promise<AnalyticsEvent[]>;
   
   // Dashboard statistics
   getDashboardStats(): Promise<{
@@ -405,6 +462,178 @@ export class DatabaseStorage implements IStorage {
       worker: row.workers || undefined,
       stage: row.stages!,
     }));
+  }
+
+  // Document Template operations
+  async getAllDocumentTemplates(): Promise<DocumentTemplate[]> {
+    return await db.select().from(documentTemplates).orderBy(desc(documentTemplates.createdAt));
+  }
+
+  async getDocumentTemplate(id: string): Promise<DocumentTemplate | undefined> {
+    const result = await db.select().from(documentTemplates).where(eq(documentTemplates.id, id));
+    return result[0];
+  }
+
+  async createDocumentTemplate(template: InsertDocumentTemplate): Promise<DocumentTemplate> {
+    const result = await db.insert(documentTemplates).values(template).returning();
+    return result[0];
+  }
+
+  async updateDocumentTemplate(id: string, updates: Partial<InsertDocumentTemplate>): Promise<DocumentTemplate> {
+    const result = await db
+      .update(documentTemplates)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(documentTemplates.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDocumentTemplate(id: string): Promise<void> {
+    await db.delete(templateFields).where(eq(templateFields.templateId, id));
+    await db.delete(documentTemplates).where(eq(documentTemplates.id, id));
+  }
+
+  async getTemplateFields(templateId: string): Promise<TemplateField[]> {
+    return await db
+      .select()
+      .from(templateFields)
+      .where(eq(templateFields.templateId, templateId))
+      .orderBy(asc(templateFields.position));
+  }
+
+  async createTemplateField(field: InsertTemplateField): Promise<TemplateField> {
+    const result = await db.insert(templateFields).values(field).returning();
+    return result[0];
+  }
+
+  async updateTemplateFields(templateId: string, fields: InsertTemplateField[]): Promise<TemplateField[]> {
+    // Delete existing fields
+    await db.delete(templateFields).where(eq(templateFields.templateId, templateId));
+    
+    // Insert new fields
+    if (fields.length === 0) return [];
+    
+    const result = await db.insert(templateFields).values(fields).returning();
+    return result;
+  }
+
+  // Payment operations
+  async getPayment(id: string): Promise<Payment | undefined> {
+    const result = await db.select().from(payments).where(eq(payments.id, id));
+    return result[0];
+  }
+
+  async getPaymentsByClient(clientId: string): Promise<Payment[]> {
+    return await db.select().from(payments).where(eq(payments.clientProfileId, clientId));
+  }
+
+  async createPayment(payment: InsertPayment): Promise<Payment> {
+    const result = await db.insert(payments).values(payment).returning();
+    return result[0];
+  }
+
+  async updatePayment(id: string, updates: Partial<InsertPayment>): Promise<Payment> {
+    const result = await db
+      .update(payments)
+      .set(updates)
+      .where(eq(payments.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // OCR operations
+  async getOcrResult(documentFileId: string): Promise<OcrResult | undefined> {
+    const result = await db.select().from(ocrResults).where(eq(ocrResults.documentFileId, documentFileId));
+    return result[0];
+  }
+
+  async createOcrResult(result: Omit<OcrResult, 'id' | 'createdAt'>): Promise<OcrResult> {
+    const insertResult = await db.insert(ocrResults).values(result).returning();
+    return insertResult[0];
+  }
+
+  async updateOcrResult(id: string, updates: Partial<OcrResult>): Promise<OcrResult> {
+    const result = await db
+      .update(ocrResults)
+      .set(updates)
+      .where(eq(ocrResults.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Workflow operations
+  async getAllWorkflowRules(): Promise<WorkflowRule[]> {
+    return await db.select().from(workflowRules).orderBy(desc(workflowRules.createdAt));
+  }
+
+  async getWorkflowRule(id: string): Promise<WorkflowRule | undefined> {
+    const result = await db.select().from(workflowRules).where(eq(workflowRules.id, id));
+    return result[0];
+  }
+
+  async createWorkflowRule(rule: InsertWorkflowRule): Promise<WorkflowRule> {
+    const result = await db.insert(workflowRules).values(rule).returning();
+    return result[0];
+  }
+
+  async updateWorkflowRule(id: string, updates: Partial<InsertWorkflowRule>): Promise<WorkflowRule> {
+    const result = await db
+      .update(workflowRules)
+      .set(updates)
+      .where(eq(workflowRules.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Translation operations
+  async getTranslations(language?: string): Promise<Translation[]> {
+    if (language) {
+      return await db.select().from(translations).where(eq(translations.language, language as any));
+    }
+    return await db.select().from(translations);
+  }
+
+  async createTranslation(translation: InsertTranslation): Promise<Translation> {
+    const result = await db.insert(translations).values(translation).returning();
+    return result[0];
+  }
+
+  async updateTranslation(id: string, updates: Partial<InsertTranslation>): Promise<Translation> {
+    const result = await db
+      .update(translations)
+      .set(updates)
+      .where(eq(translations.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Analytics operations
+  async createAnalyticsEvent(event: Omit<AnalyticsEvent, 'id' | 'createdAt'>): Promise<AnalyticsEvent> {
+    const result = await db.insert(analyticsEvents).values(event).returning();
+    return result[0];
+  }
+
+  async getAnalyticsEvents(filters?: { eventType?: string; userId?: string; clientProfileId?: string }): Promise<AnalyticsEvent[]> {
+    let baseQuery = db.select().from(analyticsEvents);
+    
+    if (filters) {
+      const conditions = [];
+      if (filters.eventType) {
+        conditions.push(eq(analyticsEvents.eventType, filters.eventType));
+      }
+      if (filters.userId) {
+        conditions.push(eq(analyticsEvents.userId, filters.userId));
+      }
+      if (filters.clientProfileId) {
+        conditions.push(eq(analyticsEvents.clientProfileId, filters.clientProfileId));
+      }
+      
+      if (conditions.length > 0) {
+        baseQuery = baseQuery.where(and(...conditions));
+      }
+    }
+    
+    return await baseQuery.orderBy(desc(analyticsEvents.createdAt));
   }
 }
 

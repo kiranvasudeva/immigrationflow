@@ -43,6 +43,9 @@ export const assignmentStatusEnum = pgEnum('assignment_status', [
 export const assignedToRoleEnum = pgEnum('assigned_to_role', ['OWNER', 'WORKER']);
 export const documentKindEnum = pgEnum('document_kind', ['USER_UPLOAD', 'ADMIN_RECEIPT', 'GENERATED_PDF']);
 export const reminderScopeEnum = pgEnum('reminder_scope', ['GLOBAL', 'CLIENT', 'STAGE']);
+export const templateTypeEnum = pgEnum('template_type', ['FORM', 'DOCUMENT', 'CERTIFICATE']);
+export const fieldTypeEnum = pgEnum('field_type', ['TEXT', 'DATE', 'NUMBER', 'CHECKBOX', 'DROPDOWN', 'SIGNATURE', 'PHOTO']);
+export const languageEnum = pgEnum('language', ['en', 'ro', 'es', 'fr']);
 
 // User table (required for Replit Auth)
 export const users = pgTable("users", {
@@ -175,6 +178,102 @@ export const auditLogs = pgTable("audit_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Document Template System
+export const documentTemplates = pgTable("document_templates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  type: templateTypeEnum("type").notNull(),
+  language: languageEnum("language").notNull().default('ro'),
+  isActive: boolean("is_active").default(true),
+  templateData: jsonb("template_data").notNull(), // Visual editor structure
+  createdByUserId: varchar("created_by_user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const templateFields = pgTable("template_fields", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  templateId: uuid("template_id").notNull(),
+  fieldKey: varchar("field_key", { length: 100 }).notNull(),
+  fieldType: fieldTypeEnum("field_type").notNull(),
+  label: varchar("label", { length: 255 }).notNull(),
+  required: boolean("required").default(false),
+  placeholder: varchar("placeholder", { length: 255 }),
+  options: jsonb("options"), // For dropdown options
+  position: integer("position").notNull(),
+  validation: jsonb("validation"), // Validation rules
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Payment Management
+export const payments = pgTable("payments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  clientProfileId: uuid("client_profile_id").notNull(),
+  workerId: uuid("worker_id"),
+  amount: integer("amount").notNull(), // in cents
+  currency: varchar("currency", { length: 3 }).default('RON'),
+  description: text("description"),
+  status: varchar("status", { length: 20 }).notNull().default('PENDING'),
+  stripePaymentIntentId: varchar("stripe_payment_intent_id"),
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// OCR Processing
+export const ocrResults = pgTable("ocr_results", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  documentFileId: uuid("document_file_id").notNull(),
+  extractedText: text("extracted_text"),
+  extractedData: jsonb("extracted_data"), // Structured data
+  confidence: integer("confidence"), // Confidence score 0-100
+  processingStatus: varchar("processing_status", { length: 20 }).default('PENDING'),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Workflow Automation
+export const workflowRules = pgTable("workflow_rules", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 255 }).notNull(),
+  stageId: uuid("stage_id"),
+  conditions: jsonb("conditions").notNull(), // Conditional rules
+  actions: jsonb("actions").notNull(), // Actions to perform
+  isActive: boolean("is_active").default(true),
+  createdByUserId: varchar("created_by_user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Government API Integration
+export const apiIntegrations = pgTable("api_integrations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 255 }).notNull(),
+  endpoint: varchar("endpoint", { length: 500 }).notNull(),
+  apiKey: varchar("api_key", { length: 500 }),
+  isActive: boolean("is_active").default(true),
+  lastSyncAt: timestamp("last_sync_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Multi-language Support
+export const translations = pgTable("translations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: varchar("key", { length: 255 }).notNull(),
+  language: languageEnum("language").notNull(),
+  value: text("value").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Analytics
+export const analyticsEvents = pgTable("analytics_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  userId: varchar("user_id"),
+  clientProfileId: uuid("client_profile_id"),
+  workerId: uuid("worker_id"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   invitedBy: one(users, {
@@ -266,6 +365,50 @@ export const reminderLogsRelations = relations(reminderLogs, ({ one }) => ({
   }),
 }));
 
+export const documentTemplatesRelations = relations(documentTemplates, ({ one, many }) => ({
+  createdBy: one(users, {
+    fields: [documentTemplates.createdByUserId],
+    references: [users.id],
+  }),
+  fields: many(templateFields),
+}));
+
+export const templateFieldsRelations = relations(templateFields, ({ one }) => ({
+  template: one(documentTemplates, {
+    fields: [templateFields.templateId],
+    references: [documentTemplates.id],
+  }),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  clientProfile: one(clientProfiles, {
+    fields: [payments.clientProfileId],
+    references: [clientProfiles.id],
+  }),
+  worker: one(workers, {
+    fields: [payments.workerId],
+    references: [workers.id],
+  }),
+}));
+
+export const ocrResultsRelations = relations(ocrResults, ({ one }) => ({
+  documentFile: one(documentFiles, {
+    fields: [ocrResults.documentFileId],
+    references: [documentFiles.id],
+  }),
+}));
+
+export const workflowRulesRelations = relations(workflowRules, ({ one }) => ({
+  stage: one(stages, {
+    fields: [workflowRules.stageId],
+    references: [stages.id],
+  }),
+  createdBy: one(users, {
+    fields: [workflowRules.createdByUserId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas using createInsertSchema
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
@@ -323,6 +466,52 @@ export const insertRequirementSchema = createInsertSchema(requirements).pick({
   createdByUserId: true,
 });
 
+export const insertDocumentTemplateSchema = createInsertSchema(documentTemplates).pick({
+  name: true,
+  description: true,
+  type: true,
+  language: true,
+  isActive: true,
+  templateData: true,
+  createdByUserId: true,
+});
+
+export const insertTemplateFieldSchema = createInsertSchema(templateFields).pick({
+  templateId: true,
+  fieldKey: true,
+  fieldType: true,
+  label: true,
+  required: true,
+  placeholder: true,
+  options: true,
+  position: true,
+  validation: true,
+});
+
+export const insertPaymentSchema = createInsertSchema(payments).pick({
+  clientProfileId: true,
+  workerId: true,
+  amount: true,
+  currency: true,
+  description: true,
+  status: true,
+});
+
+export const insertWorkflowRuleSchema = createInsertSchema(workflowRules).pick({
+  name: true,
+  stageId: true,
+  conditions: true,
+  actions: true,
+  isActive: true,
+  createdByUserId: true,
+});
+
+export const insertTranslationSchema = createInsertSchema(translations).pick({
+  key: true,
+  language: true,
+  value: true,
+});
+
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -339,3 +528,16 @@ export type DocumentFile = typeof documentFiles.$inferSelect;
 export type ReminderRule = typeof reminderRules.$inferSelect;
 export type ReminderLog = typeof reminderLogs.$inferSelect;
 export type AuditLog = typeof auditLogs.$inferSelect;
+export type DocumentTemplate = typeof documentTemplates.$inferSelect;
+export type InsertDocumentTemplate = z.infer<typeof insertDocumentTemplateSchema>;
+export type TemplateField = typeof templateFields.$inferSelect;
+export type InsertTemplateField = z.infer<typeof insertTemplateFieldSchema>;
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type OcrResult = typeof ocrResults.$inferSelect;
+export type WorkflowRule = typeof workflowRules.$inferSelect;
+export type InsertWorkflowRule = z.infer<typeof insertWorkflowRuleSchema>;
+export type ApiIntegration = typeof apiIntegrations.$inferSelect;
+export type Translation = typeof translations.$inferSelect;
+export type InsertTranslation = z.infer<typeof insertTranslationSchema>;
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
