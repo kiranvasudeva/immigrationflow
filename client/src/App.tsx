@@ -12,6 +12,9 @@ import ClientDashboard from "@/pages/client-dashboard";
 import WorkerDashboard from "@/pages/worker-dashboard";
 import TemplatesPage from "@/pages/templates";
 import AnalyticsPage from "@/pages/analytics";
+import DocumentsPage from "@/pages/documents";
+import DeadlinesPage from "@/pages/deadlines";
+import ProfilePage from "@/pages/profile";
 import { User } from "@shared/schema";
 
 function Router() {
@@ -69,10 +72,10 @@ function Router() {
           <Route path="/requirements" component={() => <AdminDashboard />} />
           <Route path="/reminders" component={() => <AdminDashboard />} />
           <Route path="/audit" component={() => <AdminDashboard />} />
-          <Route path="/profile" component={() => <ClientDashboard />} />
-          <Route path="/documents" component={() => <ClientDashboard />} />
+          <Route path="/profile" component={ProfilePage} />
+          <Route path="/documents" component={DocumentsPage} />
           <Route path="/payments" component={() => <ClientDashboard />} />
-          <Route path="/deadlines" component={() => <WorkerDashboard />} />
+          <Route path="/deadlines" component={DeadlinesPage} />
         </>
       )}
       <Route component={NotFound} />
