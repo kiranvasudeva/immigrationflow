@@ -28,14 +28,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Client Profile routes
   app.get('/api/clients', isAuthenticated, auditMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const userEmail = req.user.claims.email;
+      const user = await storage.getUserByEmail(userEmail);
       
       if (user?.role === 'ADMIN') {
         const clients = await storage.getAllClientProfiles();
         res.json(clients);
       } else if (user?.role === 'OWNER') {
-        const client = await storage.getClientProfileByOwnerId(userId);
+        const client = await storage.getClientProfileByOwnerId(user.id);
         res.json(client ? [client] : []);
       } else {
         res.status(403).json({ message: "Unauthorized" });
