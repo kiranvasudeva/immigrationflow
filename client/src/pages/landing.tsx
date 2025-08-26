@@ -1,13 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 export default function Landing() {
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const { setLanguage, t } = useLanguage();
+  
+  // Set Romanian as default for landing page
+  useEffect(() => {
+    const saved = localStorage.getItem('immigration-app-language');
+    if (!saved) {
+      setLanguage('ro');
+    }
+  }, [setLanguage]);
 
   const handleLogin = () => {
     window.location.href = "/api/login";
@@ -24,11 +35,12 @@ export default function Landing() {
               <span className="font-bold text-xl text-gray-900">ImmigrationFlow</span>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" data-testid="button-features">Features</Button>
-              <Button variant="ghost" data-testid="button-pricing">Pricing</Button>
-              <Button variant="ghost" data-testid="button-support">Support</Button>
+              <LanguageSelector />
+              <Button variant="ghost" data-testid="button-features">{t('nav.features') || 'Features'}</Button>
+              <Button variant="ghost" data-testid="button-pricing">{t('nav.pricing') || 'Pricing'}</Button>
+              <Button variant="ghost" data-testid="button-support">{t('nav.support') || 'Support'}</Button>
               <Button onClick={() => setShowLoginModal(true)} data-testid="button-login">
-                Login
+                {t('landing.login') || 'Login'}
               </Button>
             </div>
           </div>
@@ -40,12 +52,11 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-5xl font-bold text-gray-900 mb-6">
-              Streamline Romanian <br />
-              <span className="text-primary">Immigration Workflows</span>
+              {t('landing.title') || 'Streamline Romanian'} <br />
+              <span className="text-primary">{t('landing.subtitle') || 'Immigration Workflows'}</span>
             </h1>
             <p className="text-xl text-secondary mb-8 max-w-3xl mx-auto">
-              Complete SaaS platform for managing work permits, visa applications, and residence permits. 
-              From AJOFM labor market tests to final IGI approvals.
+              {t('landing.description') || 'Complete SaaS platform for managing work permits, visa applications, and residence permits. From AJOFM labor market tests to final IGI approvals.'}
             </p>
             <div className="flex justify-center space-x-4">
               <Button size="lg" onClick={handleLogin} data-testid="button-trial">

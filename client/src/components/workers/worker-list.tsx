@@ -10,6 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Worker } from "@shared/schema";
+import { WorkerInvitationLink } from "@/components/worker-invitation-link";
 
 interface WorkerListProps {
   workers: Worker[];
@@ -220,6 +221,10 @@ export default function WorkerList({ workers }: WorkerListProps) {
                           <Button variant="ghost" size="sm" data-testid={`button-edit-worker-${worker.id}`}>
                             <i className="fas fa-edit mr-1"></i>Edit
                           </Button>
+                          <WorkerInvitationLink 
+                            workerId={worker.id} 
+                            workerEmail={worker.email}
+                          />
                         </div>
                       </td>
                     </tr>

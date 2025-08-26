@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
+import { DummyDataAlert } from "@/components/dummy-data-alert";
+import { useRoleBasedLanguage } from "@/hooks/useRoleBasedLanguage";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import AdminDashboard from "@/pages/admin-dashboard";
@@ -19,6 +21,9 @@ import { User } from "@shared/schema";
 
 function Router() {
   const { user, isAuthenticated, isLoading } = useAuth();
+  
+  // Initialize role-based language settings
+  useRoleBasedLanguage();
 
   if (isLoading) {
     return (
@@ -32,10 +37,14 @@ function Router() {
   // console.log('Router - isAuthenticated:', isAuthenticated, 'user:', user);
 
   return (
-    <Switch>
-      {!isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
+    <div>
+      {/* Show dummy data alert for authenticated users */}
+      {isAuthenticated && <DummyDataAlert />}
+      
+      <Switch>
+        {!isAuthenticated ? (
+          <Route path="/" component={Landing} />
+        ) : (
         <>
           <Route path="/" component={() => {
             switch (user?.role) {
@@ -78,8 +87,9 @@ function Router() {
           <Route path="/deadlines" component={DeadlinesPage} />
         </>
       )}
-      <Route component={NotFound} />
-    </Switch>
+        <Route component={NotFound} />
+      </Switch>
+    </div>
   );
 }
 

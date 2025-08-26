@@ -384,16 +384,14 @@ export class DatabaseStorage implements IStorage {
     const activeWorkersResult = await db
       .selectDistinct({ workerId: assignments.workerId })
       .from(assignments)
+      .innerJoin(workers, eq(assignments.workerId, workers.id))
       .where(
-        and(
-          eq(assignments.workerId, workers.id),
-          or(
-            eq(assignments.status, 'AWAITING_UPLOAD'),
-            eq(assignments.status, 'SUBMITTED_BY_USER'),
-            eq(assignments.status, 'RECEIVED_BY_ADMIN'),
-            eq(assignments.status, 'SUBMITTED_TO_INSTITUTION_DIGITAL'),
-            eq(assignments.status, 'SUBMITTED_TO_INSTITUTION_COURIER')
-          )
+        or(
+          eq(assignments.status, 'AWAITING_UPLOAD'),
+          eq(assignments.status, 'SUBMITTED_BY_USER'),
+          eq(assignments.status, 'RECEIVED_BY_ADMIN'),
+          eq(assignments.status, 'SUBMITTED_TO_INSTITUTION_DIGITAL'),
+          eq(assignments.status, 'SUBMITTED_TO_INSTITUTION_COURIER')
         )
       );
     
@@ -446,6 +444,22 @@ export class DatabaseStorage implements IStorage {
       completedThisMonth: completedThisMonthResult[0]?.count ?? 0,
       assignmentsByStatus,
     };
+  }
+  
+  // Delete test data
+  async deleteTestData(): Promise<void> {
+    // Delete in correct order due to foreign key constraints
+    await db.delete(assignments).where(sql`${assignments.id} IN (
+      SELECT a.id FROM assignments a
+      JOIN clientProfiles cp ON a.clientProfileId = cp.id
+      WHERE cp.companyName LIKE 'Test %'
+    )`);
+
+    await db.delete(requirements).where(sql`${requirements.title} LIKE 'Test %'`);
+    await db.delete(stages).where(sql`${stages.title} LIKE 'Test %'`);
+    await db.delete(workers).where(sql`${workers.firstName} LIKE 'Test %'`);
+    await db.delete(clientProfiles).where(sql`${clientProfiles.companyName} LIKE 'Test %'`);
+    await db.delete(users).where(sql`${users.firstName} LIKE 'Test %'`);
   }
   
   // Enhanced assignment queries for kanban

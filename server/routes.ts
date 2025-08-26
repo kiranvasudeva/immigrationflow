@@ -19,10 +19,30 @@ import {
   insertTranslationSchema,
   insertInvitationSchema
 } from "@shared/schema";
+import { seedDatabase } from "./seedDatabase";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Development seed route - only in development
+  app.post('/api/seed-database', async (req, res) => {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(403).json({ message: 'Seeding only available in development mode' });
+    }
+    
+    try {
+      const results = await seedDatabase();
+      res.json({ 
+        success: true, 
+        message: 'Database seeded successfully with test data', 
+        results 
+      });
+    } catch (error) {
+      console.error('Error seeding database:', error);
+      res.status(500).json({ message: 'Failed to seed database', error: (error as Error).message });
+    }
+  });
 
   // Dashboard statistics
   app.get('/api/dashboard/stats', isAuthenticated, auditMiddleware, async (req: any, res) => {
@@ -737,6 +757,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching comprehensive status:', error);
       res.status(500).json({ message: "Failed to fetch comprehensive status" });
+    }
+  });
+
+  // Delete dummy/test data route
+  app.delete('/api/dummy-data', isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const user = await storage.getUserByEmail(userEmail);
+      
+      if (user?.role !== 'ADMIN') {
+        return res.status(403).json({ message: "Only admins can delete test data" });
+      }
+      
+      // Delete test data by filtering on names starting with "Test"
+      await storage.deleteTestData();
+      res.json({ message: "Test data deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting test data:", error);
+      res.status(500).json({ message: "Failed to delete test data" });
+    }
+  });
+
+  // Worker invitation routes
+  app.post('/api/invitations', isAuthenticated, async (req, res) => {
+    try {
+      const { email, role, workerId } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+
+      // Generate invitation token
+      const token = require('crypto').randomUUID();
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 72); // 72 hours expiry
+
+      // Store invitation (for now, just return the token)
+      // In a real system, you'd store this in database
+      const inviteLink = `${req.protocol}://${req.get('host')}/invite/${token}`;
+
+      // Log invitation creation
+      console.log(`Invitation created for ${email} with role ${role}`);
+      
+      res.json({ 
+        token,
+        inviteLink,
+        email,
+        role,
+        expiresAt: expiresAt.toISOString()
+      });
+    } catch (error) {
+      console.error('Error creating invitation:', error);
+      res.status(500).json({ error: 'Failed to create invitation' });
     }
   });
 
