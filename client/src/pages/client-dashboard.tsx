@@ -86,7 +86,7 @@ export default function ClientDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-secondary">Total Workers</p>
+                    <p className="text-sm text-secondary">{t('dashboard.stats.totalWorkers') || 'Total Workers'}</p>
                     <p className="text-3xl font-bold text-gray-900">{mockStats.totalWorkers}</p>
                   </div>
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -100,7 +100,7 @@ export default function ClientDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-secondary">Pending Actions</p>
+                    <p className="text-sm text-secondary">{t('dashboard.stats.pendingActions') || 'Pending Actions'}</p>
                     <p className="text-3xl font-bold text-gray-900">{mockStats.pendingActions}</p>
                   </div>
                   <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -114,7 +114,7 @@ export default function ClientDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-secondary">Completed</p>
+                    <p className="text-sm text-secondary">{t('dashboard.stats.completed') || 'Completed'}</p>
                     <p className="text-3xl font-bold text-gray-900">{mockStats.completed}</p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">

@@ -89,7 +89,7 @@ export default function AdminDashboard() {
                 data-testid="input-global-search"
               />
               <Button data-testid="button-new-client">
-                <i className="fas fa-plus mr-2"></i>New Client
+                <i className="fas fa-plus mr-2"></i>{t('action.newClient') || 'New Client'}
               </Button>
             </div>
           }
@@ -136,7 +136,7 @@ export default function AdminDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-secondary">Pending Actions</p>
+                    <p className="text-sm text-secondary">{t('dashboard.stats.pendingActions') || 'Pending Actions'}</p>
                     <p className="text-3xl font-bold text-gray-900">{stats.pendingActions}</p>
                     <p className="text-sm text-warning">
                       <i className="fas fa-clock mr-1"></i>Needs attention
@@ -153,7 +153,7 @@ export default function AdminDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-secondary">Completed This Month</p>
+                    <p className="text-sm text-secondary">{t('dashboard.stats.completedThisMonth') || 'Completed This Month'}</p>
                     <p className="text-3xl font-bold text-gray-900">{stats.completedThisMonth}</p>
                     <p className="text-sm text-success">
                       <i className="fas fa-check mr-1"></i>This month

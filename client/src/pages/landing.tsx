@@ -60,10 +60,10 @@ export default function Landing() {
             </p>
             <div className="flex justify-center space-x-4">
               <Button size="lg" onClick={handleLogin} data-testid="button-trial">
-                Start Free Trial
+                {t('landing.trial') || 'Start Free Trial'}
               </Button>
               <Button variant="outline" size="lg" data-testid="button-demo">
-                Schedule Demo
+                {t('landing.demo') || 'Schedule Demo'}
               </Button>
             </div>
           </div>
@@ -74,8 +74,8 @@ export default function Landing() {
       <section className="py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Everything You Need</h2>
-            <p className="text-xl text-secondary">Comprehensive immigration workflow management</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('landing.features.title') || 'Everything You Need'}</h2>
+            <p className="text-xl text-secondary">{t('landing.features.subtitle') || 'Comprehensive immigration workflow management'}</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -85,8 +85,8 @@ export default function Landing() {
                 <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-4">
                   <i className="fas fa-users text-white text-xl"></i>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Client Management</h3>
-                <p className="text-secondary">Manage Romanian companies with CUI, ONRC, and CAEN data. Track multiple workers per client profile.</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('landing.features.clientManagement') || 'Client Management'}</h3>
+                <p className="text-secondary">{t('landing.features.clientManagementDesc') || 'Manage Romanian companies with CUI, ONRC, and CAEN data. Track multiple workers per client profile.'}</p>
               </CardContent>
             </Card>
 
@@ -95,8 +95,8 @@ export default function Landing() {
                 <div className="w-12 h-12 bg-success rounded-lg flex items-center justify-center mb-4">
                   <i className="fas fa-clipboard-check text-white text-xl"></i>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Workflow Tracking</h3>
-                <p className="text-secondary">Complete Romanian immigration stages: AJOFM → Work Permit → Visa D/AM → Residence Permit.</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('landing.features.workflowTracking') || 'Workflow Tracking'}</h3>
+                <p className="text-secondary">{t('landing.features.workflowTrackingDesc') || 'Complete Romanian immigration stages: AJOFM → Work Permit → Visa D/AM → Residence Permit.'}</p>
               </CardContent>
             </Card>
 
@@ -105,8 +105,8 @@ export default function Landing() {
                 <div className="w-12 h-12 bg-warning rounded-lg flex items-center justify-center mb-4">
                   <i className="fas fa-file-pdf text-white text-xl"></i>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Document Generation</h3>
-                <p className="text-secondary">Auto-generate PDFs from templates with client data. Watermarking and secure preview system.</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('landing.features.documentGeneration') || 'Document Generation'}</h3>
+                <p className="text-secondary">{t('landing.features.documentGenerationDesc') || 'Auto-generate PDFs from templates with client data. Watermarking and secure preview system.'}</p>
               </CardContent>
             </Card>
 
@@ -115,8 +115,8 @@ export default function Landing() {
                 <div className="w-12 h-12 bg-error rounded-lg flex items-center justify-center mb-4">
                   <i className="fas fa-bell text-white text-xl"></i>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Smart Reminders</h3>
-                <p className="text-secondary">Automated reminders for deadlines, document expiries, and missing submissions with email notifications.</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('landing.features.smartReminders') || 'Smart Reminders'}</h3>
+                <p className="text-secondary">{t('landing.features.smartRemindersDesc') || 'Automated reminders for deadlines, document expiries, and missing submissions with email notifications.'}</p>
               </CardContent>
             </Card>
 
