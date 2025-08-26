@@ -3,8 +3,34 @@
   "clients": "Clienți",
   "workers": "Lucrători",
   "templates": "Șabloane",
-  "analytics": "Analize",
-  "profile": "Profil",
+  "analytics": {
+    "completed": {
+      "month": "TODO: translate"
+    },
+    "headers": {
+      "activeWorkers": "TODO: translate",
+      "clientPerformance": "TODO: translate",
+      "monthlyTrend": "TODO: translate",
+      "pendingActions": "TODO: translate",
+      "recentActivity": "TODO: translate",
+      "stageProgress": "TODO: translate",
+      "statusDistribution": "TODO: translate",
+      "totalClients": "TODO: translate"
+    },
+    "options": {
+      "allClients": "TODO: translate"
+    },
+    "placeholders": {
+      "allClients": "TODO: translate",
+      "period": "TODO: translate"
+    }
+  },
+  "profile": {
+    "joined": "TODO: translate",
+    "manageInfo": "TODO: translate",
+    "personalInfo": "TODO: translate",
+    "workPermitStatus": "TODO: translate"
+  },
   "documents": "Documente",
   "deadlines": "Termene",
   "loading": "Se încarcă...",
@@ -38,6 +64,14 @@
   "description": "Descriere",
   "required": "Obligatoriu",
   "optional": "Opțional",
+  "workflowOverview": "TODO: translate",
+  "allStages": "TODO: translate",
+  "allStagesOption": "TODO: translate",
+  "noRecentActivity": "TODO: translate",
+  "searchPlaceholder": "TODO: translate",
+  "": {
+    "": "TODO: translate"
+  },
   "DELETE": "TODO: translate",
   "GET": "TODO: translate",
   "PATCH": "TODO: translate",
@@ -45,12 +79,214 @@
   "PUT": "TODO: translate",
   "T": "TODO: translate",
   "\\n": "TODO: translate",
-  "allStages": "TODO: translate",
-  "allStagesOption": "TODO: translate",
+  "action": {
+    "addWorker": "TODO: translate",
+    "newClient": "TODO: translate",
+    "uploadDocument": "TODO: translate"
+  },
+  "auth": {
+    "loggedOut": "TODO: translate",
+    "unauthorized": "TODO: translate"
+  },
   "complete": "TODO: translate",
   "immigrationFlow": "TODO: translate",
-  "noRecentActivity": "TODO: translate",
-  "progress": "TODO: translate",
-  "searchPlaceholder": "TODO: translate",
-  "workflowOverview": "TODO: translate"
+  "progress": {
+    "overall": "TODO: translate"
+  },
+  "form": {
+    "email": "TODO: translate",
+    "labels": {
+      "activeTemplate": "TODO: translate",
+      "address": "TODO: translate",
+      "caenCode": "TODO: translate",
+      "companyName": "TODO: translate",
+      "contactEmail": "TODO: translate",
+      "cui": "TODO: translate",
+      "dateOfBirth": "TODO: translate",
+      "description": "TODO: translate",
+      "email": "TODO: translate",
+      "emailAddress": "TODO: translate",
+      "firstName": "TODO: translate",
+      "label": "TODO: translate",
+      "language": "TODO: translate",
+      "lastName": "TODO: translate",
+      "nationality": "TODO: translate",
+      "options": "TODO: translate",
+      "passportNumber": "TODO: translate",
+      "phoneNumber": "TODO: translate",
+      "placeholder": "TODO: translate",
+      "required": "TODO: translate",
+      "role": "TODO: translate",
+      "templateName": "TODO: translate",
+      "templateType": "TODO: translate"
+    },
+    "placeholders": {
+      "companyAddress": "TODO: translate",
+      "companyName": "TODO: translate",
+      "cui": "TODO: translate",
+      "fieldLabel": "TODO: translate",
+      "firstName": "TODO: translate",
+      "lastName": "TODO: translate",
+      "nationality": "TODO: translate",
+      "onrc": "TODO: translate",
+      "optionsOnePerLine": "TODO: translate",
+      "passportNumber": "TODO: translate",
+      "placeholderText": "TODO: translate",
+      "searchWorkers": "TODO: translate",
+      "selectOption": "TODO: translate",
+      "templateDesc": "TODO: translate",
+      "templateName": "TODO: translate"
+    }
+  },
+  "landing": {
+    "demo": "TODO: translate",
+    "description": "TODO: translate",
+    "features": {
+      "advancedSearch": "TODO: translate",
+      "advancedSearchDesc": "TODO: translate",
+      "clientManagement": "TODO: translate",
+      "clientManagementDesc": "TODO: translate",
+      "documentGeneration": "TODO: translate",
+      "documentGenerationDesc": "TODO: translate",
+      "gdprCompliant": "TODO: translate",
+      "gdprCompliantDesc": "TODO: translate",
+      "smartReminders": "TODO: translate",
+      "smartRemindersDesc": "TODO: translate",
+      "subtitle": "TODO: translate",
+      "title": "TODO: translate",
+      "workflowTracking": "TODO: translate",
+      "workflowTrackingDesc": "TODO: translate"
+    },
+    "login": "TODO: translate",
+    "subtitle": "TODO: translate",
+    "title": "TODO: translate",
+    "trial": "TODO: translate"
+  },
+  "languages": {
+    "english": "TODO: translate",
+    "french": "TODO: translate",
+    "romanian": "TODO: translate",
+    "spanish": "TODO: translate"
+  },
+  "modal": {
+    "login": {
+      "adminButton": "TODO: translate",
+      "adminDesc": "TODO: translate",
+      "adminTitle": "TODO: translate",
+      "invitationText": "TODO: translate",
+      "subtitle": "TODO: translate",
+      "supportLink": "TODO: translate",
+      "supportText": "TODO: translate",
+      "title": "TODO: translate",
+      "workerDesc": "TODO: translate",
+      "workerTitle": "TODO: translate"
+    }
+  },
+  "modals": {
+    "addWorker": {
+      "description": "TODO: translate",
+      "title": "TODO: translate"
+    },
+    "inviteWorker": {
+      "description": "TODO: translate",
+      "title": "TODO: translate"
+    }
+  },
+  "notifications": {
+    "error": "TODO: translate",
+    "invitationFailed": "TODO: translate",
+    "invitationSent": "TODO: translate",
+    "success": "TODO: translate",
+    "tryAgainLater": "TODO: translate",
+    "workerAddFailed": "TODO: translate",
+    "workerAdded": "TODO: translate"
+  },
+  "pages": {
+    "analytics": {
+      "subtitle": "TODO: translate",
+      "title": "TODO: translate"
+    },
+    "documents": {
+      "noDocuments": "TODO: translate",
+      "title": "TODO: translate"
+    },
+    "profile": {
+      "title": "TODO: translate"
+    },
+    "templates": {
+      "builder": {
+        "title": "TODO: translate"
+      }
+    }
+  },
+  "periods": {
+    "1year": "TODO: translate",
+    "30days": "TODO: translate",
+    "7days": "TODO: translate",
+    "90days": "TODO: translate"
+  },
+  "roles": {
+    "viewer": "TODO: translate",
+    "worker": "TODO: translate"
+  },
+  "stages": {
+    "ajofm": "TODO: translate",
+    "residence": "TODO: translate",
+    "visa": "TODO: translate",
+    "workPermit": "TODO: translate"
+  },
+  "status": {
+    "accepted": "TODO: translate",
+    "completed": "TODO: translate",
+    "inProgress": "TODO: translate",
+    "overdue": "TODO: translate",
+    "pending": "TODO: translate",
+    "pendingUpload": "TODO: translate",
+    "rejected": "TODO: translate",
+    "submitted": "TODO: translate",
+    "unknown": "TODO: translate"
+  },
+  "table": {
+    "headers": {
+      "actions": "TODO: translate",
+      "document": "TODO: translate",
+      "dueDate": "TODO: translate",
+      "stage": "TODO: translate",
+      "status": "TODO: translate"
+    }
+  },
+  "template": {
+    "fieldKey": "TODO: translate",
+    "fieldType": "TODO: translate",
+    "fieldTypes": {
+      "checkbox": "TODO: translate",
+      "date": "TODO: translate",
+      "dropdown": "TODO: translate",
+      "number": "TODO: translate",
+      "photo": "TODO: translate",
+      "signature": "TODO: translate",
+      "text": "TODO: translate"
+    },
+    "fields": {
+      "title": "TODO: translate"
+    },
+    "information": "TODO: translate",
+    "noFields": "TODO: translate",
+    "preview": "TODO: translate",
+    "types": {
+      "certificate": "TODO: translate",
+      "document": "TODO: translate",
+      "form": "TODO: translate"
+    }
+  },
+  "worker": {
+    "generateInvite": "TODO: translate",
+    "invitationLink": "TODO: translate",
+    "invite": "TODO: translate",
+    "inviteTitle": "TODO: translate",
+    "linkDescription": "TODO: translate",
+    "myDocuments": "TODO: translate",
+    "nextSteps": "TODO: translate",
+    "urgentActions": "TODO: translate"
+  }
 }

@@ -10,7 +10,7 @@ i18n
     fallbackLng: 'en',
     debug: false,
 
-    ns: ['common', 'nav', 'actions'],
+    ns: ['common', 'nav', 'actions', 'dashboard'],
     defaultNS: 'common',
 
     backend: {
@@ -25,19 +25,27 @@ i18n
       useSuspense: false,
     },
 
-    // Custom missing key handler to ensure fallback works
-    saveMissing: true,
+    // Enhanced fallback configuration
+    fallbackOnNull: true,
+    fallbackOnEmpty: true,
+    returnNull: false,
+    returnEmptyString: false,
+    
+    // Custom missing key handler
+    saveMissing: false,
     missingKeyHandler: (lng, ns, key, fallbackValue) => {
-      // In development, log missing keys
+      // In development, log missing keys but don't show them to users
       if (process.env.NODE_ENV === 'development') {
         console.warn(`Missing translation: ${lng}:${ns}:${key}`);
       }
+      
+      // Always return fallback value or the key as last resort
       return fallbackValue || key;
     },
 
-    // Ensure fallback language is used when key is missing
-    fallbackOnNull: true,
-    fallbackOnEmpty: true,
+    // Load all namespaces at startup to avoid loading issues
+    preload: ['en', 'ro'],
+    load: 'languageOnly',
   });
 
 // Save language changes to localStorage

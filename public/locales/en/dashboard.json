@@ -1,0 +1,46 @@
+{
+  "admin": {
+    "title": "Admin Dashboard",
+    "subtitle": "Manage your immigration platform"
+  },
+  "owner": {
+    "title": "Company Dashboard",
+    "subtitle": "Track your workers' immigration progress"
+  },
+  "worker": {
+    "title": "My Immigration Progress",
+    "subtitle": "Track your application status"
+  },
+  "viewer": {
+    "title": "Immigration Overview",
+    "subtitle": "View immigration processes"
+  },
+  "stats": {
+    "total": "Total",
+    "active": "Active",
+    "pending": "Pending",
+    "completed": "Completed",
+    "thisMonth": "This Month",
+    "totalClients": "Total Clients",
+    "newClients": "New Clients",
+    "activeWorkers": "Active Workers",
+    "activeCases": "Active Cases",
+    "pendingActions": "Pending Actions",
+    "needsAttention": "Needs Attention",
+    "completedThisMonth": "Completed This Month",
+    "totalWorkers": "Total Workers"
+  },
+  "stages": {
+    "ajofm": "AJOFM Labor Market Test",
+    "workPermit": "Work Permit (IGI)",
+    "visa": "Visa Application",
+    "residence": "Residence Permit"
+  },
+  "action": {
+    "newClient": "New Client"
+  },
+  "client": {
+    "subtitle": "Subtitle",
+    "title": "Title"
+  }
+}

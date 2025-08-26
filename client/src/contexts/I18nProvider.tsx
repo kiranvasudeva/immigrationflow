@@ -26,17 +26,35 @@ export function I18nProvider({ children }: I18nProviderProps) {
   // Enhanced translation function with automatic fallback
   const t = (key: string, options?: any): string => {
     try {
-      const translation = originalT(key, { ...options, lng: i18n.language });
+      // Handle namespace-based keys (namespace.key) 
+      const parts = key.split('.');
+      let namespace = 'common';
+      let translationKey = key;
+      
+      if (parts.length > 1 && ['common', 'nav', 'actions', 'dashboard'].includes(parts[0])) {
+        namespace = parts[0];
+        translationKey = parts.slice(1).join('.');
+      }
+      
+      const translation = originalT(translationKey, { 
+        ...options, 
+        lng: i18n.language, 
+        ns: namespace 
+      });
       
       // Ensure we always return a string
       const translationString = typeof translation === 'string' ? translation : String(translation);
       
       // Check if we got the key back (meaning no translation found)
-      if (translationString === key && i18n.language !== 'en') {
+      if (translationString === translationKey && i18n.language !== 'en') {
         // Try to get English fallback
-        const fallback = originalT(key, { ...options, lng: 'en' });
+        const fallback = originalT(translationKey, { 
+          ...options, 
+          lng: 'en', 
+          ns: namespace 
+        });
         const fallbackString = typeof fallback === 'string' ? fallback : String(fallback);
-        if (fallbackString !== key) {
+        if (fallbackString !== translationKey) {
           return fallbackString;
         }
       }
@@ -44,7 +62,9 @@ export function I18nProvider({ children }: I18nProviderProps) {
       return translationString;
     } catch (error) {
       console.warn(`Translation error for key "${key}":`, error);
-      return key;
+      // Return a meaningful fallback instead of the key
+      const parts = key.split('.');
+      return parts[parts.length - 1];
     }
   };
 

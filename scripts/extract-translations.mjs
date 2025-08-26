@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 // Configuration
 const LOCALES_DIR = path.join(__dirname, '../public/locales');
 const SUPPORTED_LANGUAGES = ['en', 'ro'];
-const NAMESPACES = ['common', 'nav', 'actions'];
+const NAMESPACES = ['common', 'nav', 'actions', 'dashboard'];
 const SOURCE_DIRS = [
   path.join(__dirname, '../client/src/**/*.{tsx,ts,jsx,js}')
 ];
@@ -38,10 +38,7 @@ function extractTranslationKeys() {
         pattern.lastIndex = 0; // Reset regex state
         while ((match = pattern.exec(content)) !== null) {
           const key = match[1];
-          // Only add keys that contain namespace separators or are simple keys
-          if (key.includes(':') || !key.includes('.') || NAMESPACES.some(ns => key.startsWith(ns + '.'))) {
-            translationKeys.add(key);
-          }
+          translationKeys.add(key);
         }
       });
     });
@@ -51,20 +48,14 @@ function extractTranslationKeys() {
 }
 
 function parseTranslationKey(key) {
-  // Handle namespaced keys (ns:key or ns.key)
-  if (key.includes(':')) {
-    const [ns, ...keyParts] = key.split(':');
-    return { namespace: ns, key: keyParts.join(':') };
+  const parts = key.split('.');
+  
+  // Handle namespace-based keys
+  if (parts.length > 1 && NAMESPACES.includes(parts[0])) {
+    return { namespace: parts[0], key: parts.slice(1).join('.') };
   }
   
-  // Handle dot notation with namespace prefix
-  for (const ns of NAMESPACES) {
-    if (key.startsWith(ns + '.')) {
-      return { namespace: ns, key: key.substring(ns.length + 1) };
-    }
-  }
-  
-  // Default to common namespace
+  // Default to common namespace for simple keys
   return { namespace: 'common', key };
 }
 
@@ -100,6 +91,21 @@ function setNestedValue(obj, keyPath, value) {
   }
 }
 
+function hasNestedValue(obj, keyPath) {
+  const keys = keyPath.split('.');
+  let current = obj;
+  
+  for (const key of keys) {
+    if (current && typeof current === 'object' && key in current) {
+      current = current[key];
+    } else {
+      return false;
+    }
+  }
+  
+  return true;
+}
+
 function updateTranslationFiles(extractedKeys) {
   console.log(`📝 Updating translation files for ${SUPPORTED_LANGUAGES.length} languages...`);
   
@@ -124,23 +130,17 @@ function updateTranslationFiles(extractedKeys) {
       let addedCount = 0;
       
       keysByNamespace[namespace].forEach(key => {
-        const keys = key.split('.');
-        let current = existing;
-        let exists = true;
-        
-        // Check if the key exists
-        for (const k of keys) {
-          if (current && typeof current === 'object' && k in current) {
-            current = current[k];
+        if (!hasNestedValue(existing, key)) {
+          // Generate appropriate default value
+          let defaultValue;
+          if (lang === 'en') {
+            // For English, use a readable version of the key
+            defaultValue = key.split('.').pop().replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
           } else {
-            exists = false;
-            break;
+            defaultValue = 'TODO: translate';
           }
-        }
-        
-        if (!exists) {
-          const placeholder = lang === 'en' ? key : 'TODO: translate';
-          setNestedValue(updated, key, placeholder);
+          
+          setNestedValue(updated, key, defaultValue);
           addedCount++;
         }
       });

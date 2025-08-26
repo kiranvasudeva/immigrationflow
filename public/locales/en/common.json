@@ -3,8 +3,34 @@
   "clients": "Clients",
   "workers": "Workers",
   "templates": "Templates",
-  "analytics": "Analytics",
-  "profile": "Profile",
+  "analytics": {
+    "completed": {
+      "month": "Month"
+    },
+    "headers": {
+      "activeWorkers": "Active Workers",
+      "clientPerformance": "Client Performance",
+      "monthlyTrend": "Monthly Trend",
+      "pendingActions": "Pending Actions",
+      "recentActivity": "Recent Activity",
+      "stageProgress": "Stage Progress",
+      "statusDistribution": "Status Distribution",
+      "totalClients": "Total Clients"
+    },
+    "options": {
+      "allClients": "All Clients"
+    },
+    "placeholders": {
+      "allClients": "All Clients",
+      "period": "Period"
+    }
+  },
+  "profile": {
+    "joined": "Joined",
+    "manageInfo": "Manage Info",
+    "personalInfo": "Personal Info",
+    "workPermitStatus": "Work Permit Status"
+  },
   "documents": "Documents",
   "deadlines": "Deadlines",
   "loading": "Loading...",
@@ -38,19 +64,229 @@
   "description": "Description",
   "required": "Required",
   "optional": "Optional",
-  "DELETE": "DELETE",
-  "GET": "GET",
-  "PATCH": "PATCH",
-  "POST": "POST",
-  "PUT": "PUT",
-  "T": "T",
+  "workflowOverview": "Workflow Overview",
+  "allStages": "All Stages",
+  "allStagesOption": "All Stages",
+  "noRecentActivity": "No recent activity to display",
+  "searchPlaceholder": "Search...",
+  "": {
+    "": ""
+  },
+  "DELETE": " D E L E T E",
+  "GET": " G E T",
+  "PATCH": " P A T C H",
+  "POST": " P O S T",
+  "PUT": " P U T",
+  "T": " T",
   "\\n": "\\n",
-  "allStages": "allStages",
-  "allStagesOption": "allStagesOption",
-  "complete": "complete",
-  "immigrationFlow": "immigrationFlow",
-  "noRecentActivity": "noRecentActivity",
-  "progress": "progress",
-  "searchPlaceholder": "searchPlaceholder",
-  "workflowOverview": "workflowOverview"
+  "action": {
+    "addWorker": "Add Worker",
+    "newClient": "New Client",
+    "uploadDocument": "Upload Document"
+  },
+  "auth": {
+    "loggedOut": "Logged Out",
+    "unauthorized": "Unauthorized"
+  },
+  "complete": "Complete",
+  "immigrationFlow": "Immigration Flow",
+  "progress": {
+    "overall": "Overall"
+  },
+  "form": {
+    "email": "Email",
+    "labels": {
+      "activeTemplate": "Active Template",
+      "address": "Address",
+      "caenCode": "Caen Code",
+      "companyName": "Company Name",
+      "contactEmail": "Contact Email",
+      "cui": "Cui",
+      "dateOfBirth": "Date Of Birth",
+      "description": "Description",
+      "email": "Email",
+      "emailAddress": "Email Address",
+      "firstName": "First Name",
+      "label": "Label",
+      "language": "Language",
+      "lastName": "Last Name",
+      "nationality": "Nationality",
+      "options": "Options",
+      "passportNumber": "Passport Number",
+      "phoneNumber": "Phone Number",
+      "placeholder": "Placeholder",
+      "required": "Required",
+      "role": "Role",
+      "templateName": "Template Name",
+      "templateType": "Template Type"
+    },
+    "placeholders": {
+      "companyAddress": "Company Address",
+      "companyName": "Company Name",
+      "cui": "Cui",
+      "fieldLabel": "Field Label",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "nationality": "Nationality",
+      "onrc": "Onrc",
+      "optionsOnePerLine": "Options One Per Line",
+      "passportNumber": "Passport Number",
+      "placeholderText": "Placeholder Text",
+      "searchWorkers": "Search Workers",
+      "selectOption": "Select Option",
+      "templateDesc": "Template Desc",
+      "templateName": "Template Name"
+    }
+  },
+  "landing": {
+    "demo": "Demo",
+    "description": "Description",
+    "features": {
+      "advancedSearch": "Advanced Search",
+      "advancedSearchDesc": "Advanced Search Desc",
+      "clientManagement": "Client Management",
+      "clientManagementDesc": "Client Management Desc",
+      "documentGeneration": "Document Generation",
+      "documentGenerationDesc": "Document Generation Desc",
+      "gdprCompliant": "Gdpr Compliant",
+      "gdprCompliantDesc": "Gdpr Compliant Desc",
+      "smartReminders": "Smart Reminders",
+      "smartRemindersDesc": "Smart Reminders Desc",
+      "subtitle": "Subtitle",
+      "title": "Title",
+      "workflowTracking": "Workflow Tracking",
+      "workflowTrackingDesc": "Workflow Tracking Desc"
+    },
+    "login": "Login",
+    "subtitle": "Subtitle",
+    "title": "Title",
+    "trial": "Trial"
+  },
+  "languages": {
+    "english": "English",
+    "french": "French",
+    "romanian": "Romanian",
+    "spanish": "Spanish"
+  },
+  "modal": {
+    "login": {
+      "adminButton": "Admin Button",
+      "adminDesc": "Admin Desc",
+      "adminTitle": "Admin Title",
+      "invitationText": "Invitation Text",
+      "subtitle": "Subtitle",
+      "supportLink": "Support Link",
+      "supportText": "Support Text",
+      "title": "Title",
+      "workerDesc": "Worker Desc",
+      "workerTitle": "Worker Title"
+    }
+  },
+  "modals": {
+    "addWorker": {
+      "description": "Description",
+      "title": "Title"
+    },
+    "inviteWorker": {
+      "description": "Description",
+      "title": "Title"
+    }
+  },
+  "notifications": {
+    "error": "Error",
+    "invitationFailed": "Invitation Failed",
+    "invitationSent": "Invitation Sent",
+    "success": "Success",
+    "tryAgainLater": "Try Again Later",
+    "workerAddFailed": "Worker Add Failed",
+    "workerAdded": "Worker Added"
+  },
+  "pages": {
+    "analytics": {
+      "subtitle": "Subtitle",
+      "title": "Title"
+    },
+    "documents": {
+      "noDocuments": "No Documents",
+      "title": "Title"
+    },
+    "profile": {
+      "title": "Title"
+    },
+    "templates": {
+      "builder": {
+        "title": "Title"
+      }
+    }
+  },
+  "periods": {
+    "1year": "1year",
+    "30days": "30days",
+    "7days": "7days",
+    "90days": "90days"
+  },
+  "roles": {
+    "viewer": "Viewer",
+    "worker": "Worker"
+  },
+  "stages": {
+    "ajofm": "Ajofm",
+    "residence": "Residence",
+    "visa": "Visa",
+    "workPermit": "Work Permit"
+  },
+  "status": {
+    "accepted": "Accepted",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "overdue": "Overdue",
+    "pending": "Pending",
+    "pendingUpload": "Pending Upload",
+    "rejected": "Rejected",
+    "submitted": "Submitted",
+    "unknown": "Unknown"
+  },
+  "table": {
+    "headers": {
+      "actions": "Actions",
+      "document": "Document",
+      "dueDate": "Due Date",
+      "stage": "Stage",
+      "status": "Status"
+    }
+  },
+  "template": {
+    "fieldKey": "Field Key",
+    "fieldType": "Field Type",
+    "fieldTypes": {
+      "checkbox": "Checkbox",
+      "date": "Date",
+      "dropdown": "Dropdown",
+      "number": "Number",
+      "photo": "Photo",
+      "signature": "Signature",
+      "text": "Text"
+    },
+    "fields": {
+      "title": "Title"
+    },
+    "information": "Information",
+    "noFields": "No Fields",
+    "preview": "Preview",
+    "types": {
+      "certificate": "Certificate",
+      "document": "Document",
+      "form": "Form"
+    }
+  },
+  "worker": {
+    "generateInvite": "Generate Invite",
+    "invitationLink": "Invitation Link",
+    "invite": "Invite",
+    "inviteTitle": "Invite Title",
+    "linkDescription": "Link Description",
+    "myDocuments": "My Documents",
+    "nextSteps": "Next Steps",
+    "urgentActions": "Urgent Actions"
+  }
 }

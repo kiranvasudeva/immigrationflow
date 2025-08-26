@@ -1,0 +1,46 @@
+{
+  "admin": {
+    "title": "TODO: translate",
+    "subtitle": "TODO: translate"
+  },
+  "owner": {
+    "title": "TODO: translate",
+    "subtitle": "TODO: translate"
+  },
+  "worker": {
+    "title": "TODO: translate",
+    "subtitle": "TODO: translate"
+  },
+  "viewer": {
+    "title": "TODO: translate",
+    "subtitle": "TODO: translate"
+  },
+  "stats": {
+    "total": "TODO: translate",
+    "active": "TODO: translate",
+    "pending": "TODO: translate",
+    "completed": "TODO: translate",
+    "thisMonth": "TODO: translate",
+    "totalClients": "TODO: translate",
+    "newClients": "TODO: translate",
+    "activeWorkers": "TODO: translate",
+    "activeCases": "TODO: translate",
+    "pendingActions": "TODO: translate",
+    "needsAttention": "TODO: translate",
+    "completedThisMonth": "TODO: translate",
+    "totalWorkers": "TODO: translate"
+  },
+  "stages": {
+    "ajofm": "TODO: translate",
+    "workPermit": "TODO: translate",
+    "visa": "TODO: translate",
+    "residence": "TODO: translate"
+  },
+  "action": {
+    "newClient": "TODO: translate"
+  },
+  "client": {
+    "subtitle": "TODO: translate",
+    "title": "TODO: translate"
+  }
+}

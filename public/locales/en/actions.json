@@ -18,10 +18,10 @@
   "addWorker": "Add Worker",
   "viewProgress": "View Progress",
   "generateInvite": "Generate Invitation Link",
-  "addField": "addField",
-  "saveTemplate": "saveTemplate",
-  "signOut": "signOut",
-  "uploadDocument": "uploadDocument",
-  "uploadFirstDocument": "uploadFirstDocument",
-  "view": "view"
+  "signOut": "Sign Out",
+  "addField": "Add Field",
+  "saveTemplate": "Save Template",
+  "uploadDocument": "Upload Document",
+  "uploadFirstDocument": "Upload First Document",
+  "view": "View"
 }
