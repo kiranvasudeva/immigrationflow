@@ -966,20 +966,24 @@ export default function AdminDashboard() {
                         assignment.clientProfileId === selectedClient.id
                       );
                       
-                      // Group assignments by workerId to create worker entries
+                      // Group assignments by workerId to create worker entries with actual worker data
                       const workersMap = new Map();
                       clientAssignments.forEach((assignment: any) => {
                         const workerId = assignment.workerId;
+                        const workerData = assignment.worker; // This contains the actual worker info!
+                        
                         if (!workersMap.has(workerId)) {
                           workersMap.set(workerId, {
                             id: workerId,
                             assignments: [],
                             status: assignment.status,
                             createdAt: assignment.createdAt,
-                            // Try to get worker name from requirement title if available
-                            workerName: assignment.requirement?.title?.includes('Worker') 
-                              ? assignment.requirement.title.split('Worker')[0].trim() 
-                              : null
+                            // Use actual worker data if available
+                            firstName: workerData?.firstName,
+                            lastName: workerData?.lastName,
+                            nationality: workerData?.nationality,
+                            email: workerData?.email,
+                            worker: workerData // Keep full worker object for reference
                           });
                         }
                         workersMap.get(workerId).assignments.push(assignment);
@@ -1017,10 +1021,12 @@ export default function AdminDashboard() {
                                   </div>
                                   <div>
                                     <h5 className="font-semibold text-gray-900">
-                                      {worker.workerName || `Worker #${index + 1}`}
+                                      {worker.firstName && worker.lastName 
+                                        ? `${worker.firstName} ${worker.lastName}`
+                                        : `Worker #${index + 1}`}
                                     </h5>
                                     <p className="text-sm text-gray-600">
-                                      {worker.assignments?.length || 0} active assignments
+                                      {worker.nationality || 'Nationality pending'}
                                     </p>
                                     <p className="text-xs text-gray-500">
                                       Started: {worker.createdAt ? new Date(worker.createdAt).toLocaleDateString() : 'Date pending'}
@@ -1290,7 +1296,6 @@ export default function AdminDashboard() {
                       </CardHeader>
                       <CardContent>
                         {(() => {
-                          console.log('WORKERS LIST: Rendering workers for client:', selectedClient.legalName);
                           // Filter assignments by matching clientProfileId to selectedClient.id
                           const clientAssignments = assignments.filter((assignment: any) => 
                             assignment.clientProfileId === selectedClient.id
