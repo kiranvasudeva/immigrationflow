@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { LanguageSelector } from '@/components/LanguageSelector';
-import { useTranslation } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/contexts/I18nProvider';
 import { 
   Menu, 
   LayoutDashboard, 
@@ -110,7 +110,7 @@ export function MobileNavigation({ user, onLogout }: MobileNavigationProps) {
         </Sheet>
 
         {/* App Title */}
-        <h1 className="text-lg font-semibold">{t('common.immigrationFlow') || 'ImmigrationFlow'}</h1>
+        <h1 className="text-lg font-semibold">ImmigrationFlow</h1>
 
         {/* Action Buttons */}
         <div className="flex items-center space-x-2">
