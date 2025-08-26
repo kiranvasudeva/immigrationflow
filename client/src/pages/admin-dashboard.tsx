@@ -1290,28 +1290,16 @@ export default function AdminDashboard() {
                       </CardHeader>
                       <CardContent>
                         {(() => {
-                          // Debug logging
-                          console.log('Selected client ID:', selectedClient.id);
-                          console.log('Total assignments:', assignments.length);
-                          console.log('First few assignments:', assignments.slice(0, 3));
-                          
                           // Filter assignments by matching clientProfileId to selectedClient.id
                           const clientAssignments = assignments.filter((assignment: any) => 
                             assignment.clientProfileId === selectedClient.id
                           );
-                          
-                          console.log('Filtered client assignments:', clientAssignments.length, clientAssignments);
                           
                           // Group assignments by workerId to create worker entries with actual worker data
                           const workersMap = new Map();
                           clientAssignments.forEach((assignment: any) => {
                             const workerId = assignment.workerId;
                             const workerData = assignment.worker; // This contains the actual worker info!
-                            
-                            // Debug: Log the actual worker data structure
-                            if (!workersMap.has(workerId)) {
-                              console.log('Worker data for workerId:', workerId, workerData);
-                            }
                             
                             if (!workersMap.has(workerId)) {
                               workersMap.set(workerId, {

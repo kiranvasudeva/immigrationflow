@@ -481,7 +481,7 @@ export class DatabaseStorage implements IStorage {
     return result.map(row => ({
       ...row.assignments,
       requirement: row.requirements!,
-      clientProfile: row.client_profiles!,
+      clientProfile: row.clientProfiles!,
       worker: row.workers || undefined,
       stage: row.stages!,
     }));
