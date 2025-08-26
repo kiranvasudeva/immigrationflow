@@ -222,7 +222,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllClientProfiles(): Promise<ClientProfile[]> {
-    return await db.select().from(clientProfiles).orderBy(asc(clientProfiles.companyName));
+    return await db.select().from(clientProfiles).orderBy(clientProfiles.legalName);
   }
 
   // Worker operations
@@ -330,7 +330,7 @@ export class DatabaseStorage implements IStorage {
       .from(clientProfiles)
       .where(
         or(
-          like(clientProfiles.companyName, searchQuery),
+          like(clientProfiles.legalName, searchQuery),
           like(clientProfiles.cui, searchQuery),
           like(clientProfiles.contactEmail, searchQuery)
         )
@@ -458,7 +458,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(requirements).where(sql`${requirements.title} LIKE 'Test %'`);
     await db.delete(stages).where(sql`${stages.title} LIKE 'Test %'`);
     await db.delete(workers).where(sql`${workers.firstName} LIKE 'Test %'`);
-    await db.delete(clientProfiles).where(sql`${clientProfiles.companyName} LIKE 'Test %'`);
+    await db.delete(clientProfiles).where(sql`${clientProfiles.legalName} LIKE 'Test %'`);
     await db.delete(users).where(sql`${users.firstName} LIKE 'Test %'`);
   }
   

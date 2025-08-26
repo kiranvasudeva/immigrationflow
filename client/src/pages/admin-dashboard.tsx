@@ -43,12 +43,15 @@ export default function AdminDashboard() {
   
   // Form state
   const [newClientForm, setNewClientForm] = useState({
-    companyName: '',
+    legalName: '',
+    registrationNumber: '',
     cui: '',
-    address: '',
-    caen: '',
+    legalAddress: '',
+    adminName: '',
     contactEmail: '',
-    onrc: ''
+    phoneNumber: '',
+    bankIban: '',
+    caen: ''
   });
 
   const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
@@ -96,12 +99,15 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
       setShowNewClientForm(false);
       setNewClientForm({
-        companyName: '',
+        legalName: '',
+        registrationNumber: '',
         cui: '',
-        address: '',
-        caen: '',
+        legalAddress: '',
+        adminName: '',
         contactEmail: '',
-        onrc: ''
+        phoneNumber: '',
+        bankIban: '',
+        caen: ''
       });
       toast({
         title: "Success",
@@ -390,7 +396,7 @@ export default function AdminDashboard() {
                               <i className="fas fa-building text-primary"></i>
                             </div>
                             <div>
-                              <p className="font-medium">{client.companyName}</p>
+                              <p className="font-medium">{client.legalName}</p>
                               <p className="text-sm text-secondary">CUI: {client.cui}</p>
                             </div>
                           </div>
@@ -438,18 +444,32 @@ export default function AdminDashboard() {
                         <form className="space-y-4" onSubmit={handleCreateClient}>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <label className="text-sm font-medium text-gray-700">{t('common.companyName') || 'Company Name'} *</label>
+                              <label className="text-sm font-medium text-gray-700">Legal Name *</label>
                               <Input
                                 placeholder="e.g., Tech Solutions SRL"
                                 className="bg-white"
-                                data-testid="input-new-company-name"
-                                value={newClientForm.companyName}
-                                onChange={(e) => handleFormChange('companyName', e.target.value)}
+                                data-testid="input-new-legal-name"
+                                value={newClientForm.legalName}
+                                onChange={(e) => handleFormChange('legalName', e.target.value)}
                                 required
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-sm font-medium text-gray-700">{t('common.cui') || 'CUI'} *</label>
+                              <label className="text-sm font-medium text-gray-700">Registration Number (ONRC) *</label>
+                              <Input
+                                placeholder="e.g., J40/12345/2020"
+                                className="bg-white"
+                                data-testid="input-new-registration-number"
+                                value={newClientForm.registrationNumber}
+                                onChange={(e) => handleFormChange('registrationNumber', e.target.value)}
+                                required
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium text-gray-700">CUI (Fiscal Code) *</label>
                               <Input
                                 placeholder="e.g., RO12345678"
                                 className="bg-white"
@@ -459,23 +479,8 @@ export default function AdminDashboard() {
                                 required
                               />
                             </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">{t('common.address') || 'Address'} *</label>
-                            <Input
-                              placeholder="e.g., Strada Victoriei Nr. 10, Sector 1, București, România"
-                              className="bg-white"
-                              data-testid="input-new-address"
-                              value={newClientForm.address}
-                              onChange={(e) => handleFormChange('address', e.target.value)}
-                              required
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <label className="text-sm font-medium text-gray-700">{t('common.caen') || 'CAEN Code'} *</label>
+                              <label className="text-sm font-medium text-gray-700">CAEN Code *</label>
                               <Input
                                 placeholder="e.g., 6201"
                                 className="bg-white"
@@ -485,27 +490,66 @@ export default function AdminDashboard() {
                                 required
                               />
                             </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">Legal Address (Sediu Legal) *</label>
+                            <Input
+                              placeholder="e.g., Strada Victoriei Nr. 10, Sector 1, București, România"
+                              className="bg-white"
+                              data-testid="input-new-legal-address"
+                              value={newClientForm.legalAddress}
+                              onChange={(e) => handleFormChange('legalAddress', e.target.value)}
+                              required
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">Administrator Name *</label>
+                            <Input
+                              placeholder="e.g., Ion Popescu"
+                              className="bg-white"
+                              data-testid="input-new-admin-name"
+                              value={newClientForm.adminName}
+                              onChange={(e) => handleFormChange('adminName', e.target.value)}
+                              required
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <label className="text-sm font-medium text-gray-700">{t('common.onrc') || 'ONRC Number'}</label>
+                              <label className="text-sm font-medium text-gray-700">Contact Email *</label>
                               <Input
-                                placeholder="e.g., J40/12345/2020"
+                                type="email"
+                                placeholder="contact@company.com"
                                 className="bg-white"
-                                data-testid="input-new-onrc"
-                                value={newClientForm.onrc}
-                                onChange={(e) => handleFormChange('onrc', e.target.value)}
+                                data-testid="input-new-contact-email"
+                                value={newClientForm.contactEmail}
+                                onChange={(e) => handleFormChange('contactEmail', e.target.value)}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium text-gray-700">Phone Number *</label>
+                              <Input
+                                placeholder="e.g., +40 21 123 4567"
+                                className="bg-white"
+                                data-testid="input-new-phone-number"
+                                value={newClientForm.phoneNumber}
+                                onChange={(e) => handleFormChange('phoneNumber', e.target.value)}
+                                required
                               />
                             </div>
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">{t('common.contactEmail') || 'Contact Email'} *</label>
+                            <label className="text-sm font-medium text-gray-700">Bank IBAN Account *</label>
                             <Input
-                              type="email"
-                              placeholder="contact@company.com"
+                              placeholder="e.g., RO49AAAA1B31007593840000"
                               className="bg-white"
-                              data-testid="input-new-contact-email"
-                              value={newClientForm.contactEmail}
-                              onChange={(e) => handleFormChange('contactEmail', e.target.value)}
+                              data-testid="input-new-bank-iban"
+                              value={newClientForm.bankIban}
+                              onChange={(e) => handleFormChange('bankIban', e.target.value)}
                               required
                             />
                           </div>

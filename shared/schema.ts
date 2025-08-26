@@ -63,12 +63,15 @@ export const users = pgTable("users", {
 // Client Profile table
 export const clientProfiles = pgTable("client_profiles", {
   id: uuid("id").primaryKey().defaultRandom(),
-  companyName: varchar("company_name", { length: 255 }).notNull(),
-  cui: varchar("cui", { length: 20 }).notNull().unique(),
-  address: text("address").notNull(),
-  caen: varchar("caen", { length: 10 }).notNull(),
+  legalName: varchar("legal_name", { length: 255 }).notNull(), // Legal business name
+  registrationNumber: varchar("registration_number", { length: 50 }).notNull(), // ONRC registration number
+  cui: varchar("cui", { length: 20 }).notNull().unique(), // Romanian fiscal code
+  legalAddress: text("legal_address").notNull(), // Sediu legal address
+  adminName: varchar("admin_name", { length: 255 }).notNull(), // Name of administrator/representative
   contactEmail: varchar("contact_email", { length: 255 }).notNull(),
-  onrc: varchar("onrc", { length: 50 }),
+  phoneNumber: varchar("phone_number", { length: 20 }).notNull(),
+  bankIban: varchar("bank_iban", { length: 34 }).notNull(), // Bank IBAN account number
+  caen: varchar("caen", { length: 10 }).notNull(), // CAEN activity code
   ownerUserId: varchar("owner_user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -450,12 +453,15 @@ export const insertUserSchema = createInsertSchema(users).pick({
 });
 
 export const insertClientProfileSchema = createInsertSchema(clientProfiles).pick({
-  companyName: true,
+  legalName: true,
+  registrationNumber: true,
   cui: true,
-  address: true,
-  caen: true,
+  legalAddress: true,
+  adminName: true,
   contactEmail: true,
-  onrc: true,
+  phoneNumber: true,
+  bankIban: true,
+  caen: true,
   ownerUserId: true,
 });
 
