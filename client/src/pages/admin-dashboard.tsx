@@ -825,20 +825,25 @@ export default function AdminDashboard() {
                         </div>
                         
                         {(() => {
-                          const clientAssignments = assignments.filter((assignment: any) => assignment.clientId === selectedClient.id);
-                          const filteredAssignments = clientAssignments.filter((assignment: any) => {
+                          // Use clientWorkers (the actual workers for this client) instead of assignments
+                          const workersBeingProcessed = clientWorkers.filter((worker: any) => 
+                            worker.status !== 'completed' && worker.status !== 'archived'
+                          );
+                          
+                          const filteredWorkers = workersBeingProcessed.filter((worker: any) => {
                             const matchesSearch = !workerSearchTerm || 
-                              assignment.worker?.fullName?.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
-                              assignment.worker?.nationality?.toLowerCase().includes(workerSearchTerm.toLowerCase());
+                              worker.firstName?.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
+                              worker.lastName?.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
+                              worker.nationality?.toLowerCase().includes(workerSearchTerm.toLowerCase());
                             
                             const matchesWorkerFilter = workerFilter === "all" || 
-                              (assignment.currentStage || "pending").toLowerCase() === workerFilter.toLowerCase();
+                              (worker.status || "pending").toLowerCase() === workerFilter.toLowerCase();
                             
                             return matchesSearch && matchesWorkerFilter;
                           });
 
-                          if (clientAssignments.length === 0) {
-                            // No assignments at all for this client
+                          if (workersBeingProcessed.length === 0) {
+                            // No workers being processed for this client
                             return (
                               <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                                 <i className="fas fa-users text-gray-400 text-3xl mb-4"></i>
@@ -851,82 +856,46 @@ export default function AdminDashboard() {
                             );
                           }
 
-                          return filteredAssignments.length === 0 ? (
+                          return filteredWorkers.length === 0 ? (
                             <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                               <i className="fas fa-users text-gray-400 text-3xl mb-4"></i>
                               <p className="text-gray-600">No workers match your filters</p>
                           </div>
                           ) : (
                             <div className="space-y-4">
-                              {filteredAssignments.map((assignment: any, index: number) => (
-                              <div key={assignment.id || index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                              {filteredWorkers.map((worker: any, index: number) => (
+                              <div key={worker.id || index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                                 <div className="flex items-start justify-between">
                                   <div className="flex items-center space-x-4">
                                     <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                                       <i className="fas fa-user text-green-600 text-lg"></i>
                                     </div>
                                     <div>
-                                      <h5 className="font-semibold text-gray-900">{assignment.worker?.fullName || 'Unknown Worker'}</h5>
-                                      <p className="text-sm text-gray-600">{assignment.worker?.nationality || 'Nationality not specified'}</p>
+                                      <h5 className="font-semibold text-gray-900">{worker.firstName} {worker.lastName}</h5>
+                                      <p className="text-sm text-gray-600">{worker.nationality || 'Nationality not specified'}</p>
                                       <div className="flex items-center mt-2 space-x-4 text-xs text-gray-500">
                                         <span>
                                           <i className="fas fa-calendar mr-1"></i>
-                                          Started: {new Date(assignment.createdAt || Date.now()).toLocaleDateString()}
+                                          Started: {new Date(worker.createdAt || Date.now()).toLocaleDateString()}
                                         </span>
                                         <span>
-                                          <i className="fas fa-briefcase mr-1"></i>
-                                          {assignment.jobTitle || 'Job Title Not Specified'}
+                                          <i className="fas fa-envelope mr-1"></i>
+                                          {worker.email || 'Email not provided'}
                                         </span>
                                       </div>
                                     </div>
                                   </div>
                                   <div className="text-right">
                                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                      assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                      assignment.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                                      assignment.status === 'pending' ? 'bg-orange-100 text-orange-800' :
-                                      'bg-gray-100 text-gray-800'
+                                      worker.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                      worker.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                                      worker.status === 'blocked' ? 'bg-red-100 text-red-800' :
+                                      'bg-yellow-100 text-yellow-800'
                                     }`}>
-                                      {assignment.status?.replace('-', ' ')?.toUpperCase() || 'UNKNOWN'}
+                                      {worker.status || 'Pending'}
                                     </span>
                                   </div>
                                 </div>
-                                
-                                {/* Process Status Bar */}
-                                <div className="mt-4 bg-gray-50 rounded-lg p-3">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium text-gray-700">{t('common.processProgress') || 'Process Progress'}</span>
-                                    <span className="text-xs text-gray-500">
-                                      {assignment.currentStage || 'Stage not specified'}
-                                    </span>
-                                  </div>
-                                  <div className="flex space-x-2">
-                                    {[
-                                      { stage: 'ajofm', label: 'AJOFM', status: assignment.ajofmStatus || 'pending' },
-                                      { stage: 'work-permit', label: 'Work Permit', status: assignment.workPermitStatus || 'pending' },
-                                      { stage: 'visa', label: 'Visa', status: assignment.visaStatus || 'pending' },
-                                      { stage: 'residence', label: 'Residence', status: assignment.residenceStatus || 'pending' }
-                                    ].map((step, stepIndex) => (
-                                      <div key={step.stage} className="flex-1">
-                                        <div className={`h-2 rounded-full ${
-                                          step.status === 'completed' ? 'bg-green-500' :
-                                          step.status === 'in-progress' ? 'bg-blue-500' :
-                                          step.status === 'pending' ? 'bg-orange-500' :
-                                          'bg-gray-300'
-                                        }`}></div>
-                                        <p className="text-xs mt-1 text-center text-gray-600">{step.label}</p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-
-                                {/* Pending Documents Summary */}
-                                {assignment.pendingDocuments && assignment.pendingDocuments.length > 0 && (
-                                  <div className="mt-3 flex items-center text-sm text-orange-600">
-                                    <i className="fas fa-exclamation-triangle mr-2"></i>
-                                    {assignment.pendingDocuments.length} {t('common.pendingDocuments') || 'pending documents'}
-                                  </div>
-                                )}
                               </div>
                               ))}
                             </div>
