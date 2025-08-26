@@ -220,9 +220,12 @@ export default function AdminDashboard() {
           }
         />
 
-        <div className="p-4 lg:p-8 max-w-full overflow-x-hidden">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-8">
+        <div className="flex-1 overflow-auto">
+          <div className="p-4 lg:p-8 max-w-full overflow-x-hidden">
+            {activeSection === "overview" && (
+              <>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-8">
             <Card data-testid="card-total-clients">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -1217,8 +1220,170 @@ export default function AdminDashboard() {
               </CollapsibleContent>
             </Card>
           </Collapsible>
+                </>
+              )}
+
+              {/* Clients Section */}
+              {activeSection === "clients" && (
+                <div className="space-y-6">
+                  <Card>
+                    <CardContent className="p-6">
+                      {!showNewClientForm ? (
+                        <div className="space-y-4">
+                          {clientsLoading ? (
+                            <div className="text-center py-8">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                            </div>
+                          ) : clients.length === 0 ? (
+                            <div className="text-center py-8">
+                              <i className="fas fa-building text-gray-400 text-3xl mb-4"></i>
+                              <p className="text-secondary">No clients found</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {clients.map((client: any) => (
+                                <div 
+                                  key={client.id}
+                                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                                  onClick={() => setSelectedClient(client)}
+                                  data-testid={`client-${client.id}`}
+                                >
+                                  <div className="flex items-center space-x-4">
+                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                      <i className="fas fa-building text-primary"></i>
+                                    </div>
+                                    <div>
+                                      <p className="font-medium">{client.legalName}</p>
+                                      <p className="text-sm text-secondary">CUI: {client.cui}</p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-sm font-medium">{client.activeWorkers || 0} workers</p>
+                                    <p className="text-xs text-secondary">{client.status}</p>
+                                    <ChevronRight className="h-4 w-4 text-gray-400 mt-1" />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div>Client form would go here</div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Workers Section */}
+              {activeSection === "workers" && (
+                <div className="space-y-6">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="text-center py-8">
+                        <i className="fas fa-users text-gray-400 text-3xl mb-4"></i>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Workers Management</h3>
+                        <p className="text-secondary">Manage all workers across clients and track their immigration status</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Documents Section */}
+              {activeSection === "documents" && (
+                <div className="space-y-6">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="text-center py-8">
+                        <i className="fas fa-file-alt text-gray-400 text-3xl mb-4"></i>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Document Management</h3>
+                        <p className="text-secondary">Generate, upload, and track all immigration documents</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Reports Section */}
+              {activeSection === "reports" && (
+                <div className="space-y-6">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="text-center py-8">
+                        <i className="fas fa-chart-bar text-gray-400 text-3xl mb-4"></i>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Reports & Analytics</h3>
+                        <p className="text-secondary">View detailed reports on immigration workflows and performance</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Requirements Section */}
+              {activeSection === "requirements" && (
+                <div className="space-y-6">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="text-center py-8">
+                        <i className="fas fa-list-check text-gray-400 text-3xl mb-4"></i>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Requirements Management</h3>
+                        <p className="text-secondary">Configure workflow requirements and validation rules</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Reminders Section */}
+              {activeSection === "reminders" && (
+                <div className="space-y-6">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="text-center py-8">
+                        <i className="fas fa-bell text-gray-400 text-3xl mb-4"></i>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Reminders & Notifications</h3>
+                        <p className="text-secondary">Set up automated reminders for deadlines and important dates</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Audit Section */}
+              {activeSection === "audit" && (
+                <div className="space-y-6">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="text-center py-8">
+                        <i className="fas fa-history text-gray-400 text-3xl mb-4"></i>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Audit Logs</h3>
+                        <p className="text-secondary">Track all system activities and user actions for compliance</p>
+                      </div>
+                      {auditLogs.length > 0 && (
+                        <div className="mt-6 space-y-4">
+                          {auditLogs.slice(0, 10).map((log: any, index: number) => (
+                            <div key={log.id || index} className="flex items-start space-x-4 p-3 bg-gray-50 rounded-lg">
+                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i className="fas fa-info text-primary text-sm"></i>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-gray-900">{log.action}</p>
+                                <p className="text-xs text-secondary mt-1">
+                                  {new Date(log.createdAt).toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
   );
 }
