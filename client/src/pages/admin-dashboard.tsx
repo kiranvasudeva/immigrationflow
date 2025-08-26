@@ -84,7 +84,7 @@ export default function AdminDashboard() {
           actions={
             <div className="flex items-center space-x-4">
               <Input 
-                placeholder="Search clients, workers, CUI..." 
+                placeholder={t('common.searchPlaceholder') || 'Search clients, workers, CUI...'} 
                 className="w-80"
                 data-testid="input-global-search"
               />
@@ -171,11 +171,11 @@ export default function AdminDashboard() {
           <Card className="mb-8" data-testid="card-workflow-overview">
             <CardHeader className="border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <CardTitle>Workflow Overview</CardTitle>
+                <CardTitle>{t('common.workflowOverview') || 'Workflow Overview'}</CardTitle>
                 <div className="flex items-center space-x-3">
                   <Select>
                     <SelectTrigger className="w-32" data-testid="select-stage-filter">
-                      <SelectValue placeholder="All Stages" />
+                      <SelectValue placeholder={t('common.allStages') || 'All Stages'} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Stages</SelectItem>

@@ -125,8 +125,8 @@ export default function Landing() {
                 <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center mb-4">
                   <i className="fas fa-shield-alt text-white text-xl"></i>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">GDPR Compliant</h3>
-                <p className="text-secondary">EU data residency, comprehensive audit trails, and secure file storage with role-based access.</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('landing.features.gdprCompliant') || 'GDPR Compliant'}</h3>
+                <p className="text-secondary">{t('landing.features.gdprCompliantDesc') || 'EU data residency, comprehensive audit trails, and secure file storage with role-based access.'}</p>
               </CardContent>
             </Card>
 
@@ -135,8 +135,8 @@ export default function Landing() {
                 <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center mb-4">
                   <i className="fas fa-search text-white text-xl"></i>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Advanced Search</h3>
-                <p className="text-secondary">Global search by client, worker, CUI, passport. Filters for overdue, expiring documents, and stages.</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('landing.features.advancedSearch') || 'Advanced Search'}</h3>
+                <p className="text-secondary">{t('landing.features.advancedSearchDesc') || 'Global search by client, worker, CUI, passport. Filters for overdue, expiring documents, and stages.'}</p>
               </CardContent>
             </Card>
           </div>
@@ -149,8 +149,8 @@ export default function Landing() {
           <DialogHeader>
             <div className="text-center mb-4">
               <i className="fas fa-passport text-primary text-3xl mb-4"></i>
-              <DialogTitle className="text-2xl font-bold text-gray-900">Access ImmigrationFlow</DialogTitle>
-              <p className="text-secondary mt-2">Sign in to your account</p>
+              <DialogTitle className="text-2xl font-bold text-gray-900">{t('modal.login.title') || 'Access ImmigrationFlow'}</DialogTitle>
+              <p className="text-secondary mt-2">{t('modal.login.subtitle') || 'Sign in to your account'}</p>
             </div>
           </DialogHeader>
 
@@ -159,10 +159,10 @@ export default function Landing() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <i className="fas fa-user-shield text-blue-600"></i>
-                  <h4 className="font-semibold text-blue-900">For Administrators</h4>
+                  <h4 className="font-semibold text-blue-900">{t('modal.login.adminTitle') || 'For Administrators'}</h4>
                 </div>
                 <p className="text-blue-700 text-sm mb-3">
-                  If you're new, signing up will automatically give you admin access to manage your immigration workflows.
+                  {t('modal.login.adminDesc') || "If you're new, signing up will automatically give you admin access to manage your immigration workflows."}
                 </p>
                 <Button 
                   onClick={handleLogin} 
@@ -170,17 +170,17 @@ export default function Landing() {
                   data-testid="button-admin-login"
                 >
                   <i className="fas fa-sign-in-alt mr-2"></i>
-                  Admin Login / Register
+                  {t('modal.login.adminButton') || 'Admin Login / Register'}
                 </Button>
               </div>
 
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <i className="fas fa-user-tie text-green-600"></i>
-                  <h4 className="font-semibold text-green-900">For Workers</h4>
+                  <h4 className="font-semibold text-green-900">{t('modal.login.workerTitle') || 'For Workers'}</h4>
                 </div>
                 <p className="text-green-700 text-sm mb-3">
-                  If you're a worker, you need an invitation link from your administrator to access your documents and deadlines.
+                  {t('modal.login.workerDesc') || "If you have an invitation link from your employer, use it to access your immigration progress."}
                 </p>
                 <div className="text-center">
                   <p className="text-green-600 text-sm font-medium">
