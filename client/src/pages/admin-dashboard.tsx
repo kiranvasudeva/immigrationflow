@@ -168,34 +168,34 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <Sidebar userRole="ADMIN" onSectionChange={setActiveSection} />
+      <Sidebar userRole="ADMIN" onSectionChange={setActiveSection} currentSection={selectedWorkerDetail ? 'overview' : activeSection} />
       
       <div className="flex-1 flex flex-col min-w-0">
         <Header 
           title={
             showNewClientForm 
-              ? (t('actions.newClient') || "New Client")
+              ? "New Client"
               : selectedClient 
                 ? selectedClient.companyName
                 : selectedWorkflowClient 
                   ? selectedWorkflowClient.companyName + " - Workers"
                   : selectedWorkerDetail
-                    ? selectedWorkerDetail.firstName + " " + selectedWorkerDetail.lastName + " - Workflow"
+                    ? "Admin Dashboard - " + selectedWorkerDetail.firstName + " " + selectedWorkerDetail.lastName
                     : activeSection === "clients"
-                      ? (t('nav.clients') || "Clients")
+                      ? "Clients"
                       : activeSection === "workers" 
-                        ? (t('nav.workers') || "Workers")
+                        ? "Workers"
                         : activeSection === "documents"
-                          ? (t('nav.documents') || "Documents") 
+                          ? "Documents" 
                           : activeSection === "reports"
-                            ? (t('nav.reports') || "Reports")
+                            ? "Reports"
                             : activeSection === "requirements"
-                              ? (t('nav.requirements') || "Requirements")
+                              ? "Requirements"
                               : activeSection === "reminders"
-                                ? (t('nav.reminders') || "Reminders")
+                                ? "Reminders"
                                 : activeSection === "audit"
-                                  ? (t('nav.auditLogs') || "Audit Logs")
-                                  : (t('dashboard.admin.title') || "Admin Dashboard")
+                                  ? "Audit Logs"
+                                  : "Admin Dashboard"
           }
           subtitle={
             showNewClientForm
@@ -222,7 +222,7 @@ export default function AdminDashboard() {
                     className="shrink-0"
                     onClick={() => setShowNewClientForm(true)}
                   >
-                    <i className="fas fa-plus mr-2"></i>{t('action.newClient') || 'New Client'}
+                    <i className="fas fa-plus mr-2"></i>New Client
                   </Button>
                 )}
               </div>
