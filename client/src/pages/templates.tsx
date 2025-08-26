@@ -143,141 +143,145 @@ export default function TemplatesPage() {
 
   if (selectedTemplate || isCreating) {
     return (
-      <div className="container mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSelectedTemplate(null);
-              setIsCreating(false);
-            }}
-          >
-            ← Back to Templates
-          </Button>
+      <div className="min-h-screen bg-background">
+        <Sidebar userRole={user?.role || 'VIEWER'} />
+        
+        <div className="ml-64">
+          <div className="p-8">
+            <div className="flex items-center justify-between mb-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSelectedTemplate(null);
+                  setIsCreating(false);
+                }}
+              >
+                ← Back to Templates
+              </Button>
+            </div>
+            <TemplateBuilder
+              template={selectedTemplate?.template}
+              fields={selectedTemplate?.fields}
+              onSave={handleSave}
+            />
+          </div>
         </div>
-        <TemplateBuilder
-          template={selectedTemplate?.template}
-          fields={selectedTemplate?.fields}
-          onSave={handleSave}
-        />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Sidebar userRole={user?.role || 'VIEWER'} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Document Templates</h1>
-          <p className="text-gray-600 mt-2">
-            Create and manage document templates for Romanian immigration forms
-          </p>
-        </div>
-        <Button
-          onClick={() => setIsCreating(true)}
-          className="flex items-center space-x-2"
-          data-testid="button-create-template"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Create Template</span>
-        </Button>
-      </div>
-
-      {templatesLoading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {templates.length === 0 ? (
-            <div className="col-span-full">
-              <Card className="text-center py-12">
-                <CardContent>
-                  <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">No Templates Yet</h3>
-                  <p className="text-gray-600 mb-4">
-                    Create your first document template to get started with automated form generation.
-                  </p>
-                  <Button
-                    onClick={() => setIsCreating(true)}
-                    className="flex items-center space-x-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Create First Template</span>
-                  </Button>
-                </CardContent>
-              </Card>
+      
+      <div className="ml-64">
+        <Header 
+          title="Document Templates"
+          subtitle="Create and manage document templates for Romanian immigration forms"
+          actions={
+            <Button
+              onClick={() => setIsCreating(true)}
+              className="flex items-center space-x-2"
+              data-testid="button-create-template"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Create Template</span>
+            </Button>
+          }
+        />
+        
+        <div className="p-8">
+          {templatesLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
             </div>
           ) : (
-            templates.map((template: DocumentTemplate) => (
-              <Card key={template.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg">{template.name}</CardTitle>
-                    <div className="flex space-x-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {templates.length === 0 ? (
+                <div className="col-span-full">
+                  <Card className="text-center py-12">
+                    <CardContent>
+                      <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold mb-2">No Templates Yet</h3>
+                      <p className="text-gray-600 mb-4">
+                        Create your first document template to get started with automated form generation.
+                      </p>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(template)}
-                        className="h-8 w-8 p-0"
-                        data-testid={`button-edit-${template.id}`}
+                        onClick={() => setIsCreating(true)}
+                        className="flex items-center space-x-2"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Plus className="h-4 w-4" />
+                        <span>Create First Template</span>
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(template.id)}
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                        data-testid={`button-delete-${template.id}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {template.description || 'No description provided'}
-                  </p>
-                  
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <Badge variant="outline" className="capitalize">
-                      {template.type.toLowerCase()}
-                    </Badge>
-                    <Badge variant="outline" className="uppercase">
-                      {template.language}
-                    </Badge>
-                    {template.isActive ? (
-                      <Badge variant="default">Active</Badge>
-                    ) : (
-                      <Badge variant="secondary">Inactive</Badge>
-                    )}
-                  </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                templates.map((template: DocumentTemplate) => (
+                  <Card key={template.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-lg">{template.name}</CardTitle>
+                        <div className="flex space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(template)}
+                            className="h-8 w-8 p-0"
+                            data-testid={`button-edit-${template.id}`}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(template.id)}
+                            className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                            data-testid={`button-delete-${template.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {template.description || 'No description provided'}
+                      </p>
+                      
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <Badge variant="outline" className="capitalize">
+                          {template.type.toLowerCase()}
+                        </Badge>
+                        <Badge variant="outline" className="uppercase">
+                          {template.language}
+                        </Badge>
+                        {template.isActive ? (
+                          <Badge variant="default">Active</Badge>
+                        ) : (
+                          <Badge variant="secondary">Inactive</Badge>
+                        )}
+                      </div>
 
-                  <div className="flex items-center text-xs text-gray-500 mb-4">
-                    <Settings className="h-3 w-3 mr-1" />
-                    <span>
-                      {template.templateData && typeof template.templateData === 'object' && 'fields' in template.templateData
-                        ? (template.templateData.fields as any[])?.length || 0
-                        : 0} fields
-                    </span>
-                  </div>
+                      <div className="flex items-center text-xs text-gray-500 mb-4">
+                        <Settings className="h-3 w-3 mr-1" />
+                        <span>
+                          {template.templateData && typeof template.templateData === 'object' && 'fields' in template.templateData
+                            ? (template.templateData.fields as any[])?.length || 0
+                            : 0} fields
+                        </span>
+                      </div>
 
-                  <div className="text-xs text-gray-400">
-                    Created {new Date(template.createdAt).toLocaleDateString()}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                      <div className="text-xs text-gray-400">
+                        Created {new Date(template.createdAt).toLocaleDateString()}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
           )}
         </div>
-      )}
-        </main>
       </div>
     </div>
   );

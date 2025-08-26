@@ -138,47 +138,45 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Sidebar userRole={user?.role || 'VIEWER'} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Comprehensive analytics and reporting for immigration workflows
-          </p>
-        </div>
+      
+      <div className="ml-64">
+        <Header 
+          title="Analytics Dashboard"
+          subtitle="Comprehensive analytics and reporting for immigration workflows"
+          actions={
+            <div className="flex space-x-4">
+              <Select value={selectedClient} onValueChange={setSelectedClient}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="All Clients" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Clients</SelectItem>
+                  {clients.map((client: any) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.companyName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">7 Days</SelectItem>
+                  <SelectItem value="30">30 Days</SelectItem>
+                  <SelectItem value="90">90 Days</SelectItem>
+                  <SelectItem value="365">1 Year</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
+        />
         
-        <div className="flex space-x-4">
-          <Select value={selectedClient} onValueChange={setSelectedClient}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="All Clients" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Clients</SelectItem>
-              {clients.map((client: any) => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.companyName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">7 Days</SelectItem>
-              <SelectItem value="30">30 Days</SelectItem>
-              <SelectItem value="90">90 Days</SelectItem>
-              <SelectItem value="365">1 Year</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+        <div className="p-8 space-y-6">
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -368,7 +366,7 @@ export default function AnalyticsPage() {
           </div>
         </CardContent>
       </Card>
-        </main>
+        </div>
       </div>
     </div>
   );

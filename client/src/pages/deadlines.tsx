@@ -127,9 +127,10 @@ export default function DeadlinesPage() {
   });
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Sidebar userRole={user?.role || 'VIEWER'} />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      
+      <div className="ml-64">
         <Header />
         <main className="flex-1 overflow-y-auto p-6">
           <div className="flex justify-between items-center mb-6">
