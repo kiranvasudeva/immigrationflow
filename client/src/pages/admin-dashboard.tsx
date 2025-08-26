@@ -784,160 +784,32 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
-                      {/* Workers Being Processed */}
-                      <div>
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                          <h4 className="text-lg font-semibold flex items-center">
+                      {/* Quick Actions for Workers */}
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h4 className="text-lg font-semibold flex items-center mb-3">
+                          <i className="fas fa-users mr-2"></i>
+                          Workers Management
+                        </h4>
+                        <p className="text-gray-600 text-sm mb-4">
+                          Manage workers for {selectedClient.legalName}. Use the Workers & Workflow section for detailed worker management.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <Button 
+                            onClick={() => setActiveSection("workers")}
+                            className="flex-1 min-w-0"
+                            data-testid="button-view-workers"
+                          >
                             <i className="fas fa-users mr-2"></i>
-                            {t('common.workersBeingProcessed') || 'Workers Being Processed'} ({selectedClient.activeWorkers || 0})
-                          </h4>
-                          
-                          {/* Worker Filters */}
-                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                            <Input
-                              placeholder={t('form.placeholders.searchWorkers') || 'Search workers...'}
-                              value={workerSearchTerm}
-                              onChange={(e) => setWorkerSearchTerm(e.target.value)}
-                              className="w-full sm:w-64"
-                              data-testid="input-worker-search"
-                            />
-                            <Select value={workerFilter} onValueChange={setWorkerFilter}>
-                              <SelectTrigger className="w-full sm:w-40" data-testid="select-worker-filter">
-                                <SelectValue placeholder="Status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="all">All Workers</SelectItem>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
-                                <SelectItem value="blocked">Blocked</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setWorkerSearchTerm("");
-                                setWorkerFilter("all");
-                              }}
-                              data-testid="button-clear-worker-filters"
-                            >
-                              <i className="fas fa-times mr-1"></i>
-                              Clear
-                            </Button>
-                          </div>
+                            View Workers ({selectedClient.activeWorkers || 0})
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            data-testid="button-add-worker"
+                          >
+                            <i className="fas fa-plus mr-2"></i>
+                            Add Worker
+                          </Button>
                         </div>
-                        
-                        {(() => {
-                          // Use assignments (the actual workers for this client) instead of clientWorkers
-                          const workersBeingProcessed = assignments.filter((worker: any) => 
-                            worker.status !== 'completed' && worker.status !== 'archived'
-                          );
-                          
-                          const filteredWorkers = workersBeingProcessed.filter((worker: any) => {
-                            const matchesSearch = !workerSearchTerm || 
-                              worker.firstName?.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
-                              worker.lastName?.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
-                              worker.nationality?.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
-                              worker.workerName?.toLowerCase().includes(workerSearchTerm.toLowerCase());
-                            
-                            const matchesWorkerFilter = workerFilter === "all" || 
-                              (worker.status || "pending").toLowerCase() === workerFilter.toLowerCase();
-                            
-                            return matchesSearch && matchesWorkerFilter;
-                          });
-
-                          // Helper function to format status labels
-                          const getStatusLabel = (status: string) => {
-                            switch (status) {
-                              case 'NOT_STARTED': return 'Not Started';
-                              case 'AWAITING_UPLOAD': return 'Awaiting Upload';
-                              case 'SUBMITTED_BY_USER': return 'Submitted';
-                              case 'RECEIVED_BY_ADMIN': return 'Under Review';
-                              case 'ACCEPTED': return 'Accepted';
-                              case 'REJECTED': return 'Rejected';
-                              case 'completed': return 'Completed';
-                              case 'active': return 'In Progress';
-                              case 'blocked': return 'Blocked';
-                              default: return status || 'Pending';
-                            }
-                          };
-
-                          // Helper function to get status color
-                          const getStatusColor = (status: string) => {
-                            switch (status) {
-                              case 'ACCEPTED':
-                              case 'completed': return 'bg-green-100 text-green-800';
-                              case 'SUBMITTED_BY_USER':
-                              case 'RECEIVED_BY_ADMIN':
-                              case 'active': return 'bg-blue-100 text-blue-800';
-                              case 'AWAITING_UPLOAD': return 'bg-yellow-100 text-yellow-800';
-                              case 'REJECTED':
-                              case 'blocked': return 'bg-red-100 text-red-800';
-                              case 'NOT_STARTED':
-                              default: return 'bg-gray-100 text-gray-800';
-                            }
-                          };
-
-                          if (workersBeingProcessed.length === 0) {
-                            // No workers being processed for this client
-                            return (
-                              <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                                <i className="fas fa-users text-gray-400 text-3xl mb-4"></i>
-                                <p className="text-gray-600">{t('common.noWorkersProcessing') || 'No workers currently being processed'}</p>
-                                <Button className="mt-4" size="sm" data-testid="button-add-worker">
-                                  <i className="fas fa-plus mr-2"></i>
-                                  {t('actions.addWorker') || 'Add Worker'}
-                                </Button>
-                              </div>
-                            );
-                          }
-
-                          return filteredWorkers.length === 0 ? (
-                            <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                              <i className="fas fa-users text-gray-400 text-3xl mb-4"></i>
-                              <p className="text-gray-600">No workers match your filters</p>
-                          </div>
-                          ) : (
-                            <div className="space-y-4">
-                              {filteredWorkers.map((worker: any, index: number) => (
-                              <div key={worker.id || index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                                <div className="flex items-start justify-between">
-                                  <div className="flex items-center space-x-4">
-                                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                                      <i className="fas fa-user text-green-600 text-lg"></i>
-                                    </div>
-                                    <div>
-                                      <h5 className="font-semibold text-gray-900">
-                                        {worker.firstName && worker.lastName 
-                                          ? `${worker.firstName} ${worker.lastName}`
-                                          : worker.workerName || `Worker #${index + 1}`
-                                        }
-                                      </h5>
-                                      <p className="text-sm text-gray-600">{worker.nationality || 'Nationality pending'}</p>
-                                      <div className="flex items-center mt-2 space-x-4 text-xs text-gray-500">
-                                        <span>
-                                          <i className="fas fa-calendar mr-1"></i>
-                                          Started: {worker.startDate || worker.createdAt ? new Date(worker.startDate || worker.createdAt).toLocaleDateString() : 'Date pending'}
-                                        </span>
-                                        <span>
-                                          <i className="fas fa-envelope mr-1"></i>
-                                          {worker.email || worker.workerEmail || 'Contact info pending'}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(worker.status)}`}>
-                                      {getStatusLabel(worker.status)}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                              ))}
-                            </div>
-                          );
-                        })()}
                       </div>
                     </div>
                   )}
