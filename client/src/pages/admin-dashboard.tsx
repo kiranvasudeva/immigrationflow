@@ -965,6 +965,11 @@ export default function AdminDashboard() {
                       const clientWorkers = assignments.filter((worker: any) => 
                         worker.clientProfileId === selectedClient.id
                       );
+                      
+                      // Debug: Log the worker data structure
+                      if (clientWorkers.length > 0) {
+                        console.log('Full worker object:', JSON.stringify(clientWorkers[0], null, 2));
+                      }
 
                       if (clientWorkers.length === 0) {
                         return (
