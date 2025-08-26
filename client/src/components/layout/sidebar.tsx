@@ -100,7 +100,7 @@ export default function Sidebar({ userRole, onSectionChange, currentSection }: S
     <div className="h-full bg-surface border-r border-gray-200 flex flex-col">
       <div className="flex items-center h-16 px-6 border-b border-gray-200">
         <i className="fas fa-passport text-primary text-xl mr-3"></i>
-        <span className="font-bold text-lg text-gray-900">ImmigrationFlow</span>
+        <span className="font-bold text-lg text-gray-900 hidden lg:inline">ImmigrationFlow</span>
       </div>
       
       <nav className="flex-1 overflow-y-auto py-6">

@@ -109,11 +109,8 @@ export function MobileNavigation({ user, onLogout }: MobileNavigationProps) {
           </SheetContent>
         </Sheet>
 
-        {/* Spacer for centering */}
-        <div className="flex-1"></div>
-
         {/* Action Buttons */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 ml-auto">
           <Button variant="ghost" size="sm" data-testid="mobile-search-button">
             <Search className="h-4 w-4" />
           </Button>
