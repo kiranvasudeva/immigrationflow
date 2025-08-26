@@ -1,5 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import Sidebar from "@/components/layout/sidebar";
+import Header from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,13 +17,44 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 export default function AnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('30');
   const [selectedClient, setSelectedClient] = useState('all');
+  const { toast } = useToast();
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, isLoading, toast]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/dashboard/stats'],
+    enabled: isAuthenticated && !isLoading,
   });
 
   const { data: assignments = [], isLoading: assignmentsLoading } = useQuery({
     queryKey: ['/api/dashboard/assignments'],
+    enabled: isAuthenticated && !isLoading,
   });
 
   const { data: clients = [] } = useQuery({
@@ -103,7 +138,11 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar userRole={user?.role || 'VIEWER'} />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-y-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
@@ -329,6 +368,8 @@ export default function AnalyticsPage() {
           </div>
         </CardContent>
       </Card>
+        </main>
+      </div>
     </div>
   );
 }
