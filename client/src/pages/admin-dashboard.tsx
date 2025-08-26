@@ -961,15 +961,31 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     {(() => {
-                      // Filter workers by matching clientProfileId to selectedClient.id
-                      const clientWorkers = assignments.filter((worker: any) => 
-                        worker.clientProfileId === selectedClient.id
+                      // Filter assignments by matching clientProfileId to selectedClient.id
+                      const clientAssignments = assignments.filter((assignment: any) => 
+                        assignment.clientProfileId === selectedClient.id
                       );
                       
-                      // Debug: Log the worker data structure
-                      if (clientWorkers.length > 0) {
-                        console.log('Full worker object:', JSON.stringify(clientWorkers[0], null, 2));
-                      }
+                      // Group assignments by workerId to create worker entries
+                      const workersMap = new Map();
+                      clientAssignments.forEach((assignment: any) => {
+                        const workerId = assignment.workerId;
+                        if (!workersMap.has(workerId)) {
+                          workersMap.set(workerId, {
+                            id: workerId,
+                            assignments: [],
+                            status: assignment.status,
+                            createdAt: assignment.createdAt,
+                            // Try to get worker name from requirement title if available
+                            workerName: assignment.requirement?.title?.includes('Worker') 
+                              ? assignment.requirement.title.split('Worker')[0].trim() 
+                              : null
+                          });
+                        }
+                        workersMap.get(workerId).assignments.push(assignment);
+                      });
+                      
+                      const clientWorkers = Array.from(workersMap.values());
 
                       if (clientWorkers.length === 0) {
                         return (
@@ -1001,12 +1017,11 @@ export default function AdminDashboard() {
                                   </div>
                                   <div>
                                     <h5 className="font-semibold text-gray-900">
-                                      {worker.clientProfile?.worker?.firstName && worker.clientProfile?.worker?.lastName 
-                                        ? `${worker.clientProfile.worker.firstName} ${worker.clientProfile.worker.lastName}`
-                                        : worker.clientProfile?.worker?.name || `Worker #${index + 1}`
-                                      }
+                                      {worker.workerName || `Worker #${index + 1}`}
                                     </h5>
-                                    <p className="text-sm text-gray-600">{worker.clientProfile?.worker?.nationality || 'Nationality pending'}</p>
+                                    <p className="text-sm text-gray-600">
+                                      {worker.assignments?.length || 0} active assignments
+                                    </p>
                                     <p className="text-xs text-gray-500">
                                       Started: {worker.createdAt ? new Date(worker.createdAt).toLocaleDateString() : 'Date pending'}
                                     </p>
@@ -1048,10 +1063,7 @@ export default function AdminDashboard() {
                       <div>
                         <CardTitle className="flex items-center">
                           <i className="fas fa-clipboard-list mr-2"></i>
-                          Immigration Workflow: {selectedWorker.clientProfile?.worker?.firstName && selectedWorker.clientProfile?.worker?.lastName 
-                            ? `${selectedWorker.clientProfile.worker.firstName} ${selectedWorker.clientProfile.worker.lastName}`
-                            : selectedWorker.clientProfile?.worker?.name || 'Worker'
-                          }
+                          Immigration Workflow: {selectedWorker.workerName || 'Worker'}
                         </CardTitle>
                         <p className="text-sm text-gray-600 mt-1">
                           Client: {selectedClient.legalName}
@@ -1074,21 +1086,16 @@ export default function AdminDashboard() {
                         <h4 className="font-semibold text-gray-900 mb-3">Worker Information</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                           <div>
-                            <span className="text-gray-600">Name:</span>
-                            <span className="ml-2 font-medium">
-                              {selectedWorker.clientProfile?.worker?.firstName && selectedWorker.clientProfile?.worker?.lastName 
-                                ? `${selectedWorker.clientProfile.worker.firstName} ${selectedWorker.clientProfile.worker.lastName}`
-                                : selectedWorker.clientProfile?.worker?.name || 'Name pending'
-                              }
-                            </span>
+                            <span className="text-gray-600">Worker ID:</span>
+                            <span className="ml-2 font-medium text-xs">{selectedWorker.id}</span>
                           </div>
                           <div>
-                            <span className="text-gray-600">Nationality:</span>
-                            <span className="ml-2 font-medium">{selectedWorker.clientProfile?.worker?.nationality || 'Pending'}</span>
+                            <span className="text-gray-600">Active Assignments:</span>
+                            <span className="ml-2 font-medium">{selectedWorker.assignments?.length || 0}</span>
                           </div>
                           <div>
-                            <span className="text-gray-600">Email:</span>
-                            <span className="ml-2 font-medium">{selectedWorker.clientProfile?.worker?.email || 'Pending'}</span>
+                            <span className="text-gray-600">Current Status:</span>
+                            <span className="ml-2 font-medium">{selectedWorker.status || 'Pending'}</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Started:</span>
@@ -1277,11 +1284,6 @@ export default function AdminDashboard() {
                       </CardHeader>
                       <CardContent>
                         {(() => {
-                          // Filter workers by matching clientProfileId to selectedClient.id
-                          const clientWorkers = assignments.filter((worker: any) => 
-                            worker.clientProfileId === selectedClient.id
-                          );
-
                           if (clientWorkers.length === 0) {
                             return (
                               <div className="text-center py-8">
@@ -1312,14 +1314,13 @@ export default function AdminDashboard() {
                                       </div>
                                       <div>
                                         <h5 className="font-semibold text-gray-900">
-                                          {worker.firstName && worker.lastName 
-                                            ? `${worker.firstName} ${worker.lastName}`
-                                            : worker.workerName || `Worker #${index + 1}`
-                                          }
+                                          {worker.workerName || `Worker #${index + 1}`}
                                         </h5>
-                                        <p className="text-sm text-gray-600">{worker.nationality || 'Nationality pending'}</p>
+                                        <p className="text-sm text-gray-600">
+                                          {worker.assignments?.length || 0} active assignments
+                                        </p>
                                         <p className="text-xs text-gray-500">
-                                          Started: {worker.startDate || worker.createdAt ? new Date(worker.startDate || worker.createdAt).toLocaleDateString() : 'Date pending'}
+                                          Started: {worker.createdAt ? new Date(worker.createdAt).toLocaleDateString() : 'Date pending'}
                                         </p>
                                       </div>
                                     </div>
