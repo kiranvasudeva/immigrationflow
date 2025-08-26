@@ -89,6 +89,13 @@ export default function ClientProfile() {
     console.log('Query should be enabled for clientId:', clientId);
   }
 
+  // Additional debugging for workers display
+  console.log('Worker display check:', {
+    hasWorkers: workers && Array.isArray(workers),
+    workerCount: workers ? workers.length : 0,
+    showingWorkers: workers && Array.isArray(workers) && workers.length > 0
+  });
+
   // Update client mutation
   const updateClientMutation = useMutation({
     mutationFn: async (data: any) => {
