@@ -8,6 +8,19 @@ export function DummyDataAlert() {
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
+  // Set CSS variable for alert height
+  useEffect(() => {
+    if (isVisible) {
+      document.documentElement.style.setProperty('--alert-height', '64px');
+    } else {
+      document.documentElement.style.setProperty('--alert-height', '0px');
+    }
+    
+    return () => {
+      document.documentElement.style.setProperty('--alert-height', '0px');
+    };
+  }, [isVisible]);
+
   // Check if dummy data alert should be shown
   useEffect(() => {
     const alertDismissed = localStorage.getItem('dummyDataAlertDismissed');
@@ -45,7 +58,7 @@ export function DummyDataAlert() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50">
+    <div className="fixed top-0 left-0 right-0 z-[60]">
       <AlertBanner
         message="📋 Demo Mode: This system contains test data prefixed with 'Test' to demonstrate functionality. You can use this sample data to explore features, then delete it when ready to add your own data."
         type="info"
