@@ -77,7 +77,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background">
       <Sidebar userRole="ADMIN" />
       
-      <div className="ml-64">
+      <div className="lg:ml-64">
         <Header 
           title={t('dashboard.admin.title') || "Admin Dashboard"}
           subtitle={t('dashboard.admin.subtitle') || "Global workflow management and oversight"}
