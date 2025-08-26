@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -34,6 +35,7 @@ const SortableField = ({ field, onUpdate, onDelete }: {
   onUpdate: (id: string, updates: Partial<FieldConfig>) => void;
   onDelete: (id: string) => void;
 }) => {
+  const { t } = useLanguage();
   const {
     attributes,
     listeners,
@@ -102,7 +104,7 @@ const SortableField = ({ field, onUpdate, onDelete }: {
               id={`${field.id}-label`}
               value={field.label}
               onChange={(e) => onUpdate(field.id, { label: e.target.value })}
-              placeholder="Field Label"
+              placeholder={t('form.placeholders.fieldLabel') || 'Field Label'}
             />
           </div>
 
@@ -112,7 +114,7 @@ const SortableField = ({ field, onUpdate, onDelete }: {
               id={`${field.id}-placeholder`}
               value={field.placeholder || ''}
               onChange={(e) => onUpdate(field.id, { placeholder: e.target.value })}
-              placeholder="Enter placeholder text"
+              placeholder={t('form.placeholders.placeholderText') || 'Enter placeholder text'}
             />
           </div>
 
@@ -147,6 +149,7 @@ const SortableField = ({ field, onUpdate, onDelete }: {
 };
 
 export function TemplateBuilder({ template, fields = [], onSave }: TemplateBuilderProps) {
+  const { t } = useLanguage();
   const [templateData, setTemplateData] = useState({
     name: template?.name || '',
     description: template?.description || '',
@@ -266,7 +269,7 @@ export function TemplateBuilder({ template, fields = [], onSave }: TemplateBuild
                   id="template-name"
                   value={templateData.name}
                   onChange={(e) => setTemplateData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter template name"
+                  placeholder={t('form.placeholders.templateName') || 'Enter template name'}
                 />
               </div>
 
@@ -276,7 +279,7 @@ export function TemplateBuilder({ template, fields = [], onSave }: TemplateBuild
                   id="template-description"
                   value={templateData.description}
                   onChange={(e) => setTemplateData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter template description"
+                  placeholder={t('form.placeholders.templateDesc') || 'Enter template description'}
                   rows={3}
                 />
               </div>
@@ -399,7 +402,7 @@ export function TemplateBuilder({ template, fields = [], onSave }: TemplateBuild
                     {field.fieldType === 'DROPDOWN' && (
                       <Select disabled>
                         <SelectTrigger>
-                          <SelectValue placeholder={field.placeholder || 'Select an option'} />
+                          <SelectValue placeholder={field.placeholder || t('form.placeholders.selectOption') || 'Select an option'} />
                         </SelectTrigger>
                         <SelectContent>
                           {field.options?.map((option, index) => (

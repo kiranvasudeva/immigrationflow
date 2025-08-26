@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { insertClientProfileSchema } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ interface ClientFormProps {
 }
 
 export default function ClientForm({ onSubmit, isLoading = false, initialData }: ClientFormProps) {
+  const { t } = useLanguage();
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientFormSchema),
     defaultValues: {
@@ -44,7 +46,7 @@ export default function ClientForm({ onSubmit, isLoading = false, initialData }:
               <FormControl>
                 <Input 
                   {...field} 
-                  placeholder="Enter company name"
+                  placeholder={t('form.placeholders.companyName') || 'Enter company name'}
                   data-testid="input-company-name"
                 />
               </FormControl>
@@ -100,7 +102,7 @@ export default function ClientForm({ onSubmit, isLoading = false, initialData }:
               <FormControl>
                 <Textarea 
                   {...field} 
-                  placeholder="Enter company address"
+                  placeholder={t('form.placeholders.companyAddress') || 'Enter company address'}
                   className="min-h-20"
                   data-testid="textarea-address"
                 />

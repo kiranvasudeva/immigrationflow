@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
@@ -15,6 +16,7 @@ import { apiRequest } from '@/lib/queryClient';
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 export default function AnalyticsPage() {
+  const { t } = useLanguage();
   const [selectedPeriod, setSelectedPeriod] = useState('30');
   const [selectedClient, setSelectedClient] = useState('all');
   const { toast } = useToast();
@@ -149,7 +151,7 @@ export default function AnalyticsPage() {
             <div className="flex space-x-4">
               <Select value={selectedClient} onValueChange={setSelectedClient}>
                 <SelectTrigger className="w-48">
-                  <SelectValue placeholder="All Clients" />
+                  <SelectValue placeholder={t('analytics.placeholders.allClients') || 'All Clients'} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Clients</SelectItem>
@@ -163,7 +165,7 @@ export default function AnalyticsPage() {
               
               <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
                 <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Period" />
+                  <SelectValue placeholder={t('analytics.placeholders.period') || 'Period'} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="7">7 Days</SelectItem>

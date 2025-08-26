@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { insertWorkerSchema } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ interface WorkerFormProps {
 }
 
 export default function WorkerForm({ onSubmit, isLoading = false, initialData, clientProfileId }: WorkerFormProps) {
+  const { t } = useLanguage();
   const form = useForm<WorkerFormData>({
     resolver: zodResolver(workerFormSchema),
     defaultValues: {
@@ -48,7 +50,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
                 <FormControl>
                   <Input 
                     {...field} 
-                    placeholder="Enter first name"
+                    placeholder={t('form.placeholders.firstName') || 'Enter first name'}
                     data-testid="input-first-name"
                   />
                 </FormControl>
@@ -66,7 +68,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
                 <FormControl>
                   <Input 
                     {...field} 
-                    placeholder="Enter last name"
+                    placeholder={t('form.placeholders.lastName') || 'Enter last name'}
                     data-testid="input-last-name"
                   />
                 </FormControl>
@@ -86,7 +88,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
                 <FormControl>
                   <Input 
                     {...field} 
-                    placeholder="USA"
+                    placeholder={t('form.placeholders.nationality') || 'USA'}
                     data-testid="input-nationality"
                   />
                 </FormControl>
