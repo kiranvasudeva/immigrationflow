@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight, Filter } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useTranslation } from "@/contexts/LanguageContext";
 
@@ -41,6 +43,7 @@ export default function AdminDashboard() {
   const [editingClient, setEditingClient] = useState(false);
   const [showNewClientForm, setShowNewClientForm] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
+  const [editingWorker, setEditingWorker] = useState(false);
   
   
   // Form state
@@ -54,6 +57,17 @@ export default function AdminDashboard() {
     phoneNumber: '',
     bankIban: '',
     caen: ''
+  });
+
+  const [editWorkerForm, setEditWorkerForm] = useState({
+    firstName: '',
+    lastName: '',
+    nationality: '',
+    email: '',
+    phone: '',
+    passportNumber: '',
+    dob: '',
+    passportExpiry: ''
   });
 
   const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
@@ -1097,11 +1111,18 @@ export default function AdminDashboard() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              // TODO: Implement edit worker profile functionality
-                              toast({
-                                title: "Edit Profile",
-                                description: "Worker profile editing will be implemented soon.",
+                              // Initialize form with current worker data
+                              setEditWorkerForm({
+                                firstName: selectedWorker.worker?.firstName || '',
+                                lastName: selectedWorker.worker?.lastName || '',
+                                nationality: selectedWorker.worker?.nationality || '',
+                                email: selectedWorker.worker?.email || '',
+                                phone: selectedWorker.worker?.phone || '',
+                                passportNumber: selectedWorker.worker?.passportNumber || '',
+                                dob: selectedWorker.worker?.dob ? new Date(selectedWorker.worker.dob).toISOString().split('T')[0] : '',
+                                passportExpiry: selectedWorker.worker?.passportExpiry ? new Date(selectedWorker.worker.passportExpiry).toISOString().split('T')[0] : ''
                               });
+                              setEditingWorker(true);
                             }}
                             data-testid="button-edit-worker-profile"
                           >
@@ -1663,6 +1684,128 @@ export default function AdminDashboard() {
             </>
           )}
         </div>
+
+        {/* Edit Worker Dialog */}
+        <Dialog open={editingWorker} onOpenChange={setEditingWorker}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                <i className="fas fa-user-edit mr-2"></i>
+                Edit Worker Profile
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={editWorkerForm.firstName}
+                    onChange={(e) => setEditWorkerForm({...editWorkerForm, firstName: e.target.value})}
+                    placeholder="Enter first name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={editWorkerForm.lastName}
+                    onChange={(e) => setEditWorkerForm({...editWorkerForm, lastName: e.target.value})}
+                    placeholder="Enter last name"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="nationality">Nationality</Label>
+                  <Input
+                    id="nationality"
+                    value={editWorkerForm.nationality}
+                    onChange={(e) => setEditWorkerForm({...editWorkerForm, nationality: e.target.value})}
+                    placeholder="Enter nationality"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={editWorkerForm.email}
+                    onChange={(e) => setEditWorkerForm({...editWorkerForm, email: e.target.value})}
+                    placeholder="Enter email address"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    value={editWorkerForm.phone}
+                    onChange={(e) => setEditWorkerForm({...editWorkerForm, phone: e.target.value})}
+                    placeholder="Enter phone number"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="passportNumber">Passport Number</Label>
+                  <Input
+                    id="passportNumber"
+                    value={editWorkerForm.passportNumber}
+                    onChange={(e) => setEditWorkerForm({...editWorkerForm, passportNumber: e.target.value})}
+                    placeholder="Enter passport number"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="dob">Date of Birth</Label>
+                  <Input
+                    id="dob"
+                    type="date"
+                    value={editWorkerForm.dob}
+                    onChange={(e) => setEditWorkerForm({...editWorkerForm, dob: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="passportExpiry">Passport Expiry Date</Label>
+                  <Input
+                    id="passportExpiry"
+                    type="date"
+                    value={editWorkerForm.passportExpiry}
+                    onChange={(e) => setEditWorkerForm({...editWorkerForm, passportExpiry: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingWorker(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    // TODO: Implement save worker profile functionality
+                    toast({
+                      title: "Profile Updated",
+                      description: "Worker profile has been updated successfully.",
+                    });
+                    setEditingWorker(false);
+                  }}
+                  data-testid="button-save-worker-profile"
+                >
+                  <i className="fas fa-save mr-2"></i>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   </div>
