@@ -11,6 +11,8 @@ interface LanguageSelectorProps {
 export function LanguageSelector({ variant = 'select', className }: LanguageSelectorProps) {
   const { language: currentLanguage, changeLanguage: setLanguage, availableLanguages } = useTranslation();
   
+  console.log('LanguageSelector render:', { currentLanguage, availableLanguages });
+  
   const handleLanguageChange = async (language: string) => {
     console.log('Language selector changing to:', language);
     try {
@@ -39,13 +41,17 @@ export function LanguageSelector({ variant = 'select', className }: LanguageSele
 
   return (
     <Select value={currentLanguage} onValueChange={handleLanguageChange}>
-      <SelectTrigger className={`w-32 ${className}`} data-testid="language-selector">
+      <SelectTrigger 
+        className={`w-32 ${className}`} 
+        data-testid="language-selector"
+        onClick={() => console.log('Language selector clicked')}
+      >
         <Globe className="h-4 w-4 mr-2" />
-        <SelectValue />
+        <SelectValue placeholder="Language" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="z-[9999]">
         {availableLanguages.map(({ code, name }) => (
-          <SelectItem key={code} value={code}>
+          <SelectItem key={code} value={code} onClick={() => console.log('Language item clicked:', code, name)}>
             {name}
           </SelectItem>
         ))}
