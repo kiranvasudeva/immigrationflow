@@ -913,6 +913,297 @@ export default function AdminDashboard() {
               </>
             )}
 
+          {/* Workers Section - Available for both mobile and desktop */}
+          {activeSection === "workers" && (
+            <div className="space-y-6">
+              {!selectedClient ? (
+                // Step 1: Show message to select a client first
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center py-8">
+                      <i className="fas fa-users text-gray-400 text-3xl mb-4"></i>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Workers & Workflow Management</h3>
+                      <p className="text-gray-600 mb-4">Select a client from the Clients section to view their workers and workflow</p>
+                      <Button 
+                        onClick={() => setActiveSection("clients")}
+                        className="mt-2"
+                        data-testid="button-go-to-clients"
+                      >
+                        <i className="fas fa-building mr-2"></i>
+                        Go to Clients
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : !selectedWorker ? (
+                // Step 2: Show workers list for selected client
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center">
+                          <i className="fas fa-users mr-2"></i>
+                          Workers for {selectedClient.legalName}
+                        </CardTitle>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Click on a worker to view their immigration workflow
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => setSelectedClient(null)}
+                        data-testid="button-back-to-client-selection"
+                      >
+                        <i className="fas fa-arrow-left mr-2"></i>
+                        Back to Client Selection
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const clientWorkers = assignments.filter((worker: any) => 
+                        worker.clientId === selectedClient.id
+                      );
+
+                      if (clientWorkers.length === 0) {
+                        return (
+                          <div className="text-center py-8">
+                            <i className="fas fa-user-plus text-gray-400 text-3xl mb-4"></i>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">No Workers Found</h3>
+                            <p className="text-gray-600 mb-4">This client doesn't have any workers assigned yet.</p>
+                            <Button data-testid="button-add-first-worker">
+                              <i className="fas fa-plus mr-2"></i>
+                              Add First Worker
+                            </Button>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-3">
+                          {clientWorkers.map((worker: any, index: number) => (
+                            <div 
+                              key={worker.id || index}
+                              className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                              onClick={() => setSelectedWorker(worker)}
+                              data-testid={`worker-${index}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-4">
+                                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i className="fas fa-user text-blue-600 text-lg"></i>
+                                  </div>
+                                  <div>
+                                    <h5 className="font-semibold text-gray-900">
+                                      {worker.firstName && worker.lastName 
+                                        ? `${worker.firstName} ${worker.lastName}`
+                                        : worker.workerName || `Worker #${index + 1}`
+                                      }
+                                    </h5>
+                                    <p className="text-sm text-gray-600">{worker.nationality || 'Nationality pending'}</p>
+                                    <p className="text-xs text-gray-500">
+                                      Started: {worker.startDate || worker.createdAt ? new Date(worker.startDate || worker.createdAt).toLocaleDateString() : 'Date pending'}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                    worker.status === 'ACCEPTED' || worker.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                    worker.status === 'SUBMITTED_BY_USER' || worker.status === 'RECEIVED_BY_ADMIN' || worker.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                                    worker.status === 'AWAITING_UPLOAD' ? 'bg-yellow-100 text-yellow-800' :
+                                    worker.status === 'REJECTED' || worker.status === 'blocked' ? 'bg-red-100 text-red-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {worker.status === 'NOT_STARTED' ? 'Not Started' :
+                                     worker.status === 'AWAITING_UPLOAD' ? 'Awaiting Upload' :
+                                     worker.status === 'SUBMITTED_BY_USER' ? 'Submitted' :
+                                     worker.status === 'RECEIVED_BY_ADMIN' ? 'Under Review' :
+                                     worker.status === 'ACCEPTED' ? 'Accepted' :
+                                     worker.status === 'REJECTED' ? 'Rejected' :
+                                     worker.status || 'Pending'}
+                                  </span>
+                                  <div className="mt-1">
+                                    <i className="fas fa-chevron-right text-gray-400"></i>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              ) : (
+                // Step 3: Show detailed workflow for selected worker
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center">
+                          <i className="fas fa-clipboard-list mr-2"></i>
+                          Immigration Workflow: {selectedWorker.firstName && selectedWorker.lastName 
+                            ? `${selectedWorker.firstName} ${selectedWorker.lastName}`
+                            : selectedWorker.workerName || 'Worker'
+                          }
+                        </CardTitle>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Client: {selectedClient.legalName}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => setSelectedWorker(null)}
+                        data-testid="button-back-to-workers-list"
+                      >
+                        <i className="fas fa-arrow-left mr-2"></i>
+                        Back to Workers List
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {/* Worker Information */}
+                      <div className="border rounded-lg p-4 bg-gray-50">
+                        <h4 className="font-semibold text-gray-900 mb-3">Worker Information</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Name:</span>
+                            <span className="ml-2 font-medium">
+                              {selectedWorker.firstName && selectedWorker.lastName 
+                                ? `${selectedWorker.firstName} ${selectedWorker.lastName}`
+                                : selectedWorker.workerName || 'Name pending'
+                              }
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Nationality:</span>
+                            <span className="ml-2 font-medium">{selectedWorker.nationality || 'Pending'}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Email:</span>
+                            <span className="ml-2 font-medium">{selectedWorker.email || selectedWorker.workerEmail || 'Pending'}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Started:</span>
+                            <span className="ml-2 font-medium">
+                              {selectedWorker.startDate || selectedWorker.createdAt 
+                                ? new Date(selectedWorker.startDate || selectedWorker.createdAt).toLocaleDateString()
+                                : 'Date pending'
+                              }
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Workflow Status */}
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-4">Immigration Process Status</h4>
+                        <div className="space-y-4">
+                          {/* AJOFM (Labor Market Test) */}
+                          <div className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                selectedWorker.ajofmStatus === 'completed' || selectedWorker.ajofmStatus === 'approved' 
+                                  ? 'bg-green-100 text-green-600' 
+                                  : 'bg-gray-100 text-gray-600'
+                              }`}>
+                                <i className="fas fa-briefcase text-sm"></i>
+                              </div>
+                              <div>
+                                <h5 className="font-medium">AJOFM Labor Market Test</h5>
+                                <p className="text-sm text-gray-600">Romanian Employment Agency approval</p>
+                              </div>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              selectedWorker.ajofmStatus === 'completed' || selectedWorker.ajofmStatus === 'approved' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {selectedWorker.ajofmStatus === 'completed' || selectedWorker.ajofmStatus === 'approved' ? 'Completed' : 'Pending'}
+                            </span>
+                          </div>
+
+                          {/* IGI Work Permit */}
+                          <div className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                selectedWorker.igiStatus === 'completed' || selectedWorker.igiStatus === 'approved' 
+                                  ? 'bg-green-100 text-green-600' 
+                                  : 'bg-gray-100 text-gray-600'
+                              }`}>
+                                <i className="fas fa-id-card text-sm"></i>
+                              </div>
+                              <div>
+                                <h5 className="font-medium">IGI Work Permit</h5>
+                                <p className="text-sm text-gray-600">Romanian Immigration Office work authorization</p>
+                              </div>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              selectedWorker.igiStatus === 'completed' || selectedWorker.igiStatus === 'approved' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {selectedWorker.igiStatus === 'completed' || selectedWorker.igiStatus === 'approved' ? 'Completed' : 'Pending'}
+                            </span>
+                          </div>
+
+                          {/* Consulate Visa */}
+                          <div className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                selectedWorker.visaStatus === 'completed' || selectedWorker.visaStatus === 'approved' 
+                                  ? 'bg-green-100 text-green-600' 
+                                  : 'bg-gray-100 text-gray-600'
+                              }`}>
+                                <i className="fas fa-passport text-sm"></i>
+                              </div>
+                              <div>
+                                <h5 className="font-medium">Consulate Visa Application</h5>
+                                <p className="text-sm text-gray-600">Romanian consulate visa processing</p>
+                              </div>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              selectedWorker.visaStatus === 'completed' || selectedWorker.visaStatus === 'approved' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {selectedWorker.visaStatus === 'completed' || selectedWorker.visaStatus === 'approved' ? 'Completed' : 'Pending'}
+                            </span>
+                          </div>
+
+                          {/* Residence Permit */}
+                          <div className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                selectedWorker.residenceStatus === 'completed' || selectedWorker.residenceStatus === 'approved' 
+                                  ? 'bg-green-100 text-green-600' 
+                                  : 'bg-gray-100 text-gray-600'
+                              }`}>
+                                <i className="fas fa-home text-sm"></i>
+                              </div>
+                              <div>
+                                <h5 className="font-medium">Residence Permit</h5>
+                                <p className="text-sm text-gray-600">Final residence permit in Romania</p>
+                              </div>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              selectedWorker.residenceStatus === 'completed' || selectedWorker.residenceStatus === 'approved' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {selectedWorker.residenceStatus === 'completed' || selectedWorker.residenceStatus === 'approved' ? 'Completed' : 'Pending'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
           {/* Mobile Navigation & Quick Action Sections */}
           {isMobile && (
             <>
