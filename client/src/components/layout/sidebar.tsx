@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button";
+import { Link, useLocation } from "wouter";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 interface SidebarProps {
   userRole: 'ADMIN' | 'OWNER' | 'WORKER' | 'VIEWER';
@@ -27,35 +29,45 @@ export default function Sidebar({ userRole }: SidebarProps) {
     }
   };
 
+  const [location] = useLocation();
+
   const getNavItems = () => {
+    const isActive = (href: string) => {
+      if (href === '/' && (location === '/' || location === '/dashboard')) return true;
+      return location.startsWith(href) && href !== '/';
+    };
+
     const commonItems = [
-      { icon: 'fas fa-chart-bar', label: 'Dashboard', active: true }
+      { icon: 'fas fa-chart-bar', label: 'Dashboard', href: '/dashboard', active: isActive('/dashboard') || isActive('/') }
     ];
 
     switch (userRole) {
       case 'ADMIN':
         return [
           ...commonItems,
-          { icon: 'fas fa-building', label: 'Clients' },
-          { icon: 'fas fa-users', label: 'Workers' },
-          { icon: 'fas fa-clipboard-list', label: 'Requirements' },
-          { icon: 'fas fa-bell', label: 'Reminders' },
-          { icon: 'fas fa-history', label: 'Audit Logs' }
+          { icon: 'fas fa-building', label: 'Clients', href: '/clients', active: isActive('/clients') },
+          { icon: 'fas fa-users', label: 'Workers', href: '/workers', active: isActive('/workers') },
+          { icon: 'fas fa-file-text', label: 'Templates', href: '/templates', active: isActive('/templates') },
+          { icon: 'fas fa-bar-chart', label: 'Analytics', href: '/analytics', active: isActive('/analytics') },
+          { icon: 'fas fa-clipboard-list', label: 'Requirements', href: '/requirements', active: isActive('/requirements') },
+          { icon: 'fas fa-bell', label: 'Reminders', href: '/reminders', active: isActive('/reminders') },
+          { icon: 'fas fa-history', label: 'Audit Logs', href: '/audit', active: isActive('/audit') }
         ];
       case 'OWNER':
         return [
           ...commonItems,
-          { icon: 'fas fa-building', label: 'Company Profile' },
-          { icon: 'fas fa-users', label: 'Workers' },
-          { icon: 'fas fa-file-alt', label: 'Documents' },
-          { icon: 'fas fa-euro-sign', label: 'Payments' }
+          { icon: 'fas fa-building', label: 'Company Profile', href: '/profile', active: isActive('/profile') },
+          { icon: 'fas fa-users', label: 'Workers', href: '/workers', active: isActive('/workers') },
+          { icon: 'fas fa-file-alt', label: 'Documents', href: '/documents', active: isActive('/documents') },
+          { icon: 'fas fa-bar-chart', label: 'Analytics', href: '/analytics', active: isActive('/analytics') },
+          { icon: 'fas fa-euro-sign', label: 'Payments', href: '/payments', active: isActive('/payments') }
         ];
       case 'WORKER':
         return [
-          { icon: 'fas fa-chart-bar', label: 'My Progress', active: true },
-          { icon: 'fas fa-file-alt', label: 'Documents' },
-          { icon: 'fas fa-calendar', label: 'Deadlines' },
-          { icon: 'fas fa-user', label: 'Profile' }
+          { icon: 'fas fa-chart-bar', label: 'My Progress', href: '/dashboard', active: isActive('/dashboard') || isActive('/') },
+          { icon: 'fas fa-file-alt', label: 'Documents', href: '/documents', active: isActive('/documents') },
+          { icon: 'fas fa-calendar', label: 'Deadlines', href: '/deadlines', active: isActive('/deadlines') },
+          { icon: 'fas fa-user', label: 'Profile', href: '/profile', active: isActive('/profile') }
         ];
       default:
         return commonItems;
@@ -88,23 +100,27 @@ export default function Sidebar({ userRole }: SidebarProps) {
 
         <div className="space-y-1 px-3">
           {getNavItems().map((item, index) => (
-            <Button
-              key={index}
-              variant={(item as any).active ? "default" : "ghost"}
-              className={`w-full justify-start ${
-                (item as any).active 
-                  ? 'bg-blue-50 text-primary hover:bg-blue-100' 
-                  : 'text-secondary hover:bg-gray-50'
-              }`}
-              data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
-            >
-              <i className={`${item.icon} mr-3`}></i>
-              {item.label}
-            </Button>
+            <Link key={index} href={(item as any).href || '/'}>
+              <Button
+                variant={(item as any).active ? "default" : "ghost"}
+                className={`w-full justify-start ${
+                  (item as any).active 
+                    ? 'bg-blue-50 text-primary hover:bg-blue-100' 
+                    : 'text-secondary hover:bg-gray-50'
+                }`}
+                data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+              >
+                <i className={`${item.icon} mr-3`}></i>
+                {item.label}
+              </Button>
+            </Link>
           ))}
         </div>
 
-        <div className="absolute bottom-4 left-0 right-0 px-3">
+        <div className="absolute bottom-4 left-0 right-0 px-3 space-y-2">
+          <div className="px-3">
+            <LanguageSelector className="w-full" />
+          </div>
           <Button 
             variant="ghost" 
             className="w-full justify-start text-secondary hover:bg-gray-50"
