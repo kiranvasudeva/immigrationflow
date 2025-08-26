@@ -1091,7 +1091,24 @@ export default function AdminDashboard() {
                     <div className="space-y-6">
                       {/* Worker Information */}
                       <div className="border rounded-lg p-4 bg-gray-50">
-                        <h4 className="font-semibold text-gray-900 mb-3">Worker Information</h4>
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-gray-900">Worker Information</h4>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              // TODO: Implement edit worker profile functionality
+                              toast({
+                                title: "Edit Profile",
+                                description: "Worker profile editing will be implemented soon.",
+                              });
+                            }}
+                            data-testid="button-edit-worker-profile"
+                          >
+                            <i className="fas fa-edit mr-2"></i>
+                            Edit Profile
+                          </Button>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                           <div>
                             <span className="text-gray-600">Name:</span>
