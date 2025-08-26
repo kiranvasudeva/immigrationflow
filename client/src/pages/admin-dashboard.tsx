@@ -77,6 +77,12 @@ export default function AdminDashboard() {
     enabled: isAuthenticated && !isLoading && user?.role === 'ADMIN',
   });
 
+  // Fetch workers for selected workflow client
+  const { data: clientWorkers = [] } = useQuery<any[]>({
+    queryKey: ["/api/clients", selectedWorkflowClient?.id, "workers"],
+    enabled: isAuthenticated && !isLoading && user?.role === 'ADMIN' && !!selectedWorkflowClient?.id,
+  });
+
   // Redirect if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -941,20 +947,18 @@ export default function AdminDashboard() {
                         {t('common.workerApplications') || 'Worker Applications'}
                       </h4>
 
-                      {assignments.filter((assignment: any) => assignment.clientId === selectedWorkflowClient.id).length === 0 ? (
+                      {clientWorkers.length === 0 ? (
                         <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                           <i className="fas fa-user-plus text-gray-400 text-3xl mb-4"></i>
                           <p className="text-gray-600">{t('common.noWorkersForClient') || 'No workers found for this client'}</p>
                         </div>
                       ) : (
                         <div className="grid gap-4">
-                          {assignments
-                            .filter((assignment: any) => assignment.clientId === selectedWorkflowClient.id)
-                            .map((assignment: any, index: number) => (
+                          {clientWorkers.map((worker: any, index: number) => (
                             <div 
-                              key={assignment.id || index} 
+                              key={worker.id || index} 
                               className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                              onClick={() => setSelectedWorkerDetail(assignment)}
+                              onClick={() => setSelectedWorkerDetail(worker)}
                               data-testid={`worker-application-${index}`}
                             >
                               <div className="flex items-center justify-between">
@@ -963,24 +967,19 @@ export default function AdminDashboard() {
                                     <i className="fas fa-user text-green-600"></i>
                                   </div>
                                   <div>
-                                    <h5 className="font-semibold text-gray-900">{assignment.worker?.fullName || 'Unknown Worker'}</h5>
+                                    <h5 className="font-semibold text-gray-900">{worker.firstName} {worker.lastName}</h5>
                                     <div className="flex items-center space-x-4 text-sm text-gray-600">
-                                      <span><i className="fas fa-flag mr-1"></i>{assignment.worker?.nationality || 'Unknown'}</span>
-                                      <span><i className="fas fa-briefcase mr-1"></i>{assignment.jobTitle || 'Job not specified'}</span>
+                                      <span><i className="fas fa-flag mr-1"></i>{worker.nationality}</span>
+                                      <span><i className="fas fa-envelope mr-1"></i>{worker.email}</span>
                                     </div>
                                   </div>
                                 </div>
                                 <div className="text-right">
-                                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                    assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                    assignment.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                                    assignment.status === 'pending' ? 'bg-orange-100 text-orange-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
-                                    {assignment.status?.replace('-', ' ')?.toUpperCase() || 'UNKNOWN'}
+                                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                    ACTIVE
                                   </span>
                                   <div className="mt-1 text-xs text-gray-500">
-                                    {assignment.currentStage || 'Stage not specified'}
+                                    Passport: {worker.passportNumber}
                                   </div>
                                 </div>
                               </div>
