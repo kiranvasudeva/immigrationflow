@@ -10,6 +10,12 @@ interface LanguageSelectorProps {
 
 export function LanguageSelector({ variant = 'select', className }: LanguageSelectorProps) {
   const { currentLanguage, setLanguage, t } = useLanguage();
+  
+  const handleLanguageChange = (language: string) => {
+    setLanguage(language as any);
+    // Mark as manually set to prevent role-based override
+    localStorage.setItem('immigration-app-language-manually-set', 'true');
+  };
 
   if (variant === 'button') {
     return (
@@ -26,7 +32,7 @@ export function LanguageSelector({ variant = 'select', className }: LanguageSele
   }
 
   return (
-    <Select value={currentLanguage} onValueChange={(value) => setLanguage(value as any)}>
+    <Select value={currentLanguage} onValueChange={handleLanguageChange}>
       <SelectTrigger className={`w-32 ${className}`} data-testid="language-selector">
         <Globe className="h-4 w-4 mr-2" />
         <SelectValue />

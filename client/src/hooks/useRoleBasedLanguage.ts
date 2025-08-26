@@ -14,7 +14,7 @@ export function useRoleBasedLanguage() {
     const manuallySet = localStorage.getItem('immigration-app-language-manually-set');
     
     // If user hasn't manually set language, set default based on role
-    if (!manuallySet) {
+    if (!manuallySet && !savedLanguage) {
       let defaultLanguage: 'ro' | 'en' = 'en';
       
       if (user.role === 'ADMIN' || user.role === 'OWNER') {

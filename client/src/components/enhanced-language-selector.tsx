@@ -9,18 +9,16 @@ interface EnhancedLanguageSelectorProps {
 
 export function EnhancedLanguageSelector({ variant = 'select', className }: EnhancedLanguageSelectorProps) {
   const { setLanguageManually } = useRoleBasedLanguage();
-  const { currentLanguage, setLanguage } = useLanguage();
+  const { currentLanguage } = useLanguage();
 
   const handleLanguageChange = (newLanguage: string) => {
     setLanguageManually(newLanguage);
   };
 
-  // Override the setLanguage function to mark as manually set
-  const languageContext = useLanguage();
-  const enhancedContext = {
-    ...languageContext,
-    setLanguage: handleLanguageChange
-  };
-
-  return <LanguageSelector variant={variant} className={className} />;
+  return (
+    <LanguageSelector 
+      variant={variant} 
+      className={className}
+    />
+  );
 }
