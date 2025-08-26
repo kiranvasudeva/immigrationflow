@@ -71,15 +71,15 @@ export default function DocumentsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ACCEPTED':
-        return <Badge variant="default" className="bg-green-500">Accepted</Badge>;
+        return <Badge variant="default" className="bg-green-500">{t('status.accepted') || 'Accepted'}</Badge>;
       case 'SUBMITTED':
-        return <Badge variant="default" className="bg-blue-500">Submitted</Badge>;
+        return <Badge variant="default" className="bg-blue-500">{t('status.submitted') || 'Submitted'}</Badge>;
       case 'PENDING':
-        return <Badge variant="secondary">Pending Upload</Badge>;
+        return <Badge variant="secondary">{t('status.pendingUpload') || 'Pending Upload'}</Badge>;
       case 'REJECTED':
-        return <Badge variant="destructive">Rejected</Badge>;
+        return <Badge variant="destructive">{t('status.rejected') || 'Rejected'}</Badge>;
       default:
-        return <Badge variant="outline">Unknown</Badge>;
+        return <Badge variant="outline">{t('status.unknown') || 'Unknown'}</Badge>;
     }
   };
 
@@ -92,7 +92,7 @@ export default function DocumentsPage() {
         <main className="flex-1 overflow-y-auto p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold">Documents</h1>
+              <h1 className="text-3xl font-bold">{t('pages.documents.title') || 'Documents'}</h1>
               <p className="text-gray-600 mt-2">
                 Manage and track your immigration documents
               </p>
@@ -102,7 +102,7 @@ export default function DocumentsPage() {
               data-testid="button-upload-document"
             >
               <Upload className="h-4 w-4" />
-              <span>Upload Document</span>
+              <span>{t('actions.uploadDocument') || 'Upload Document'}</span>
             </Button>
           </div>
 
@@ -160,13 +160,13 @@ export default function DocumentsPage() {
             <Card className="text-center py-12">
               <CardContent>
                 <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No Documents Yet</h3>
+                <h3 className="text-xl font-semibold mb-2">{t('pages.documents.noDocuments') || 'No Documents Yet'}</h3>
                 <p className="text-gray-600 mb-4">
                   Upload your first document to get started with your immigration process.
                 </p>
                 <Button className="flex items-center space-x-2">
                   <Upload className="h-4 w-4" />
-                  <span>Upload First Document</span>
+                  <span>{t('actions.uploadFirstDocument') || 'Upload First Document'}</span>
                 </Button>
               </CardContent>
             </Card>

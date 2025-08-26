@@ -126,7 +126,7 @@ const SortableField = ({ field, onUpdate, onDelete }: {
                 onChange={(e) => onUpdate(field.id, { 
                   options: e.target.value.split('\n').filter(Boolean) 
                 })}
-                placeholder="Option 1&#10;Option 2&#10;Option 3"
+                placeholder={t('form.placeholders.optionsOnePerLine') || 'Option 1&#10;Option 2&#10;Option 3'}
                 rows={4}
               />
             </div>

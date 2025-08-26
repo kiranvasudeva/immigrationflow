@@ -65,7 +65,7 @@ export default function ClientForm({ onSubmit, isLoading = false, initialData }:
                 <FormControl>
                   <Input 
                     {...field} 
-                    placeholder="RO12345678"
+                    placeholder={t('form.placeholders.cui') || 'RO12345678'}
                     data-testid="input-cui"
                   />
                 </FormControl>
@@ -142,7 +142,7 @@ export default function ClientForm({ onSubmit, isLoading = false, initialData }:
                   <Input 
                     {...field} 
                     value={field.value || ''}
-                    placeholder="J40/1234/2020"
+                    placeholder={t('form.placeholders.onrc') || 'J40/1234/2020'}
                     data-testid="input-onrc"
                   />
                 </FormControl>

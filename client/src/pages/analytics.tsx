@@ -145,8 +145,8 @@ export default function AnalyticsPage() {
       
       <div className="ml-64">
         <Header 
-          title="Analytics Dashboard"
-          subtitle="Comprehensive analytics and reporting for immigration workflows"
+          title={t('pages.analytics.title') || 'Analytics Dashboard'}
+          subtitle={t('pages.analytics.subtitle') || 'Comprehensive analytics and reporting for immigration workflows'}
           actions={
             <div className="flex space-x-4">
               <Select value={selectedClient} onValueChange={setSelectedClient}>
@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
                   <SelectValue placeholder={t('analytics.placeholders.allClients') || 'All Clients'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Clients</SelectItem>
+                  <SelectItem value="all">{t('analytics.options.allClients') || 'All Clients'}</SelectItem>
                   {clients.map((client: any) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.companyName}
@@ -168,10 +168,10 @@ export default function AnalyticsPage() {
                   <SelectValue placeholder={t('analytics.placeholders.period') || 'Period'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="7">7 Days</SelectItem>
-                  <SelectItem value="30">30 Days</SelectItem>
-                  <SelectItem value="90">90 Days</SelectItem>
-                  <SelectItem value="365">1 Year</SelectItem>
+                  <SelectItem value="7">{t('periods.7days') || '7 Days'}</SelectItem>
+                  <SelectItem value="30">{t('periods.30days') || '30 Days'}</SelectItem>
+                  <SelectItem value="90">{t('periods.90days') || '90 Days'}</SelectItem>
+                  <SelectItem value="365">{t('periods.1year') || '1 Year'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -184,7 +184,7 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('analytics.headers.totalClients') || 'Total Clients'}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -199,7 +199,7 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Workers</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('analytics.headers.activeWorkers') || 'Active Workers'}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -214,7 +214,7 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Actions</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('analytics.headers.pendingActions') || 'Pending Actions'}</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -247,7 +247,7 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Assignment Status Distribution</CardTitle>
+            <CardTitle>{t('analytics.headers.statusDistribution') || 'Assignment Status Distribution'}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -274,7 +274,7 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Stage Progress</CardTitle>
+            <CardTitle>{t('analytics.headers.stageProgress') || 'Stage Progress'}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -296,7 +296,7 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Progress Trend</CardTitle>
+            <CardTitle>{t('analytics.headers.monthlyTrend') || 'Monthly Progress Trend'}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -316,7 +316,7 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Client Performance</CardTitle>
+            <CardTitle>{t('analytics.headers.clientPerformance') || 'Client Performance'}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -337,7 +337,7 @@ export default function AnalyticsPage() {
       {/* Recent Activity */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
+          <CardTitle>{t('analytics.headers.recentActivity') || 'Recent Activity'}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

@@ -106,7 +106,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
                 <FormControl>
                   <Input 
                     {...field} 
-                    placeholder="US1234567"
+                    placeholder={t('form.placeholders.passportNumber') || 'US1234567'}
                     data-testid="input-passport-number"
                   />
                 </FormControl>

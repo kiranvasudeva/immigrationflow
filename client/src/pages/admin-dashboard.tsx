@@ -179,10 +179,10 @@ export default function AdminDashboard() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">{t('common.allStagesOption') || 'All Stages'}</SelectItem>
-                      <SelectItem value="ajofm">AJOFM</SelectItem>
-                      <SelectItem value="work-permit">Work Permit</SelectItem>
-                      <SelectItem value="visa">Visa D/AM</SelectItem>
-                      <SelectItem value="residence">Residence Permit</SelectItem>
+                      <SelectItem value="ajofm">{t('stages.ajofm') || 'AJOFM'}</SelectItem>
+                      <SelectItem value="work-permit">{t('stages.workPermit') || 'Work Permit'}</SelectItem>
+                      <SelectItem value="visa">{t('stages.visa') || 'Visa D/AM'}</SelectItem>
+                      <SelectItem value="residence">{t('stages.residence') || 'Residence Permit'}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button variant="ghost" size="sm" data-testid="button-filter">

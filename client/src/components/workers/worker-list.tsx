@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ interface WorkerListProps {
 }
 
 export default function WorkerList({ workers }: WorkerListProps) {
+  const { t } = useLanguage();
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("WORKER");
@@ -79,7 +81,7 @@ export default function WorkerList({ workers }: WorkerListProps) {
           <CardTitle>Workers</CardTitle>
           <div className="flex items-center space-x-3">
             <Input 
-              placeholder="Search workers..." 
+              placeholder={t('form.placeholders.searchWorkers') || 'Search workers...'} 
               className="w-64"
               data-testid="input-search-workers"
             />
