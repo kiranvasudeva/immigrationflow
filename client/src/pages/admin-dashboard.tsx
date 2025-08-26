@@ -791,7 +791,7 @@ export default function AdminDashboard() {
                           {/* Worker Filters */}
                           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                             <Input
-                              placeholder={t('common.searchWorkers') || 'Search workers...'}
+                              placeholder={t('form.placeholders.searchWorkers') || 'Search workers...'}
                               value={workerSearchTerm}
                               onChange={(e) => setWorkerSearchTerm(e.target.value)}
                               className="w-full sm:w-64"
@@ -839,8 +839,13 @@ export default function AdminDashboard() {
 
                           return filteredAssignments.length === 0 ? (
                             <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                            <i className="fas fa-users text-gray-400 text-3xl mb-4"></i>
-                            <p className="text-gray-600">{t('common.noWorkersProcessing') || 'No workers currently being processed'}</p>
+                              <i className="fas fa-users text-gray-400 text-3xl mb-4"></i>
+                              <p className="text-gray-600">
+                                {workerSearchTerm || workerFilter !== "all" 
+                                  ? "No workers match your filters"
+                                  : (t('common.noWorkersProcessing') || 'No workers currently being processed')
+                                }
+                              </p>
                             <Button className="mt-4" size="sm" data-testid="button-add-worker">
                               <i className="fas fa-plus mr-2"></i>
                               {t('actions.addWorker') || 'Add Worker'}
@@ -1039,7 +1044,7 @@ export default function AdminDashboard() {
                         {/* Worker Filters */}
                         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                           <Input
-                            placeholder={t('common.searchWorkers') || 'Search workers...'}
+                            placeholder={t('form.placeholders.searchWorkers') || 'Search workers...'}
                             value={workerSearchTerm}
                             onChange={(e) => setWorkerSearchTerm(e.target.value)}
                             className="w-full sm:w-64"
