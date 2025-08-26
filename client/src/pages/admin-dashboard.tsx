@@ -996,14 +996,14 @@ export default function AdminDashboard() {
                                   </div>
                                   <div>
                                     <h5 className="font-semibold text-gray-900">
-                                      {worker.firstName && worker.lastName 
-                                        ? `${worker.firstName} ${worker.lastName}`
-                                        : worker.workerName || `Worker #${index + 1}`
+                                      {worker.clientProfile?.worker?.firstName && worker.clientProfile?.worker?.lastName 
+                                        ? `${worker.clientProfile.worker.firstName} ${worker.clientProfile.worker.lastName}`
+                                        : worker.clientProfile?.worker?.name || `Worker #${index + 1}`
                                       }
                                     </h5>
-                                    <p className="text-sm text-gray-600">{worker.nationality || 'Nationality pending'}</p>
+                                    <p className="text-sm text-gray-600">{worker.clientProfile?.worker?.nationality || 'Nationality pending'}</p>
                                     <p className="text-xs text-gray-500">
-                                      Started: {worker.startDate || worker.createdAt ? new Date(worker.startDate || worker.createdAt).toLocaleDateString() : 'Date pending'}
+                                      Started: {worker.createdAt ? new Date(worker.createdAt).toLocaleDateString() : 'Date pending'}
                                     </p>
                                   </div>
                                 </div>
@@ -1043,9 +1043,9 @@ export default function AdminDashboard() {
                       <div>
                         <CardTitle className="flex items-center">
                           <i className="fas fa-clipboard-list mr-2"></i>
-                          Immigration Workflow: {selectedWorker.firstName && selectedWorker.lastName 
-                            ? `${selectedWorker.firstName} ${selectedWorker.lastName}`
-                            : selectedWorker.workerName || 'Worker'
+                          Immigration Workflow: {selectedWorker.clientProfile?.worker?.firstName && selectedWorker.clientProfile?.worker?.lastName 
+                            ? `${selectedWorker.clientProfile.worker.firstName} ${selectedWorker.clientProfile.worker.lastName}`
+                            : selectedWorker.clientProfile?.worker?.name || 'Worker'
                           }
                         </CardTitle>
                         <p className="text-sm text-gray-600 mt-1">
@@ -1071,25 +1071,25 @@ export default function AdminDashboard() {
                           <div>
                             <span className="text-gray-600">Name:</span>
                             <span className="ml-2 font-medium">
-                              {selectedWorker.firstName && selectedWorker.lastName 
-                                ? `${selectedWorker.firstName} ${selectedWorker.lastName}`
-                                : selectedWorker.workerName || 'Name pending'
+                              {selectedWorker.clientProfile?.worker?.firstName && selectedWorker.clientProfile?.worker?.lastName 
+                                ? `${selectedWorker.clientProfile.worker.firstName} ${selectedWorker.clientProfile.worker.lastName}`
+                                : selectedWorker.clientProfile?.worker?.name || 'Name pending'
                               }
                             </span>
                           </div>
                           <div>
                             <span className="text-gray-600">Nationality:</span>
-                            <span className="ml-2 font-medium">{selectedWorker.nationality || 'Pending'}</span>
+                            <span className="ml-2 font-medium">{selectedWorker.clientProfile?.worker?.nationality || 'Pending'}</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Email:</span>
-                            <span className="ml-2 font-medium">{selectedWorker.email || selectedWorker.workerEmail || 'Pending'}</span>
+                            <span className="ml-2 font-medium">{selectedWorker.clientProfile?.worker?.email || 'Pending'}</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Started:</span>
                             <span className="ml-2 font-medium">
-                              {selectedWorker.startDate || selectedWorker.createdAt 
-                                ? new Date(selectedWorker.startDate || selectedWorker.createdAt).toLocaleDateString()
+                              {selectedWorker.createdAt 
+                                ? new Date(selectedWorker.createdAt).toLocaleDateString()
                                 : 'Date pending'
                               }
                             </span>
