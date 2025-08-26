@@ -1,0 +1,220 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertWorkerSchema } from "@shared/schema";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { z } from "zod";
+
+const workerFormSchema = insertWorkerSchema.extend({
+  clientProfileId: z.string().optional(),
+});
+
+type WorkerFormData = z.infer<typeof workerFormSchema>;
+
+interface WorkerFormProps {
+  onSubmit: (data: WorkerFormData) => void;
+  isLoading?: boolean;
+  initialData?: Partial<WorkerFormData>;
+  clientProfileId: string;
+}
+
+export default function WorkerForm({ onSubmit, isLoading = false, initialData, clientProfileId }: WorkerFormProps) {
+  const form = useForm<WorkerFormData>({
+    resolver: zodResolver(workerFormSchema),
+    defaultValues: {
+      firstName: initialData?.firstName || "",
+      lastName: initialData?.lastName || "",
+      nationality: initialData?.nationality || "",
+      passportNumber: initialData?.passportNumber || "",
+      email: initialData?.email || "",
+      phone: initialData?.phone || "",
+      dob: initialData?.dob || undefined,
+      passportExpiry: initialData?.passportExpiry || undefined,
+      clientProfileId,
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name *</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    placeholder="Enter first name"
+                    data-testid="input-first-name"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name *</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    placeholder="Enter last name"
+                    data-testid="input-last-name"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="nationality"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nationality *</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    placeholder="USA"
+                    data-testid="input-nationality"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="passportNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Passport Number *</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    placeholder="US1234567"
+                    data-testid="input-passport-number"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="dob"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date of Birth</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    type="date"
+                    value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                    onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                    data-testid="input-date-of-birth"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="passportExpiry"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Passport Expiry</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    type="date"
+                    value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                    onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                    data-testid="input-passport-expiry"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    type="email"
+                    placeholder="worker@email.com"
+                    data-testid="input-worker-email"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    placeholder="+1234567890"
+                    data-testid="input-phone"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="flex justify-end space-x-4">
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            data-testid="button-submit-worker"
+          >
+            {isLoading ? (
+              <>
+                <i className="fas fa-spinner fa-spin mr-2"></i>
+                Saving...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-save mr-2"></i>
+                Save Worker
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
