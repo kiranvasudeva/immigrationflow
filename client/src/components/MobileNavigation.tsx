@@ -109,8 +109,8 @@ export function MobileNavigation({ user, onLogout }: MobileNavigationProps) {
           </SheetContent>
         </Sheet>
 
-        {/* App Title */}
-        <h1 className="text-lg font-semibold">ImmigrationFlow</h1>
+        {/* Spacer for centering */}
+        <div className="flex-1"></div>
 
         {/* Action Buttons */}
         <div className="flex items-center space-x-2">

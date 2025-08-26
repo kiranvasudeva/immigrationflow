@@ -12,9 +12,15 @@ export function LanguageSelector({ variant = 'select', className }: LanguageSele
   const { language: currentLanguage, changeLanguage: setLanguage, availableLanguages } = useTranslation();
   
   const handleLanguageChange = async (language: string) => {
-    await setLanguage(language);
-    // Mark as manually set to prevent role-based override
-    localStorage.setItem('immigration-app-language-manually-set', 'true');
+    console.log('Language selector changing to:', language);
+    try {
+      await setLanguage(language);
+      // Mark as manually set to prevent role-based override
+      localStorage.setItem('immigration-app-language-manually-set', 'true');
+      console.log('Language changed successfully to:', language);
+    } catch (error) {
+      console.error('Error changing language:', error);
+    }
   };
 
   if (variant === 'button') {
