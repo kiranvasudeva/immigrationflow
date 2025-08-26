@@ -1083,7 +1083,9 @@ export default function AdminDashboard() {
                       <div>
                         <CardTitle className="flex items-center">
                           <i className="fas fa-clipboard-list mr-2"></i>
-                          Immigration Workflow: {selectedWorker.firstName && selectedWorker.lastName 
+                          Immigration Workflow: {selectedWorker.worker?.firstName && selectedWorker.worker?.lastName 
+                            ? `${selectedWorker.worker.firstName} ${selectedWorker.worker.lastName}`
+                            : selectedWorker.firstName && selectedWorker.lastName 
                             ? `${selectedWorker.firstName} ${selectedWorker.lastName}`
                             : 'Worker'}
                         </CardTitle>
@@ -1811,9 +1813,12 @@ export default function AdminDashboard() {
                           worker: updatedWorker
                         }));
                         
-                        // Invalidate and refetch assignments to update the list
+                        // Invalidate and refetch assignments to update all worker data throughout the app
                         queryClient.invalidateQueries({
                           queryKey: ["/api/clients", selectedClient?.id, "assignments"]
+                        });
+                        queryClient.invalidateQueries({
+                          queryKey: ["/api/dashboard/assignments"]
                         });
                         
                         toast({
