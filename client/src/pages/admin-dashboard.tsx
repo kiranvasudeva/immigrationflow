@@ -78,9 +78,18 @@ export default function AdminDashboard() {
   });
 
   // Fetch workers for selected workflow client
-  const { data: clientWorkers = [] } = useQuery<any[]>({
+  const { data: clientWorkers = [], isLoading: workersLoading, error: workersError } = useQuery<any[]>({
     queryKey: ["/api/clients", selectedWorkflowClient?.id, "workers"],
     enabled: isAuthenticated && !isLoading && user?.role === 'ADMIN' && !!selectedWorkflowClient?.id,
+  });
+
+  // Debug logging
+  console.log('Admin Dashboard Workers Debug:', {
+    selectedWorkflowClientId: selectedWorkflowClient?.id,
+    clientWorkersData: clientWorkers,
+    workersLoading,
+    workersError: workersError?.message,
+    queryEnabled: isAuthenticated && !isLoading && user?.role === 'ADMIN' && !!selectedWorkflowClient?.id
   });
 
   // Redirect if not authenticated
