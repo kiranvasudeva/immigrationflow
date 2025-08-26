@@ -22,16 +22,32 @@ function Router() {
     );
   }
 
+  // Debug logging
+  console.log('Router - isAuthenticated:', isAuthenticated, 'user:', user);
+
   return (
     <Switch>
       {!isAuthenticated ? (
         <Route path="/" component={Landing} />
       ) : (
         <>
-          {user?.role === 'ADMIN' && <Route path="/" component={AdminDashboard} />}
-          {user?.role === 'OWNER' && <Route path="/" component={ClientDashboard} />}
-          {user?.role === 'WORKER' && <Route path="/" component={WorkerDashboard} />}
-          {user?.role === 'VIEWER' && <Route path="/" component={AdminDashboard} />}
+          <Route path="/" component={() => {
+            console.log('Authenticated route - user role:', user?.role);
+            switch (user?.role) {
+              case 'ADMIN':
+                return <AdminDashboard />;
+              case 'OWNER':
+                return <ClientDashboard />;
+              case 'WORKER':
+                return <WorkerDashboard />;
+              case 'VIEWER':
+                return <AdminDashboard />;
+              default:
+                // Fallback to Owner dashboard if role is undefined or unknown
+                console.log('Unknown role, defaulting to ClientDashboard');
+                return <ClientDashboard />;
+            }
+          }} />
         </>
       )}
       <Route component={NotFound} />
