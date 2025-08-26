@@ -382,6 +382,18 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const { data: translations = {}, isLoading } = useQuery({
     queryKey: ['/api/translations', currentLanguage],
+    queryFn: async () => {
+      const response = await fetch(`/api/translations?language=${currentLanguage}`);
+      const translationArray = await response.json();
+      
+      // Convert array format to key-value object format
+      const translationObject: Record<string, string> = {};
+      translationArray.forEach((translation: any) => {
+        translationObject[translation.key] = translation.value;
+      });
+      
+      return translationObject;
+    },
     enabled: true,
   });
 
