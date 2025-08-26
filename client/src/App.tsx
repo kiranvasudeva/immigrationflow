@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { TranslationProvider } from "@/contexts/LanguageContext";
+import { I18nProvider } from "@/contexts/I18nContext";
 import { useAuth } from "@/hooks/useAuth";
 import { DummyDataAlert } from "@/components/dummy-data-alert";
 import { useRoleBasedLanguage } from "@/hooks/useRoleBasedLanguage";
@@ -96,12 +96,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TranslationProvider>
+      <I18nProvider>
         <TooltipProvider>
           <Toaster />
           <Router />
         </TooltipProvider>
-      </TranslationProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }
