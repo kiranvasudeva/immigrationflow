@@ -606,67 +606,120 @@ export default function AdminDashboard() {
                             <div className="flex-1">
                               {editingClient ? (
                                 <div className="space-y-4">
-                                  <Input
-                                    defaultValue={selectedClient.companyName}
-                                    className="text-xl font-bold bg-white"
-                                    placeholder={t('common.companyName') || 'Company Name'}
-                                    data-testid="input-company-name"
-                                  />
-                                  <Input
-                                    defaultValue={selectedClient.cui}
-                                    className="bg-white"
-                                    placeholder={t('common.cui') || 'CUI'}
-                                    data-testid="input-cui"
-                                  />
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                      <label className="text-sm font-medium text-gray-700">Legal Name *</label>
+                                      <Input
+                                        defaultValue={selectedClient.legalName}
+                                        className="bg-white"
+                                        placeholder="e.g., Tech Solutions SRL"
+                                        data-testid="input-edit-legal-name"
+                                        required
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <label className="text-sm font-medium text-gray-700">Registration Number *</label>
+                                      <Input
+                                        defaultValue={selectedClient.registrationNumber}
+                                        className="bg-white"
+                                        placeholder="e.g., J40/12345/2020"
+                                        data-testid="input-edit-registration-number"
+                                        required
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                      <label className="text-sm font-medium text-gray-700">CUI *</label>
+                                      <Input
+                                        defaultValue={selectedClient.cui}
+                                        className="bg-white"
+                                        placeholder="e.g., RO12345678"
+                                        data-testid="input-edit-cui"
+                                        required
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <label className="text-sm font-medium text-gray-700">CAEN Code *</label>
+                                      <Input
+                                        defaultValue={selectedClient.caen}
+                                        className="bg-white"
+                                        placeholder="e.g., 6201"
+                                        data-testid="input-edit-caen"
+                                        required
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700">Legal Address *</label>
                                     <Input
-                                      defaultValue={selectedClient.address || ''}
+                                      defaultValue={selectedClient.legalAddress}
                                       className="bg-white"
-                                      placeholder={t('common.address') || 'Address'}
-                                      data-testid="input-address"
-                                    />
-                                    <Input
-                                      defaultValue={selectedClient.phone || ''}
-                                      className="bg-white"
-                                      placeholder={t('common.phone') || 'Phone'}
-                                      data-testid="input-phone"
+                                      placeholder="e.g., Strada Victoriei Nr. 10, Sector 1, București"
+                                      data-testid="input-edit-legal-address"
+                                      required
                                     />
                                   </div>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700">Administrator Name *</label>
                                     <Input
-                                      defaultValue={selectedClient.email || ''}
+                                      defaultValue={selectedClient.adminName}
                                       className="bg-white"
-                                      placeholder={t('common.email') || 'Email'}
-                                      data-testid="input-email"
+                                      placeholder="e.g., Ion Popescu"
+                                      data-testid="input-edit-admin-name"
+                                      required
                                     />
-                                    <Select defaultValue={selectedClient.status || 'active'}>
-                                      <SelectTrigger className="bg-white" data-testid="select-client-status">
-                                        <SelectValue placeholder={t('common.status') || 'Status'} />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="active">{t('common.active') || 'Active'}</SelectItem>
-                                        <SelectItem value="inactive">{t('common.inactive') || 'Inactive'}</SelectItem>
-                                        <SelectItem value="suspended">{t('common.suspended') || 'Suspended'}</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                      <label className="text-sm font-medium text-gray-700">Contact Email *</label>
+                                      <Input
+                                        type="email"
+                                        defaultValue={selectedClient.contactEmail}
+                                        className="bg-white"
+                                        placeholder="contact@company.com"
+                                        data-testid="input-edit-contact-email"
+                                        required
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <label className="text-sm font-medium text-gray-700">Phone Number *</label>
+                                      <Input
+                                        defaultValue={selectedClient.phoneNumber}
+                                        className="bg-white"
+                                        placeholder="e.g., +40 21 123 4567"
+                                        data-testid="input-edit-phone-number"
+                                        required
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700">Bank IBAN *</label>
+                                    <Input
+                                      defaultValue={selectedClient.bankIban}
+                                      className="bg-white"
+                                      placeholder="e.g., RO49AAAA1B31007593840000"
+                                      data-testid="input-edit-bank-iban"
+                                      required
+                                    />
                                   </div>
                                 </div>
                               ) : (
                                 <div>
-                                  <h3 className="text-xl font-bold text-gray-900">{selectedClient.companyName}</h3>
+                                  <h3 className="text-xl font-bold text-gray-900">{selectedClient.legalName}</h3>
                                   <p className="text-gray-600">CUI: {selectedClient.cui}</p>
                                   <div className="flex flex-wrap items-center mt-2 gap-x-4 gap-y-1 text-sm">
                                     <span className="text-gray-600">
                                       <i className="fas fa-map-marker-alt mr-1"></i>
-                                      {selectedClient.address || 'Address not provided'}
+                                      {selectedClient.legalAddress || 'Address not provided'}
                                     </span>
                                     <span className="text-gray-600">
                                       <i className="fas fa-phone mr-1"></i>
-                                      {selectedClient.phone || 'Phone not provided'}
+                                      {selectedClient.phoneNumber || 'Phone not provided'}
                                     </span>
                                     <span className="text-gray-600">
                                       <i className="fas fa-envelope mr-1"></i>
-                                      {selectedClient.email || 'Email not provided'}
+                                      {selectedClient.contactEmail || 'Email not provided'}
                                     </span>
                                   </div>
                                 </div>
