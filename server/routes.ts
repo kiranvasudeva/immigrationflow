@@ -321,16 +321,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
+      console.log(`Fetching workers for client ${clientId}, user: ${userId}, role: ${user?.role}`);
+      
       const client = await storage.getClientProfile(clientId);
       if (!client) {
+        console.log(`Client ${clientId} not found`);
         return res.status(404).json({ message: "Client not found" });
       }
 
+      console.log(`Client found: ${client.legalName}, owner: ${client.ownerUserId}`);
+
       // Check authorization
       if (user?.role === 'ADMIN' || client.ownerUserId === userId) {
+        console.log(`Authorization granted for user ${userId}`);
         const workers = await storage.getWorkersByClientId(clientId);
+        console.log(`Found ${workers.length} workers for client ${clientId}`);
         res.json(workers);
       } else {
+        console.log(`Authorization denied for user ${userId}, role: ${user?.role}, owner: ${client.ownerUserId}`);
         res.status(403).json({ message: "Unauthorized" });
       }
     } catch (error) {
