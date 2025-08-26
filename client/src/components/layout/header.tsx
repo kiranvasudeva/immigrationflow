@@ -15,9 +15,18 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
       setIsScrolled(scrolled);
     };
 
+    // Set initial state based on current scroll position
+    handleScroll();
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Also check scroll position when component updates (e.g., language change)
+  useEffect(() => {
+    const scrolled = window.scrollY > 0;
+    setIsScrolled(scrolled);
+  }, [title, subtitle]);
 
   return (
     <header className={`sticky z-50 border-b border-gray-200 px-4 lg:px-8 py-3 lg:py-4 transition-all duration-200 ${
