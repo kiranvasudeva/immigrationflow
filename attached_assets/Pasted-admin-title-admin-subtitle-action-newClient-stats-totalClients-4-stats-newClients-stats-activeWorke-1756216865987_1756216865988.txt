@@ -1,0 +1,185 @@
+admin.title
+admin.subtitle
+
+action.newClient
+stats.totalClients
+4
+stats.newClients
+stats.activeWorkers
+12
+stats.activeCases
+stats.pendingActions
+41
+stats.needsAttention
+stats.completedThisMonth
+0
+stats.thisMonth
+workflowOverview
+
+allStages
+
+Awaiting Client
+18
+Test IT Solutions 2
+Test Worker Gamma - Test AJOFM Application Form
+Awaiting upload
+Test Construction Company 2
+Test Worker Gamma - Test AJOFM Application Form
+Awaiting upload
+Test Construction Company 1
+Test Worker Gamma - Test Job Advertisement
+Awaiting upload
+Test Construction Company 1
+Test Worker Beta - Test Job Advertisement
+Awaiting upload
+Test Construction Company 1
+Test Worker Alpha - Test AJOFM Application Form
+Awaiting upload
+Test IT Solutions 1
+Test Worker Alpha - Test Work Permit Application
+Awaiting upload
+Test Construction Company 1
+Test Worker Gamma - Test Work Permit Application
+Awaiting upload
+Test Construction Company 1
+Test Worker Beta - Test Work Permit Application
+Awaiting upload
+Test IT Solutions 2
+Test Worker Gamma - Test Visa Application
+Awaiting upload
+Test IT Solutions 2
+Test Worker Alpha - Test Visa Application
+Awaiting upload
+Test IT Solutions 1
+Test Worker Beta - Test Visa Application
+Awaiting upload
+Test IT Solutions 1
+Test Worker Alpha - Test Visa Application
+Awaiting upload
+Test Construction Company 1
+Test Worker Beta - Test Visa Application
+Awaiting upload
+Test IT Solutions 2
+Test Worker Gamma - Test Residence Permit Application
+Awaiting upload
+Test Construction Company 2
+Test Worker Gamma - Test Residence Permit Application
+Awaiting upload
+Test Construction Company 2
+Test Worker Beta - Test Residence Permit Application
+Awaiting upload
+Test IT Solutions 1
+Test Worker Beta - Test Residence Permit Application
+Awaiting upload
+Test Construction Company 1
+Test Worker Alpha - Test Residence Permit Application
+Awaiting upload
+Awaiting Admin
+23
+Test IT Solutions 2
+Test Worker Beta - Test Job Advertisement
+Document received
+Test IT Solutions 2
+Test Worker Alpha - Test Job Advertisement
+Document received
+Test Construction Company 2
+Test Worker Beta - Test Job Advertisement
+Document received
+Test Construction Company 2
+Test Worker Alpha - Test Job Advertisement
+Document received
+Test IT Solutions 1
+Test Worker Beta - Test Job Advertisement
+Document received
+Test Construction Company 1
+Test Worker Alpha - Test Job Advertisement
+Document received
+Test IT Solutions 2
+Test Worker Alpha - Test Work Permit Application
+Document received
+Test Construction Company 2
+Test Worker Beta - Test Work Permit Application
+Document received
+Test IT Solutions 1
+Test Worker Gamma - Test Work Permit Application
+Document received
+Test Construction Company 2
+Test Worker Gamma - Test Visa Application
+Document received
+Test Construction Company 2
+Test Worker Beta - Test Visa Application
+Document received
+Test Construction Company 2
+Test Worker Alpha - Test Residence Permit Application
+Document received
+Test IT Solutions 1
+Test Worker Gamma - Test Residence Permit Application
+Document received
+Test IT Solutions 2
+Test Worker Beta - Test AJOFM Application Form
+Ready to submit
+Test Construction Company 2
+Test Worker Beta - Test AJOFM Application Form
+Ready to submit
+Test Construction Company 2
+Test Worker Alpha - Test AJOFM Application Form
+Ready to submit
+Test IT Solutions 1
+Test Worker Alpha - Test AJOFM Application Form
+Ready to submit
+Test Construction Company 1
+Test Worker Gamma - Test AJOFM Application Form
+Ready to submit
+Test IT Solutions 2
+Test Worker Gamma - Test Work Permit Application
+Ready to submit
+Test Construction Company 2
+Test Worker Alpha - Test Work Permit Application
+Ready to submit
+Test Construction Company 1
+Test Worker Gamma - Test Visa Application
+Ready to submit
+Test IT Solutions 2
+Test Worker Beta - Test Residence Permit Application
+Ready to submit
+Test IT Solutions 1
+Test Worker Alpha - Test Residence Permit Application
+Ready to submit
+Submitted
+0
+Approved
+10
+Test IT Solutions 2
+Test Worker Gamma - Test Job Advertisement
+Approved
+Test IT Solutions 1
+Test Worker Gamma - Test Job Advertisement
+Approved
+Test IT Solutions 1
+Test Worker Beta - Test AJOFM Application Form
+Approved
+Test Construction Company 1
+Test Worker Beta - Test AJOFM Application Form
+Approved
+Test IT Solutions 2
+Test Worker Beta - Test Work Permit Application
+Approved
+Test Construction Company 2
+Test Worker Gamma - Test Work Permit Application
+Approved
+Test Construction Company 2
+Test Worker Alpha - Test Visa Application
+Approved
+Test Construction Company 1
+Test Worker Alpha - Test Visa Application
+Approved
+Test Construction Company 1
+Test Worker Gamma - Test Residence Permit Application
+Approved
+Test Construction Company 1
+Test Worker Beta - Test Residence Permit Application
+Approved
+Rejected
+0
+recentActivity
+noRecentActivity
