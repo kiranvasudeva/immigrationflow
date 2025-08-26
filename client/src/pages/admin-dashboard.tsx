@@ -1049,14 +1049,14 @@ export default function AdminDashboard() {
                       <div>
                         <h4 className="text-lg font-semibold mb-4 flex items-center">
                           <i className="fas fa-file-alt mr-2"></i>
-                          {t('common.documentFlow') || 'Document Flow & Status'}
+                          Document Flow & Status
                         </h4>
                         
                         <div className="space-y-6">
                           {[
                             {
                               stage: 'ajofm',
-                              title: t('stages.ajofm') || 'AJOFM Labor Market Test',
+                              title: 'AJOFM Labor Market Test',
                               status: selectedWorkerDetail.ajofmStatus || 'pending',
                               documents: [
                                 { name: 'Employment Contract', status: selectedWorkerDetail.ajofmDocuments?.employmentContract || 'pending' },
@@ -1067,7 +1067,7 @@ export default function AdminDashboard() {
                             },
                             {
                               stage: 'work-permit',
-                              title: t('stages.workPermit') || 'IGI Work Permit',
+                              title: 'IGI Work Permit',
                               status: selectedWorkerDetail.workPermitStatus || 'pending',
                               documents: [
                                 { name: 'Passport Copy', status: selectedWorkerDetail.workPermitDocuments?.passport || 'pending' },
@@ -1079,7 +1079,7 @@ export default function AdminDashboard() {
                             },
                             {
                               stage: 'visa',
-                              title: t('stages.visa') || 'Consulate Visa D/AM',
+                              title: 'Consulate Visa D/AM',
                               status: selectedWorkerDetail.visaStatus || 'pending',
                               documents: [
                                 { name: 'Visa Application Form', status: selectedWorkerDetail.visaDocuments?.application || 'pending' },
@@ -1091,7 +1091,7 @@ export default function AdminDashboard() {
                             },
                             {
                               stage: 'residence',
-                              title: t('stages.residence') || 'Residence Permit',
+                              title: 'Residence Permit',
                               status: selectedWorkerDetail.residenceStatus || 'pending',
                               documents: [
                                 { name: 'Residence Application', status: selectedWorkerDetail.residenceDocuments?.application || 'pending' },
@@ -1133,7 +1133,7 @@ export default function AdminDashboard() {
                                 <div>
                                   <h6 className="font-medium text-gray-900 mb-3 flex items-center">
                                     <i className="fas fa-file-import mr-2"></i>
-                                    {t('common.documentsRequired') || 'Documents Required'}
+                                    Documents Required
                                   </h6>
                                   <div className="space-y-2">
                                     {stage.documents.map((doc, docIndex) => (
@@ -1154,7 +1154,7 @@ export default function AdminDashboard() {
                                 <div>
                                   <h6 className="font-medium text-gray-900 mb-3 flex items-center">
                                     <i className="fas fa-university mr-2"></i>
-                                    {t('common.authorityResponse') || 'Authority Response'}
+                                    Authority Response
                                   </h6>
                                   <div className={`p-4 rounded-lg border-2 ${
                                     stage.authorityResponse === 'approved' ? 'border-green-200 bg-green-50' :
