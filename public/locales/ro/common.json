@@ -2,6 +2,15 @@
   "dashboard": "Panou de Control",
   "clients": "Clienți",
   "clientList": "Lista Clienților",
+  "allClients": "Toți Clienții",
+  "activeClients": "Clienți Activi",
+  "inactiveClients": "Clienți Inactivi", 
+  "allStatuses": "Toate Statusurile",
+  "pending": "În Așteptare",
+  "approved": "Aprobat",
+  "selectClient": "Selectează Client",
+  "selectClientDescription": "Selectează un client pentru a vedea lucrătorii și progresul workflow-ului",
+  "chooseClient": "Alege Client",
   "workers": "Lucrători",
   "templates": "Șabloane",
   "analytics": "Analize",
@@ -216,15 +225,15 @@
     "workPermit": "TODO: translate"
   },
   "status": {
-    "accepted": "TODO: translate",
-    "completed": "TODO: translate",
-    "inProgress": "TODO: translate",
-    "overdue": "TODO: translate",
-    "pending": "TODO: translate",
-    "pendingUpload": "TODO: translate",
-    "rejected": "TODO: translate",
-    "submitted": "TODO: translate",
-    "unknown": "TODO: translate"
+    "accepted": "Acceptat",
+    "completed": "Completat",
+    "inProgress": "În Progres",
+    "overdue": "Întârziat",
+    "pending": "În Așteptare",
+    "pendingUpload": "În Așteptarea Încărcării",
+    "rejected": "Respins",
+    "submitted": "Trimis",
+    "unknown": "Necunoscut"
   },
   "table": {
     "headers": {
