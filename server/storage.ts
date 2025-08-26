@@ -82,11 +82,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    // For Replit Auth, we use the email as the unique identifier
     const [user] = await db
       .insert(users)
       .values(userData)
       .onConflictDoUpdate({
-        target: users.id,
+        target: users.email,
         set: {
           ...userData,
           updatedAt: new Date(),
@@ -236,7 +237,7 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    const workers = await db
+    const workersResult = await db
       .select()
       .from(workers)
       .where(
@@ -248,7 +249,7 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    return { clients, workers };
+    return { clients, workers: workersResult };
   }
 
   // Audit operations

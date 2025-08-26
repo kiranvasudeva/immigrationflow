@@ -9,6 +9,7 @@ import Landing from "@/pages/landing";
 import AdminDashboard from "@/pages/admin-dashboard";
 import ClientDashboard from "@/pages/client-dashboard";
 import WorkerDashboard from "@/pages/worker-dashboard";
+import { User } from "@shared/schema";
 
 function Router() {
   const { user, isAuthenticated, isLoading } = useAuth();

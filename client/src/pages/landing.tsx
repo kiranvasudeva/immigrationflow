@@ -48,7 +48,7 @@ export default function Landing() {
               From AJOFM labor market tests to final IGI approvals.
             </p>
             <div className="flex justify-center space-x-4">
-              <Button size="lg" data-testid="button-trial">
+              <Button size="lg" onClick={handleLogin} data-testid="button-trial">
                 Start Free Trial
               </Button>
               <Button variant="outline" size="lg" data-testid="button-demo">
