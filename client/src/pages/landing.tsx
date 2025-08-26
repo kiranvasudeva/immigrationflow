@@ -184,7 +184,7 @@ export default function Landing() {
                 </p>
                 <div className="text-center">
                   <p className="text-green-600 text-sm font-medium">
-                    Check your email for an invitation link
+                    {t('modal.login.invitationText') || 'Check your email for an invitation link'}
                   </p>
                 </div>
               </div>
@@ -192,9 +192,9 @@ export default function Landing() {
 
             <div className="text-center pt-4 border-t">
               <p className="text-xs text-secondary">
-                Need help? Contact your administrator or{" "}
+                {t('modal.login.supportText') || 'Need help? Contact your administrator or'}{" "}
                 <Button variant="link" className="p-0 h-auto text-xs" data-testid="link-support">
-                  support team
+                  {t('modal.login.supportLink') || 'support team'}
                 </Button>
               </p>
             </div>

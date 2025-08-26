@@ -105,7 +105,7 @@ export default function AdminDashboard() {
                     <p className="text-sm text-secondary">{t('dashboard.stats.totalClients') || 'Total Clients'}</p>
                     <p className="text-3xl font-bold text-gray-900">{stats.totalClients}</p>
                     <p className="text-sm text-success">
-                      <i className="fas fa-arrow-up mr-1"></i>New clients
+                      <i className="fas fa-arrow-up mr-1"></i>{t('dashboard.stats.newClients') || 'New clients'}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -122,7 +122,7 @@ export default function AdminDashboard() {
                     <p className="text-sm text-secondary">{t('dashboard.stats.activeWorkers') || 'Active Workers'}</p>
                     <p className="text-3xl font-bold text-gray-900">{stats.activeWorkers}</p>
                     <p className="text-sm text-success">
-                      <i className="fas fa-arrow-up mr-1"></i>Active cases
+                      <i className="fas fa-arrow-up mr-1"></i>{t('dashboard.stats.activeCases') || 'Active cases'}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
                     <p className="text-sm text-secondary">{t('dashboard.stats.pendingActions') || 'Pending Actions'}</p>
                     <p className="text-3xl font-bold text-gray-900">{stats.pendingActions}</p>
                     <p className="text-sm text-warning">
-                      <i className="fas fa-clock mr-1"></i>Needs attention
+                      <i className="fas fa-clock mr-1"></i>{t('dashboard.stats.needsAttention') || 'Needs attention'}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
                     <p className="text-sm text-secondary">{t('dashboard.stats.completedThisMonth') || 'Completed This Month'}</p>
                     <p className="text-3xl font-bold text-gray-900">{stats.completedThisMonth}</p>
                     <p className="text-sm text-success">
-                      <i className="fas fa-check mr-1"></i>This month
+                      <i className="fas fa-check mr-1"></i>{t('dashboard.stats.thisMonth') || 'This month'}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -178,7 +178,7 @@ export default function AdminDashboard() {
                       <SelectValue placeholder={t('common.allStages') || 'All Stages'} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Stages</SelectItem>
+                      <SelectItem value="all">{t('common.allStagesOption') || 'All Stages'}</SelectItem>
                       <SelectItem value="ajofm">AJOFM</SelectItem>
                       <SelectItem value="work-permit">Work Permit</SelectItem>
                       <SelectItem value="visa">Visa D/AM</SelectItem>
@@ -199,14 +199,14 @@ export default function AdminDashboard() {
           {/* Recent Activity */}
           <Card data-testid="card-recent-activity">
             <CardHeader className="border-b border-gray-200">
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle>{t('common.recentActivity') || 'Recent Activity'}</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-4">
                 {auditLogs.length === 0 ? (
                   <div className="text-center py-8">
                     <i className="fas fa-history text-gray-400 text-3xl mb-4"></i>
-                    <p className="text-secondary">No recent activity</p>
+                    <p className="text-secondary">{t('common.noRecentActivity') || 'No recent activity'}</p>
                   </div>
                 ) : (
                   auditLogs.slice(0, 5).map((log: any, index: number) => (
