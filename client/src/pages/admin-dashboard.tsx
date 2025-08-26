@@ -31,7 +31,7 @@ export default function AdminDashboard() {
   
   // Navigation states
   const [selectedClient, setSelectedClient] = useState<any>(null);
-  const [selectedWorker, setSelectedWorker] = useState<any>(null);
+  const [editingClient, setEditingClient] = useState(false);
 
   const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
     queryKey: ["/api/clients"],
@@ -229,38 +229,33 @@ export default function AdminDashboard() {
                   </div>
                   
                   {/* Navigation Breadcrumb */}
-                  {(selectedClient || selectedWorker) && (
-                    <div className="flex items-center space-x-2 mb-4 text-sm">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => {
-                          setSelectedClient(null);
-                          setSelectedWorker(null);
-                        }}
-                        className="text-primary hover:text-primary/80"
+                  {selectedClient && (
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2 text-sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            setSelectedClient(null);
+                            setEditingClient(false);
+                          }}
+                          className="text-primary hover:text-primary/80"
+                        >
+                          <i className="fas fa-arrow-left mr-2"></i>
+                          {t('common.clients') || 'Clients'}
+                        </Button>
+                        <ChevronRight className="h-4 w-4 text-gray-400" />
+                        <span className="text-gray-900 font-medium">{selectedClient.companyName}</span>
+                      </div>
+                      <Button
+                        variant={editingClient ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setEditingClient(!editingClient)}
+                        data-testid="button-edit-client"
                       >
-                        {t('common.clients') || 'Clients'}
+                        <i className={`fas ${editingClient ? 'fa-save' : 'fa-edit'} mr-2`}></i>
+                        {editingClient ? (t('actions.save') || 'Save') : (t('actions.edit') || 'Edit')}
                       </Button>
-                      {selectedClient && (
-                        <>
-                          <ChevronRight className="h-4 w-4 text-gray-400" />
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => setSelectedWorker(null)}
-                            className={selectedWorker ? "text-primary hover:text-primary/80" : "text-gray-900"}
-                          >
-                            {selectedClient.companyName}
-                          </Button>
-                        </>
-                      )}
-                      {selectedWorker && (
-                        <>
-                          <ChevronRight className="h-4 w-4 text-gray-400" />
-                          <span className="text-gray-900 font-medium">{selectedWorker.fullName}</span>
-                        </>
-                      )}
                     </div>
                   )}
 
@@ -294,31 +289,86 @@ export default function AdminDashboard() {
                   )}
 
                   {/* Client Profile View */}
-                  {selectedClient && !selectedWorker && (
+                  {selectedClient && (
                     <div className="space-y-6">
                       {/* Client Profile Header */}
                       <div className="bg-blue-50 rounded-lg p-6">
                         <div className="flex items-start justify-between">
-                          <div className="flex items-start space-x-4">
-                            <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center">
+                          <div className="flex items-start space-x-4 flex-1">
+                            <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
                               <i className="fas fa-building text-white text-xl"></i>
                             </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-gray-900">{selectedClient.companyName}</h3>
-                              <p className="text-gray-600">CUI: {selectedClient.cui}</p>
-                              <div className="flex items-center mt-2 space-x-4 text-sm">
-                                <span className="text-gray-600">
-                                  <i className="fas fa-map-marker-alt mr-1"></i>
-                                  {selectedClient.address || 'Address not provided'}
-                                </span>
-                                <span className="text-gray-600">
-                                  <i className="fas fa-phone mr-1"></i>
-                                  {selectedClient.phone || 'Phone not provided'}
-                                </span>
-                              </div>
+                            <div className="flex-1">
+                              {editingClient ? (
+                                <div className="space-y-4">
+                                  <Input
+                                    defaultValue={selectedClient.companyName}
+                                    className="text-xl font-bold bg-white"
+                                    placeholder={t('common.companyName') || 'Company Name'}
+                                    data-testid="input-company-name"
+                                  />
+                                  <Input
+                                    defaultValue={selectedClient.cui}
+                                    className="bg-white"
+                                    placeholder={t('common.cui') || 'CUI'}
+                                    data-testid="input-cui"
+                                  />
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <Input
+                                      defaultValue={selectedClient.address || ''}
+                                      className="bg-white"
+                                      placeholder={t('common.address') || 'Address'}
+                                      data-testid="input-address"
+                                    />
+                                    <Input
+                                      defaultValue={selectedClient.phone || ''}
+                                      className="bg-white"
+                                      placeholder={t('common.phone') || 'Phone'}
+                                      data-testid="input-phone"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <Input
+                                      defaultValue={selectedClient.email || ''}
+                                      className="bg-white"
+                                      placeholder={t('common.email') || 'Email'}
+                                      data-testid="input-email"
+                                    />
+                                    <Select defaultValue={selectedClient.status || 'active'}>
+                                      <SelectTrigger className="bg-white" data-testid="select-client-status">
+                                        <SelectValue placeholder={t('common.status') || 'Status'} />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="active">{t('common.active') || 'Active'}</SelectItem>
+                                        <SelectItem value="inactive">{t('common.inactive') || 'Inactive'}</SelectItem>
+                                        <SelectItem value="suspended">{t('common.suspended') || 'Suspended'}</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <h3 className="text-xl font-bold text-gray-900">{selectedClient.companyName}</h3>
+                                  <p className="text-gray-600">CUI: {selectedClient.cui}</p>
+                                  <div className="flex flex-wrap items-center mt-2 gap-x-4 gap-y-1 text-sm">
+                                    <span className="text-gray-600">
+                                      <i className="fas fa-map-marker-alt mr-1"></i>
+                                      {selectedClient.address || 'Address not provided'}
+                                    </span>
+                                    <span className="text-gray-600">
+                                      <i className="fas fa-phone mr-1"></i>
+                                      {selectedClient.phone || 'Phone not provided'}
+                                    </span>
+                                    <span className="text-gray-600">
+                                      <i className="fas fa-envelope mr-1"></i>
+                                      {selectedClient.email || 'Email not provided'}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <div className="text-right">
+                          <div className="text-right flex-shrink-0 ml-4">
                             <div className="bg-white rounded-lg px-3 py-2 text-center">
                               <p className="text-2xl font-bold text-primary">{selectedClient.activeWorkers || 0}</p>
                               <p className="text-xs text-gray-600">{t('common.activeWorkers') || 'Active Workers'}</p>
@@ -327,153 +377,99 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
-                      {/* Workers List */}
+                      {/* Workers Being Processed */}
                       <div>
                         <h4 className="text-lg font-semibold mb-4 flex items-center">
                           <i className="fas fa-users mr-2"></i>
-                          {t('common.workers') || 'Workers'} ({selectedClient.activeWorkers || 0})
+                          {t('common.workersBeingProcessed') || 'Workers Being Processed'} ({selectedClient.activeWorkers || 0})
                         </h4>
-                        <div className="space-y-3">
-                          {assignments
-                            .filter((assignment: any) => assignment.clientId === selectedClient.id)
-                            .map((assignment: any, index: number) => (
-                            <div 
-                              key={assignment.id || index}
-                              className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                              onClick={() => setSelectedWorker({
-                                ...assignment.worker,
-                                assignment: assignment
-                              })}
-                              data-testid={`worker-${index}`}
-                            >
-                              <div className="flex items-center space-x-4">
-                                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                                  <i className="fas fa-user text-green-600"></i>
-                                </div>
-                                <div>
-                                  <p className="font-medium">{assignment.worker?.fullName || 'Unknown Worker'}</p>
-                                  <p className="text-sm text-secondary">{assignment.worker?.nationality || 'Nationality not specified'}</p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                  assignment.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                                  assignment.status === 'pending' ? 'bg-orange-100 text-orange-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {assignment.status}
-                                </span>
-                                <ChevronRight className="h-4 w-4 text-gray-400 mt-2" />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Worker Detail View */}
-                  {selectedWorker && (
-                    <div className="space-y-6">
-                      {/* Worker Profile Header */}
-                      <div className="bg-green-50 rounded-lg p-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start space-x-4">
-                            <div className="w-16 h-16 bg-green-600 rounded-lg flex items-center justify-center">
-                              <i className="fas fa-user text-white text-xl"></i>
-                            </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-gray-900">{selectedWorker.fullName}</h3>
-                              <p className="text-gray-600">{selectedWorker.nationality}</p>
-                              <div className="flex items-center mt-2 space-x-4 text-sm">
-                                <span className="text-gray-600">
-                                  <i className="fas fa-envelope mr-1"></i>
-                                  {selectedWorker.email || 'Email not provided'}
-                                </span>
-                                <span className="text-gray-600">
-                                  <i className="fas fa-phone mr-1"></i>
-                                  {selectedWorker.phone || 'Phone not provided'}
-                                </span>
-                              </div>
-                            </div>
+                        
+                        {assignments.filter((assignment: any) => assignment.clientId === selectedClient.id).length === 0 ? (
+                          <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                            <i className="fas fa-users text-gray-400 text-3xl mb-4"></i>
+                            <p className="text-gray-600">{t('common.noWorkersProcessing') || 'No workers currently being processed'}</p>
+                            <Button className="mt-4" size="sm" data-testid="button-add-worker">
+                              <i className="fas fa-plus mr-2"></i>
+                              {t('actions.addWorker') || 'Add Worker'}
+                            </Button>
                           </div>
-                          <div className="text-right">
-                            <span className={`px-3 py-2 rounded-full text-sm font-medium ${
-                              selectedWorker.assignment?.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              selectedWorker.assignment?.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                              selectedWorker.assignment?.status === 'pending' ? 'bg-orange-100 text-orange-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {selectedWorker.assignment?.status || 'Unknown'}
-                            </span>
+                        ) : (
+                          <div className="space-y-4">
+                            {assignments
+                              .filter((assignment: any) => assignment.clientId === selectedClient.id)
+                              .map((assignment: any, index: number) => (
+                              <div key={assignment.id || index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex items-center space-x-4">
+                                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                      <i className="fas fa-user text-green-600 text-lg"></i>
+                                    </div>
+                                    <div>
+                                      <h5 className="font-semibold text-gray-900">{assignment.worker?.fullName || 'Unknown Worker'}</h5>
+                                      <p className="text-sm text-gray-600">{assignment.worker?.nationality || 'Nationality not specified'}</p>
+                                      <div className="flex items-center mt-2 space-x-4 text-xs text-gray-500">
+                                        <span>
+                                          <i className="fas fa-calendar mr-1"></i>
+                                          Started: {new Date(assignment.createdAt || Date.now()).toLocaleDateString()}
+                                        </span>
+                                        <span>
+                                          <i className="fas fa-briefcase mr-1"></i>
+                                          {assignment.jobTitle || 'Job Title Not Specified'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                      assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                      assignment.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                                      assignment.status === 'pending' ? 'bg-orange-100 text-orange-800' :
+                                      'bg-gray-100 text-gray-800'
+                                    }`}>
+                                      {assignment.status?.replace('-', ' ')?.toUpperCase() || 'UNKNOWN'}
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                {/* Process Status Bar */}
+                                <div className="mt-4 bg-gray-50 rounded-lg p-3">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm font-medium text-gray-700">{t('common.processProgress') || 'Process Progress'}</span>
+                                    <span className="text-xs text-gray-500">
+                                      {assignment.currentStage || 'Stage not specified'}
+                                    </span>
+                                  </div>
+                                  <div className="flex space-x-2">
+                                    {[
+                                      { stage: 'ajofm', label: 'AJOFM', status: assignment.ajofmStatus || 'pending' },
+                                      { stage: 'work-permit', label: 'Work Permit', status: assignment.workPermitStatus || 'pending' },
+                                      { stage: 'visa', label: 'Visa', status: assignment.visaStatus || 'pending' },
+                                      { stage: 'residence', label: 'Residence', status: assignment.residenceStatus || 'pending' }
+                                    ].map((step, stepIndex) => (
+                                      <div key={step.stage} className="flex-1">
+                                        <div className={`h-2 rounded-full ${
+                                          step.status === 'completed' ? 'bg-green-500' :
+                                          step.status === 'in-progress' ? 'bg-blue-500' :
+                                          step.status === 'pending' ? 'bg-orange-500' :
+                                          'bg-gray-300'
+                                        }`}></div>
+                                        <p className="text-xs mt-1 text-center text-gray-600">{step.label}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {/* Pending Documents Summary */}
+                                {assignment.pendingDocuments && assignment.pendingDocuments.length > 0 && (
+                                  <div className="mt-3 flex items-center text-sm text-orange-600">
+                                    <i className="fas fa-exclamation-triangle mr-2"></i>
+                                    {assignment.pendingDocuments.length} {t('common.pendingDocuments') || 'pending documents'}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
                           </div>
-                        </div>
-                      </div>
-
-                      {/* Process Map */}
-                      <div>
-                        <h4 className="text-lg font-semibold mb-4 flex items-center">
-                          <i className="fas fa-route mr-2"></i>
-                          {t('common.processMap') || 'Process Map'}
-                        </h4>
-                        <div className="space-y-4">
-                          {[
-                            { stage: 'ajofm', label: t('stages.ajofm') || 'AJOFM', status: selectedWorker.assignment?.ajofmStatus || 'pending' },
-                            { stage: 'work-permit', label: t('stages.workPermit') || 'Work Permit', status: selectedWorker.assignment?.workPermitStatus || 'pending' },
-                            { stage: 'visa', label: t('stages.visa') || 'Visa D/AM', status: selectedWorker.assignment?.visaStatus || 'pending' },
-                            { stage: 'residence', label: t('stages.residence') || 'Residence Permit', status: selectedWorker.assignment?.residenceStatus || 'pending' }
-                          ].map((step, index) => (
-                            <div key={step.stage} className="flex items-center space-x-4">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                                step.status === 'completed' ? 'bg-green-500 text-white' :
-                                step.status === 'in-progress' ? 'bg-blue-500 text-white' :
-                                step.status === 'pending' ? 'bg-orange-500 text-white' :
-                                'bg-gray-300 text-gray-600'
-                              }`}>
-                                {index + 1}
-                              </div>
-                              <div className="flex-1">
-                                <p className="font-medium">{step.label}</p>
-                                <p className="text-sm text-gray-600 capitalize">{step.status.replace('-', ' ')}</p>
-                              </div>
-                              <div>
-                                <i className={`fas ${
-                                  step.status === 'completed' ? 'fa-check text-green-500' :
-                                  step.status === 'in-progress' ? 'fa-clock text-blue-500' :
-                                  step.status === 'pending' ? 'fa-hourglass-half text-orange-500' :
-                                  'fa-circle text-gray-400'
-                                }`}></i>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Pending Documents */}
-                      <div>
-                        <h4 className="text-lg font-semibold mb-4 flex items-center">
-                          <i className="fas fa-file-alt mr-2"></i>
-                          {t('common.pendingDocuments') || 'Pending Documents'}
-                        </h4>
-                        <div className="space-y-2">
-                          {(selectedWorker.assignment?.pendingDocuments || [
-                            'Passport Copy',
-                            'Employment Contract',
-                            'Diploma Translation',
-                            'Criminal Background Check'
-                          ]).map((doc: string, index: number) => (
-                            <div key={index} className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                              <div className="flex items-center space-x-3">
-                                <i className="fas fa-file-pdf text-orange-600"></i>
-                                <span className="font-medium text-orange-800">{doc}</span>
-                              </div>
-                              <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">
-                                {t('common.pending') || 'Pending'}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
+                        )}
                       </div>
                     </div>
                   )}
