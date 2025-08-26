@@ -56,25 +56,25 @@ export default function Sidebar({ userRole }: SidebarProps) {
           { icon: 'fas fa-users', label: t('common.workers') || 'Workers', href: '/workers', active: isActive('/workers') },
           { icon: 'fas fa-file-text', label: t('common.templates') || 'Templates', href: '/templates', active: isActive('/templates') },
           { icon: 'fas fa-bar-chart', label: t('common.analytics') || 'Analytics', href: '/analytics', active: isActive('/analytics') },
-          { icon: 'fas fa-clipboard-list', label: 'Requirements', href: '/requirements', active: isActive('/requirements') },
-          { icon: 'fas fa-bell', label: 'Reminders', href: '/reminders', active: isActive('/reminders') },
-          { icon: 'fas fa-history', label: 'Audit Logs', href: '/audit', active: isActive('/audit') }
+          { icon: 'fas fa-clipboard-list', label: t('nav.requirements') || 'Requirements', href: '/requirements', active: isActive('/requirements') },
+          { icon: 'fas fa-bell', label: t('nav.reminders') || 'Reminders', href: '/reminders', active: isActive('/reminders') },
+          { icon: 'fas fa-history', label: t('nav.auditLogs') || 'Audit Logs', href: '/audit', active: isActive('/audit') }
         ];
       case 'OWNER':
         return [
           ...commonItems,
-          { icon: 'fas fa-building', label: 'Company Profile', href: '/profile', active: isActive('/profile') },
-          { icon: 'fas fa-users', label: 'Workers', href: '/workers', active: isActive('/workers') },
-          { icon: 'fas fa-file-alt', label: 'Documents', href: '/documents', active: isActive('/documents') },
-          { icon: 'fas fa-bar-chart', label: 'Analytics', href: '/analytics', active: isActive('/analytics') },
-          { icon: 'fas fa-euro-sign', label: 'Payments', href: '/payments', active: isActive('/payments') }
+          { icon: 'fas fa-building', label: t('nav.companyProfile') || 'Company Profile', href: '/profile', active: isActive('/profile') },
+          { icon: 'fas fa-users', label: t('common.workers') || 'Workers', href: '/workers', active: isActive('/workers') },
+          { icon: 'fas fa-file-alt', label: t('nav.documents') || 'Documents', href: '/documents', active: isActive('/documents') },
+          { icon: 'fas fa-bar-chart', label: t('common.analytics') || 'Analytics', href: '/analytics', active: isActive('/analytics') },
+          { icon: 'fas fa-euro-sign', label: t('nav.payments') || 'Payments', href: '/payments', active: isActive('/payments') }
         ];
       case 'WORKER':
         return [
-          { icon: 'fas fa-chart-bar', label: 'My Progress', href: '/dashboard', active: isActive('/dashboard') || isActive('/') },
-          { icon: 'fas fa-file-alt', label: 'Documents', href: '/documents', active: isActive('/documents') },
-          { icon: 'fas fa-calendar', label: 'Deadlines', href: '/deadlines', active: isActive('/deadlines') },
-          { icon: 'fas fa-user', label: 'Profile', href: '/profile', active: isActive('/profile') }
+          { icon: 'fas fa-chart-bar', label: t('nav.myProgress') || 'My Progress', href: '/dashboard', active: isActive('/dashboard') || isActive('/') },
+          { icon: 'fas fa-file-alt', label: t('nav.documents') || 'Documents', href: '/documents', active: isActive('/documents') },
+          { icon: 'fas fa-calendar', label: t('nav.deadlines') || 'Deadlines', href: '/deadlines', active: isActive('/deadlines') },
+          { icon: 'fas fa-user', label: t('nav.profile') || 'Profile', href: '/profile', active: isActive('/profile') }
         ];
       default:
         return commonItems;
@@ -135,7 +135,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
             data-testid="button-logout"
           >
             <i className="fas fa-sign-out-alt mr-3"></i>
-            Sign Out
+            {t('actions.signOut') || 'Sign Out'}
           </Button>
         </div>
       </nav>
