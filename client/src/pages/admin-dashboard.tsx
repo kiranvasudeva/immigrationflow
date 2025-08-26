@@ -40,6 +40,7 @@ export default function AdminDashboard() {
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [editingClient, setEditingClient] = useState(false);
   const [showNewClientForm, setShowNewClientForm] = useState(false);
+  const [selectedWorkflowClient, setSelectedWorkflowClient] = useState<any>(null);
   
   
   // Form state
@@ -828,8 +829,8 @@ export default function AdminDashboard() {
                         </div>
                         
                         {(() => {
-                          // Use clientWorkers (the actual workers for this client) instead of assignments
-                          const workersBeingProcessed = clientWorkers.filter((worker: any) => 
+                          // Use assignments (the actual workers for this client) instead of clientWorkers
+                          const workersBeingProcessed = assignments.filter((worker: any) => 
                             worker.status !== 'completed' && worker.status !== 'archived'
                           );
                           
