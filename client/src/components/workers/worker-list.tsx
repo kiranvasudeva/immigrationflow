@@ -88,10 +88,13 @@ export default function WorkerList({ workers }: WorkerListProps) {
                   <i className="fas fa-envelope mr-2"></i>Invite Worker
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="sm:max-w-md" aria-describedby="invite-dialog-description">
                 <DialogHeader>
                   <DialogTitle>Invite Worker</DialogTitle>
                 </DialogHeader>
+                <p id="invite-dialog-description" className="text-sm text-muted-foreground">
+                  Send an invitation link to add a new worker to the system.
+                </p>
                 <div className="space-y-4 py-4">
                   <div>
                     <Label htmlFor="invite-email">Email address</Label>
