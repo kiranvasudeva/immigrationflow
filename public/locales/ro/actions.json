@@ -18,10 +18,10 @@
   "addWorker": "Adaugă Lucrător",
   "viewProgress": "Vezi Progresul",
   "generateInvite": "Generează Link de Invitație",
-  "signOut": "TODO: translate",
-  "addField": "TODO: translate",
-  "saveTemplate": "TODO: translate",
-  "uploadDocument": "TODO: translate",
-  "uploadFirstDocument": "TODO: translate",
-  "view": "TODO: translate"
+  "signOut": "Deconectare",
+  "addField": "Adaugă Câmp",
+  "saveTemplate": "Salvează Șablon",
+  "uploadDocument": "Încarcă Document",
+  "uploadFirstDocument": "Încarcă Primul Document",
+  "view": "Vizualizează"
 }
