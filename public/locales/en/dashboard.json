@@ -42,5 +42,8 @@
   "client": {
     "subtitle": "Subtitle",
     "title": "Title"
-  }
+  },
+  "clientProfile": "Client Profile & Management",
+  "workersManagement": "Workers Management & Assignment",
+  "workflowTracking": "Immigration Workflow Tracking"
 }

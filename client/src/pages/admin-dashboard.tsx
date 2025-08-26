@@ -214,6 +214,8 @@ export default function AdminDashboard() {
                 <Input 
                   placeholder={t('common.searchPlaceholder') || 'Search clients, workers, CUI...'} 
                   className="w-full sm:w-80"
+                  value={clientSearchTerm}
+                  onChange={(e) => setClientSearchTerm(e.target.value)}
                   data-testid="input-global-search"
                 />
                 {!selectedClient && !selectedWorkflowClient && !selectedWorkerDetail && (
@@ -1314,6 +1316,7 @@ export default function AdminDashboard() {
                             variant="outline"
                             onClick={() => {
                               setClientSearchTerm("");
+                              setClientFilter("all");
                               setStatusFilter("all");
                             }}
                             data-testid="button-clear-filters"
