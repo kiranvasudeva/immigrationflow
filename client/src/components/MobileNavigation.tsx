@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { LanguageSelector } from '@/components/LanguageSelector';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/contexts/LanguageContext';
 import { 
   Menu, 
   LayoutDashboard, 
@@ -26,7 +26,7 @@ interface MobileNavigationProps {
 export function MobileNavigation({ user, onLogout }: MobileNavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [location] = useLocation();
-  const { t } = useLanguage();
+  const { t } = useTranslation();
 
   const navItems = [
     { href: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },

@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Copy, Send, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/contexts/LanguageContext';
 
 interface WorkerInvitationLinkProps {
   workerId?: string;
@@ -19,7 +19,7 @@ export function WorkerInvitationLink({ workerId, workerEmail }: WorkerInvitation
   const [invitationLink, setInvitationLink] = useState<string>('');
   const [email, setEmail] = useState(workerEmail || '');
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t } = useTranslation();
 
   const generateInvitationLink = async () => {
     if (!email) {

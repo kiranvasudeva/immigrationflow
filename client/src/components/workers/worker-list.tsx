@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ interface WorkerListProps {
 }
 
 export default function WorkerList({ workers }: WorkerListProps) {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("WORKER");

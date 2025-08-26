@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
@@ -16,7 +16,7 @@ import { apiRequest } from '@/lib/queryClient';
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 export default function AnalyticsPage() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const [selectedPeriod, setSelectedPeriod] = useState('30');
   const [selectedClient, setSelectedClient] = useState('all');
   const { toast } = useToast();

@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/contexts/LanguageContext";
 import { insertClientProfileSchema } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ interface ClientFormProps {
 }
 
 export default function ClientForm({ onSubmit, isLoading = false, initialData }: ClientFormProps) {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientFormSchema),
     defaultValues: {

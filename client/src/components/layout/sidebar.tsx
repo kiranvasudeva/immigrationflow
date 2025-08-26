@@ -1,14 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface SidebarProps {
   userRole: 'ADMIN' | 'OWNER' | 'WORKER' | 'VIEWER';
 }
 
 export default function Sidebar({ userRole }: SidebarProps) {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   
   const handleLogout = () => {
     window.location.href = "/api/logout";

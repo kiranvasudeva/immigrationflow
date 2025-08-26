@@ -10,12 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 export default function AdminDashboard() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { t } = useLanguage();
+  const { t } = useTranslation();
 
   const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
     queryKey: ["/api/clients"],

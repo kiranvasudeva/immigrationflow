@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/contexts/LanguageContext';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -35,7 +35,7 @@ const SortableField = ({ field, onUpdate, onDelete }: {
   onUpdate: (id: string, updates: Partial<FieldConfig>) => void;
   onDelete: (id: string) => void;
 }) => {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const {
     attributes,
     listeners,
@@ -149,7 +149,7 @@ const SortableField = ({ field, onUpdate, onDelete }: {
 };
 
 export function TemplateBuilder({ template, fields = [], onSave }: TemplateBuilderProps) {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const [templateData, setTemplateData] = useState({
     name: template?.name || '',
     description: template?.description || '',

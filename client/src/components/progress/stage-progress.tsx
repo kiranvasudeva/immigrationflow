@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 export default function StageProgress() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   // Mock progress data - would come from API based on worker's assignments
   const stages = [
     { key: 'AJOFM', title: 'AJOFM', status: 'completed', progress: 100 },

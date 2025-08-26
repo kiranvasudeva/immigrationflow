@@ -5,12 +5,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/LanguageSelector";
 
 export default function Landing() {
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const { setLanguage, t } = useLanguage();
+  const { setLanguage, t } = useTranslation();
   
   // Set Romanian as default for landing page
   useEffect(() => {

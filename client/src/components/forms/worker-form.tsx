@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/contexts/LanguageContext";
 import { insertWorkerSchema } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ interface WorkerFormProps {
 }
 
 export default function WorkerForm({ onSubmit, isLoading = false, initialData, clientProfileId }: WorkerFormProps) {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const form = useForm<WorkerFormData>({
     resolver: zodResolver(workerFormSchema),
     defaultValues: {

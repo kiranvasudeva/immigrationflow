@@ -1,6 +1,6 @@
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useRoleBasedLanguage } from '@/hooks/useRoleBasedLanguage';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/contexts/LanguageContext';
 
 interface EnhancedLanguageSelectorProps {
   variant?: 'select' | 'button';
@@ -9,7 +9,7 @@ interface EnhancedLanguageSelectorProps {
 
 export function EnhancedLanguageSelector({ variant = 'select', className }: EnhancedLanguageSelectorProps) {
   const { setLanguageManually } = useRoleBasedLanguage();
-  const { currentLanguage } = useLanguage();
+  const { currentLanguage } = useTranslation();
 
   const handleLanguageChange = (newLanguage: string) => {
     setLanguageManually(newLanguage);

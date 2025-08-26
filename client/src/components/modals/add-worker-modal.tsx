@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -19,7 +19,7 @@ interface AddWorkerModalProps {
 }
 
 export default function AddWorkerModal({ isOpen, onClose, clientProfileId }: AddWorkerModalProps) {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

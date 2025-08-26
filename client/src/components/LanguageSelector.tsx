@@ -1,7 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Globe } from 'lucide-react';
-import { useLanguage, LANGUAGES } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/contexts/LanguageContext';
 
 interface LanguageSelectorProps {
   variant?: 'select' | 'button';
@@ -9,7 +9,7 @@ interface LanguageSelectorProps {
 }
 
 export function LanguageSelector({ variant = 'select', className }: LanguageSelectorProps) {
-  const { currentLanguage, setLanguage, t } = useLanguage();
+  const { currentLanguage, setLanguage, t, availableLanguages } = useTranslation();
   
   const handleLanguageChange = (language: string) => {
     setLanguage(language as any);
@@ -26,7 +26,7 @@ export function LanguageSelector({ variant = 'select', className }: LanguageSele
         data-testid="language-toggle-button"
       >
         <Globe className="h-4 w-4 mr-2" />
-        {LANGUAGES[currentLanguage]}
+        {availableLanguages.find(lang => lang.code === currentLanguage)?.name}
       </Button>
     );
   }
@@ -38,7 +38,7 @@ export function LanguageSelector({ variant = 'select', className }: LanguageSele
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {Object.entries(LANGUAGES).map(([code, name]) => (
+        {availableLanguages.map(({ code, name }) => (
           <SelectItem key={code} value={code}>
             {name}
           </SelectItem>
