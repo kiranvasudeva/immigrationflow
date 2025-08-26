@@ -409,7 +409,10 @@ export default function AdminDashboard() {
                         <div 
                           key={client.id || index} 
                           className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors" 
-                          onClick={() => setSelectedClient(client)}
+                          onClick={() => {
+                            setSelectedClient(client);
+                            setSelectedWorkflowClient(client);
+                          }}
                           data-testid={`client-${index}`}
                         >
                           <div className="flex items-center space-x-4">

@@ -1,0 +1,39 @@
+
+> rest-express@1.0.0 dev
+✅ DATABASE_URL found, initializing database connection...
+✅ Database connection pool created successfully
+8:51:55 PM [express] Starting server initialization...
+8:51:55 PM [express] Routes registered successfully
+8:51:55 PM [express] Vite development server setup complete
+8:51:55 PM [express] Server successfully started and listening on host 0.0.0.0:5000
+8:51:55 PM [express] Environment: development
+8:51:55 PM [express] Health check available at /health
+8:51:55 PM [express] Database health check available at /health/db
+Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+8:51:58 PM [express] GET /api/auth/user 200 in 2ms :: {"id":"dev-admin-1","email":"admin@dev.local",…
+8:51:58 PM [express] GET /api/audit 401 in 1ms :: {"message":"Unauthorized"}
+✅ Database connection established
+✅ Database connection established
+✅ Database connection established
+8:51:59 PM [express] GET /api/dashboard/assignments 200 in 806ms :: [{"id":"0485de89-f957-424d-b8f0-…
+✅ Database connection established
+✅ Database connection established
+✅ Database connection established
+✅ Database connection established
+✅ Database connection established
+✅ Database connection established
+✅ Database connection established
+✅ Database connection established
+✅ Database connection established
+✅ Database connection established
+✅ Database connection established
+8:51:59 PM [express] GET /api/dashboard/stats 200 in 1076ms :: {"totalClients":12,"totalWorkers":36,…
+8:51:59 PM [express] GET /api/clients 200 in 1137ms :: [{"id":"a51ccb98-a664-4e58-ae60-d46eeda1cf50"…
+8:51:59 PM [express] GET /api/auth/user 200 in 0ms :: {"id":"dev-admin-1","email":"admin@dev.local",…
+8:52:00 PM [express] GET /api/audit 401 in 1ms :: {"message":"Unauthorized"}
+8:52:00 PM [express] GET /api/clients 304 in 344ms :: [{"id":"a51ccb98-a664-4e58-ae60-d46eeda1cf50",…
+8:52:00 PM [express] GET /api/dashboard/assignments 304 in 456ms :: [{"id":"0485de89-f957-424d-b8f0-…
+8:52:00 PM [express] GET /api/dashboard/stats 304 in 689ms :: {"totalClients":12,"totalWorkers":36,"…
+^C8:52:28 PM [express] Received SIGINT, shutting down gracefully...
