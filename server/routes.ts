@@ -397,6 +397,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/workers/:workerId', isAuthenticated, auditMiddleware, async (req: any, res) => {
+    try {
+      const { workerId } = req.params;
+      const workerUpdates = req.body;
+      
+      // Validate required fields
+      if (!workerId) {
+        return res.status(400).json({ message: "Worker ID is required" });
+      }
+
+      // Convert date strings to Date objects if provided
+      if (workerUpdates.dob) {
+        workerUpdates.dob = new Date(workerUpdates.dob);
+      }
+      if (workerUpdates.passportExpiry) {
+        workerUpdates.passportExpiry = new Date(workerUpdates.passportExpiry);
+      }
+
+      const updatedWorker = await storage.updateWorker(workerId, workerUpdates);
+      res.json(updatedWorker);
+    } catch (error) {
+      console.error("Error updating worker:", error);
+      res.status(500).json({ message: "Failed to update worker profile" });
+    }
+  });
+
   // Stage routes
   app.get('/api/stages', isAuthenticated, async (req: any, res) => {
     try {
