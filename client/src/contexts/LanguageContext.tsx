@@ -55,6 +55,69 @@ const FALLBACK_TRANSLATIONS: Record<string, Translations> = {
     
     // Common
     'common.generating': 'Generating...',
+    'common.welcome': 'Welcome',
+    'common.dashboard': 'Dashboard',
+    'common.clients': 'Clients',
+    'common.workers': 'Workers',
+    'common.templates': 'Templates',
+    'common.analytics': 'Analytics',
+    'common.profile': 'Profile',
+    'common.documents': 'Documents',
+    'common.deadlines': 'Deadlines',
+    'common.logout': 'Logout',
+
+    // Landing page
+    'landing.title': 'Romanian Immigration Management',
+    'landing.subtitle': 'Streamline your Romanian immigration workflows',
+    'landing.description': 'Complete solution for managing work permits, visas, and residence permits',
+    'landing.login': 'Login',
+
+    // Navigation features
+    'nav.features': 'Features',
+    'nav.pricing': 'Pricing',
+    'nav.support': 'Support',
+
+    // Worker invitation
+    'worker.invite': 'Invite Worker',
+    'worker.inviteTitle': 'Worker Invitation',
+    'worker.generateInvite': 'Generate Invitation Link',
+    'worker.invitationLink': 'Invitation Link',
+
+    // Dashboard stats
+    'dashboard.stats.totalWorkers': 'Total Workers',
+    'dashboard.stats.pendingActions': 'Pending Actions',
+    'dashboard.stats.completed': 'Completed',
+    'dashboard.stats.completedThisMonth': 'Completed This Month',
+
+    // Actions
+    'action.newClient': 'New Client',
+
+    // Profile related
+    'pages.profile.title': 'Profile',
+    'profile.manageInfo': 'Manage your account information',
+    'actions.saveChanges': 'Save Changes',
+    'actions.editProfile': 'Edit Profile',
+    'profile.joined': 'Joined',
+    'profile.personalInfo': 'Personal Information',
+    'form.labels.email': 'Email Address',
+    'form.labels.phoneNumber': 'Phone Number',
+    'profile.workPermitStatus': 'Work Permit Status',
+
+    // Worker dashboard
+    'dashboard.worker.title': 'Worker Dashboard',
+    'dashboard.worker.subtitle': 'Track your immigration process',
+    'worker.urgentActions': 'Urgent Actions Required',
+    'status.overdue': 'Overdue',
+    'action.uploadDocument': 'Upload Document',
+    'worker.nextSteps': 'Next Steps',
+    'worker.myDocuments': 'My Documents',
+
+    // Table headers
+    'table.headers.document': 'Document',
+    'table.headers.stage': 'Stage',
+    'table.headers.status': 'Status',
+    'table.headers.dueDate': 'Due Date',
+    'table.headers.actions': 'Actions',
     
     // Common actions
     'action.save': 'Save',
@@ -157,6 +220,69 @@ const FALLBACK_TRANSLATIONS: Record<string, Translations> = {
     
     // Common
     'common.generating': 'Generare...',
+    'common.welcome': 'Bun venit',
+    'common.dashboard': 'Panou de Control',
+    'common.clients': 'Clienți',
+    'common.workers': 'Lucrători',
+    'common.templates': 'Șabloane',
+    'common.analytics': 'Analize',
+    'common.profile': 'Profil',
+    'common.documents': 'Documente',
+    'common.deadlines': 'Termene',
+    'common.logout': 'Deconectare',
+
+    // Landing page
+    'landing.title': 'Managementul Imigrației Românești',
+    'landing.subtitle': 'Eficientizați fluxurile de imigrare românești',
+    'landing.description': 'Soluție completă pentru gestionarea permiselor de muncă, vizelor și permiselor de ședere',
+    'landing.login': 'Autentificare',
+
+    // Navigation features
+    'nav.features': 'Funcționalități',
+    'nav.pricing': 'Prețuri',
+    'nav.support': 'Suport',
+
+    // Worker invitation
+    'worker.invite': 'Invită Lucrător',
+    'worker.inviteTitle': 'Invitație Lucrător',
+    'worker.generateInvite': 'Generează Link de Invitație',
+    'worker.invitationLink': 'Link Invitație',
+
+    // Dashboard stats
+    'dashboard.stats.totalWorkers': 'Total Lucrători',
+    'dashboard.stats.pendingActions': 'Acțiuni în Așteptare',
+    'dashboard.stats.completed': 'Completate',
+    'dashboard.stats.completedThisMonth': 'Completate Luna Aceasta',
+
+    // Actions
+    'action.newClient': 'Client Nou',
+
+    // Profile related
+    'pages.profile.title': 'Profil',
+    'profile.manageInfo': 'Gestionează informațiile contului tău',
+    'actions.saveChanges': 'Salvează Modificările',
+    'actions.editProfile': 'Editează Profilul',
+    'profile.joined': 'Înregistrat',
+    'profile.personalInfo': 'Informații Personale',
+    'form.labels.email': 'Adresa de Email',
+    'form.labels.phoneNumber': 'Număr de Telefon',
+    'profile.workPermitStatus': 'Starea Permisului de Muncă',
+
+    // Worker dashboard
+    'dashboard.worker.title': 'Panou Lucrător',
+    'dashboard.worker.subtitle': 'Urmărește procesul tău de imigrare',
+    'worker.urgentActions': 'Acțiuni Urgente Necesare',
+    'status.overdue': 'Întârziat',
+    'action.uploadDocument': 'Încarcă Document',
+    'worker.nextSteps': 'Pași Următori',
+    'worker.myDocuments': 'Documentele Mele',
+
+    // Table headers
+    'table.headers.document': 'Document',
+    'table.headers.stage': 'Etapa',
+    'table.headers.status': 'Status',
+    'table.headers.dueDate': 'Data Scadentă',
+    'table.headers.actions': 'Acțiuni',
     
     // Common actions
     'action.save': 'Salvează',
@@ -283,6 +409,71 @@ const FALLBACK_TRANSLATIONS: Record<string, Translations> = {
     'message.success': 'Éxito',
     'message.error': 'Error',
     'message.loading': 'Cargando...',
+    
+    // Common
+    'common.welcome': 'Bienvenido',
+    'common.dashboard': 'Tablero',
+    'common.clients': 'Clientes',
+    'common.workers': 'Trabajadores',
+    'common.templates': 'Plantillas',
+    'common.analytics': 'Análisis',
+    'common.profile': 'Perfil',
+    'common.documents': 'Documentos',
+    'common.deadlines': 'Plazos',
+    'common.logout': 'Cerrar Sesión',
+
+    // Landing page
+    'landing.title': 'Gestión de Inmigración Rumana',
+    'landing.subtitle': 'Optimiza tus flujos de inmigración rumanos',
+    'landing.description': 'Solución completa para gestionar permisos de trabajo, visas y permisos de residencia',
+    'landing.login': 'Iniciar Sesión',
+
+    // Navigation features
+    'nav.features': 'Características',
+    'nav.pricing': 'Precios',
+    'nav.support': 'Soporte',
+
+    // Worker invitation
+    'worker.invite': 'Invitar Trabajador',
+    'worker.inviteTitle': 'Invitación de Trabajador',
+    'worker.generateInvite': 'Generar Enlace de Invitación',
+    'worker.invitationLink': 'Enlace de Invitación',
+
+    // Dashboard stats
+    'dashboard.stats.totalWorkers': 'Total Trabajadores',
+    'dashboard.stats.pendingActions': 'Acciones Pendientes',
+    'dashboard.stats.completed': 'Completadas',
+    'dashboard.stats.completedThisMonth': 'Completadas Este Mes',
+
+    // Actions
+    'action.newClient': 'Nuevo Cliente',
+
+    // Profile related
+    'pages.profile.title': 'Perfil',
+    'profile.manageInfo': 'Gestiona la información de tu cuenta',
+    'actions.saveChanges': 'Guardar Cambios',
+    'actions.editProfile': 'Editar Perfil',
+    'profile.joined': 'Registrado',
+    'profile.personalInfo': 'Información Personal',
+    'form.labels.email': 'Dirección de Correo',
+    'form.labels.phoneNumber': 'Número de Teléfono',
+    'profile.workPermitStatus': 'Estado del Permiso de Trabajo',
+
+    // Worker dashboard
+    'dashboard.worker.title': 'Panel de Trabajador',
+    'dashboard.worker.subtitle': 'Sigue tu proceso de inmigración',
+    'worker.urgentActions': 'Acciones Urgentes Requeridas',
+    'status.overdue': 'Vencido',
+    'action.uploadDocument': 'Subir Documento',
+    'worker.nextSteps': 'Próximos Pasos',
+    'worker.myDocuments': 'Mis Documentos',
+
+    // Table headers
+    'table.headers.document': 'Documento',
+    'table.headers.stage': 'Etapa',
+    'table.headers.status': 'Estado',
+    'table.headers.dueDate': 'Fecha de Vencimiento',
+    'table.headers.actions': 'Acciones',
     'message.noData': 'No hay datos disponibles',
     'message.confirmDelete': '¿Estás seguro de que quieres eliminar este elemento?',
     
@@ -366,6 +557,71 @@ const FALLBACK_TRANSLATIONS: Record<string, Translations> = {
     'message.success': 'Succès',
     'message.error': 'Erreur',
     'message.loading': 'Chargement...',
+    
+    // Common
+    'common.welcome': 'Bienvenue',
+    'common.dashboard': 'Tableau de Bord',
+    'common.clients': 'Clients',
+    'common.workers': 'Travailleurs',
+    'common.templates': 'Modèles',
+    'common.analytics': 'Analyses',
+    'common.profile': 'Profil',
+    'common.documents': 'Documents',
+    'common.deadlines': 'Échéances',
+    'common.logout': 'Déconnexion',
+
+    // Landing page
+    'landing.title': 'Gestion de l\'Immigration Roumaine',
+    'landing.subtitle': 'Rationalisez vos flux d\'immigration roumains',
+    'landing.description': 'Solution complète pour gérer les permis de travail, visas et permis de séjour',
+    'landing.login': 'Connexion',
+
+    // Navigation features
+    'nav.features': 'Fonctionnalités',
+    'nav.pricing': 'Tarifs',
+    'nav.support': 'Support',
+
+    // Worker invitation
+    'worker.invite': 'Inviter Travailleur',
+    'worker.inviteTitle': 'Invitation de Travailleur',
+    'worker.generateInvite': 'Générer Lien d\'Invitation',
+    'worker.invitationLink': 'Lien d\'Invitation',
+
+    // Dashboard stats
+    'dashboard.stats.totalWorkers': 'Total Travailleurs',
+    'dashboard.stats.pendingActions': 'Actions en Attente',
+    'dashboard.stats.completed': 'Terminées',
+    'dashboard.stats.completedThisMonth': 'Terminées ce Mois',
+
+    // Actions
+    'action.newClient': 'Nouveau Client',
+
+    // Profile related
+    'pages.profile.title': 'Profil',
+    'profile.manageInfo': 'Gérer les informations de votre compte',
+    'actions.saveChanges': 'Enregistrer les Modifications',
+    'actions.editProfile': 'Modifier le Profil',
+    'profile.joined': 'Inscrit',
+    'profile.personalInfo': 'Informations Personnelles',
+    'form.labels.email': 'Adresse Email',
+    'form.labels.phoneNumber': 'Numéro de Téléphone',
+    'profile.workPermitStatus': 'Statut du Permis de Travail',
+
+    // Worker dashboard
+    'dashboard.worker.title': 'Tableau de Bord Travailleur',
+    'dashboard.worker.subtitle': 'Suivez votre processus d\'immigration',
+    'worker.urgentActions': 'Actions Urgentes Requises',
+    'status.overdue': 'En Retard',
+    'action.uploadDocument': 'Télécharger Document',
+    'worker.nextSteps': 'Prochaines Étapes',
+    'worker.myDocuments': 'Mes Documents',
+
+    // Table headers
+    'table.headers.document': 'Document',
+    'table.headers.stage': 'Étape',
+    'table.headers.status': 'Statut',
+    'table.headers.dueDate': 'Date d\'Échéance',
+    'table.headers.actions': 'Actions',
     'message.noData': 'Aucune donnée disponible',
     'message.confirmDelete': 'Êtes-vous sûr de vouloir supprimer cet élément?',
     
