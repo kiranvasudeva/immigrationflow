@@ -25,12 +25,15 @@ export default function ClientForm({ onSubmit, isLoading = false, initialData }:
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientFormSchema),
     defaultValues: {
-      companyName: initialData?.companyName || "",
+      legalName: initialData?.legalName || "",
       cui: initialData?.cui || "",
-      address: initialData?.address || "",
+      legalAddress: initialData?.legalAddress || "",
       caen: initialData?.caen || "",
       contactEmail: initialData?.contactEmail || "",
-      onrc: initialData?.onrc || "",
+      registrationNumber: initialData?.registrationNumber || "",
+      adminName: initialData?.adminName || "",
+      phoneNumber: initialData?.phoneNumber || "",
+      bankIban: initialData?.bankIban || "",
     },
   });
 
@@ -39,15 +42,15 @@ export default function ClientForm({ onSubmit, isLoading = false, initialData }:
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
-          name="companyName"
+          name="legalName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('form.labels.companyName') || 'Company Name *'}</FormLabel>
+              <FormLabel>{t('form.labels.legalName') || 'Legal Name *'}</FormLabel>
               <FormControl>
                 <Input 
                   {...field} 
-                  placeholder={t('form.placeholders.companyName') || 'Enter company name'}
-                  data-testid="input-company-name"
+                  placeholder={t('form.placeholders.legalName') || 'Enter legal company name'}
+                  data-testid="input-legal-name"
                 />
               </FormControl>
               <FormMessage />
@@ -95,16 +98,16 @@ export default function ClientForm({ onSubmit, isLoading = false, initialData }:
 
         <FormField
           control={form.control}
-          name="address"
+          name="legalAddress"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('form.labels.address') || 'Address *'}</FormLabel>
+              <FormLabel>{t('form.labels.legalAddress') || 'Legal Address *'}</FormLabel>
               <FormControl>
                 <Textarea 
                   {...field} 
-                  placeholder={t('form.placeholders.companyAddress') || 'Enter company address'}
+                  placeholder={t('form.placeholders.legalAddress') || 'Enter registered legal address'}
                   className="min-h-20"
-                  data-testid="textarea-address"
+                  data-testid="textarea-legal-address"
                 />
               </FormControl>
               <FormMessage />
@@ -134,16 +137,73 @@ export default function ClientForm({ onSubmit, isLoading = false, initialData }:
 
           <FormField
             control={form.control}
-            name="onrc"
+            name="registrationNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>ONRC</FormLabel>
+                <FormLabel>{t('form.labels.registrationNumber') || 'Registration Number *'}</FormLabel>
                 <FormControl>
                   <Input 
                     {...field} 
                     value={field.value || ''}
-                    placeholder={t('form.placeholders.onrc') || 'J40/1234/2020'}
-                    data-testid="input-onrc"
+                    placeholder={t('form.placeholders.registrationNumber') || 'J40/1234/2020'}
+                    data-testid="input-registration-number"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="adminName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('form.labels.adminName') || 'Administrator Name *'}</FormLabel>
+              <FormControl>
+                <Input 
+                  {...field} 
+                  placeholder={t('form.placeholders.adminName') || 'Full name of legal representative'}
+                  data-testid="input-admin-name"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="phoneNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('form.labels.phoneNumber') || 'Phone Number *'}</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    placeholder={t('form.placeholders.phoneNumber') || '+40 21 123 4567'}
+                    data-testid="input-phone-number"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="bankIban"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('form.labels.bankIban') || 'Bank IBAN *'}</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    value={field.value || ''}
+                    placeholder={t('form.placeholders.bankIban') || 'RO49 AAAA 1B31 0075 9384 0001'}
+                    data-testid="input-bank-iban"
                   />
                 </FormControl>
                 <FormMessage />
