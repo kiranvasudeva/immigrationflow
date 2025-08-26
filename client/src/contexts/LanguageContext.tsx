@@ -34,6 +34,11 @@ const FALLBACK_TRANSLATIONS: Record<string, Translations> = {
     'nav.features': 'Features',
     'nav.pricing': 'Pricing',
     'nav.support': 'Support',
+    'nav.requirements': 'Requirements',
+    'nav.reminders': 'Reminders',
+    'nav.auditLogs': 'Audit Logs',
+    'nav.deadlines': 'Deadlines',
+    'nav.profile': 'Profile',
     
     // Landing page
     'landing.title': 'Streamline Romanian',
@@ -131,6 +136,11 @@ const FALLBACK_TRANSLATIONS: Record<string, Translations> = {
     'nav.features': 'Caracteristici',
     'nav.pricing': 'Prețuri',
     'nav.support': 'Suport',
+    'nav.requirements': 'Cerințe',
+    'nav.reminders': 'Memento',
+    'nav.auditLogs': 'Jurnale de Audit',
+    'nav.deadlines': 'Termene Limită',
+    'nav.profile': 'Profil',
     
     // Landing page
     'landing.title': 'Optimizează procesele de',
@@ -225,6 +235,11 @@ const FALLBACK_TRANSLATIONS: Record<string, Translations> = {
     'nav.analytics': 'Análisis',
     'nav.settings': 'Configuración',
     'nav.logout': 'Cerrar Sesión',
+    'nav.requirements': 'Requisitos',
+    'nav.reminders': 'Recordatorios',
+    'nav.auditLogs': 'Registros de Auditoría',
+    'nav.deadlines': 'Plazos',
+    'nav.profile': 'Perfil',
     
     // Common actions
     'action.save': 'Guardar',
@@ -303,6 +318,11 @@ const FALLBACK_TRANSLATIONS: Record<string, Translations> = {
     'nav.analytics': 'Analyses',
     'nav.settings': 'Paramètres',
     'nav.logout': 'Déconnexion',
+    'nav.requirements': 'Exigences',
+    'nav.reminders': 'Rappels',
+    'nav.auditLogs': 'Journaux d\'Audit',
+    'nav.deadlines': 'Échéances',
+    'nav.profile': 'Profil',
     
     // Common actions
     'action.save': 'Enregistrer',
