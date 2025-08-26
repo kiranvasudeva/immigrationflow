@@ -32,6 +32,10 @@ export default function AdminDashboard() {
   // Navigation states
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [editingClient, setEditingClient] = useState(false);
+  
+  // Workers menu states
+  const [selectedWorkflowClient, setSelectedWorkflowClient] = useState<any>(null);
+  const [selectedWorkerDetail, setSelectedWorkerDetail] = useState<any>(null);
 
   const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
     queryKey: ["/api/clients"],
@@ -494,38 +498,353 @@ export default function AdminDashboard() {
               </CardHeader>
               <CollapsibleContent>
                 <CardContent className="p-6">
-                  {/* Filters */}
-                  <div className="flex flex-wrap gap-2 lg:gap-4 mb-6 p-3 lg:p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <Filter className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm font-medium">{t('common.filters') || 'Filters'}:</span>
+                  {/* Navigation Breadcrumb */}
+                  {(selectedWorkflowClient || selectedWorkerDetail) && (
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2 text-sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            setSelectedWorkflowClient(null);
+                            setSelectedWorkerDetail(null);
+                          }}
+                          className="text-primary hover:text-primary/80"
+                        >
+                          <i className="fas fa-arrow-left mr-2"></i>
+                          {t('common.workers') || 'Workers'}
+                        </Button>
+                        {selectedWorkflowClient && (
+                          <>
+                            <ChevronRight className="h-4 w-4 text-gray-400" />
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => setSelectedWorkerDetail(null)}
+                              className={selectedWorkerDetail ? "text-primary hover:text-primary/80" : "text-gray-900"}
+                            >
+                              {selectedWorkflowClient.companyName}
+                            </Button>
+                          </>
+                        )}
+                        {selectedWorkerDetail && (
+                          <>
+                            <ChevronRight className="h-4 w-4 text-gray-400" />
+                            <span className="text-gray-900 font-medium">{selectedWorkerDetail.worker?.fullName}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <Select value={workerFilter} onValueChange={setWorkerFilter}>
-                      <SelectTrigger className="w-full sm:w-48" data-testid="select-worker-filter">
-                        <SelectValue placeholder={t('common.allWorkers') || 'All Workers'} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t('common.allWorkers') || 'All Workers'}</SelectItem>
-                        {clients.map((client: any) => (
-                          <SelectItem key={client.id} value={client.id}>{client.companyName}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select>
-                      <SelectTrigger className="w-full sm:w-48" data-testid="select-stage-filter">
-                        <SelectValue placeholder={t('common.allStages') || 'All Stages'} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t('common.allStagesOption') || 'All Stages'}</SelectItem>
-                        <SelectItem value="ajofm">{t('stages.ajofm') || 'AJOFM'}</SelectItem>
-                        <SelectItem value="work-permit">{t('stages.workPermit') || 'Work Permit'}</SelectItem>
-                        <SelectItem value="visa">{t('stages.visa') || 'Visa D/AM'}</SelectItem>
-                        <SelectItem value="residence">{t('stages.residence') || 'Residence Permit'}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <WorkflowKanban assignments={assignments} />
+                  )}
+
+                  {/* Client Selection Form */}
+                  {!selectedWorkflowClient && (
+                    <div className="space-y-6">
+                      <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                        <i className="fas fa-building text-gray-400 text-3xl mb-4"></i>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('common.selectClient') || 'Select a Client'}</h3>
+                        <p className="text-gray-600 mb-4">{t('common.selectClientDescription') || 'Choose a client to view their workers and application status'}</p>
+                        
+                        <Select onValueChange={(clientId) => {
+                          const client = clients.find((c: any) => c.id === clientId);
+                          setSelectedWorkflowClient(client);
+                        }}>
+                          <SelectTrigger className="w-full max-w-md mx-auto" data-testid="select-workflow-client">
+                            <SelectValue placeholder={t('common.chooseClient') || 'Choose Client'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {clients.map((client: any) => (
+                              <SelectItem key={client.id} value={client.id}>
+                                <div className="flex items-center space-x-2">
+                                  <i className="fas fa-building text-primary"></i>
+                                  <span>{client.companyName} - CUI: {client.cui}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Workers List */}
+                  {selectedWorkflowClient && !selectedWorkerDetail && (
+                    <div className="space-y-4">
+                      <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
+                            <i className="fas fa-building text-white"></i>
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{selectedWorkflowClient.companyName}</h3>
+                            <p className="text-sm text-gray-600">CUI: {selectedWorkflowClient.cui}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <h4 className="text-lg font-semibold mb-4 flex items-center">
+                        <i className="fas fa-users mr-2"></i>
+                        {t('common.workerApplications') || 'Worker Applications'}
+                      </h4>
+
+                      {assignments.filter((assignment: any) => assignment.clientId === selectedWorkflowClient.id).length === 0 ? (
+                        <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                          <i className="fas fa-user-plus text-gray-400 text-3xl mb-4"></i>
+                          <p className="text-gray-600">{t('common.noWorkersForClient') || 'No workers found for this client'}</p>
+                        </div>
+                      ) : (
+                        <div className="grid gap-4">
+                          {assignments
+                            .filter((assignment: any) => assignment.clientId === selectedWorkflowClient.id)
+                            .map((assignment: any, index: number) => (
+                            <div 
+                              key={assignment.id || index} 
+                              className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                              onClick={() => setSelectedWorkerDetail(assignment)}
+                              data-testid={`worker-application-${index}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-4">
+                                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i className="fas fa-user text-green-600"></i>
+                                  </div>
+                                  <div>
+                                    <h5 className="font-semibold text-gray-900">{assignment.worker?.fullName || 'Unknown Worker'}</h5>
+                                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                                      <span><i className="fas fa-flag mr-1"></i>{assignment.worker?.nationality || 'Unknown'}</span>
+                                      <span><i className="fas fa-briefcase mr-1"></i>{assignment.jobTitle || 'Job not specified'}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                    assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                    assignment.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                                    assignment.status === 'pending' ? 'bg-orange-100 text-orange-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {assignment.status?.replace('-', ' ')?.toUpperCase() || 'UNKNOWN'}
+                                  </span>
+                                  <div className="mt-1 text-xs text-gray-500">
+                                    {assignment.currentStage || 'Stage not specified'}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Quick Status Overview */}
+                              <div className="mt-3 flex space-x-1">
+                                {[
+                                  { stage: 'ajofm', status: assignment.ajofmStatus || 'pending' },
+                                  { stage: 'work-permit', status: assignment.workPermitStatus || 'pending' },
+                                  { stage: 'visa', status: assignment.visaStatus || 'pending' },
+                                  { stage: 'residence', status: assignment.residenceStatus || 'pending' }
+                                ].map((step, stepIndex) => (
+                                  <div key={step.stage} className="flex-1">
+                                    <div className={`h-1.5 rounded-full ${
+                                      step.status === 'completed' ? 'bg-green-500' :
+                                      step.status === 'in-progress' ? 'bg-blue-500' :
+                                      step.status === 'pending' ? 'bg-orange-500' :
+                                      'bg-gray-300'
+                                    }`}></div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Worker Detail Flowchart */}
+                  {selectedWorkerDetail && (
+                    <div className="space-y-6">
+                      {/* Worker Header */}
+                      <div className="bg-green-50 rounded-lg p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start space-x-4">
+                            <div className="w-16 h-16 bg-green-600 rounded-lg flex items-center justify-center">
+                              <i className="fas fa-user text-white text-xl"></i>
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900">{selectedWorkerDetail.worker?.fullName}</h3>
+                              <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                                <span><i className="fas fa-flag mr-1"></i>{selectedWorkerDetail.worker?.nationality}</span>
+                                <span><i className="fas fa-briefcase mr-1"></i>{selectedWorkerDetail.jobTitle}</span>
+                                <span><i className="fas fa-building mr-1"></i>{selectedWorkflowClient.companyName}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className={`px-3 py-2 rounded-full text-sm font-medium ${
+                              selectedWorkerDetail.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              selectedWorkerDetail.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                              selectedWorkerDetail.status === 'pending' ? 'bg-orange-100 text-orange-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {selectedWorkerDetail.status?.replace('-', ' ')?.toUpperCase() || 'UNKNOWN'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Document Status Flowchart */}
+                      <div>
+                        <h4 className="text-lg font-semibold mb-4 flex items-center">
+                          <i className="fas fa-file-alt mr-2"></i>
+                          {t('common.documentFlow') || 'Document Flow & Status'}
+                        </h4>
+                        
+                        <div className="space-y-6">
+                          {[
+                            {
+                              stage: 'ajofm',
+                              title: t('stages.ajofm') || 'AJOFM Labor Market Test',
+                              status: selectedWorkerDetail.ajofmStatus || 'pending',
+                              documents: [
+                                { name: 'Employment Contract', status: selectedWorkerDetail.ajofmDocuments?.employmentContract || 'pending' },
+                                { name: 'Job Description', status: selectedWorkerDetail.ajofmDocuments?.jobDescription || 'pending' },
+                                { name: 'Company Registration', status: selectedWorkerDetail.ajofmDocuments?.companyRegistration || 'received' }
+                              ],
+                              authorityResponse: selectedWorkerDetail.ajofmResponse || 'pending'
+                            },
+                            {
+                              stage: 'work-permit',
+                              title: t('stages.workPermit') || 'IGI Work Permit',
+                              status: selectedWorkerDetail.workPermitStatus || 'pending',
+                              documents: [
+                                { name: 'Passport Copy', status: selectedWorkerDetail.workPermitDocuments?.passport || 'pending' },
+                                { name: 'Diploma Translation', status: selectedWorkerDetail.workPermitDocuments?.diploma || 'pending' },
+                                { name: 'Criminal Background Check', status: selectedWorkerDetail.workPermitDocuments?.background || 'pending' },
+                                { name: 'AJOFM Approval', status: selectedWorkerDetail.ajofmStatus === 'completed' ? 'received' : 'pending' }
+                              ],
+                              authorityResponse: selectedWorkerDetail.workPermitResponse || 'pending'
+                            },
+                            {
+                              stage: 'visa',
+                              title: t('stages.visa') || 'Consulate Visa D/AM',
+                              status: selectedWorkerDetail.visaStatus || 'pending',
+                              documents: [
+                                { name: 'Visa Application Form', status: selectedWorkerDetail.visaDocuments?.application || 'pending' },
+                                { name: 'Work Permit Copy', status: selectedWorkerDetail.workPermitStatus === 'completed' ? 'received' : 'pending' },
+                                { name: 'Medical Certificate', status: selectedWorkerDetail.visaDocuments?.medical || 'pending' },
+                                { name: 'Proof of Accommodation', status: selectedWorkerDetail.visaDocuments?.accommodation || 'pending' }
+                              ],
+                              authorityResponse: selectedWorkerDetail.visaResponse || 'pending'
+                            },
+                            {
+                              stage: 'residence',
+                              title: t('stages.residence') || 'Residence Permit',
+                              status: selectedWorkerDetail.residenceStatus || 'pending',
+                              documents: [
+                                { name: 'Residence Application', status: selectedWorkerDetail.residenceDocuments?.application || 'pending' },
+                                { name: 'Entry Stamp/Visa', status: selectedWorkerDetail.visaStatus === 'completed' ? 'received' : 'pending' },
+                                { name: 'Employment Proof', status: selectedWorkerDetail.residenceDocuments?.employment || 'pending' },
+                                { name: 'Health Insurance', status: selectedWorkerDetail.residenceDocuments?.insurance || 'pending' }
+                              ],
+                              authorityResponse: selectedWorkerDetail.residenceResponse || 'pending'
+                            }
+                          ].map((stage, stageIndex) => (
+                            <div key={stage.stage} className="border rounded-lg p-6 bg-white">
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center space-x-3">
+                                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
+                                    stage.status === 'completed' ? 'bg-green-500' :
+                                    stage.status === 'in-progress' ? 'bg-blue-500' :
+                                    stage.status === 'pending' ? 'bg-orange-500' :
+                                    'bg-gray-400'
+                                  }`}>
+                                    {stageIndex + 1}
+                                  </div>
+                                  <div>
+                                    <h5 className="font-semibold text-gray-900">{stage.title}</h5>
+                                    <p className="text-sm text-gray-600 capitalize">{stage.status.replace('-', ' ')}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <i className={`fas text-lg ${
+                                    stage.status === 'completed' ? 'fa-check-circle text-green-500' :
+                                    stage.status === 'in-progress' ? 'fa-clock text-blue-500' :
+                                    stage.status === 'pending' ? 'fa-hourglass-half text-orange-500' :
+                                    'fa-circle text-gray-400'
+                                  }`}></i>
+                                </div>
+                              </div>
+
+                              {/* Document Status Grid */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                  <h6 className="font-medium text-gray-900 mb-3 flex items-center">
+                                    <i className="fas fa-file-import mr-2"></i>
+                                    {t('common.documentsRequired') || 'Documents Required'}
+                                  </h6>
+                                  <div className="space-y-2">
+                                    {stage.documents.map((doc, docIndex) => (
+                                      <div key={docIndex} className="flex items-center justify-between p-2 border rounded">
+                                        <span className="text-sm">{doc.name}</span>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                          doc.status === 'received' ? 'bg-green-100 text-green-800' :
+                                          doc.status === 'pending' ? 'bg-orange-100 text-orange-800' :
+                                          'bg-gray-100 text-gray-800'
+                                        }`}>
+                                          {doc.status === 'received' ? 'Received' : 'Pending'}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <h6 className="font-medium text-gray-900 mb-3 flex items-center">
+                                    <i className="fas fa-university mr-2"></i>
+                                    {t('common.authorityResponse') || 'Authority Response'}
+                                  </h6>
+                                  <div className={`p-4 rounded-lg border-2 ${
+                                    stage.authorityResponse === 'approved' ? 'border-green-200 bg-green-50' :
+                                    stage.authorityResponse === 'rejected' ? 'border-red-200 bg-red-50' :
+                                    stage.authorityResponse === 'in-review' ? 'border-blue-200 bg-blue-50' :
+                                    'border-gray-200 bg-gray-50'
+                                  }`}>
+                                    <div className="flex items-center space-x-2">
+                                      <i className={`fas ${
+                                        stage.authorityResponse === 'approved' ? 'fa-check-circle text-green-600' :
+                                        stage.authorityResponse === 'rejected' ? 'fa-times-circle text-red-600' :
+                                        stage.authorityResponse === 'in-review' ? 'fa-clock text-blue-600' :
+                                        'fa-hourglass-half text-gray-600'
+                                      }`}></i>
+                                      <span className={`font-medium ${
+                                        stage.authorityResponse === 'approved' ? 'text-green-800' :
+                                        stage.authorityResponse === 'rejected' ? 'text-red-800' :
+                                        stage.authorityResponse === 'in-review' ? 'text-blue-800' :
+                                        'text-gray-800'
+                                      }`}>
+                                        {stage.authorityResponse === 'approved' ? 'Approved' :
+                                         stage.authorityResponse === 'rejected' ? 'Rejected' :
+                                         stage.authorityResponse === 'in-review' ? 'In Review' :
+                                         'Pending Submission'}
+                                      </span>
+                                    </div>
+                                    {stage.authorityResponse !== 'pending' && (
+                                      <p className="text-xs mt-1 text-gray-600">
+                                        Response received on {new Date().toLocaleDateString()}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Flow Arrow */}
+                              {stageIndex < 3 && (
+                                <div className="flex justify-center mt-4">
+                                  <i className="fas fa-arrow-down text-gray-400 text-xl"></i>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </CollapsibleContent>
             </Card>
