@@ -1,20 +1,19 @@
+import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Globe } from 'lucide-react';
 import { useTranslation } from '@/contexts/I18nProvider';
 
-interface LanguageSelectorProps {
+interface LanguageSwitcherProps {
   variant?: 'select' | 'button';
   className?: string;
 }
 
-export function LanguageSelector({ variant = 'select', className }: LanguageSelectorProps) {
-  const { language: currentLanguage, changeLanguage: setLanguage, availableLanguages } = useTranslation();
+export function LanguageSwitcher({ variant = 'select', className }: LanguageSwitcherProps) {
+  const { language, changeLanguage, availableLanguages } = useTranslation();
   
-  const handleLanguageChange = async (language: string) => {
-    await setLanguage(language);
-    // Mark as manually set to prevent role-based override
-    localStorage.setItem('immigration-app-language-manually-set', 'true');
+  const handleLanguageChange = async (newLanguage: string) => {
+    await changeLanguage(newLanguage);
   };
 
   if (variant === 'button') {
@@ -23,16 +22,21 @@ export function LanguageSelector({ variant = 'select', className }: LanguageSele
         variant="outline"
         size="sm"
         className={className}
+        onClick={() => {
+          const currentIndex = availableLanguages.findIndex(lang => lang.code === language);
+          const nextIndex = (currentIndex + 1) % availableLanguages.length;
+          handleLanguageChange(availableLanguages[nextIndex].code);
+        }}
         data-testid="language-toggle-button"
       >
         <Globe className="h-4 w-4 mr-2" />
-        {availableLanguages.find(lang => lang.code === currentLanguage)?.name}
+        {availableLanguages.find(lang => lang.code === language)?.name}
       </Button>
     );
   }
 
   return (
-    <Select value={currentLanguage} onValueChange={handleLanguageChange}>
+    <Select value={language} onValueChange={handleLanguageChange}>
       <SelectTrigger className={`w-32 ${className}`} data-testid="language-selector">
         <Globe className="h-4 w-4 mr-2" />
         <SelectValue />

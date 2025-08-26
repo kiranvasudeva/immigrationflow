@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { I18nProvider } from "@/contexts/I18nContext";
+import { I18nProvider } from "@/contexts/I18nProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { DummyDataAlert } from "@/components/dummy-data-alert";
 import { useRoleBasedLanguage } from "@/hooks/useRoleBasedLanguage";

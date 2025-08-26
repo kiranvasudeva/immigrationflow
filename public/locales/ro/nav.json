@@ -1,0 +1,21 @@
+{
+  "dashboard": "Panou de Control",
+  "clients": "Clienți",
+  "workers": "Lucrători",
+  "templates": "Șabloane",
+  "analytics": "Analize",
+  "settings": "Setări",
+  "logout": "Deconectare",
+  "features": "Funcționalități",
+  "pricing": "Prețuri",
+  "support": "Suport",
+  "requirements": "Cerințe",
+  "reminders": "Memento-uri",
+  "auditLogs": "Jurnale de Audit",
+  "deadlines": "Termene",
+  "profile": "Profil",
+  "documents": "Documente",
+  "companyProfile": "TODO: translate",
+  "myProgress": "TODO: translate",
+  "payments": "TODO: translate"
+}
