@@ -246,8 +246,9 @@ export async function seedDatabase() {
     const insertedAssignments = await db.insert(assignments).values(assignmentsData).returning();
     console.log(`✅ Created ${insertedAssignments.length} test assignments`);
 
-    // Add Romanian translations
-    const romanianTranslations = [
+    // Add comprehensive translations
+    const allTranslations = [
+      // Romanian translations
       { key: 'common.welcome', language: 'ro' as const, value: 'Bun venit' },
       { key: 'common.dashboard', language: 'ro' as const, value: 'Panou de control' },
       { key: 'common.clients', language: 'ro' as const, value: 'Clienți' },
@@ -258,9 +259,26 @@ export async function seedDatabase() {
       { key: 'common.documents', language: 'ro' as const, value: 'Documente' },
       { key: 'common.deadlines', language: 'ro' as const, value: 'Termene' },
       { key: 'common.logout', language: 'ro' as const, value: 'Ieșire' },
-      { key: 'landing.title', language: 'ro' as const, value: 'ImmigrationFlow - Gestionarea Proceselor de Imigrație Românești' },
-      { key: 'landing.subtitle', language: 'ro' as const, value: 'Platforma completă SaaS pentru gestionarea fluxurilor de lucru de imigrație românești' },
+      { key: 'common.generating', language: 'ro' as const, value: 'Generare...' },
+      
+      // Navigation in Romanian
+      { key: 'nav.features', language: 'ro' as const, value: 'Caracteristici' },
+      { key: 'nav.pricing', language: 'ro' as const, value: 'Prețuri' },
+      { key: 'nav.support', language: 'ro' as const, value: 'Suport' },
+      
+      // Landing page in Romanian
+      { key: 'landing.title', language: 'ro' as const, value: 'Optimizează procesele de' },
+      { key: 'landing.subtitle', language: 'ro' as const, value: 'Imigrație Românească' },
+      { key: 'landing.description', language: 'ro' as const, value: 'Platformă SaaS completă pentru gestionarea autorizațiilor de muncă, vizelor și permiselor de ședere. De la testele AJOFM la aprobările finale IGI.' },
       { key: 'landing.login', language: 'ro' as const, value: 'Autentificare' },
+      
+      // Worker invitation in Romanian
+      { key: 'worker.invite', language: 'ro' as const, value: 'Invită Lucrătorul' },
+      { key: 'worker.inviteTitle', language: 'ro' as const, value: 'Invită Lucrătorul să acceseze Profilul' },
+      { key: 'worker.generateInvite', language: 'ro' as const, value: 'Generează Link de Invitație' },
+      { key: 'worker.invitationLink', language: 'ro' as const, value: 'Link de Invitație' },
+      { key: 'worker.linkDescription', language: 'ro' as const, value: 'Trimite acest link lucrătorului pentru a-i da acces la profilul său și zona de încărcare documente.' },
+      { key: 'form.email', language: 'ro' as const, value: 'Email' },
       
       // English translations
       { key: 'common.welcome', language: 'en' as const, value: 'Welcome' },
@@ -273,13 +291,30 @@ export async function seedDatabase() {
       { key: 'common.documents', language: 'en' as const, value: 'Documents' },
       { key: 'common.deadlines', language: 'en' as const, value: 'Deadlines' },
       { key: 'common.logout', language: 'en' as const, value: 'Logout' },
-      { key: 'landing.title', language: 'en' as const, value: 'ImmigrationFlow - Romanian Immigration Management' },
-      { key: 'landing.subtitle', language: 'en' as const, value: 'Complete SaaS platform for managing Romanian immigration workflows' },
+      { key: 'common.generating', language: 'en' as const, value: 'Generating...' },
+      
+      // Navigation in English
+      { key: 'nav.features', language: 'en' as const, value: 'Features' },
+      { key: 'nav.pricing', language: 'en' as const, value: 'Pricing' },
+      { key: 'nav.support', language: 'en' as const, value: 'Support' },
+      
+      // Landing page in English
+      { key: 'landing.title', language: 'en' as const, value: 'Streamline Romanian' },
+      { key: 'landing.subtitle', language: 'en' as const, value: 'Immigration Workflows' },
+      { key: 'landing.description', language: 'en' as const, value: 'Complete SaaS platform for managing work permits, visa applications, and residence permits. From AJOFM labor market tests to final IGI approvals.' },
       { key: 'landing.login', language: 'en' as const, value: 'Login' },
+      
+      // Worker invitation in English
+      { key: 'worker.invite', language: 'en' as const, value: 'Invite Worker' },
+      { key: 'worker.inviteTitle', language: 'en' as const, value: 'Invite Worker to Access Profile' },
+      { key: 'worker.generateInvite', language: 'en' as const, value: 'Generate Invitation Link' },
+      { key: 'worker.invitationLink', language: 'en' as const, value: 'Invitation Link' },
+      { key: 'worker.linkDescription', language: 'en' as const, value: 'Share this link with the worker to give them access to their profile and document upload area.' },
+      { key: 'form.email', language: 'en' as const, value: 'Email' },
     ];
 
-    await db.insert(translations).values(romanianTranslations);
-    console.log(`✅ Added ${romanianTranslations.length} translations`);
+    await db.insert(translations).values(allTranslations);
+    console.log(`✅ Added ${allTranslations.length} translations`);
 
     // Create test document templates
     const templatesData = [

@@ -31,6 +31,25 @@ const FALLBACK_TRANSLATIONS: Record<string, Translations> = {
     'nav.analytics': 'Analytics',
     'nav.settings': 'Settings',
     'nav.logout': 'Logout',
+    'nav.features': 'Features',
+    'nav.pricing': 'Pricing',
+    'nav.support': 'Support',
+    
+    // Landing page
+    'landing.title': 'Streamline Romanian',
+    'landing.subtitle': 'Immigration Workflows',
+    'landing.description': 'Complete SaaS platform for managing work permits, visa applications, and residence permits. From AJOFM labor market tests to final IGI approvals.',
+    'landing.login': 'Login',
+    
+    // Worker invitations
+    'worker.invite': 'Invite Worker',
+    'worker.inviteTitle': 'Invite Worker to Access Profile',
+    'worker.generateInvite': 'Generate Invitation Link',
+    'worker.invitationLink': 'Invitation Link',
+    'worker.linkDescription': 'Share this link with the worker to give them access to their profile and document upload area.',
+    
+    // Common
+    'common.generating': 'Generating...',
     
     // Common actions
     'action.save': 'Save',
@@ -109,6 +128,25 @@ const FALLBACK_TRANSLATIONS: Record<string, Translations> = {
     'nav.analytics': 'Analize',
     'nav.settings': 'Setări',
     'nav.logout': 'Deconectare',
+    'nav.features': 'Caracteristici',
+    'nav.pricing': 'Prețuri',
+    'nav.support': 'Suport',
+    
+    // Landing page
+    'landing.title': 'Optimizează procesele de',
+    'landing.subtitle': 'Imigrație Românească',
+    'landing.description': 'Platformă SaaS completă pentru gestionarea autorizațiilor de muncă, vizelor și permiselor de ședere. De la testele AJOFM la aprobările finale IGI.',
+    'landing.login': 'Autentificare',
+    
+    // Worker invitations
+    'worker.invite': 'Invită Lucrătorul',
+    'worker.inviteTitle': 'Invită Lucrătorul să acceseze Profilul',
+    'worker.generateInvite': 'Generează Link de Invitație',
+    'worker.invitationLink': 'Link de Invitație',
+    'worker.linkDescription': 'Trimite acest link lucrătorului pentru a-i da acces la profilul său și zona de încărcare documente.',
+    
+    // Common
+    'common.generating': 'Generare...',
     
     // Common actions
     'action.save': 'Salvează',
