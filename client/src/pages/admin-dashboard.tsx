@@ -33,6 +33,7 @@ export default function AdminDashboard() {
   const [workerFilter, setWorkerFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [clientSearchTerm, setClientSearchTerm] = useState("");
+  const [workerSearchTerm, setWorkerSearchTerm] = useState("");
   
   // Navigation states
   const [activeSection, setActiveSection] = useState<string>("overview");
@@ -781,13 +782,63 @@ export default function AdminDashboard() {
 
                       {/* Workers Being Processed */}
                       <div>
-                        <h4 className="text-lg font-semibold mb-4 flex items-center">
-                          <i className="fas fa-users mr-2"></i>
-                          {t('common.workersBeingProcessed') || 'Workers Being Processed'} ({selectedClient.activeWorkers || 0})
-                        </h4>
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                          <h4 className="text-lg font-semibold flex items-center">
+                            <i className="fas fa-users mr-2"></i>
+                            {t('common.workersBeingProcessed') || 'Workers Being Processed'} ({selectedClient.activeWorkers || 0})
+                          </h4>
+                          
+                          {/* Worker Filters */}
+                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <Input
+                              placeholder={t('common.searchWorkers') || 'Search workers...'}
+                              value={workerSearchTerm}
+                              onChange={(e) => setWorkerSearchTerm(e.target.value)}
+                              className="w-full sm:w-64"
+                              data-testid="input-worker-search"
+                            />
+                            <Select value={workerFilter} onValueChange={setWorkerFilter}>
+                              <SelectTrigger className="w-full sm:w-40" data-testid="select-worker-filter">
+                                <SelectValue placeholder="Status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">All Workers</SelectItem>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="blocked">Blocked</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setWorkerSearchTerm("");
+                                setWorkerFilter("all");
+                              }}
+                              data-testid="button-clear-worker-filters"
+                            >
+                              <i className="fas fa-times mr-1"></i>
+                              Clear
+                            </Button>
+                          </div>
+                        </div>
                         
-                        {assignments.filter((assignment: any) => assignment.clientId === selectedClient.id).length === 0 ? (
-                          <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                        {(() => {
+                          const clientAssignments = assignments.filter((assignment: any) => assignment.clientId === selectedClient.id);
+                          const filteredAssignments = clientAssignments.filter((assignment: any) => {
+                            const matchesSearch = !workerSearchTerm || 
+                              assignment.worker?.fullName?.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
+                              assignment.worker?.nationality?.toLowerCase().includes(workerSearchTerm.toLowerCase());
+                            
+                            const matchesWorkerFilter = workerFilter === "all" || 
+                              (assignment.currentStage || "pending").toLowerCase() === workerFilter.toLowerCase();
+                            
+                            return matchesSearch && matchesWorkerFilter;
+                          });
+
+                          return filteredAssignments.length === 0 ? (
+                            <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                             <i className="fas fa-users text-gray-400 text-3xl mb-4"></i>
                             <p className="text-gray-600">{t('common.noWorkersProcessing') || 'No workers currently being processed'}</p>
                             <Button className="mt-4" size="sm" data-testid="button-add-worker">
@@ -795,11 +846,9 @@ export default function AdminDashboard() {
                               {t('actions.addWorker') || 'Add Worker'}
                             </Button>
                           </div>
-                        ) : (
-                          <div className="space-y-4">
-                            {assignments
-                              .filter((assignment: any) => assignment.clientId === selectedClient.id)
-                              .map((assignment: any, index: number) => (
+                          ) : (
+                            <div className="space-y-4">
+                              {filteredAssignments.map((assignment: any, index: number) => (
                               <div key={assignment.id || index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                                 <div className="flex items-start justify-between">
                                   <div className="flex items-center space-x-4">
@@ -869,9 +918,10 @@ export default function AdminDashboard() {
                                   </div>
                                 )}
                               </div>
-                            ))}
-                          </div>
-                        )}
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   )}
@@ -980,19 +1030,74 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
-                      <h4 className="text-lg font-semibold mb-4 flex items-center">
-                        <i className="fas fa-users mr-2"></i>
-                        {t('common.workerApplications') || 'Worker Applications'}
-                      </h4>
-
-                      {clientWorkers.length === 0 ? (
-                        <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                          <i className="fas fa-user-plus text-gray-400 text-3xl mb-4"></i>
-                          <p className="text-gray-600">{t('common.noWorkersForClient') || 'No workers found for this client'}</p>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                        <h4 className="text-lg font-semibold flex items-center">
+                          <i className="fas fa-users mr-2"></i>
+                          {t('common.workerApplications') || 'Worker Applications'}
+                        </h4>
+                        
+                        {/* Worker Filters */}
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                          <Input
+                            placeholder={t('common.searchWorkers') || 'Search workers...'}
+                            value={workerSearchTerm}
+                            onChange={(e) => setWorkerSearchTerm(e.target.value)}
+                            className="w-full sm:w-64"
+                            data-testid="input-worker-applications-search"
+                          />
+                          <Select value={workerFilter} onValueChange={setWorkerFilter}>
+                            <SelectTrigger className="w-full sm:w-40" data-testid="select-worker-applications-filter">
+                              <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Workers</SelectItem>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="completed">Completed</SelectItem>
+                              <SelectItem value="blocked">Blocked</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setWorkerSearchTerm("");
+                              setWorkerFilter("all");
+                            }}
+                            data-testid="button-clear-worker-applications-filters"
+                          >
+                            <i className="fas fa-times mr-1"></i>
+                            Clear
+                          </Button>
                         </div>
-                      ) : (
-                        <div className="grid gap-4">
-                          {clientWorkers.map((worker: any, index: number) => (
+                      </div>
+
+                      {(() => {
+                        const filteredWorkers = clientWorkers.filter((worker: any) => {
+                          const matchesSearch = !workerSearchTerm || 
+                            worker.firstName?.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
+                            worker.lastName?.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
+                            worker.nationality?.toLowerCase().includes(workerSearchTerm.toLowerCase());
+                          
+                          const matchesWorkerFilter = workerFilter === "all" || 
+                            (worker.status || "pending").toLowerCase() === workerFilter.toLowerCase();
+                          
+                          return matchesSearch && matchesWorkerFilter;
+                        });
+
+                        return filteredWorkers.length === 0 ? (
+                          <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                            <i className="fas fa-user-plus text-gray-400 text-3xl mb-4"></i>
+                            <p className="text-gray-600">
+                              {workerSearchTerm || workerFilter !== "all" 
+                                ? "No workers match your filters"
+                                : (t('common.noWorkersForClient') || 'No workers found for this client')
+                              }
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="grid gap-4">
+                            {filteredWorkers.map((worker: any, index: number) => (
                             <div 
                               key={worker.id || index} 
                               className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
@@ -1030,8 +1135,9 @@ export default function AdminDashboard() {
                             </div>
                           ))}
                         </div>
-                      )}
-                    </div>
+                      );
+                    })()}
+                  </div>
                   )}
 
                   {/* Worker Detail Flowchart */}
