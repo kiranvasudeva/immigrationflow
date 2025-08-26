@@ -44,8 +44,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Development middleware bypass
+  const devAuthBypass = (req: any, res: any, next: any) => {
+    if (process.env.NODE_ENV === 'development') {
+      // Mock authenticated user in development
+      req.user = { 
+        claims: { email: 'admin@dev.local' },
+        isAuthenticated: () => true
+      };
+      return next();
+    }
+    return isAuthenticated(req, res, next);
+  };
+
+  const devAuditBypass = (req: any, res: any, next: any) => {
+    if (process.env.NODE_ENV === 'development') {
+      return next();
+    }
+    return auditMiddleware(req, res, next);
+  };
+
   // Dashboard statistics
-  app.get('/api/dashboard/stats', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  app.get('/api/dashboard/stats', devAuthBypass, devAuditBypass, async (req: any, res) => {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats);
@@ -55,7 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/dashboard/assignments', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  app.get('/api/dashboard/assignments', devAuthBypass, devAuditBypass, async (req: any, res) => {
     try {
       const assignments = await storage.getAssignmentsWithDetails();
       res.json(assignments);
@@ -66,8 +86,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
+      // Development mode - simulate admin user
+      if (process.env.NODE_ENV === 'development') {
+        const adminUser = {
+          id: "dev-admin-1",
+          email: "admin@dev.local",
+          firstName: "Admin",
+          lastName: "User",
+          role: "ADMIN",
+          profileImageUrl: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        return res.json(adminUser);
+      }
+
+      // Production auth check
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       const userEmail = req.user.claims.email;
       
       // Look up user by email since that's how we store them
