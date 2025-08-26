@@ -1284,6 +1284,29 @@ export default function AdminDashboard() {
                       </CardHeader>
                       <CardContent>
                         {(() => {
+                          // Filter assignments by matching clientProfileId to selectedClient.id
+                          const clientAssignments = assignments.filter((assignment: any) => 
+                            assignment.clientProfileId === selectedClient.id
+                          );
+                          
+                          // Group assignments by workerId to create worker entries
+                          const workersMap = new Map();
+                          clientAssignments.forEach((assignment: any) => {
+                            const workerId = assignment.workerId;
+                            if (!workersMap.has(workerId)) {
+                              workersMap.set(workerId, {
+                                id: workerId,
+                                assignments: [],
+                                status: assignment.status,
+                                createdAt: assignment.createdAt,
+                                workerName: null // We'll use Worker #X format since we don't have names
+                              });
+                            }
+                            workersMap.get(workerId).assignments.push(assignment);
+                          });
+                          
+                          const clientWorkers = Array.from(workersMap.values());
+                          
                           if (clientWorkers.length === 0) {
                             return (
                               <div className="text-center py-8">
