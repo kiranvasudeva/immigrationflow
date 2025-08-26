@@ -19,11 +19,11 @@ export class AuditService {
     metadata?: any
   ): Promise<void> {
     await this.log({
-      userId,
+      userId: userId || null,
       action,
       entityType,
       entityId,
-      ip,
+      ip: ip || null,
       metadata
     });
   }

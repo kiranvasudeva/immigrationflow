@@ -14,14 +14,14 @@ export default function ClientDashboard() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
 
-  const { data: clients } = useQuery({
+  const { data: clients = [] } = useQuery<any[]>({
     queryKey: ["/api/clients"],
     enabled: isAuthenticated && !isLoading && user?.role === 'OWNER',
   });
 
-  const clientProfile = clients?.[0]; // Owner should have exactly one client profile
+  const clientProfile = clients[0]; // Owner should have exactly one client profile
 
-  const { data: workers } = useQuery({
+  const { data: workers = [] } = useQuery<any[]>({
     queryKey: ["/api/clients", clientProfile?.id, "workers"],
     enabled: !!clientProfile?.id,
   });
@@ -54,7 +54,7 @@ export default function ClientDashboard() {
   }
 
   const mockStats = {
-    totalWorkers: workers?.length || 0,
+    totalWorkers: workers.length || 0,
     pendingActions: 0, // Would be calculated from assignments
     completed: 0, // Would be calculated from assignments
   };

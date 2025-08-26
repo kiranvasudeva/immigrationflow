@@ -5,7 +5,7 @@ export const auditMiddleware = (req: Request, res: Response, next: NextFunction)
   // Capture original end method
   const originalEnd = res.end;
   
-  res.end = function(chunk?: any, encoding?: any) {
+  res.end = function(chunk?: any, encoding?: any): Response {
     // Log the request after response is sent
     const user = (req as any).user;
     const userId = user?.claims?.sub;
@@ -26,7 +26,8 @@ export const auditMiddleware = (req: Request, res: Response, next: NextFunction)
     
     // Call original end method
     originalEnd.call(this, chunk, encoding);
-  };
+    return this;
+  } as any;
   
   next();
 };

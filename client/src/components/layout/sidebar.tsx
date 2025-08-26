@@ -90,9 +90,9 @@ export default function Sidebar({ userRole }: SidebarProps) {
           {getNavItems().map((item, index) => (
             <Button
               key={index}
-              variant={item.active ? "default" : "ghost"}
+              variant={(item as any).active ? "default" : "ghost"}
               className={`w-full justify-start ${
-                item.active 
+                (item as any).active 
                   ? 'bg-blue-50 text-primary hover:bg-blue-100' 
                   : 'text-secondary hover:bg-gray-50'
               }`}

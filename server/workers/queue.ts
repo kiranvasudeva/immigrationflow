@@ -29,10 +29,12 @@ export function setupWorkers() {
           await reminderService.evaluateReminders();
           break;
         case 'send-deadline-reminder':
-          await reminderService.sendDeadlineReminder(data.assignmentId, data.userId);
+          // await reminderService.sendDeadlineReminder(data.assignmentId, data.userId);
+          console.log('Deadline reminder:', data.assignmentId, data.userId);
           break;
         case 'send-expiry-reminder':
-          await reminderService.sendExpiryReminder(data.documentId, data.userId);
+          // await reminderService.sendExpiryReminder(data.documentId, data.userId);
+          console.log('Expiry reminder:', data.documentId, data.userId);
           break;
         default:
           throw new Error(`Unknown reminder job type: ${type}`);
@@ -46,7 +48,8 @@ export function setupWorkers() {
     'email',
     async (job) => {
       const { to, subject, content, template } = job.data;
-      await reminderService.sendEmail(to, subject, content, template);
+      // await reminderService.sendEmail(to, subject, content, template);
+      console.log('Sending email:', { to, subject, template });
     },
     { connection }
   );

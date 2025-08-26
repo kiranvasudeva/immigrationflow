@@ -139,6 +139,7 @@ export default function ClientForm({ onSubmit, isLoading = false, initialData }:
                 <FormControl>
                   <Input 
                     {...field} 
+                    value={field.value || ''}
                     placeholder="J40/1234/2020"
                     data-testid="input-onrc"
                   />

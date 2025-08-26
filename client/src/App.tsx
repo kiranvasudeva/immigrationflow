@@ -22,8 +22,8 @@ function Router() {
     );
   }
 
-  // Debug logging
-  console.log('Router - isAuthenticated:', isAuthenticated, 'user:', user);
+  // Debug logging (remove in production)
+  // console.log('Router - isAuthenticated:', isAuthenticated, 'user:', user);
 
   return (
     <Switch>
@@ -32,7 +32,7 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={() => {
-            console.log('Authenticated route - user role:', user?.role);
+            // console.log('Authenticated route - user role:', user?.role);
             switch (user?.role) {
               case 'ADMIN':
                 return <AdminDashboard />;
@@ -44,7 +44,7 @@ function Router() {
                 return <AdminDashboard />;
               default:
                 // Fallback to Owner dashboard if role is undefined or unknown
-                console.log('Unknown role, defaulting to ClientDashboard');
+                // console.log('Unknown role, defaulting to ClientDashboard');
                 return <ClientDashboard />;
             }
           }} />

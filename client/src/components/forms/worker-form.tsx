@@ -166,6 +166,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
                 <FormControl>
                   <Input 
                     {...field} 
+                    value={field.value || ''}
                     type="email"
                     placeholder="worker@email.com"
                     data-testid="input-worker-email"
@@ -185,6 +186,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
                 <FormControl>
                   <Input 
                     {...field} 
+                    value={field.value || ''}
                     placeholder="+1234567890"
                     data-testid="input-phone"
                   />
