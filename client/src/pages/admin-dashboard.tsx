@@ -1134,7 +1134,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                           <div>
-                            <span className="text-gray-600">Name:</span>
+                            <span className="text-gray-600">Full Name:</span>
                             <span className="ml-2 font-medium">
                               {selectedWorker.firstName && selectedWorker.lastName 
                                 ? `${selectedWorker.firstName} ${selectedWorker.lastName}`
@@ -1148,6 +1148,32 @@ export default function AdminDashboard() {
                           <div>
                             <span className="text-gray-600">Email:</span>
                             <span className="ml-2 font-medium">{selectedWorker.email || 'Pending'}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Phone:</span>
+                            <span className="ml-2 font-medium">{selectedWorker.phone || 'Pending'}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Passport Number:</span>
+                            <span className="ml-2 font-medium">{selectedWorker.passportNumber || 'Pending'}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Date of Birth:</span>
+                            <span className="ml-2 font-medium">
+                              {selectedWorker.dob 
+                                ? new Date(selectedWorker.dob).toLocaleDateString()
+                                : 'Pending'
+                              }
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Passport Expiry:</span>
+                            <span className="ml-2 font-medium">
+                              {selectedWorker.passportExpiry 
+                                ? new Date(selectedWorker.passportExpiry).toLocaleDateString()
+                                : 'Pending'
+                              }
+                            </span>
                           </div>
                           <div>
                             <span className="text-gray-600">Started:</span>
