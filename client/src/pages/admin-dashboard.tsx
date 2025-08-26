@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import WorkflowKanban from "@/components/kanban/workflow-kanban";
@@ -20,6 +21,7 @@ export default function AdminDashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [location, setLocation] = useLocation();
   
   // Collapsible states
   const [clientsOpen, setClientsOpen] = useState(true);
@@ -1306,7 +1308,7 @@ export default function AdminDashboard() {
                                   <div 
                                     key={client.id}
                                     className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                                    onClick={() => setSelectedClient(client)}
+                                    onClick={() => setLocation(`/clients/${client.id}`)}
                                     data-testid={`client-${client.id}`}
                                   >
                                     <div className="flex items-center space-x-4">

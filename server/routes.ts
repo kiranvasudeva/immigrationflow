@@ -263,6 +263,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/clients/:id', isAuthenticated, auditMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      const client = await storage.getClientProfile(id);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+
+      // Check authorization
+      if (user?.role !== 'ADMIN' && client.ownerUserId !== userId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const parsedData = insertClientProfileSchema.omit({ id: true, ownerUserId: true }).parse(req.body);
+      
+      const updatedClient = await storage.updateClientProfile(id, parsedData);
+      res.json(updatedClient);
+    } catch (error) {
+      console.error("Error updating client:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update client" });
+    }
+  });
+
   app.post('/api/clients', isAuthenticated, auditMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

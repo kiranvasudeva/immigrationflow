@@ -17,6 +17,7 @@ import AnalyticsPage from "@/pages/analytics";
 import DocumentsPage from "@/pages/documents";
 import DeadlinesPage from "@/pages/deadlines";
 import ProfilePage from "@/pages/profile";
+import ClientProfile from "@/pages/client-profile";
 import { User } from "@shared/schema";
 
 function Router() {
@@ -77,6 +78,7 @@ function Router() {
           <Route path="/templates" component={TemplatesPage} />
           <Route path="/analytics" component={AnalyticsPage} />
           <Route path="/clients" component={() => <AdminDashboard />} />
+          <Route path="/clients/:id" component={ClientProfile} />
           <Route path="/workers" component={() => <AdminDashboard />} />
           <Route path="/requirements" component={() => <AdminDashboard />} />
           <Route path="/reminders" component={() => <AdminDashboard />} />
