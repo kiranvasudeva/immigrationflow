@@ -1301,6 +1301,11 @@ export default function AdminDashboard() {
                             const workerId = assignment.workerId;
                             const workerData = assignment.worker; // This contains the actual worker info!
                             
+                            // Debug: Log the actual worker data structure
+                            if (!workersMap.has(workerId)) {
+                              console.log('Worker data for workerId:', workerId, workerData);
+                            }
+                            
                             if (!workersMap.has(workerId)) {
                               workersMap.set(workerId, {
                                 id: workerId,
