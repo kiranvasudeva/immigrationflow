@@ -3,28 +3,7 @@
   "clients": "Clienți",
   "workers": "Lucrători",
   "templates": "Șabloane",
-  "analytics": {
-    "completed": {
-      "month": "TODO: translate"
-    },
-    "headers": {
-      "activeWorkers": "TODO: translate",
-      "clientPerformance": "TODO: translate",
-      "monthlyTrend": "TODO: translate",
-      "pendingActions": "TODO: translate",
-      "recentActivity": "TODO: translate",
-      "stageProgress": "TODO: translate",
-      "statusDistribution": "TODO: translate",
-      "totalClients": "TODO: translate"
-    },
-    "options": {
-      "allClients": "TODO: translate"
-    },
-    "placeholders": {
-      "allClients": "TODO: translate",
-      "period": "TODO: translate"
-    }
-  },
+  "analytics": "Analize",
   "profile": {
     "joined": "TODO: translate",
     "manageInfo": "TODO: translate",
@@ -64,11 +43,11 @@
   "description": "Descriere",
   "required": "Obligatoriu",
   "optional": "Opțional",
-  "workflowOverview": "TODO: translate",
-  "allStages": "TODO: translate",
-  "allStagesOption": "TODO: translate",
-  "noRecentActivity": "TODO: translate",
-  "searchPlaceholder": "TODO: translate",
+  "workflowOverview": "Prezentarea Generală a Fluxului",
+  "allStages": "Toate Etapele",
+  "allStagesOption": "Toate Etapele",
+  "noRecentActivity": "Nu există activitate recentă",
+  "searchPlaceholder": "Căutare...",
   "": {
     "": "TODO: translate"
   },

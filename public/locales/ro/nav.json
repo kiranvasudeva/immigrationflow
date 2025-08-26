@@ -9,13 +9,13 @@
   "features": "Funcționalități",
   "pricing": "Prețuri",
   "support": "Suport",
-  "requirements": "TODO: translate",
-  "reminders": "TODO: translate",
-  "auditLogs": "TODO: translate",
+  "requirements": "Cerințe",
+  "reminders": "Memento",
+  "auditLogs": "Jurnale Audit",
   "deadlines": "Termene",
   "profile": "Profil",
   "documents": "Documente",
-  "companyProfile": "TODO: translate",
-  "myProgress": "TODO: translate",
-  "payments": "TODO: translate"
+  "companyProfile": "Profil Companie",
+  "myProgress": "Progresul Meu",
+  "payments": "Plăți"
 }
