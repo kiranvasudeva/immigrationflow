@@ -222,7 +222,7 @@ export default function AdminDashboard() {
                     className="shrink-0"
                     onClick={() => setShowNewClientForm(true)}
                   >
-                    <i className="fas fa-plus mr-2"></i>New Client
+                    <i className="fas fa-plus mr-2"></i>{t('actions.newClient') || 'New Client'}
                   </Button>
                 )}
               </div>
