@@ -49,9 +49,7 @@ export default function ClientProfile() {
   const { data: workers, isLoading: workersLoading, error: workersError } = useQuery({
     queryKey: ['/api/clients', clientId, 'workers'],
     enabled: !!clientId && isAuthenticated,
-    staleTime: 0, // Always fetch fresh data for debugging
     retry: (failureCount, error) => {
-      console.log('Workers query retry attempt:', failureCount, error);
       if (isUnauthorizedError(error as Error)) {
         toast({
           title: "Unauthorized", 
@@ -64,37 +62,9 @@ export default function ClientProfile() {
         return false;
       }
       return failureCount < 3;
-    },
-    onError: (error) => {
-      console.error('Workers query error:', error);
-    },
-    onSuccess: (data) => {
-      console.log('Workers query success:', data);
     }
   });
 
-  // Debug logging
-  console.log('Workers query state:', {
-    clientId,
-    isAuthenticated,
-    workersLoading,
-    workersData: workers,
-    workersError: workersError?.message,
-    enabled: !!clientId && isAuthenticated,
-    queryKey: ['/api/clients', clientId, 'workers']
-  });
-
-  // Force debug the query when clientId is available
-  if (clientId && isAuthenticated) {
-    console.log('Query should be enabled for clientId:', clientId);
-  }
-
-  // Additional debugging for workers display
-  console.log('Worker display check:', {
-    hasWorkers: workers && Array.isArray(workers),
-    workerCount: workers ? workers.length : 0,
-    showingWorkers: workers && Array.isArray(workers) && workers.length > 0
-  });
 
   // Update client mutation
   const updateClientMutation = useMutation({

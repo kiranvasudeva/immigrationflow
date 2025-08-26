@@ -371,8 +371,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/clients/:clientId/workers', isAuthenticated, auditMiddleware, async (req: any, res) => {
     try {
       const { clientId } = req.params;
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const userEmail = req.user.claims.email;
+      const user = await storage.getUserByEmail(userEmail);
       
       const client = await storage.getClientProfile(clientId);
       if (!client) {
@@ -380,7 +380,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check authorization
-      if (user?.role !== 'ADMIN' && client.ownerUserId !== userId) {
+      if (user?.role !== 'ADMIN' && client.ownerUserId !== user?.id) {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
