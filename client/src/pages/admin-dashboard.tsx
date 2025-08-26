@@ -176,11 +176,11 @@ export default function AdminDashboard() {
             showNewClientForm 
               ? "New Client"
               : selectedClient 
-                ? selectedClient.companyName
+                ? "Admin Dashboard"
                 : selectedWorkflowClient 
-                  ? selectedWorkflowClient.companyName + " - Workers"
+                  ? "Admin Dashboard"
                   : selectedWorkerDetail
-                    ? "Admin Dashboard - " + selectedWorkerDetail.firstName + " " + selectedWorkerDetail.lastName
+                    ? "Admin Dashboard"
                     : activeSection === "clients"
                       ? "Clients"
                       : activeSection === "workers" 
@@ -201,11 +201,11 @@ export default function AdminDashboard() {
             showNewClientForm
               ? (t('common.fillClientDetails') || "Fill in the client information below")
               : selectedClient
-                ? (t('dashboard.clientProfile') || "Client Profile & Management")
+                ? selectedClient.legalName + " - " + (t('dashboard.clientProfile') || "Client Profile & Management")
                 : selectedWorkflowClient
-                  ? (t('dashboard.workersManagement') || "Workers Management & Assignment")
+                  ? selectedWorkflowClient.legalName + " - " + (t('dashboard.workersManagement') || "Workers Management & Assignment")
                   : selectedWorkerDetail
-                    ? (t('dashboard.workflowTracking') || "Immigration Workflow Tracking")
+                    ? selectedWorkerDetail.firstName + " " + selectedWorkerDetail.lastName + " - " + (t('dashboard.workflowTracking') || "Immigration Workflow Tracking")
                     : (t('dashboard.admin.subtitle') || "Global workflow management and oversight")
           }
           actions={
@@ -1345,7 +1345,11 @@ export default function AdminDashboard() {
                               const matchesStatus = statusFilter === "all" || 
                                 (client.status || "active").toLowerCase() === statusFilter.toLowerCase();
                               
-                              return matchesSearch && matchesStatus;
+                              const matchesClientFilter = clientFilter === "all" || 
+                                (clientFilter === "active" && (client.status || "active") === "active") ||
+                                (clientFilter === "inactive" && client.status === "inactive");
+                              
+                              return matchesSearch && matchesStatus && matchesClientFilter;
                             });
 
                             return filteredClients.length === 0 ? (
