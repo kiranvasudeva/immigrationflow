@@ -157,21 +157,24 @@ export default function Sidebar({ userRole, onSectionChange }: SidebarProps) {
   return (
     <>
       {/* Mobile Menu Button */}
-      <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-        <SheetTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="lg:hidden fixed top-4 left-4 z-50 bg-white shadow-md border"
-            data-testid="mobile-menu-button"
-          >
-            <Menu className="h-4 w-4" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-64 p-0">
-          <SidebarContent />
-        </SheetContent>
-      </Sheet>
+      <div className="lg:hidden">
+        <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+          <SheetTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="fixed top-4 left-4 z-[60] bg-white shadow-lg border-2 hover:bg-gray-50"
+              data-testid="mobile-menu-button"
+              onClick={() => setIsMobileOpen(true)}
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-64 p-0 z-[55]">
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+      </div>
 
       {/* Desktop Sidebar */}
       <div className="hidden lg:block w-64 flex-shrink-0">
