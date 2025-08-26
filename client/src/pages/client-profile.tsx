@@ -46,7 +46,7 @@ export default function ClientProfile() {
   });
 
   // Fetch workers for this client
-  const { data: workers, isLoading: workersLoading } = useQuery({
+  const { data: workers, isLoading: workersLoading, error: workersError } = useQuery({
     queryKey: ['/api/clients', clientId, 'workers'],
     enabled: !!clientId && isAuthenticated,
     retry: (failureCount, error) => {
@@ -63,6 +63,16 @@ export default function ClientProfile() {
       }
       return failureCount < 3;
     }
+  });
+
+  // Debug logging
+  console.log('Workers query state:', {
+    clientId,
+    isAuthenticated,
+    workersLoading,
+    workersData: workers,
+    workersError: workersError?.message,
+    enabled: !!clientId && isAuthenticated
   });
 
   // Update client mutation
@@ -442,7 +452,7 @@ export default function ClientProfile() {
                         <div className="flex justify-center py-4">
                           <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
                         </div>
-                      ) : workers && workers.length > 0 ? (
+                      ) : workers && Array.isArray(workers) && workers.length > 0 ? (
                         <div className="space-y-3">
                           {workers.map((worker) => (
                             <div 
