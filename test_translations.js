@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ANSI color codes for better output
 const colors = {
@@ -365,14 +369,14 @@ async function main() {
 
 // Add fetch polyfill for Node.js if needed
 if (!global.fetch) {
-  global.fetch = require('node-fetch');
+  const { default: fetch } = await import('node-fetch');
+  global.fetch = fetch;
 }
 
-if (require.main === module) {
+// Check if this is the main module
+if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(error => {
     console.error('Test runner failed:', error);
     process.exit(1);
   });
 }
-
-module.exports = TranslationTester;
