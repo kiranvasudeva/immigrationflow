@@ -399,16 +399,47 @@ export default function AdminDashboard() {
                         </Button>
                       </div>
                       
-                      {clients.map((client: any, index: number) => (
-                        <div 
-                          key={client.id || index} 
-                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors" 
-                          onClick={() => {
-                            setSelectedClient(client);
-                            setSelectedWorkflowClient(client);
-                          }}
-                          data-testid={`client-${index}`}
-                        >
+                      {(() => {
+                        const filteredClients = clients.filter((client: any) => {
+                          const matchesSearch = !clientSearchTerm || 
+                            client.legalName?.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                            client.cui?.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                            client.contactEmail?.toLowerCase().includes(clientSearchTerm.toLowerCase());
+                          
+                          const matchesStatus = statusFilter === "all" || 
+                            (client.status || "active").toLowerCase() === statusFilter.toLowerCase();
+                          
+                          const matchesClientFilter = clientFilter === "all" || 
+                            (clientFilter === "active" && (client.status || "active") === "active") ||
+                            (clientFilter === "inactive" && client.status === "inactive");
+                          
+                          return matchesSearch && matchesStatus && matchesClientFilter;
+                        });
+
+                        if (filteredClients.length === 0) {
+                          return (
+                            <div className="text-center py-8">
+                              <i className="fas fa-building text-gray-400 text-3xl mb-4"></i>
+                              <p className="text-secondary">
+                                {clientSearchTerm || clientFilter !== "all" || statusFilter !== "all" 
+                                  ? "No clients match your filters"
+                                  : "No clients found"
+                                }
+                              </p>
+                            </div>
+                          );
+                        }
+
+                        return filteredClients.map((client: any, index: number) => (
+                          <div 
+                            key={client.id || index} 
+                            className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors" 
+                            onClick={() => {
+                              setSelectedClient(client);
+                              setSelectedWorkflowClient(client);
+                            }}
+                            data-testid={`client-${index}`}
+                          >
                           <div className="flex items-center space-x-4">
                             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                               <i className="fas fa-building text-primary"></i>
@@ -424,7 +455,8 @@ export default function AdminDashboard() {
                             <ChevronRight className="h-4 w-4 text-gray-400 mt-1" />
                           </div>
                         </div>
-                      ))}
+                        ));
+                      })()}
                     </div>
                   )}
 
