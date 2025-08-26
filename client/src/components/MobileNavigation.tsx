@@ -110,7 +110,7 @@ export function MobileNavigation({ user, onLogout }: MobileNavigationProps) {
         </Sheet>
 
         {/* App Title */}
-        <h1 className="text-lg font-semibold">ImmigrationFlow</h1>
+        <h1 className="text-lg font-semibold">{t('common.immigrationFlow') || 'ImmigrationFlow'}</h1>
 
         {/* Action Buttons */}
         <div className="flex items-center space-x-2">

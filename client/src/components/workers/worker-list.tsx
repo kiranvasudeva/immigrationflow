@@ -31,8 +31,8 @@ export default function WorkerList({ workers }: WorkerListProps) {
     },
     onSuccess: (data: any) => {
       toast({
-        title: "Invitation sent successfully",
-        description: `Invitation link: ${data.inviteLink}`,
+        title: t('notifications.invitationSent') || "Invitation sent successfully",
+        description: `${t('worker.invitationLink') || 'Invitation Link'}: ${data.inviteLink}`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
       setShowInviteDialog(false);
@@ -40,8 +40,8 @@ export default function WorkerList({ workers }: WorkerListProps) {
     },
     onError: (error) => {
       toast({
-        title: "Failed to send invitation",
-        description: "Please try again later",
+        title: t('notifications.invitationFailed') || "Failed to send invitation",
+        description: t('notifications.tryAgainLater') || "Please try again later",
         variant: "destructive",
       });
     },
@@ -78,7 +78,7 @@ export default function WorkerList({ workers }: WorkerListProps) {
     <Card data-testid="card-workers-list">
       <CardHeader className="border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <CardTitle>Workers</CardTitle>
+          <CardTitle>{t('common.workers') || 'Workers'}</CardTitle>
           <div className="flex items-center space-x-3">
             <Input 
               placeholder={t('form.placeholders.searchWorkers') || 'Search workers...'} 
@@ -88,19 +88,19 @@ export default function WorkerList({ workers }: WorkerListProps) {
             <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
               <DialogTrigger asChild>
                 <Button variant="outline" data-testid="button-invite-worker">
-                  <i className="fas fa-envelope mr-2"></i>Invite Worker
+                  <i className="fas fa-envelope mr-2"></i>{t('modals.inviteWorker.title') || 'Invite Worker'}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md" aria-describedby="invite-dialog-description">
                 <DialogHeader>
-                  <DialogTitle>Invite Worker</DialogTitle>
+                  <DialogTitle>{t('modals.inviteWorker.title') || 'Invite Worker'}</DialogTitle>
                 </DialogHeader>
                 <p id="invite-dialog-description" className="text-sm text-muted-foreground">
-                  Send an invitation link to add a new worker to the system.
+                  {t('modals.inviteWorker.description') || 'Send an invitation link to add a new worker to the system.'}
                 </p>
                 <div className="space-y-4 py-4">
                   <div>
-                    <Label htmlFor="invite-email">Email address</Label>
+                    <Label htmlFor="invite-email">{t('form.labels.emailAddress') || 'Email address'}</Label>
                     <Input
                       id="invite-email"
                       type="email"
@@ -111,14 +111,14 @@ export default function WorkerList({ workers }: WorkerListProps) {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="invite-role">Role</Label>
+                    <Label htmlFor="invite-role">{t('form.labels.role') || 'Role'}</Label>
                     <Select value={inviteRole} onValueChange={setInviteRole}>
                       <SelectTrigger data-testid="select-invite-role">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="WORKER">Worker</SelectItem>
-                        <SelectItem value="VIEWER">Viewer</SelectItem>
+                        <SelectItem value="WORKER">{t('roles.worker') || 'Worker'}</SelectItem>
+                        <SelectItem value="VIEWER">{t('roles.viewer') || 'Viewer'}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -218,14 +218,14 @@ export default function WorkerList({ workers }: WorkerListProps) {
                       <td className="py-4 px-6">
                         <div className="flex items-center space-x-2">
                           <Button variant="ghost" size="sm" data-testid={`button-view-worker-${worker.id}`}>
-                            <i className="fas fa-eye mr-1"></i>View
+                            <i className="fas fa-eye mr-1"></i>{t('actions.view') || 'View'}
                           </Button>
                           <Button variant="ghost" size="sm" data-testid={`button-edit-worker-${worker.id}`}>
-                            <i className="fas fa-edit mr-1"></i>Edit
+                            <i className="fas fa-edit mr-1"></i>{t('actions.edit') || 'Edit'}
                           </Button>
                           <WorkerInvitationLink 
                             workerId={worker.id} 
-                            workerEmail={worker.email}
+                            workerEmail={worker.email || ''}
                           />
                         </div>
                       </td>

@@ -101,16 +101,16 @@ export default function ProfilePage() {
           <div className="max-w-4xl mx-auto">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h1 className="text-3xl font-bold">Profile</h1>
+                <h1 className="text-3xl font-bold">{t('pages.profile.title') || 'Profile'}</h1>
                 <p className="text-gray-600 mt-2">
-                  Manage your personal information and immigration status
+                  {t('profile.manageInfo') || 'Manage your personal information and immigration status'}
                 </p>
               </div>
               <Button 
                 onClick={() => isEditing ? handleSave() : setIsEditing(true)}
                 data-testid="button-edit-profile"
               >
-                {isEditing ? 'Save Changes' : 'Edit Profile'}
+                {isEditing ? (t('actions.saveChanges') || 'Save Changes') : (t('actions.editProfile') || 'Edit Profile')}
               </Button>
             </div>
 
@@ -137,7 +137,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                      <span>Joined {new Date(user?.createdAt || Date.now()).toLocaleDateString()}</span>
+                      <span>{t('profile.joined') || 'Joined'} {new Date(user?.createdAt || Date.now()).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -148,13 +148,13 @@ export default function ProfilePage() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <User className="h-5 w-5 mr-2" />
-                    Personal Information
+                    {t('profile.personalInfo') || 'Personal Information'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="firstName">First Name</Label>
+                      <Label htmlFor="firstName">{t('form.labels.firstName') || 'First Name'}</Label>
                       <Input
                         id="firstName"
                         value={profileData.firstName}
@@ -163,7 +163,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="lastName">Last Name</Label>
+                      <Label htmlFor="lastName">{t('form.labels.lastName') || 'Last Name'}</Label>
                       <Input
                         id="lastName"
                         value={profileData.lastName}
@@ -172,7 +172,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">{t('form.labels.email') || 'Email'}</Label>
                       <Input
                         id="email"
                         value={profileData.email}
@@ -181,7 +181,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="phone">{t('form.labels.phoneNumber') || 'Phone Number'}</Label>
                       <Input
                         id="phone"
                         value={profileData.phone}
@@ -190,7 +190,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="nationality">Nationality</Label>
+                      <Label htmlFor="nationality">{t('form.labels.nationality') || 'Nationality'}</Label>
                       <Input
                         id="nationality"
                         value={profileData.nationality}
@@ -199,7 +199,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                      <Label htmlFor="dateOfBirth">{t('form.labels.dateOfBirth') || 'Date of Birth'}</Label>
                       <Input
                         id="dateOfBirth"
                         type="date"
@@ -223,7 +223,7 @@ export default function ProfilePage() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
-                      <Label>Work Permit Status</Label>
+                      <Label>{t('profile.workPermitStatus') || 'Work Permit Status'}</Label>
                       <div className="mt-2">
                         <Badge variant="secondary">{profileData.workPermitStatus}</Badge>
                       </div>

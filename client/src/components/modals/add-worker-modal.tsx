@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +19,7 @@ interface AddWorkerModalProps {
 }
 
 export default function AddWorkerModal({ isOpen, onClose, clientProfileId }: AddWorkerModalProps) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -28,8 +30,8 @@ export default function AddWorkerModal({ isOpen, onClose, clientProfileId }: Add
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Worker added successfully",
+        title: t('notifications.success') || "Success",
+        description: t('notifications.workerAdded') || "Worker added successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/clients", clientProfileId, "workers"] });
       onClose();
@@ -37,8 +39,8 @@ export default function AddWorkerModal({ isOpen, onClose, clientProfileId }: Add
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: t('auth.unauthorized') || "Unauthorized",
+          description: t('auth.loggedOut') || "You are logged out. Logging in again...",
           variant: "destructive",
         });
         setTimeout(() => {
@@ -48,8 +50,8 @@ export default function AddWorkerModal({ isOpen, onClose, clientProfileId }: Add
       }
       
       toast({
-        title: "Error",
-        description: "Failed to add worker. Please try again.",
+        title: t('notifications.error') || "Error",
+        description: t('notifications.workerAddFailed') || "Failed to add worker. Please try again.",
         variant: "destructive",
       });
     },
@@ -63,9 +65,9 @@ export default function AddWorkerModal({ isOpen, onClose, clientProfileId }: Add
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Add New Worker</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">{t('modals.addWorker.title') || 'Add New Worker'}</DialogTitle>
           <p className="text-sm text-secondary">
-            Enter the worker's personal information to add them to your client profile.
+            {t('modals.addWorker.description') || "Enter the worker's personal information to add them to your client profile."}
           </p>
         </DialogHeader>
 
@@ -84,7 +86,7 @@ export default function AddWorkerModal({ isOpen, onClose, clientProfileId }: Add
             disabled={createWorkerMutation.isPending}
             data-testid="button-cancel-worker"
           >
-            Cancel
+            {t('actions.cancel') || 'Cancel'}
           </Button>
         </div>
       </DialogContent>

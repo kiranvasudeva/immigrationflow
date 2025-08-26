@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function StageProgress() {
+  const { t } = useLanguage();
   // Mock progress data - would come from API based on worker's assignments
   const stages = [
     { key: 'AJOFM', title: 'AJOFM', status: 'completed', progress: 100 },
@@ -14,13 +16,13 @@ export default function StageProgress() {
   return (
     <Card className="mb-8" data-testid="card-stage-progress">
       <CardContent className="p-6">
-        <CardTitle className="mb-6">Overall Progress</CardTitle>
+        <CardTitle className="mb-6">{t('progress.overall') || 'Overall Progress'}</CardTitle>
         
         {/* Progress Bar */}
         <div className="mb-6">
           <div className="flex justify-between text-sm text-secondary mb-2">
-            <span>Progress</span>
-            <span data-testid="text-overall-progress">{overallProgress}% Complete</span>
+            <span>{t('common.progress') || 'Progress'}</span>
+            <span data-testid="text-overall-progress">{overallProgress}% {t('common.complete') || 'Complete'}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">
             <div 
@@ -50,8 +52,8 @@ export default function StageProgress() {
                 stage.status === 'completed' ? 'text-success' :
                 stage.status === 'current' ? 'text-primary' : 'text-secondary'
               }`}>
-                {stage.status === 'completed' ? 'Completed' :
-                 stage.status === 'current' ? 'In Progress' : 'Pending'}
+                {stage.status === 'completed' ? (t('status.completed') || 'Completed') :
+                 stage.status === 'current' ? (t('status.inProgress') || 'In Progress') : (t('status.pending') || 'Pending')}
               </p>
             </div>
           ))}

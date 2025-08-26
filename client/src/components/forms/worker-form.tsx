@@ -46,7 +46,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name *</FormLabel>
+                <FormLabel>{t('form.labels.firstName') || 'First Name *'}</FormLabel>
                 <FormControl>
                   <Input 
                     {...field} 
@@ -64,7 +64,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name *</FormLabel>
+                <FormLabel>{t('form.labels.lastName') || 'Last Name *'}</FormLabel>
                 <FormControl>
                   <Input 
                     {...field} 
@@ -84,7 +84,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
             name="nationality"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nationality *</FormLabel>
+                <FormLabel>{t('form.labels.nationality') || 'Nationality *'}</FormLabel>
                 <FormControl>
                   <Input 
                     {...field} 
@@ -102,7 +102,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
             name="passportNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Passport Number *</FormLabel>
+                <FormLabel>{t('form.labels.passportNumber') || 'Passport Number *'}</FormLabel>
                 <FormControl>
                   <Input 
                     {...field} 
@@ -122,7 +122,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
             name="dob"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date of Birth</FormLabel>
+                <FormLabel>{t('form.labels.dateOfBirth') || 'Date of Birth'}</FormLabel>
                 <FormControl>
                   <Input 
                     {...field} 

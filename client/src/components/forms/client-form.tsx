@@ -42,7 +42,7 @@ export default function ClientForm({ onSubmit, isLoading = false, initialData }:
           name="companyName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Company Name *</FormLabel>
+              <FormLabel>{t('form.labels.companyName') || 'Company Name *'}</FormLabel>
               <FormControl>
                 <Input 
                   {...field} 
@@ -61,7 +61,7 @@ export default function ClientForm({ onSubmit, isLoading = false, initialData }:
             name="cui"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>CUI *</FormLabel>
+                <FormLabel>{t('form.labels.cui') || 'CUI *'}</FormLabel>
                 <FormControl>
                   <Input 
                     {...field} 
@@ -79,7 +79,7 @@ export default function ClientForm({ onSubmit, isLoading = false, initialData }:
             name="caen"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>CAEN Code *</FormLabel>
+                <FormLabel>{t('form.labels.caenCode') || 'CAEN Code *'}</FormLabel>
                 <FormControl>
                   <Input 
                     {...field} 
@@ -98,7 +98,7 @@ export default function ClientForm({ onSubmit, isLoading = false, initialData }:
           name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Address *</FormLabel>
+              <FormLabel>{t('form.labels.address') || 'Address *'}</FormLabel>
               <FormControl>
                 <Textarea 
                   {...field} 
@@ -118,7 +118,7 @@ export default function ClientForm({ onSubmit, isLoading = false, initialData }:
             name="contactEmail"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Contact Email *</FormLabel>
+                <FormLabel>{t('form.labels.contactEmail') || 'Contact Email *'}</FormLabel>
                 <FormControl>
                   <Input 
                     {...field} 

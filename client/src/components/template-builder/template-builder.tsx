@@ -71,7 +71,7 @@ const SortableField = ({ field, onUpdate, onDelete }: {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor={`${field.id}-key`}>Field Key</Label>
+              <Label htmlFor={`${field.id}-key`}>{t('template.fieldKey') || 'Field Key'}</Label>
               <Input
                 id={`${field.id}-key`}
                 value={field.fieldKey}
@@ -80,26 +80,26 @@ const SortableField = ({ field, onUpdate, onDelete }: {
               />
             </div>
             <div>
-              <Label htmlFor={`${field.id}-type`}>Field Type</Label>
+              <Label htmlFor={`${field.id}-type`}>{t('template.fieldType') || 'Field Type'}</Label>
               <Select value={field.fieldType} onValueChange={(value: any) => onUpdate(field.id, { fieldType: value })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="TEXT">Text</SelectItem>
-                  <SelectItem value="DATE">Date</SelectItem>
-                  <SelectItem value="NUMBER">Number</SelectItem>
-                  <SelectItem value="CHECKBOX">Checkbox</SelectItem>
-                  <SelectItem value="DROPDOWN">Dropdown</SelectItem>
-                  <SelectItem value="SIGNATURE">Signature</SelectItem>
-                  <SelectItem value="PHOTO">Photo</SelectItem>
+                  <SelectItem value="TEXT">{t('template.fieldTypes.text') || 'Text'}</SelectItem>
+                  <SelectItem value="DATE">{t('template.fieldTypes.date') || 'Date'}</SelectItem>
+                  <SelectItem value="NUMBER">{t('template.fieldTypes.number') || 'Number'}</SelectItem>
+                  <SelectItem value="CHECKBOX">{t('template.fieldTypes.checkbox') || 'Checkbox'}</SelectItem>
+                  <SelectItem value="DROPDOWN">{t('template.fieldTypes.dropdown') || 'Dropdown'}</SelectItem>
+                  <SelectItem value="SIGNATURE">{t('template.fieldTypes.signature') || 'Signature'}</SelectItem>
+                  <SelectItem value="PHOTO">{t('template.fieldTypes.photo') || 'Photo'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div>
-            <Label htmlFor={`${field.id}-label`}>Label</Label>
+            <Label htmlFor={`${field.id}-label`}>{t('form.labels.label') || 'Label'}</Label>
             <Input
               id={`${field.id}-label`}
               value={field.label}
@@ -109,7 +109,7 @@ const SortableField = ({ field, onUpdate, onDelete }: {
           </div>
 
           <div>
-            <Label htmlFor={`${field.id}-placeholder`}>Placeholder</Label>
+            <Label htmlFor={`${field.id}-placeholder`}>{t('form.labels.placeholder') || 'Placeholder'}</Label>
             <Input
               id={`${field.id}-placeholder`}
               value={field.placeholder || ''}
@@ -120,7 +120,7 @@ const SortableField = ({ field, onUpdate, onDelete }: {
 
           {field.fieldType === 'DROPDOWN' && (
             <div>
-              <Label>Options (one per line)</Label>
+              <Label>{t('form.labels.options') || 'Options (one per line)'}</Label>
               <Textarea
                 value={field.options?.join('\n') || ''}
                 onChange={(e) => onUpdate(field.id, { 
@@ -140,7 +140,7 @@ const SortableField = ({ field, onUpdate, onDelete }: {
               onChange={(e) => onUpdate(field.id, { required: e.target.checked })}
               className="rounded border-gray-300"
             />
-            <Label htmlFor={`${field.id}-required`}>Required field</Label>
+            <Label htmlFor={`${field.id}-required`}>{t('form.labels.required') || 'Required field'}</Label>
           </div>
         </CardContent>
       </Card>
@@ -238,7 +238,7 @@ export function TemplateBuilder({ template, fields = [], onSave }: TemplateBuild
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Document Template Builder</h1>
+        <h1 className="text-2xl font-bold">{t('pages.templates.builder.title') || 'Document Template Builder'}</h1>
         <div className="flex space-x-2">
           <Button 
             variant="outline" 
@@ -250,7 +250,7 @@ export function TemplateBuilder({ template, fields = [], onSave }: TemplateBuild
           </Button>
           <Button onClick={handleSave} className="flex items-center space-x-2">
             <Save className="h-4 w-4" />
-            <span>Save Template</span>
+            <span>{t('actions.saveTemplate') || 'Save Template'}</span>
           </Button>
         </div>
       </div>
@@ -260,11 +260,11 @@ export function TemplateBuilder({ template, fields = [], onSave }: TemplateBuild
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Template Information</CardTitle>
+              <CardTitle>{t('template.information') || 'Template Information'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="template-name">Template Name</Label>
+                <Label htmlFor="template-name">{t('form.labels.templateName') || 'Template Name'}</Label>
                 <Input
                   id="template-name"
                   value={templateData.name}
@@ -274,7 +274,7 @@ export function TemplateBuilder({ template, fields = [], onSave }: TemplateBuild
               </div>
 
               <div>
-                <Label htmlFor="template-description">Description</Label>
+                <Label htmlFor="template-description">{t('form.labels.description') || 'Description'}</Label>
                 <Textarea
                   id="template-description"
                   value={templateData.description}
@@ -286,30 +286,30 @@ export function TemplateBuilder({ template, fields = [], onSave }: TemplateBuild
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="template-type">Template Type</Label>
+                  <Label htmlFor="template-type">{t('form.labels.templateType') || 'Template Type'}</Label>
                   <Select value={templateData.type} onValueChange={(value: any) => setTemplateData(prev => ({ ...prev, type: value }))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="FORM">Form</SelectItem>
-                      <SelectItem value="DOCUMENT">Document</SelectItem>
-                      <SelectItem value="CERTIFICATE">Certificate</SelectItem>
+                      <SelectItem value="FORM">{t('template.types.form') || 'Form'}</SelectItem>
+                      <SelectItem value="DOCUMENT">{t('template.types.document') || 'Document'}</SelectItem>
+                      <SelectItem value="CERTIFICATE">{t('template.types.certificate') || 'Certificate'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="template-language">Language</Label>
+                  <Label htmlFor="template-language">{t('form.labels.language') || 'Language'}</Label>
                   <Select value={templateData.language} onValueChange={(value: any) => setTemplateData(prev => ({ ...prev, language: value }))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ro">Romanian</SelectItem>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Spanish</SelectItem>
-                      <SelectItem value="fr">French</SelectItem>
+                      <SelectItem value="ro">{t('languages.romanian') || 'Romanian'}</SelectItem>
+                      <SelectItem value="en">{t('languages.english') || 'English'}</SelectItem>
+                      <SelectItem value="es">{t('languages.spanish') || 'Spanish'}</SelectItem>
+                      <SelectItem value="fr">{t('languages.french') || 'French'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -323,7 +323,7 @@ export function TemplateBuilder({ template, fields = [], onSave }: TemplateBuild
                   onChange={(e) => setTemplateData(prev => ({ ...prev, isActive: e.target.checked }))}
                   className="rounded border-gray-300"
                 />
-                <Label htmlFor="template-active">Active template</Label>
+                <Label htmlFor="template-active">{t('form.labels.activeTemplate') || 'Active template'}</Label>
               </div>
             </CardContent>
           </Card>
@@ -332,10 +332,10 @@ export function TemplateBuilder({ template, fields = [], onSave }: TemplateBuild
           {!isPreview && (
             <div>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Template Fields</h2>
+                <h2 className="text-xl font-semibold">{t('template.fields.title') || 'Template Fields'}</h2>
                 <Button onClick={addField} className="flex items-center space-x-2">
                   <Plus className="h-4 w-4" />
-                  <span>Add Field</span>
+                  <span>{t('actions.addField') || 'Add Field'}</span>
                 </Button>
               </div>
 
@@ -358,7 +358,7 @@ export function TemplateBuilder({ template, fields = [], onSave }: TemplateBuild
 
               {templateFields.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  <p>No fields added yet. Click "Add Field" to get started.</p>
+                  <p>{t('template.noFields') || 'No fields added yet. Click "Add Field" to get started.'}</p>
                 </div>
               )}
             </div>
@@ -369,7 +369,7 @@ export function TemplateBuilder({ template, fields = [], onSave }: TemplateBuild
         <div className="lg:sticky lg:top-6">
           <Card>
             <CardHeader>
-              <CardTitle>Preview</CardTitle>
+              <CardTitle>{t('template.preview') || 'Preview'}</CardTitle>
             </CardHeader>
             <CardContent>
               <form className="space-y-4">
