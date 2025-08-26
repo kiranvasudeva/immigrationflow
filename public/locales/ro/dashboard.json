@@ -1,46 +1,46 @@
 {
   "admin": {
-    "title": "TODO: translate",
-    "subtitle": "TODO: translate"
+    "title": "Panou de Control Admin",
+    "subtitle": "Gestionează platforma de imigrație"
   },
   "owner": {
-    "title": "TODO: translate",
-    "subtitle": "TODO: translate"
+    "title": "Panou de Control Companie",
+    "subtitle": "Urmărește progresul imigrării lucrătorilor"
   },
   "worker": {
-    "title": "TODO: translate",
-    "subtitle": "TODO: translate"
+    "title": "Progresul Meu de Imigrație",
+    "subtitle": "Urmărește statusul aplicației tale"
   },
   "viewer": {
-    "title": "TODO: translate",
-    "subtitle": "TODO: translate"
+    "title": "Prezentare Generală Imigrație",
+    "subtitle": "Vizualizează procesele de imigrație"
   },
   "stats": {
-    "total": "TODO: translate",
-    "active": "TODO: translate",
-    "pending": "TODO: translate",
-    "completed": "TODO: translate",
-    "thisMonth": "TODO: translate",
-    "totalClients": "TODO: translate",
-    "newClients": "TODO: translate",
-    "activeWorkers": "TODO: translate",
-    "activeCases": "TODO: translate",
-    "pendingActions": "TODO: translate",
-    "needsAttention": "TODO: translate",
-    "completedThisMonth": "TODO: translate",
-    "totalWorkers": "TODO: translate"
+    "total": "Total",
+    "active": "Activ",
+    "pending": "În Așteptare",
+    "completed": "Finalizat",
+    "thisMonth": "Luna Aceasta",
+    "totalClients": "Total Clienți",
+    "newClients": "Clienți Noi",
+    "activeWorkers": "Lucrători Activi",
+    "activeCases": "Cazuri Active",
+    "pendingActions": "Acțiuni în Așteptare",
+    "needsAttention": "Necesită Atenție",
+    "completedThisMonth": "Finalizate Luna Aceasta",
+    "totalWorkers": "Total Lucrători"
   },
   "stages": {
-    "ajofm": "TODO: translate",
-    "workPermit": "TODO: translate",
-    "visa": "TODO: translate",
-    "residence": "TODO: translate"
+    "ajofm": "Test Piața Muncii AJOFM",
+    "workPermit": "Permis de Muncă (IGI)",
+    "visa": "Aplicație Viză",
+    "residence": "Permis de Ședere"
   },
   "action": {
-    "newClient": "TODO: translate"
+    "newClient": "Client Nou"
   },
   "client": {
-    "subtitle": "TODO: translate",
-    "title": "TODO: translate"
+    "subtitle": "Subtitlu",
+    "title": "Titlu"
   }
 }
