@@ -838,13 +838,46 @@ export default function AdminDashboard() {
                             const matchesSearch = !workerSearchTerm || 
                               worker.firstName?.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
                               worker.lastName?.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
-                              worker.nationality?.toLowerCase().includes(workerSearchTerm.toLowerCase());
+                              worker.nationality?.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
+                              worker.workerName?.toLowerCase().includes(workerSearchTerm.toLowerCase());
                             
                             const matchesWorkerFilter = workerFilter === "all" || 
                               (worker.status || "pending").toLowerCase() === workerFilter.toLowerCase();
                             
                             return matchesSearch && matchesWorkerFilter;
                           });
+
+                          // Helper function to format status labels
+                          const getStatusLabel = (status: string) => {
+                            switch (status) {
+                              case 'NOT_STARTED': return 'Not Started';
+                              case 'AWAITING_UPLOAD': return 'Awaiting Upload';
+                              case 'SUBMITTED_BY_USER': return 'Submitted';
+                              case 'RECEIVED_BY_ADMIN': return 'Under Review';
+                              case 'ACCEPTED': return 'Accepted';
+                              case 'REJECTED': return 'Rejected';
+                              case 'completed': return 'Completed';
+                              case 'active': return 'In Progress';
+                              case 'blocked': return 'Blocked';
+                              default: return status || 'Pending';
+                            }
+                          };
+
+                          // Helper function to get status color
+                          const getStatusColor = (status: string) => {
+                            switch (status) {
+                              case 'ACCEPTED':
+                              case 'completed': return 'bg-green-100 text-green-800';
+                              case 'SUBMITTED_BY_USER':
+                              case 'RECEIVED_BY_ADMIN':
+                              case 'active': return 'bg-blue-100 text-blue-800';
+                              case 'AWAITING_UPLOAD': return 'bg-yellow-100 text-yellow-800';
+                              case 'REJECTED':
+                              case 'blocked': return 'bg-red-100 text-red-800';
+                              case 'NOT_STARTED':
+                              default: return 'bg-gray-100 text-gray-800';
+                            }
+                          };
 
                           if (workersBeingProcessed.length === 0) {
                             // No workers being processed for this client
@@ -875,28 +908,28 @@ export default function AdminDashboard() {
                                       <i className="fas fa-user text-green-600 text-lg"></i>
                                     </div>
                                     <div>
-                                      <h5 className="font-semibold text-gray-900">{worker.firstName} {worker.lastName}</h5>
-                                      <p className="text-sm text-gray-600">{worker.nationality || 'Nationality not specified'}</p>
+                                      <h5 className="font-semibold text-gray-900">
+                                        {worker.firstName && worker.lastName 
+                                          ? `${worker.firstName} ${worker.lastName}`
+                                          : worker.workerName || `Worker #${index + 1}`
+                                        }
+                                      </h5>
+                                      <p className="text-sm text-gray-600">{worker.nationality || 'Nationality pending'}</p>
                                       <div className="flex items-center mt-2 space-x-4 text-xs text-gray-500">
                                         <span>
                                           <i className="fas fa-calendar mr-1"></i>
-                                          Started: {new Date(worker.createdAt || Date.now()).toLocaleDateString()}
+                                          Started: {worker.startDate || worker.createdAt ? new Date(worker.startDate || worker.createdAt).toLocaleDateString() : 'Date pending'}
                                         </span>
                                         <span>
                                           <i className="fas fa-envelope mr-1"></i>
-                                          {worker.email || 'Email not provided'}
+                                          {worker.email || worker.workerEmail || 'Contact info pending'}
                                         </span>
                                       </div>
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                      worker.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                      worker.status === 'active' ? 'bg-blue-100 text-blue-800' :
-                                      worker.status === 'blocked' ? 'bg-red-100 text-red-800' :
-                                      'bg-yellow-100 text-yellow-800'
-                                    }`}>
-                                      {worker.status || 'Pending'}
+                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(worker.status)}`}>
+                                      {getStatusLabel(worker.status)}
                                     </span>
                                   </div>
                                 </div>

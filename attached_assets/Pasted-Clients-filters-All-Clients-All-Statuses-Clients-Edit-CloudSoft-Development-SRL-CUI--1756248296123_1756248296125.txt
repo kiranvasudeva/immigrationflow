@@ -1,0 +1,446 @@
+Clients
+filters:
+
+All Clients
+
+All Statuses
+
+Clients
+
+Edit
+CloudSoft Development SRL
+CUI: RO56789012
+
+Strada Piața Amzei Nr. 2-4, Sector 1, București 010014, România
++40 21 567 8901
+contact@cloudsoft.ro
+3
+
+Active Workers
+
+workersBeingProcessed (3)
+Search workers...
+
+All Workers
+
+Clear
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+RECEIVED_BY_ADMIN
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+RECEIVED_BY_ADMIN
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+RECEIVED_BY_ADMIN
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+RECEIVED_BY_ADMIN
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+RECEIVED_BY_ADMIN
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+RECEIVED_BY_ADMIN
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+RECEIVED_BY_ADMIN
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+RECEIVED_BY_ADMIN
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+RECEIVED_BY_ADMIN
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+AWAITING_UPLOAD
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+RECEIVED_BY_ADMIN
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+ACCEPTED
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+SUBMITTED_BY_USER
+Nationality not specified
+
+Started: 26/08/2025
+Email not provided
+NOT_STARTED
