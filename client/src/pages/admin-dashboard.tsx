@@ -1290,6 +1290,7 @@ export default function AdminDashboard() {
                       </CardHeader>
                       <CardContent>
                         {(() => {
+                          console.log('WORKERS LIST: Rendering workers for client:', selectedClient.legalName);
                           // Filter assignments by matching clientProfileId to selectedClient.id
                           const clientAssignments = assignments.filter((assignment: any) => 
                             assignment.clientProfileId === selectedClient.id
