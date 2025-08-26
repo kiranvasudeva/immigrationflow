@@ -202,10 +202,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (user?.role === 'ADMIN') {
         const clients = await storage.getAllClientProfiles();
-        res.json(clients);
+        
+        // Add worker count to each client
+        const clientsWithWorkerCount = await Promise.all(
+          clients.map(async (client) => {
+            const workers = await storage.getWorkersByClientId(client.id);
+            return {
+              ...client,
+              activeWorkers: workers.length
+            };
+          })
+        );
+        
+        res.json(clientsWithWorkerCount);
       } else if (user?.role === 'OWNER') {
         const client = await storage.getClientProfileByOwnerId(user.id);
-        res.json(client ? [client] : []);
+        if (client) {
+          const workers = await storage.getWorkersByClientId(client.id);
+          const clientWithWorkerCount = {
+            ...client,
+            activeWorkers: workers.length
+          };
+          res.json([clientWithWorkerCount]);
+        } else {
+          res.json([]);
+        }
       } else {
         res.status(403).json({ message: "Unauthorized" });
       }
@@ -318,10 +339,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/clients/:clientId/workers', isAuthenticated, auditMiddleware, async (req: any, res) => {
     try {
       const { clientId } = req.params;
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const userEmail = req.user.claims.email;
+      const user = await storage.getUserByEmail(userEmail);
       
-      console.log(`Fetching workers for client ${clientId}, user: ${userId}, role: ${user?.role}`);
+      console.log(`Fetching workers for client ${clientId}, user: ${userEmail}, role: ${user?.role}`);
       
       const client = await storage.getClientProfile(clientId);
       if (!client) {
@@ -331,14 +352,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Client found: ${client.legalName}, owner: ${client.ownerUserId}`);
 
-      // Check authorization
-      if (user?.role === 'ADMIN' || client.ownerUserId === userId) {
-        console.log(`Authorization granted for user ${userId}`);
+      // Check authorization - admin can access all, owners can access their own
+      if (user?.role === 'ADMIN' || client.ownerUserId === user?.id) {
+        console.log(`Authorization granted for user ${userEmail}`);
         const workers = await storage.getWorkersByClientId(clientId);
         console.log(`Found ${workers.length} workers for client ${clientId}`);
         res.json(workers);
       } else {
-        console.log(`Authorization denied for user ${userId}, role: ${user?.role}, owner: ${client.ownerUserId}`);
+        console.log(`Authorization denied for user ${userEmail}, role: ${user?.role}, owner: ${client.ownerUserId}`);
         res.status(403).json({ message: "Unauthorized" });
       }
     } catch (error) {
