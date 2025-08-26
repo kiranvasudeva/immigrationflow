@@ -961,13 +961,10 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     {(() => {
-                      console.log('Debug - selectedClient.id:', selectedClient.id);
-                      console.log('Debug - assignments sample:', assignments.slice(0, 2));
-                      
-                      const clientWorkers = assignments.filter((worker: any) => {
-                        console.log('Debug - worker.clientId:', worker.clientId, 'vs selectedClient.id:', selectedClient.id);
-                        return worker.clientId === selectedClient.id;
-                      });
+                      // Filter workers by matching clientProfileId to selectedClient.id
+                      const clientWorkers = assignments.filter((worker: any) => 
+                        worker.clientProfileId === selectedClient.id
+                      );
 
                       if (clientWorkers.length === 0) {
                         return (
@@ -1275,8 +1272,9 @@ export default function AdminDashboard() {
                       </CardHeader>
                       <CardContent>
                         {(() => {
+                          // Filter workers by matching clientProfileId to selectedClient.id
                           const clientWorkers = assignments.filter((worker: any) => 
-                            worker.clientId === selectedClient.id
+                            worker.clientProfileId === selectedClient.id
                           );
 
                           if (clientWorkers.length === 0) {
