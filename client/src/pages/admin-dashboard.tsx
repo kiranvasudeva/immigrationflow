@@ -155,19 +155,47 @@ export default function AdminDashboard() {
       
       <div className="flex-1 flex flex-col min-w-0">
         <Header 
-          title={t('dashboard.admin.title') || "Admin Dashboard"}
-          subtitle={t('dashboard.admin.subtitle') || "Global workflow management and oversight"}
+          title={
+            showNewClientForm 
+              ? (t('actions.newClient') || "New Client")
+              : selectedClient 
+                ? selectedClient.companyName
+                : selectedWorkflowClient 
+                  ? selectedWorkflowClient.companyName + " - Workers"
+                  : selectedWorkerDetail
+                    ? selectedWorkerDetail.firstName + " " + selectedWorkerDetail.lastName + " - Workflow"
+                    : (t('dashboard.admin.title') || "Admin Dashboard")
+          }
+          subtitle={
+            showNewClientForm
+              ? (t('common.fillClientDetails') || "Fill in the client information below")
+              : selectedClient
+                ? (t('dashboard.clientProfile') || "Client Profile & Management")
+                : selectedWorkflowClient
+                  ? (t('dashboard.workersManagement') || "Workers Management & Assignment")
+                  : selectedWorkerDetail
+                    ? (t('dashboard.workflowTracking') || "Immigration Workflow Tracking")
+                    : (t('dashboard.admin.subtitle') || "Global workflow management and oversight")
+          }
           actions={
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              <Input 
-                placeholder={t('common.searchPlaceholder') || 'Search clients, workers, CUI...'} 
-                className="w-full sm:w-80"
-                data-testid="input-global-search"
-              />
-              <Button data-testid="button-new-client" className="shrink-0">
-                <i className="fas fa-plus mr-2"></i>{t('action.newClient') || 'New Client'}
-              </Button>
-            </div>
+            showNewClientForm ? null : (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                <Input 
+                  placeholder={t('common.searchPlaceholder') || 'Search clients, workers, CUI...'} 
+                  className="w-full sm:w-80"
+                  data-testid="input-global-search"
+                />
+                {!selectedClient && !selectedWorkflowClient && !selectedWorkerDetail && (
+                  <Button 
+                    data-testid="button-new-client" 
+                    className="shrink-0"
+                    onClick={() => setShowNewClientForm(true)}
+                  >
+                    <i className="fas fa-plus mr-2"></i>{t('action.newClient') || 'New Client'}
+                  </Button>
+                )}
+              </div>
+            )
           }
         />
 
