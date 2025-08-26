@@ -41,9 +41,6 @@ export default function AdminDashboard() {
   const [editingClient, setEditingClient] = useState(false);
   const [showNewClientForm, setShowNewClientForm] = useState(false);
   
-  // Workers menu states
-  const [selectedWorkflowClient, setSelectedWorkflowClient] = useState<any>(null);
-  const [selectedWorkerDetail, setSelectedWorkerDetail] = useState<any>(null);
   
   // Form state
   const [newClientForm, setNewClientForm] = useState({
@@ -75,14 +72,28 @@ export default function AdminDashboard() {
 
   const { data: assignments = [] } = useQuery<any[]>({
     queryKey: ["/api/dashboard/assignments"],
+    enabled: isAuthenticated && !isLoading,
+  });
+
+  const { data: recentActivities = [] } = useQuery<any[]>({
+    queryKey: ["/api/dashboard/activities"],
     enabled: isAuthenticated && !isLoading && user?.role === 'ADMIN',
   });
 
-  // Fetch workers for selected workflow client
-  const { data: clientWorkers = [], isLoading: workersLoading, error: workersError } = useQuery<any[]>({
-    queryKey: ["/api/clients", selectedWorkflowClient?.id, "workers"],
-    enabled: isAuthenticated && !isLoading && user?.role === 'ADMIN' && !!selectedWorkflowClient?.id,
-  });
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+
 
 
   // Redirect if not authenticated
@@ -169,7 +180,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <Sidebar userRole="ADMIN" onSectionChange={setActiveSection} currentSection={selectedWorkerDetail ? 'overview' : activeSection} />
+      <Sidebar userRole="ADMIN" onSectionChange={setActiveSection} currentSection={activeSection} />
       
       <div className="flex-1 flex flex-col min-w-0">
         <Header 
@@ -178,36 +189,28 @@ export default function AdminDashboard() {
               ? "New Client"
               : selectedClient 
                 ? "Admin Dashboard"
-                : selectedWorkflowClient 
-                  ? "Admin Dashboard"
-                  : selectedWorkerDetail
-                    ? "Admin Dashboard"
-                    : activeSection === "clients"
-                      ? "Clients"
-                      : activeSection === "workers" 
-                        ? "Workers"
-                        : activeSection === "documents"
-                          ? "Documents" 
-                          : activeSection === "reports"
-                            ? "Reports"
-                            : activeSection === "requirements"
-                              ? "Requirements"
-                              : activeSection === "reminders"
-                                ? "Reminders"
-                                : activeSection === "audit"
-                                  ? "Audit Logs"
-                                  : "Admin Dashboard"
+                : activeSection === "clients"
+                  ? "Clients"
+                  : activeSection === "workers" 
+                    ? "Workers & Workflow"
+                    : activeSection === "documents"
+                      ? "Documents" 
+                      : activeSection === "reports"
+                        ? "Reports"
+                        : activeSection === "requirements"
+                          ? "Requirements"
+                          : activeSection === "reminders"
+                            ? "Reminders"
+                            : activeSection === "audit"
+                              ? "Audit Logs"
+                              : "Admin Dashboard"
           }
           subtitle={
             showNewClientForm
               ? (t('common.fillClientDetails') || "Fill in the client information below")
               : selectedClient
                 ? selectedClient.legalName + " - " + (t('dashboard.clientProfile') || "Client Profile & Management")
-                : selectedWorkflowClient
-                  ? selectedWorkflowClient.legalName + " - " + (t('dashboard.workersManagement') || "Workers Management & Assignment")
-                  : selectedWorkerDetail
-                    ? selectedWorkerDetail.firstName + " " + selectedWorkerDetail.lastName + " - " + (t('dashboard.workflowTracking') || "Immigration Workflow Tracking")
-                    : (t('dashboard.admin.subtitle') || "Global workflow management and oversight")
+                : (t('dashboard.admin.subtitle') || "Global workflow management and oversight")
           }
           actions={
             showNewClientForm ? null : (
@@ -219,7 +222,7 @@ export default function AdminDashboard() {
                   onChange={(e) => setClientSearchTerm(e.target.value)}
                   data-testid="input-global-search"
                 />
-                {!selectedClient && !selectedWorkflowClient && !selectedWorkerDetail && (
+                {!selectedClient && (
                   <Button 
                     data-testid="button-new-client" 
                     className="shrink-0"
@@ -909,423 +912,6 @@ export default function AdminDashboard() {
             </Card>
           </Collapsible>
 
-          {/* Collapsible Workflow Section */}
-          <Collapsible open={workflowOpen} onOpenChange={setWorkflowOpen} className="mb-6">
-            <Card data-testid="card-workflow-overview">
-              <CardHeader className="border-b border-gray-200">
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" className="w-full justify-between p-0 h-auto hover:bg-transparent">
-                    <CardTitle className="flex items-center">
-                      <i className="fas fa-tasks mr-2"></i>
-                      {t('common.workflowOverview') || 'Workflow Overview'}
-                    </CardTitle>
-                    {workflowOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  </Button>
-                </CollapsibleTrigger>
-              </CardHeader>
-              <CollapsibleContent>
-                <CardContent className="p-6">
-                  {/* Navigation Breadcrumb */}
-                  {(selectedWorkflowClient || selectedWorkerDetail) && (
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-2 text-sm">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => {
-                            setSelectedWorkflowClient(null);
-                            setSelectedWorkerDetail(null);
-                          }}
-                          className="text-primary hover:text-primary/80"
-                        >
-                          <i className="fas fa-arrow-left mr-2"></i>
-                          {t('common.workers') || 'Workers'}
-                        </Button>
-                        {selectedWorkflowClient && (
-                          <>
-                            <ChevronRight className="h-4 w-4 text-gray-400" />
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => setSelectedWorkerDetail(null)}
-                              className={selectedWorkerDetail ? "text-primary hover:text-primary/80" : "text-gray-900"}
-                            >
-                              {selectedWorkflowClient.companyName}
-                            </Button>
-                          </>
-                        )}
-                        {selectedWorkerDetail && (
-                          <>
-                            <ChevronRight className="h-4 w-4 text-gray-400" />
-                            <span className="text-gray-900 font-medium">{selectedWorkerDetail.worker?.fullName}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Client Selection Form */}
-                  {!selectedWorkflowClient && (
-                    <div className="space-y-6">
-                      <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                        <i className="fas fa-building text-gray-400 text-3xl mb-4"></i>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('common.selectClient') || 'Select a Client'}</h3>
-                        <p className="text-gray-600 mb-4">{t('common.selectClientDescription') || 'Choose a client to view their workers and application status'}</p>
-                        
-                        <Select onValueChange={(clientId) => {
-                          const client = clients.find((c: any) => c.id === clientId);
-                          setSelectedWorkflowClient(client);
-                        }}>
-                          <SelectTrigger className="w-full max-w-md mx-auto" data-testid="select-workflow-client">
-                            <SelectValue placeholder={t('common.chooseClient') || 'Choose Client'} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {clients.map((client: any) => (
-                              <SelectItem key={client.id} value={client.id}>
-                                <div className="flex items-center space-x-2">
-                                  <i className="fas fa-building text-primary"></i>
-                                  <span>{client.companyName} - CUI: {client.cui}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Workers List */}
-                  {selectedWorkflowClient && !selectedWorkerDetail && (
-                    <div className="space-y-4">
-                      <div className="bg-blue-50 rounded-lg p-4 mb-6">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-                            <i className="fas fa-building text-white"></i>
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{selectedWorkflowClient.companyName}</h3>
-                            <p className="text-sm text-gray-600">CUI: {selectedWorkflowClient.cui}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                        <h4 className="text-lg font-semibold flex items-center">
-                          <i className="fas fa-users mr-2"></i>
-                          {t('common.workerApplications') || 'Worker Applications'}
-                        </h4>
-                        
-                        {/* Worker Filters */}
-                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                          <Input
-                            placeholder={t('form.placeholders.searchWorkers') || 'Search workers...'}
-                            value={workerSearchTerm}
-                            onChange={(e) => setWorkerSearchTerm(e.target.value)}
-                            className="w-full sm:w-64"
-                            data-testid="input-worker-applications-search"
-                          />
-                          <Select value={workerFilter} onValueChange={setWorkerFilter}>
-                            <SelectTrigger className="w-full sm:w-40" data-testid="select-worker-applications-filter">
-                              <SelectValue placeholder="Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Workers</SelectItem>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="completed">Completed</SelectItem>
-                              <SelectItem value="blocked">Blocked</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setWorkerSearchTerm("");
-                              setWorkerFilter("all");
-                            }}
-                            data-testid="button-clear-worker-applications-filters"
-                          >
-                            <i className="fas fa-times mr-1"></i>
-                            Clear
-                          </Button>
-                        </div>
-                      </div>
-
-                      {(() => {
-                        const filteredWorkers = clientWorkers.filter((worker: any) => {
-                          const matchesSearch = !workerSearchTerm || 
-                            worker.firstName?.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
-                            worker.lastName?.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
-                            worker.nationality?.toLowerCase().includes(workerSearchTerm.toLowerCase());
-                          
-                          const matchesWorkerFilter = workerFilter === "all" || 
-                            (worker.status || "pending").toLowerCase() === workerFilter.toLowerCase();
-                          
-                          return matchesSearch && matchesWorkerFilter;
-                        });
-
-                        return filteredWorkers.length === 0 ? (
-                          <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                            <i className="fas fa-user-plus text-gray-400 text-3xl mb-4"></i>
-                            <p className="text-gray-600">
-                              {workerSearchTerm || workerFilter !== "all" 
-                                ? "No workers match your filters"
-                                : (t('common.noWorkersForClient') || 'No workers found for this client')
-                              }
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="grid gap-4">
-                            {filteredWorkers.map((worker: any, index: number) => (
-                            <div 
-                              key={worker.id || index} 
-                              className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                              onClick={() => setSelectedWorkerDetail(worker)}
-                              data-testid={`worker-application-${index}`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-4">
-                                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                                    <i className="fas fa-user text-green-600"></i>
-                                  </div>
-                                  <div>
-                                    <h5 className="font-semibold text-gray-900">{worker.firstName} {worker.lastName}</h5>
-                                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                                      <span><i className="fas fa-flag mr-1"></i>{worker.nationality}</span>
-                                      <span><i className="fas fa-envelope mr-1"></i>{worker.email}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                    ACTIVE
-                                  </span>
-                                  <div className="mt-1 text-xs text-gray-500">
-                                    Passport: {worker.passportNumber}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Worker Basic Info */}
-                              <div className="mt-3 flex space-x-4 text-sm text-gray-500">
-                                <span><i className="fas fa-id-card mr-1"></i>DOB: {new Date(worker.dob).toLocaleDateString()}</span>
-                                <span><i className="fas fa-calendar mr-1"></i>Passport Exp: {new Date(worker.passportExpiry).toLocaleDateString()}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                  )}
-
-                  {/* Worker Detail Flowchart */}
-                  {selectedWorkerDetail && (
-                    <div className="space-y-6">
-                      {/* Back Button */}
-                      <button
-                        onClick={() => setSelectedWorkerDetail(null)}
-                        className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-                        data-testid="back-to-workers"
-                      >
-                        <i className="fas fa-arrow-left mr-2"></i>
-                        Back to Workers List
-                      </button>
-
-                      {/* Worker Header */}
-                      <div className="bg-green-50 rounded-lg p-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start space-x-4">
-                            <div className="w-16 h-16 bg-green-600 rounded-lg flex items-center justify-center">
-                              <i className="fas fa-user text-white text-xl"></i>
-                            </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-gray-900">{selectedWorkerDetail.firstName} {selectedWorkerDetail.lastName}</h3>
-                              <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                                <span><i className="fas fa-flag mr-1"></i>{selectedWorkerDetail.nationality}</span>
-                                <span><i className="fas fa-envelope mr-1"></i>{selectedWorkerDetail.email}</span>
-                                <span><i className="fas fa-building mr-1"></i>{selectedWorkflowClient.companyName}</span>
-                              </div>
-                              <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                                <span><i className="fas fa-id-card mr-1"></i>Passport: {selectedWorkerDetail.passportNumber}</span>
-                                <span><i className="fas fa-calendar mr-1"></i>DOB: {new Date(selectedWorkerDetail.dob).toLocaleDateString()}</span>
-                                <span><i className="fas fa-phone mr-1"></i>{selectedWorkerDetail.phone}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="px-3 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                              ACTIVE WORKER
-                            </span>
-                            <div className="mt-1 text-xs text-gray-500">
-                              Passport Expires: {new Date(selectedWorkerDetail.passportExpiry).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Document Status Flowchart */}
-                      <div>
-                        <h4 className="text-lg font-semibold mb-4 flex items-center">
-                          <i className="fas fa-file-alt mr-2"></i>
-                          Document Flow & Status
-                        </h4>
-                        
-                        <div className="space-y-6">
-                          {[
-                            {
-                              stage: 'ajofm',
-                              title: 'AJOFM Labor Market Test',
-                              status: selectedWorkerDetail.ajofmStatus || 'pending',
-                              documents: [
-                                { name: 'Employment Contract', status: selectedWorkerDetail.ajofmDocuments?.employmentContract || 'pending' },
-                                { name: 'Job Description', status: selectedWorkerDetail.ajofmDocuments?.jobDescription || 'pending' },
-                                { name: 'Company Registration', status: selectedWorkerDetail.ajofmDocuments?.companyRegistration || 'received' }
-                              ],
-                              authorityResponse: selectedWorkerDetail.ajofmResponse || 'pending'
-                            },
-                            {
-                              stage: 'work-permit',
-                              title: 'IGI Work Permit',
-                              status: selectedWorkerDetail.workPermitStatus || 'pending',
-                              documents: [
-                                { name: 'Passport Copy', status: selectedWorkerDetail.workPermitDocuments?.passport || 'pending' },
-                                { name: 'Diploma Translation', status: selectedWorkerDetail.workPermitDocuments?.diploma || 'pending' },
-                                { name: 'Criminal Background Check', status: selectedWorkerDetail.workPermitDocuments?.background || 'pending' },
-                                { name: 'AJOFM Approval', status: selectedWorkerDetail.ajofmStatus === 'completed' ? 'received' : 'pending' }
-                              ],
-                              authorityResponse: selectedWorkerDetail.workPermitResponse || 'pending'
-                            },
-                            {
-                              stage: 'visa',
-                              title: 'Consulate Visa D/AM',
-                              status: selectedWorkerDetail.visaStatus || 'pending',
-                              documents: [
-                                { name: 'Visa Application Form', status: selectedWorkerDetail.visaDocuments?.application || 'pending' },
-                                { name: 'Work Permit Copy', status: selectedWorkerDetail.workPermitStatus === 'completed' ? 'received' : 'pending' },
-                                { name: 'Medical Certificate', status: selectedWorkerDetail.visaDocuments?.medical || 'pending' },
-                                { name: 'Proof of Accommodation', status: selectedWorkerDetail.visaDocuments?.accommodation || 'pending' }
-                              ],
-                              authorityResponse: selectedWorkerDetail.visaResponse || 'pending'
-                            },
-                            {
-                              stage: 'residence',
-                              title: 'Residence Permit',
-                              status: selectedWorkerDetail.residenceStatus || 'pending',
-                              documents: [
-                                { name: 'Residence Application', status: selectedWorkerDetail.residenceDocuments?.application || 'pending' },
-                                { name: 'Entry Stamp/Visa', status: selectedWorkerDetail.visaStatus === 'completed' ? 'received' : 'pending' },
-                                { name: 'Employment Proof', status: selectedWorkerDetail.residenceDocuments?.employment || 'pending' },
-                                { name: 'Health Insurance', status: selectedWorkerDetail.residenceDocuments?.insurance || 'pending' }
-                              ],
-                              authorityResponse: selectedWorkerDetail.residenceResponse || 'pending'
-                            }
-                          ].map((stage, stageIndex) => (
-                            <div key={stage.stage} className="border rounded-lg p-6 bg-white">
-                              <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center space-x-3">
-                                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                                    stage.status === 'completed' ? 'bg-green-500' :
-                                    stage.status === 'in-progress' ? 'bg-blue-500' :
-                                    stage.status === 'pending' ? 'bg-orange-500' :
-                                    'bg-gray-400'
-                                  }`}>
-                                    {stageIndex + 1}
-                                  </div>
-                                  <div>
-                                    <h5 className="font-semibold text-gray-900">{stage.title}</h5>
-                                    <p className="text-sm text-gray-600 capitalize">{stage.status.replace('-', ' ')}</p>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <i className={`fas text-lg ${
-                                    stage.status === 'completed' ? 'fa-check-circle text-green-500' :
-                                    stage.status === 'in-progress' ? 'fa-clock text-blue-500' :
-                                    stage.status === 'pending' ? 'fa-hourglass-half text-orange-500' :
-                                    'fa-circle text-gray-400'
-                                  }`}></i>
-                                </div>
-                              </div>
-
-                              {/* Document Status Grid */}
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                  <h6 className="font-medium text-gray-900 mb-3 flex items-center">
-                                    <i className="fas fa-file-import mr-2"></i>
-                                    Documents Required
-                                  </h6>
-                                  <div className="space-y-2">
-                                    {stage.documents.map((doc, docIndex) => (
-                                      <div key={docIndex} className="flex items-center justify-between p-2 border rounded">
-                                        <span className="text-sm">{doc.name}</span>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                          doc.status === 'received' ? 'bg-green-100 text-green-800' :
-                                          doc.status === 'pending' ? 'bg-orange-100 text-orange-800' :
-                                          'bg-gray-100 text-gray-800'
-                                        }`}>
-                                          {doc.status === 'received' ? 'Received' : 'Pending'}
-                                        </span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-
-                                <div>
-                                  <h6 className="font-medium text-gray-900 mb-3 flex items-center">
-                                    <i className="fas fa-university mr-2"></i>
-                                    Authority Response
-                                  </h6>
-                                  <div className={`p-4 rounded-lg border-2 ${
-                                    stage.authorityResponse === 'approved' ? 'border-green-200 bg-green-50' :
-                                    stage.authorityResponse === 'rejected' ? 'border-red-200 bg-red-50' :
-                                    stage.authorityResponse === 'in-review' ? 'border-blue-200 bg-blue-50' :
-                                    'border-gray-200 bg-gray-50'
-                                  }`}>
-                                    <div className="flex items-center space-x-2">
-                                      <i className={`fas ${
-                                        stage.authorityResponse === 'approved' ? 'fa-check-circle text-green-600' :
-                                        stage.authorityResponse === 'rejected' ? 'fa-times-circle text-red-600' :
-                                        stage.authorityResponse === 'in-review' ? 'fa-clock text-blue-600' :
-                                        'fa-hourglass-half text-gray-600'
-                                      }`}></i>
-                                      <span className={`font-medium ${
-                                        stage.authorityResponse === 'approved' ? 'text-green-800' :
-                                        stage.authorityResponse === 'rejected' ? 'text-red-800' :
-                                        stage.authorityResponse === 'in-review' ? 'text-blue-800' :
-                                        'text-gray-800'
-                                      }`}>
-                                        {stage.authorityResponse === 'approved' ? 'Approved' :
-                                         stage.authorityResponse === 'rejected' ? 'Rejected' :
-                                         stage.authorityResponse === 'in-review' ? 'In Review' :
-                                         'Pending Submission'}
-                                      </span>
-                                    </div>
-                                    {stage.authorityResponse !== 'pending' && (
-                                      <p className="text-xs mt-1 text-gray-600">
-                                        Response received on {new Date().toLocaleDateString()}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Flow Arrow */}
-                              {stageIndex < 3 && (
-                                <div className="flex justify-center mt-4">
-                                  <i className="fas fa-arrow-down text-gray-400 text-xl"></i>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-
           {/* Collapsible Recent Activity Section */}
           <Collapsible open={activityOpen} onOpenChange={setActivityOpen} className="mb-6">
             <Card data-testid="card-recent-activity">
@@ -1365,31 +951,51 @@ export default function AdminDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">{t('common.allActivities') || 'All Activities'}</SelectItem>
-                        <SelectItem value="document">{t('common.documents') || 'Documents'}</SelectItem>
-                        <SelectItem value="status">{t('common.statusChange') || 'Status Changes'}</SelectItem>
-                        <SelectItem value="user">{t('common.userActions') || 'User Actions'}</SelectItem>
+                        <SelectItem value="document">Document Uploads</SelectItem>
+                        <SelectItem value="status">Status Changes</SelectItem>
+                        <SelectItem value="assignment">Worker Assignments</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
+                  {/* Activity Feed */}
                   <div className="space-y-4">
-                    {auditLogs.length === 0 ? (
+                    {recentActivities.length === 0 ? (
                       <div className="text-center py-8">
-                        <i className="fas fa-history text-gray-400 text-3xl mb-4"></i>
-                        <p className="text-secondary">{t('common.noRecentActivity') || 'No recent activity'}</p>
+                        <i className="fas fa-clock text-gray-400 text-3xl mb-4"></i>
+                        <h4 className="text-lg font-medium text-gray-900 mb-2">{t('common.noRecentActivity') || 'No Recent Activity'}</h4>
+                        <p className="text-gray-600">{t('common.noRecentActivityDescription') || 'Activity from clients and workers will appear here.'}</p>
                       </div>
                     ) : (
-                      auditLogs.slice(0, 5).map((log: any, index: number) => (
-                        <div key={log.id || index} className="flex items-start space-x-4" data-testid={`activity-${index}`}>
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <i className="fas fa-info text-primary text-sm"></i>
+                      recentActivities.slice(0, 10).map((activity: any, index: number) => (
+                        <div key={activity.id || index} className="flex items-start space-x-4 p-4 bg-white rounded-lg border border-gray-200">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i className={`fas ${
+                              activity.type === 'document' ? 'fa-file-alt' :
+                              activity.type === 'status' ? 'fa-exchange-alt' :
+                              activity.type === 'assignment' ? 'fa-user-plus' :
+                              'fa-info'
+                            } text-primary`}></i>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-900">{log.action}</p>
+                            <p className="text-sm text-gray-900">
+                              <span className="font-medium">{activity.clientName || 'Unknown Client'}</span> - {activity.description}
+                            </p>
                             <p className="text-xs text-secondary mt-1">
-                              {new Date(log.createdAt).toLocaleString()}
+                              {new Date(activity.timestamp || Date.now()).toLocaleString()}
                             </p>
                           </div>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            activity.type === 'document' ? 'bg-green-100 text-green-800' :
+                            activity.type === 'status' ? 'bg-blue-100 text-blue-800' :
+                            activity.type === 'assignment' ? 'bg-purple-100 text-purple-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {activity.type === 'document' ? 'Document' :
+                             activity.type === 'status' ? 'Status' :
+                             activity.type === 'assignment' ? 'Assignment' :
+                             'Other'}
+                          </span>
                         </div>
                       ))
                     )}
@@ -1398,123 +1004,23 @@ export default function AdminDashboard() {
               </CollapsibleContent>
             </Card>
           </Collapsible>
-                </>
-              )}
+              </>
+            )}
 
-              {/* Clients Section */}
-              {activeSection === "clients" && (
+          {/* Mobile Navigation & Quick Action Sections */}
+          {isMobile && (
+            <>
+              <div className="space-y-6">
+              {/* Documents Section */}
+              {activeSection === "documents" && (
                 <div className="space-y-6">
-                  {/* Search and Filter Bar */}
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-                        <div className="flex-1">
-                          <Input
-                            placeholder="Search clients by name, CUI, or email..."
-                            value={clientSearchTerm}
-                            onChange={(e) => setClientSearchTerm(e.target.value)}
-                            className="w-full"
-                            data-testid="input-client-search"
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="w-40" data-testid="select-client-status-filter">
-                              <SelectValue placeholder="Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Statuses</SelectItem>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="inactive">Inactive</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setClientSearchTerm("");
-                              setClientFilter("all");
-                              setStatusFilter("all");
-                            }}
-                            data-testid="button-clear-filters"
-                          >
-                            <i className="fas fa-times mr-2"></i>
-                            Clear
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Clients List */}
                   <Card>
                     <CardContent className="p-6">
-                      {!showNewClientForm ? (
-                        <div className="space-y-4">
-                          {clientsLoading ? (
-                            <div className="text-center py-8">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                            </div>
-                          ) : (() => {
-                            const filteredClients = clients.filter((client: any) => {
-                              const matchesSearch = !clientSearchTerm || 
-                                client.legalName?.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
-                                client.cui?.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
-                                client.contactEmail?.toLowerCase().includes(clientSearchTerm.toLowerCase());
-                              
-                              const matchesStatus = statusFilter === "all" || 
-                                (client.status || "active").toLowerCase() === statusFilter.toLowerCase();
-                              
-                              const matchesClientFilter = clientFilter === "all" || 
-                                (clientFilter === "active" && (client.status || "active") === "active") ||
-                                (clientFilter === "inactive" && client.status === "inactive");
-                              
-                              return matchesSearch && matchesStatus && matchesClientFilter;
-                            });
-
-                            return filteredClients.length === 0 ? (
-                              <div className="text-center py-8">
-                                <i className="fas fa-building text-gray-400 text-3xl mb-4"></i>
-                                <p className="text-secondary">
-                                  {clientSearchTerm || statusFilter !== "all" 
-                                    ? "No clients match your filters"
-                                    : "No clients found"
-                                  }
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="space-y-3">
-                                {filteredClients.map((client: any) => (
-                                  <div 
-                                    key={client.id}
-                                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                                    onClick={() => setLocation(`/clients/${client.id}`)}
-                                    data-testid={`client-${client.id}`}
-                                  >
-                                    <div className="flex items-center space-x-4">
-                                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <i className="fas fa-building text-primary"></i>
-                                      </div>
-                                      <div>
-                                        <p className="font-medium">{client.legalName}</p>
-                                        <p className="text-sm text-secondary">CUI: {client.cui}</p>
-                                        <p className="text-xs text-gray-500">{client.contactEmail}</p>
-                                      </div>
-                                    </div>
-                                    <div className="text-right">
-                                      <p className="text-sm font-medium">{client.activeWorkers || 0} workers</p>
-                                      <p className="text-xs text-secondary capitalize">{client.status || "active"}</p>
-                                      <ChevronRight className="h-4 w-4 text-gray-400 mt-1" />
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      ) : (
-                        <div>Client form would go here</div>
-                      )}
+                      <div className="text-center py-8">
+                        <i className="fas fa-file-alt text-gray-400 text-3xl mb-4"></i>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Document Management</h3>
+                        <p className="text-secondary">Generate, track, and manage Romanian immigration documents</p>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
@@ -1527,23 +1033,8 @@ export default function AdminDashboard() {
                     <CardContent className="p-6">
                       <div className="text-center py-8">
                         <i className="fas fa-users text-gray-400 text-3xl mb-4"></i>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Workers Management</h3>
-                        <p className="text-secondary">Manage all workers across clients and track their immigration status</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {/* Documents Section */}
-              {activeSection === "documents" && (
-                <div className="space-y-6">
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="text-center py-8">
-                        <i className="fas fa-file-alt text-gray-400 text-3xl mb-4"></i>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Document Management</h3>
-                        <p className="text-secondary">Generate, upload, and track all immigration documents</p>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Workers & Workflow Management</h3>
+                        <p className="text-secondary">Manage worker assignments and track immigration workflow progress</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -1558,7 +1049,7 @@ export default function AdminDashboard() {
                       <div className="text-center py-8">
                         <i className="fas fa-chart-bar text-gray-400 text-3xl mb-4"></i>
                         <h3 className="text-lg font-medium text-gray-900 mb-2">Reports & Analytics</h3>
-                        <p className="text-secondary">View detailed reports on immigration workflows and performance</p>
+                        <p className="text-secondary">Detailed insights and analytics for immigration workflows</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -1626,9 +1117,12 @@ export default function AdminDashboard() {
                   </Card>
                 </div>
               )}
-            </div>
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
+    </div>
+  </div>
   );
 }
