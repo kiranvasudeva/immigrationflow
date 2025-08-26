@@ -8,25 +8,35 @@ export function DummyDataAlert() {
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
-  // Set CSS variable for alert height with responsive values
+  // Set CSS variables for alert height and total header offset
   useEffect(() => {
     if (isVisible) {
       // Smaller height on mobile to prevent overlap
       const alertHeight = window.innerWidth < 1024 ? '56px' : '64px';
+      const headerHeight = window.innerWidth < 1024 ? '64px' : '76px'; // Header + padding
+      const totalOffset = window.innerWidth < 1024 ? '120px' : '140px'; // Alert + Header combined
+      
       document.documentElement.style.setProperty('--alert-height', alertHeight);
+      document.documentElement.style.setProperty('--header-offset', totalOffset);
       
       const handleResize = () => {
-        const newHeight = window.innerWidth < 1024 ? '56px' : '64px';
-        document.documentElement.style.setProperty('--alert-height', newHeight);
+        const newAlertHeight = window.innerWidth < 1024 ? '56px' : '64px';
+        const newHeaderHeight = window.innerWidth < 1024 ? '64px' : '76px';
+        const newTotalOffset = window.innerWidth < 1024 ? '120px' : '140px';
+        
+        document.documentElement.style.setProperty('--alert-height', newAlertHeight);
+        document.documentElement.style.setProperty('--header-offset', newTotalOffset);
       };
       
       window.addEventListener('resize', handleResize);
       return () => {
         window.removeEventListener('resize', handleResize);
-        document.documentElement.style.setProperty('--alert-height', '0px');
+        document.documentElement.style.removeProperty('--alert-height');
+        document.documentElement.style.removeProperty('--header-offset');
       };
     } else {
-      document.documentElement.style.setProperty('--alert-height', '0px');
+      document.documentElement.style.removeProperty('--alert-height');
+      document.documentElement.style.removeProperty('--header-offset');
     }
   }, [isVisible]);
 

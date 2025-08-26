@@ -224,7 +224,7 @@ export default function AdminDashboard() {
         />
 
         <div className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-8 max-w-full overflow-x-hidden">
+          <div className="p-4 lg:p-8 max-w-full overflow-x-hidden" style={{ paddingTop: 'calc(1rem + var(--header-offset, 0px))' }}>
             {activeSection === "overview" && (
               <>
                 {/* Stats Cards */}
