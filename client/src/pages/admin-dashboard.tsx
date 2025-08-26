@@ -32,6 +32,7 @@ export default function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
   
   // Navigation states
+  const [activeSection, setActiveSection] = useState<string>("overview");
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [editingClient, setEditingClient] = useState(false);
   const [showNewClientForm, setShowNewClientForm] = useState(false);
@@ -151,7 +152,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <Sidebar userRole="ADMIN" />
+      <Sidebar userRole="ADMIN" onSectionChange={setActiveSection} />
       
       <div className="flex-1 flex flex-col min-w-0">
         <Header 
@@ -164,7 +165,21 @@ export default function AdminDashboard() {
                   ? selectedWorkflowClient.companyName + " - Workers"
                   : selectedWorkerDetail
                     ? selectedWorkerDetail.firstName + " " + selectedWorkerDetail.lastName + " - Workflow"
-                    : (t('dashboard.admin.title') || "Admin Dashboard")
+                    : activeSection === "clients"
+                      ? (t('nav.clients') || "Clients")
+                      : activeSection === "workers" 
+                        ? (t('nav.workers') || "Workers")
+                        : activeSection === "documents"
+                          ? (t('nav.documents') || "Documents") 
+                          : activeSection === "reports"
+                            ? (t('nav.reports') || "Reports")
+                            : activeSection === "requirements"
+                              ? (t('nav.requirements') || "Requirements")
+                              : activeSection === "reminders"
+                                ? (t('nav.reminders') || "Reminders")
+                                : activeSection === "audit"
+                                  ? (t('nav.auditLogs') || "Audit Logs")
+                                  : (t('dashboard.admin.title') || "Admin Dashboard")
           }
           subtitle={
             showNewClientForm

@@ -8,9 +8,10 @@ import { Menu } from "lucide-react";
 
 interface SidebarProps {
   userRole: 'ADMIN' | 'OWNER' | 'WORKER' | 'VIEWER';
+  onSectionChange?: (section: string) => void;
 }
 
-export default function Sidebar({ userRole }: SidebarProps) {
+export default function Sidebar({ userRole, onSectionChange }: SidebarProps) {
   const { t } = useTranslation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   
@@ -38,8 +39,12 @@ export default function Sidebar({ userRole }: SidebarProps) {
 
   const [location] = useLocation();
   
-  const handleNavigation = (href: string) => {
-    window.location.href = href;
+  const handleNavigation = (href: string, sectionKey: string) => {
+    if (onSectionChange && userRole === 'ADMIN') {
+      onSectionChange(sectionKey);
+    } else {
+      window.location.href = href;
+    }
   };
 
   const getNavItems = () => {
@@ -49,20 +54,20 @@ export default function Sidebar({ userRole }: SidebarProps) {
     };
 
     const commonItems = [
-      { icon: 'fas fa-chart-bar', label: t('common.dashboard') || 'Dashboard', href: '/dashboard', active: isActive('/dashboard') || isActive('/') }
+      { icon: 'fas fa-chart-bar', label: t('common.dashboard') || 'Dashboard', href: '/dashboard', sectionKey: 'overview', active: isActive('/dashboard') || isActive('/') }
     ];
 
     switch (userRole) {
       case 'ADMIN':
         return [
           ...commonItems,
-          { icon: 'fas fa-building', label: t('common.clients') || 'Clients', href: '/clients', active: isActive('/clients') },
-          { icon: 'fas fa-users', label: t('common.workers') || 'Workers', href: '/workers', active: isActive('/workers') },
-          { icon: 'fas fa-file-text', label: t('common.templates') || 'Templates', href: '/templates', active: isActive('/templates') },
-          { icon: 'fas fa-bar-chart', label: t('common.analytics') || 'Analytics', href: '/analytics', active: isActive('/analytics') },
-          { icon: 'fas fa-clipboard-list', label: t('nav.requirements') || 'Requirements', href: '/requirements', active: isActive('/requirements') },
-          { icon: 'fas fa-bell', label: t('nav.reminders') || 'Reminders', href: '/reminders', active: isActive('/reminders') },
-          { icon: 'fas fa-history', label: t('nav.auditLogs') || 'Audit Logs', href: '/audit', active: isActive('/audit') }
+          { icon: 'fas fa-building', label: t('common.clients') || 'Clients', href: '/clients', sectionKey: 'clients', active: isActive('/clients') },
+          { icon: 'fas fa-users', label: t('common.workers') || 'Workers', href: '/workers', sectionKey: 'workers', active: isActive('/workers') },
+          { icon: 'fas fa-file-text', label: t('common.templates') || 'Templates', href: '/templates', sectionKey: 'documents', active: isActive('/templates') },
+          { icon: 'fas fa-bar-chart', label: t('common.analytics') || 'Analytics', href: '/analytics', sectionKey: 'reports', active: isActive('/analytics') },
+          { icon: 'fas fa-clipboard-list', label: t('nav.requirements') || 'Requirements', href: '/requirements', sectionKey: 'requirements', active: isActive('/requirements') },
+          { icon: 'fas fa-bell', label: t('nav.reminders') || 'Reminders', href: '/reminders', sectionKey: 'reminders', active: isActive('/reminders') },
+          { icon: 'fas fa-history', label: t('nav.auditLogs') || 'Audit Logs', href: '/audit', sectionKey: 'audit', active: isActive('/audit') }
         ];
       case 'OWNER':
         return [
@@ -120,7 +125,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
                   : 'text-secondary hover:bg-gray-50'
               }`}
               onClick={() => {
-                handleNavigation((item as any).href || '/');
+                handleNavigation((item as any).href || '/', (item as any).sectionKey || 'overview');
                 setIsMobileOpen(false);
               }}
               data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
