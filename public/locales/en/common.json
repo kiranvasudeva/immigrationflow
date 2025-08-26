@@ -3,28 +3,7 @@
   "clients": "Clients",
   "workers": "Workers",
   "templates": "Templates",
-  "analytics": {
-    "completed": {
-      "month": "Month"
-    },
-    "headers": {
-      "activeWorkers": "Active Workers",
-      "clientPerformance": "Client Performance",
-      "monthlyTrend": "Monthly Trend",
-      "pendingActions": "Pending Actions",
-      "recentActivity": "Recent Activity",
-      "stageProgress": "Stage Progress",
-      "statusDistribution": "Status Distribution",
-      "totalClients": "Total Clients"
-    },
-    "options": {
-      "allClients": "All Clients"
-    },
-    "placeholders": {
-      "allClients": "All Clients",
-      "period": "Period"
-    }
-  },
+  "analytics": "Analytics",
   "profile": {
     "joined": "Joined",
     "manageInfo": "Manage Info",
