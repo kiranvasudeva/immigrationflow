@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { LanguageSelector } from "@/components/LanguageSelector";
 
 interface SidebarProps {
@@ -30,6 +30,10 @@ export default function Sidebar({ userRole }: SidebarProps) {
   };
 
   const [location] = useLocation();
+  
+  const handleNavigation = (href: string) => {
+    window.location.href = href;
+  };
 
   const getNavItems = () => {
     const isActive = (href: string) => {
@@ -100,20 +104,20 @@ export default function Sidebar({ userRole }: SidebarProps) {
 
         <div className="space-y-1 px-3">
           {getNavItems().map((item, index) => (
-            <Link key={index} href={(item as any).href || '/'}>
-              <Button
-                variant={(item as any).active ? "default" : "ghost"}
-                className={`w-full justify-start ${
-                  (item as any).active 
-                    ? 'bg-blue-50 text-primary hover:bg-blue-100' 
-                    : 'text-secondary hover:bg-gray-50'
-                }`}
-                data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
-              >
-                <i className={`${item.icon} mr-3`}></i>
-                {item.label}
-              </Button>
-            </Link>
+            <Button
+              key={index}
+              variant={(item as any).active ? "default" : "ghost"}
+              className={`w-full justify-start ${
+                (item as any).active 
+                  ? 'bg-blue-50 text-primary hover:bg-blue-100' 
+                  : 'text-secondary hover:bg-gray-50'
+              }`}
+              onClick={() => handleNavigation((item as any).href || '/')}
+              data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+            >
+              <i className={`${item.icon} mr-3`}></i>
+              {item.label}
+            </Button>
           ))}
         </div>
 

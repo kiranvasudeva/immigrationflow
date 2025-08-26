@@ -354,8 +354,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const t = (key: string): string => {
     // First try to get from API translations
-    if (translations[key]) {
-      return translations[key];
+    const apiTranslations = translations as Record<string, string>;
+    if (apiTranslations[key]) {
+      return apiTranslations[key];
     }
 
     // Fall back to hardcoded translations

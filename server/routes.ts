@@ -589,7 +589,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
-      const templates = workflowEngine.constructor.getWorkflowTemplates();
+      const templates = (workflowEngine.constructor as any).getWorkflowTemplates();
       res.json(templates);
     } catch (error) {
       console.error('Error fetching workflow templates:', error);

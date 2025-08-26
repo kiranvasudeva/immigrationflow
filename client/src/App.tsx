@@ -64,6 +64,15 @@ function Router() {
           }} />
           <Route path="/templates" component={TemplatesPage} />
           <Route path="/analytics" component={AnalyticsPage} />
+          <Route path="/clients" component={() => <AdminDashboard />} />
+          <Route path="/workers" component={() => <AdminDashboard />} />
+          <Route path="/requirements" component={() => <AdminDashboard />} />
+          <Route path="/reminders" component={() => <AdminDashboard />} />
+          <Route path="/audit" component={() => <AdminDashboard />} />
+          <Route path="/profile" component={() => <ClientDashboard />} />
+          <Route path="/documents" component={() => <ClientDashboard />} />
+          <Route path="/payments" component={() => <ClientDashboard />} />
+          <Route path="/deadlines" component={() => <WorkerDashboard />} />
         </>
       )}
       <Route component={NotFound} />
