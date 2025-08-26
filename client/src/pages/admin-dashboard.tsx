@@ -20,7 +20,7 @@ export default function AdminDashboard() {
     enabled: isAuthenticated && !isLoading,
   });
 
-  const { data: auditLogs } = useQuery({
+  const { data: auditLogs = [] } = useQuery<any[]>({
     queryKey: ["/api/audit"],
     enabled: isAuthenticated && !isLoading && user?.role === 'ADMIN',
   });
@@ -189,7 +189,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-4">
-                {!auditLogs || auditLogs.length === 0 ? (
+                {auditLogs.length === 0 ? (
                   <div className="text-center py-8">
                     <i className="fas fa-history text-gray-400 text-3xl mb-4"></i>
                     <p className="text-secondary">No recent activity</p>
