@@ -138,55 +138,52 @@ export default function Landing() {
           <DialogHeader>
             <div className="text-center mb-4">
               <i className="fas fa-passport text-primary text-3xl mb-4"></i>
-              <DialogTitle className="text-2xl font-bold text-gray-900">Welcome Back</DialogTitle>
-              <p className="text-secondary mt-2">Sign in to your ImmigrationFlow account</p>
+              <DialogTitle className="text-2xl font-bold text-gray-900">Access ImmigrationFlow</DialogTitle>
+              <p className="text-secondary mt-2">Sign in to your account</p>
             </div>
           </DialogHeader>
 
           <div className="space-y-6">
-            <div>
-              <Label htmlFor="email">Email address</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="Enter your email"
-                data-testid="input-email"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                placeholder="Enter your password"
-                data-testid="input-password"
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Checkbox id="remember" />
-                <Label htmlFor="remember" className="text-sm">Remember me</Label>
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <i className="fas fa-user-shield text-blue-600"></i>
+                  <h4 className="font-semibold text-blue-900">For Administrators</h4>
+                </div>
+                <p className="text-blue-700 text-sm mb-3">
+                  If you're new, signing up will automatically give you admin access to manage your immigration workflows.
+                </p>
+                <Button 
+                  onClick={handleLogin} 
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  data-testid="button-admin-login"
+                >
+                  <i className="fas fa-sign-in-alt mr-2"></i>
+                  Admin Login / Register
+                </Button>
               </div>
-              <Button variant="link" className="p-0 h-auto" data-testid="link-forgot-password">
-                Forgot password?
-              </Button>
-            </div>
-            
-            <Button 
-              onClick={handleLogin} 
-              className="w-full"
-              data-testid="button-signin"
-            >
-              Sign In
-            </Button>
 
-            <div className="text-center">
-              <p className="text-sm text-secondary">
-                Don't have an account?{" "}
-                <Button variant="link" className="p-0 h-auto" data-testid="link-contact-sales">
-                  Contact Sales
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <i className="fas fa-user-tie text-green-600"></i>
+                  <h4 className="font-semibold text-green-900">For Workers</h4>
+                </div>
+                <p className="text-green-700 text-sm mb-3">
+                  If you're a worker, you need an invitation link from your administrator to access your documents and deadlines.
+                </p>
+                <div className="text-center">
+                  <p className="text-green-600 text-sm font-medium">
+                    Check your email for an invitation link
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center pt-4 border-t">
+              <p className="text-xs text-secondary">
+                Need help? Contact your administrator or{" "}
+                <Button variant="link" className="p-0 h-auto text-xs" data-testid="link-support">
+                  support team
                 </Button>
               </p>
             </div>

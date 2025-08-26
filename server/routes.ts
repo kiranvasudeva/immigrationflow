@@ -7,6 +7,7 @@ import { governmentApiService } from "./services/government-api";
 import { ocrService } from "./services/ocr-service";
 import { workflowEngine } from "./services/workflow-engine";
 import { z } from "zod";
+import { nanoid } from 'nanoid';
 import { 
   insertClientProfileSchema, 
   insertWorkerSchema, 
@@ -15,7 +16,8 @@ import {
   insertTemplateFieldSchema,
   insertPaymentSchema,
   insertWorkflowRuleSchema,
-  insertTranslationSchema
+  insertTranslationSchema,
+  insertInvitationSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -55,6 +57,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Invitation routes
+  app.post('/api/invitations', isAuthenticated, auditMiddleware, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const user = await storage.getUserByEmail(userEmail);
+      
+      if (user?.role !== 'ADMIN' && user?.role !== 'OWNER') {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const token = nanoid(32);
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // Expires in 7 days
+
+      const data = insertInvitationSchema.parse({
+        ...req.body,
+        token,
+        invitedByUserId: user.id,
+        expiresAt,
+      });
+
+      const invitation = await storage.createInvitation(data);
+      
+      // Return invitation with the generated link
+      const inviteLink = `${req.protocol}://${req.hostname}/api/login?invitation=${token}`;
+      
+      res.status(201).json({
+        ...invitation,
+        inviteLink
+      });
+    } catch (error) {
+      console.error("Error creating invitation:", error);
+      res.status(500).json({ message: "Failed to create invitation" });
+    }
+  });
+
+  app.get('/api/invitations', isAuthenticated, auditMiddleware, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const user = await storage.getUserByEmail(userEmail);
+      
+      if (user?.role !== 'ADMIN' && user?.role !== 'OWNER') {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const invitations = await storage.getInvitationsByUser(user.id);
+      res.json(invitations);
+    } catch (error) {
+      console.error("Error fetching invitations:", error);
+      res.status(500).json({ message: "Failed to fetch invitations" });
+    }
+  });
+
+  // Public route to check invitation validity
+  app.get('/api/invitations/:token/check', async (req, res) => {
+    try {
+      const { token } = req.params;
+      const invitation = await storage.getInvitationByToken(token);
+      
+      if (!invitation || invitation.used || new Date() > invitation.expiresAt) {
+        return res.status(404).json({ message: "Invalid or expired invitation" });
+      }
+      
+      res.json({
+        valid: true,
+        email: invitation.email,
+        role: invitation.role
+      });
+    } catch (error) {
+      console.error("Error checking invitation:", error);
+      res.status(500).json({ message: "Failed to check invitation" });
     }
   });
 

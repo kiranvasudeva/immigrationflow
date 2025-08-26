@@ -56,12 +56,29 @@ function updateUserSession(
 
 async function upsertUser(
   claims: any,
+  invitationToken?: string
 ) {
+  let userRole = 'ADMIN'; // Default to ADMIN for regular registrations
+  let invitedById: string | undefined;
+  
+  // If there's an invitation token, check if it's valid and get the role
+  if (invitationToken) {
+    const invitation = await storage.getInvitationByToken(invitationToken);
+    if (invitation && !invitation.used && new Date() < invitation.expiresAt) {
+      userRole = invitation.role;
+      invitedById = invitation.invitedByUserId;
+      // Mark invitation as used
+      await storage.useInvitation(invitation.id);
+    }
+  }
+  
   await storage.upsertUser({
     email: claims["email"],
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
+    role: userRole as any,
+    invitedById,
   });
 }
 
@@ -75,11 +92,20 @@ export async function setupAuth(app: Express) {
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
-    verified: passport.AuthenticateCallback
+    verified: passport.AuthenticateCallback,
+    req?: any
   ) => {
     const user = {};
     updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
+    
+    // Check for invitation token in session (stored during login)
+    const invitationToken = req?.session?.invitationToken;
+    await upsertUser(tokens.claims(), invitationToken);
+    
+    // Clear invitation token from session
+    if (req?.session?.invitationToken) {
+      delete req.session.invitationToken;
+    }
     verified(null, user);
   };
 
@@ -101,6 +127,11 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
+    // Preserve invitation token in session for later use
+    if (req.query.invitation) {
+      (req.session as any).invitationToken = req.query.invitation;
+    }
+    
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],

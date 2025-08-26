@@ -16,6 +16,7 @@ import {
   apiIntegrations,
   translations,
   analyticsEvents,
+  invitations,
   type User,
   type UpsertUser,
   type ClientProfile,
@@ -43,6 +44,8 @@ import {
   type Translation,
   type InsertTranslation,
   type AnalyticsEvent,
+  type Invitation,
+  type InsertInvitation,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, like, desc, asc, count, sql } from "drizzle-orm";
@@ -130,6 +133,12 @@ export interface IStorage {
   // Analytics operations
   createAnalyticsEvent(event: Omit<AnalyticsEvent, 'id' | 'createdAt'>): Promise<AnalyticsEvent>;
   getAnalyticsEvents(filters?: { eventType?: string; userId?: string; clientProfileId?: string }): Promise<AnalyticsEvent[]>;
+  
+  // Invitation operations
+  createInvitation(invitation: InsertInvitation): Promise<Invitation>;
+  getInvitationByToken(token: string): Promise<Invitation | undefined>;
+  useInvitation(id: string): Promise<void>;
+  getInvitationsByUser(userId: string): Promise<Invitation[]>;
   
   // Dashboard statistics
   getDashboardStats(): Promise<{
@@ -634,6 +643,32 @@ export class DatabaseStorage implements IStorage {
     }
     
     return await baseQuery.orderBy(desc(analyticsEvents.createdAt));
+  }
+
+  // Invitation operations
+  async createInvitation(invitation: InsertInvitation): Promise<Invitation> {
+    const result = await db.insert(invitations).values(invitation).returning();
+    return result[0];
+  }
+
+  async getInvitationByToken(token: string): Promise<Invitation | undefined> {
+    const result = await db.select().from(invitations).where(eq(invitations.token, token));
+    return result[0];
+  }
+
+  async useInvitation(id: string): Promise<void> {
+    await db
+      .update(invitations)
+      .set({ used: true, usedAt: new Date() })
+      .where(eq(invitations.id, id));
+  }
+
+  async getInvitationsByUser(userId: string): Promise<Invitation[]> {
+    return await db
+      .select()
+      .from(invitations)
+      .where(eq(invitations.invitedByUserId, userId))
+      .orderBy(desc(invitations.createdAt));
   }
 }
 

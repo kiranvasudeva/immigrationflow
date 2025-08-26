@@ -1,7 +1,14 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Worker } from "@shared/schema";
 
 interface WorkerListProps {
@@ -9,6 +16,42 @@ interface WorkerListProps {
 }
 
 export default function WorkerList({ workers }: WorkerListProps) {
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("WORKER");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const createInvitationMutation = useMutation({
+    mutationFn: async (invitationData: { email: string; role: string }) => {
+      return apiRequest("POST", "/api/invitations", invitationData);
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Invitation sent successfully",
+        description: `Invitation link: ${data.inviteLink}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
+      setShowInviteDialog(false);
+      setInviteEmail("");
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to send invitation",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSendInvite = () => {
+    if (!inviteEmail) return;
+    
+    createInvitationMutation.mutate({
+      email: inviteEmail,
+      role: inviteRole,
+    });
+  };
   // Mock additional data that would come from assignments
   const getWorkerProgress = (workerId: string) => {
     // Mock progress calculation
@@ -39,6 +82,59 @@ export default function WorkerList({ workers }: WorkerListProps) {
               className="w-64"
               data-testid="input-search-workers"
             />
+            <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" data-testid="button-invite-worker">
+                  <i className="fas fa-envelope mr-2"></i>Invite Worker
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Invite Worker</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div>
+                    <Label htmlFor="invite-email">Email address</Label>
+                    <Input
+                      id="invite-email"
+                      type="email"
+                      placeholder="worker@example.com"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      data-testid="input-invite-email"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="invite-role">Role</Label>
+                    <Select value={inviteRole} onValueChange={setInviteRole}>
+                      <SelectTrigger data-testid="select-invite-role">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="WORKER">Worker</SelectItem>
+                        <SelectItem value="VIEWER">Viewer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowInviteDialog(false)}
+                      data-testid="button-cancel-invite"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleSendInvite}
+                      disabled={!inviteEmail || createInvitationMutation.isPending}
+                      data-testid="button-send-invite"
+                    >
+                      {createInvitationMutation.isPending ? "Sending..." : "Send Invite"}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button data-testid="button-add-worker-list">
               <i className="fas fa-plus mr-2"></i>Add Worker
             </Button>

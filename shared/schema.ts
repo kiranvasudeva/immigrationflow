@@ -263,6 +263,21 @@ export const translations = pgTable("translations", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Invitation system for workers
+export const invitations = pgTable("invitations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  email: varchar("email", { length: 255 }).notNull(),
+  role: userRoleEnum("role").notNull().default('WORKER'),
+  invitedByUserId: varchar("invited_by_user_id").notNull(),
+  workerId: uuid("worker_id"), // Optional - links to existing worker record
+  clientProfileId: uuid("client_profile_id"), // Optional - for worker invitations
+  used: boolean("used").notNull().default(false),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Analytics
 export const analyticsEvents = pgTable("analytics_events", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -409,6 +424,21 @@ export const workflowRulesRelations = relations(workflowRules, ({ one }) => ({
   }),
 }));
 
+export const invitationsRelations = relations(invitations, ({ one }) => ({
+  invitedBy: one(users, {
+    fields: [invitations.invitedByUserId],
+    references: [users.id],
+  }),
+  worker: one(workers, {
+    fields: [invitations.workerId],
+    references: [workers.id],
+  }),
+  clientProfile: one(clientProfiles, {
+    fields: [invitations.clientProfileId],
+    references: [clientProfiles.id],
+  }),
+}));
+
 // Insert schemas using createInsertSchema
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
@@ -512,6 +542,16 @@ export const insertTranslationSchema = createInsertSchema(translations).pick({
   value: true,
 });
 
+export const insertInvitationSchema = createInsertSchema(invitations).pick({
+  token: true,
+  email: true,
+  role: true,
+  invitedByUserId: true,
+  workerId: true,
+  clientProfileId: true,
+  expiresAt: true,
+});
+
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -540,4 +580,6 @@ export type InsertWorkflowRule = z.infer<typeof insertWorkflowRuleSchema>;
 export type ApiIntegration = typeof apiIntegrations.$inferSelect;
 export type Translation = typeof translations.$inferSelect;
 export type InsertTranslation = z.infer<typeof insertTranslationSchema>;
+export type Invitation = typeof invitations.$inferSelect;
+export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
