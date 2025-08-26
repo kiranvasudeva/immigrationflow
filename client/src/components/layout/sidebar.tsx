@@ -1,12 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SidebarProps {
   userRole: 'ADMIN' | 'OWNER' | 'WORKER' | 'VIEWER';
 }
 
 export default function Sidebar({ userRole }: SidebarProps) {
+  const { t } = useLanguage();
+  
   const handleLogout = () => {
     window.location.href = "/api/logout";
   };
@@ -42,17 +45,17 @@ export default function Sidebar({ userRole }: SidebarProps) {
     };
 
     const commonItems = [
-      { icon: 'fas fa-chart-bar', label: 'Dashboard', href: '/dashboard', active: isActive('/dashboard') || isActive('/') }
+      { icon: 'fas fa-chart-bar', label: t('common.dashboard') || 'Dashboard', href: '/dashboard', active: isActive('/dashboard') || isActive('/') }
     ];
 
     switch (userRole) {
       case 'ADMIN':
         return [
           ...commonItems,
-          { icon: 'fas fa-building', label: 'Clients', href: '/clients', active: isActive('/clients') },
-          { icon: 'fas fa-users', label: 'Workers', href: '/workers', active: isActive('/workers') },
-          { icon: 'fas fa-file-text', label: 'Templates', href: '/templates', active: isActive('/templates') },
-          { icon: 'fas fa-bar-chart', label: 'Analytics', href: '/analytics', active: isActive('/analytics') },
+          { icon: 'fas fa-building', label: t('common.clients') || 'Clients', href: '/clients', active: isActive('/clients') },
+          { icon: 'fas fa-users', label: t('common.workers') || 'Workers', href: '/workers', active: isActive('/workers') },
+          { icon: 'fas fa-file-text', label: t('common.templates') || 'Templates', href: '/templates', active: isActive('/templates') },
+          { icon: 'fas fa-bar-chart', label: t('common.analytics') || 'Analytics', href: '/analytics', active: isActive('/analytics') },
           { icon: 'fas fa-clipboard-list', label: 'Requirements', href: '/requirements', active: isActive('/requirements') },
           { icon: 'fas fa-bell', label: 'Reminders', href: '/reminders', active: isActive('/reminders') },
           { icon: 'fas fa-history', label: 'Audit Logs', href: '/audit', active: isActive('/audit') }

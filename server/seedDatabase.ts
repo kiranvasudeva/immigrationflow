@@ -248,7 +248,7 @@ export async function seedDatabase() {
 
     // Add comprehensive translations
     const allTranslations = [
-      // Romanian translations
+      // Romanian translations - Common
       { key: 'common.welcome', language: 'ro' as const, value: 'Bun venit' },
       { key: 'common.dashboard', language: 'ro' as const, value: 'Panou de control' },
       { key: 'common.clients', language: 'ro' as const, value: 'Clienți' },
@@ -260,6 +260,63 @@ export async function seedDatabase() {
       { key: 'common.deadlines', language: 'ro' as const, value: 'Termene' },
       { key: 'common.logout', language: 'ro' as const, value: 'Ieșire' },
       { key: 'common.generating', language: 'ro' as const, value: 'Generare...' },
+      { key: 'common.loading', language: 'ro' as const, value: 'Se încarcă...' },
+      { key: 'common.save', language: 'ro' as const, value: 'Salvează' },
+      { key: 'common.cancel', language: 'ro' as const, value: 'Anulează' },
+      { key: 'common.add', language: 'ro' as const, value: 'Adaugă' },
+      { key: 'common.edit', language: 'ro' as const, value: 'Editează' },
+      { key: 'common.delete', language: 'ro' as const, value: 'Șterge' },
+      { key: 'common.view', language: 'ro' as const, value: 'Vizualizează' },
+      { key: 'common.search', language: 'ro' as const, value: 'Caută' },
+      { key: 'common.filter', language: 'ro' as const, value: 'Filtrează' },
+      { key: 'common.export', language: 'ro' as const, value: 'Exportă' },
+      { key: 'common.import', language: 'ro' as const, value: 'Importă' },
+      { key: 'common.settings', language: 'ro' as const, value: 'Setări' },
+      { key: 'common.help', language: 'ro' as const, value: 'Ajutor' },
+      { key: 'common.close', language: 'ro' as const, value: 'Închide' },
+      { key: 'common.submit', language: 'ro' as const, value: 'Trimite' },
+      
+      // Dashboard translations - Romanian
+      { key: 'dashboard.admin.title', language: 'ro' as const, value: 'Panou de Control Admin' },
+      { key: 'dashboard.admin.subtitle', language: 'ro' as const, value: 'Gestionează clienții, lucrătorii și fluxurile de imigrație' },
+      { key: 'dashboard.client.title', language: 'ro' as const, value: 'Panou de Control Client' },
+      { key: 'dashboard.client.subtitle', language: 'ro' as const, value: 'Gestionează lucrătorii și fluxurile de imigrație' },
+      { key: 'dashboard.worker.title', language: 'ro' as const, value: 'Panou de Control Lucrător' },
+      { key: 'dashboard.worker.subtitle', language: 'ro' as const, value: 'Urmărește progresul și încarcă documentele' },
+      { key: 'dashboard.stats.totalClients', language: 'ro' as const, value: 'Total Clienți' },
+      { key: 'dashboard.stats.totalWorkers', language: 'ro' as const, value: 'Total Lucrători' },
+      { key: 'dashboard.stats.activeWorkers', language: 'ro' as const, value: 'Lucrători Activi' },
+      { key: 'dashboard.stats.pendingActions', language: 'ro' as const, value: 'Acțiuni în Așteptare' },
+      { key: 'dashboard.stats.completedMonth', language: 'ro' as const, value: 'Finalizate Luna Aceasta' },
+      
+      // Actions and buttons - Romanian
+      { key: 'action.addWorker', language: 'ro' as const, value: 'Adaugă Lucrător' },
+      { key: 'action.addClient', language: 'ro' as const, value: 'Adaugă Client' },
+      { key: 'action.viewProfile', language: 'ro' as const, value: 'Vezi Profilul' },
+      { key: 'action.editProfile', language: 'ro' as const, value: 'Editează Profilul' },
+      { key: 'action.uploadDocument', language: 'ro' as const, value: 'Încarcă Document' },
+      { key: 'action.downloadDocument', language: 'ro' as const, value: 'Descarcă Document' },
+      { key: 'action.manageWorkers', language: 'ro' as const, value: 'Gestionează Lucrătorii' },
+      
+      // Status and labels - Romanian
+      { key: 'status.active', language: 'ro' as const, value: 'Activ' },
+      { key: 'status.inactive', language: 'ro' as const, value: 'Inactiv' },
+      { key: 'status.pending', language: 'ro' as const, value: 'În așteptare' },
+      { key: 'status.completed', language: 'ro' as const, value: 'Finalizat' },
+      { key: 'status.inProgress', language: 'ro' as const, value: 'În progres' },
+      { key: 'status.urgent', language: 'ro' as const, value: 'Urgent' },
+      { key: 'status.overdue', language: 'ro' as const, value: 'Întârziat' },
+      
+      // Worker dashboard specific - Romanian
+      { key: 'worker.urgentActions', language: 'ro' as const, value: 'Acțiuni Urgente' },
+      { key: 'worker.nextSteps', language: 'ro' as const, value: 'Următorii Pași' },
+      { key: 'worker.myProgress', language: 'ro' as const, value: 'Progresul Meu' },
+      { key: 'worker.myDocuments', language: 'ro' as const, value: 'Documentele Mele' },
+      { key: 'worker.recentActivity', language: 'ro' as const, value: 'Activitate Recentă' },
+      
+      // Unauthorized messages - Romanian
+      { key: 'auth.unauthorized', language: 'ro' as const, value: 'Neautorizat' },
+      { key: 'auth.loggedOut', language: 'ro' as const, value: 'Ești deconectat. Se reconectează...' },
       
       // Navigation in Romanian
       { key: 'nav.features', language: 'ro' as const, value: 'Caracteristici' },
@@ -280,7 +337,7 @@ export async function seedDatabase() {
       { key: 'worker.linkDescription', language: 'ro' as const, value: 'Trimite acest link lucrătorului pentru a-i da acces la profilul său și zona de încărcare documente.' },
       { key: 'form.email', language: 'ro' as const, value: 'Email' },
       
-      // English translations
+      // English translations - Common
       { key: 'common.welcome', language: 'en' as const, value: 'Welcome' },
       { key: 'common.dashboard', language: 'en' as const, value: 'Dashboard' },
       { key: 'common.clients', language: 'en' as const, value: 'Clients' },
@@ -292,6 +349,63 @@ export async function seedDatabase() {
       { key: 'common.deadlines', language: 'en' as const, value: 'Deadlines' },
       { key: 'common.logout', language: 'en' as const, value: 'Logout' },
       { key: 'common.generating', language: 'en' as const, value: 'Generating...' },
+      { key: 'common.loading', language: 'en' as const, value: 'Loading...' },
+      { key: 'common.save', language: 'en' as const, value: 'Save' },
+      { key: 'common.cancel', language: 'en' as const, value: 'Cancel' },
+      { key: 'common.add', language: 'en' as const, value: 'Add' },
+      { key: 'common.edit', language: 'en' as const, value: 'Edit' },
+      { key: 'common.delete', language: 'en' as const, value: 'Delete' },
+      { key: 'common.view', language: 'en' as const, value: 'View' },
+      { key: 'common.search', language: 'en' as const, value: 'Search' },
+      { key: 'common.filter', language: 'en' as const, value: 'Filter' },
+      { key: 'common.export', language: 'en' as const, value: 'Export' },
+      { key: 'common.import', language: 'en' as const, value: 'Import' },
+      { key: 'common.settings', language: 'en' as const, value: 'Settings' },
+      { key: 'common.help', language: 'en' as const, value: 'Help' },
+      { key: 'common.close', language: 'en' as const, value: 'Close' },
+      { key: 'common.submit', language: 'en' as const, value: 'Submit' },
+      
+      // Dashboard translations - English
+      { key: 'dashboard.admin.title', language: 'en' as const, value: 'Admin Dashboard' },
+      { key: 'dashboard.admin.subtitle', language: 'en' as const, value: 'Manage clients, workers and immigration workflows' },
+      { key: 'dashboard.client.title', language: 'en' as const, value: 'Client Dashboard' },
+      { key: 'dashboard.client.subtitle', language: 'en' as const, value: 'Manage your workers and immigration workflows' },
+      { key: 'dashboard.worker.title', language: 'en' as const, value: 'Worker Dashboard' },
+      { key: 'dashboard.worker.subtitle', language: 'en' as const, value: 'Track your progress and upload documents' },
+      { key: 'dashboard.stats.totalClients', language: 'en' as const, value: 'Total Clients' },
+      { key: 'dashboard.stats.totalWorkers', language: 'en' as const, value: 'Total Workers' },
+      { key: 'dashboard.stats.activeWorkers', language: 'en' as const, value: 'Active Workers' },
+      { key: 'dashboard.stats.pendingActions', language: 'en' as const, value: 'Pending Actions' },
+      { key: 'dashboard.stats.completedMonth', language: 'en' as const, value: 'Completed This Month' },
+      
+      // Actions and buttons - English
+      { key: 'action.addWorker', language: 'en' as const, value: 'Add Worker' },
+      { key: 'action.addClient', language: 'en' as const, value: 'Add Client' },
+      { key: 'action.viewProfile', language: 'en' as const, value: 'View Profile' },
+      { key: 'action.editProfile', language: 'en' as const, value: 'Edit Profile' },
+      { key: 'action.uploadDocument', language: 'en' as const, value: 'Upload Document' },
+      { key: 'action.downloadDocument', language: 'en' as const, value: 'Download Document' },
+      { key: 'action.manageWorkers', language: 'en' as const, value: 'Manage Workers' },
+      
+      // Status and labels - English
+      { key: 'status.active', language: 'en' as const, value: 'Active' },
+      { key: 'status.inactive', language: 'en' as const, value: 'Inactive' },
+      { key: 'status.pending', language: 'en' as const, value: 'Pending' },
+      { key: 'status.completed', language: 'en' as const, value: 'Completed' },
+      { key: 'status.inProgress', language: 'en' as const, value: 'In Progress' },
+      { key: 'status.urgent', language: 'en' as const, value: 'Urgent' },
+      { key: 'status.overdue', language: 'en' as const, value: 'Overdue' },
+      
+      // Worker dashboard specific - English
+      { key: 'worker.urgentActions', language: 'en' as const, value: 'Urgent Actions' },
+      { key: 'worker.nextSteps', language: 'en' as const, value: 'Next Steps' },
+      { key: 'worker.myProgress', language: 'en' as const, value: 'My Progress' },
+      { key: 'worker.myDocuments', language: 'en' as const, value: 'My Documents' },
+      { key: 'worker.recentActivity', language: 'en' as const, value: 'Recent Activity' },
+      
+      // Unauthorized messages - English
+      { key: 'auth.unauthorized', language: 'en' as const, value: 'Unauthorized' },
+      { key: 'auth.loggedOut', language: 'en' as const, value: 'You are logged out. Logging in again...' },
       
       // Navigation in English
       { key: 'nav.features', language: 'en' as const, value: 'Features' },

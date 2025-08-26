@@ -8,17 +8,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function WorkerDashboard() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { t } = useLanguage();
 
   // Redirect if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        title: t('auth.unauthorized') || "Unauthorized",
+        description: t('auth.loggedOut') || "You are logged out. Logging in again...",
         variant: "destructive",
       });
       setTimeout(() => {
@@ -103,8 +105,8 @@ export default function WorkerDashboard() {
       
       <div className="ml-64">
         <Header 
-          title="My Immigration Progress"
-          subtitle="Track your Romanian work permit and residence application"
+          title={t('dashboard.worker.title') || "My Immigration Progress"}
+          subtitle={t('dashboard.worker.subtitle') || "Track your Romanian work permit and residence application"}
         />
 
         <div className="p-8">
@@ -118,7 +120,7 @@ export default function WorkerDashboard() {
               <CardHeader className="border-b border-gray-200">
                 <CardTitle className="flex items-center">
                   <i className="fas fa-exclamation-triangle text-warning mr-2"></i>
-                  Urgent Actions
+                  {t('worker.urgentActions') || 'Urgent Actions'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -145,7 +147,7 @@ export default function WorkerDashboard() {
                           action.status === 'overdue' ? 'text-error' : 'text-warning'
                         }`}>
                           <i className="fas fa-clock mr-1"></i>
-                          {action.status === 'overdue' ? 'Overdue' : `Due ${action.dueDate}`}
+                          {action.status === 'overdue' ? (t('status.overdue') || 'Overdue') : `Due ${action.dueDate}`}
                         </p>
                         <div className="mt-3">
                           <Button 
@@ -153,7 +155,7 @@ export default function WorkerDashboard() {
                             variant={action.status === 'overdue' ? 'destructive' : 'default'}
                             data-testid={`button-upload-${action.id}`}
                           >
-                            Upload Document
+                            {t('action.uploadDocument') || 'Upload Document'}
                           </Button>
                         </div>
                       </div>
@@ -168,7 +170,7 @@ export default function WorkerDashboard() {
               <CardHeader className="border-b border-gray-200">
                 <CardTitle className="flex items-center">
                   <i className="fas fa-list-check text-primary mr-2"></i>
-                  Next Steps
+                  {t('worker.nextSteps') || 'Next Steps'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -200,7 +202,7 @@ export default function WorkerDashboard() {
           {/* Document Checklist */}
           <Card data-testid="card-document-checklist">
             <CardHeader className="border-b border-gray-200">
-              <CardTitle>Document Checklist</CardTitle>
+              <CardTitle>{t('worker.myDocuments') || 'Document Checklist'}</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">

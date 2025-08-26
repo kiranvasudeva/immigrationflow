@@ -10,10 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AdminDashboard() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { t } = useLanguage();
 
   const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
     queryKey: ["/api/clients"],
@@ -39,8 +41,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        title: t('auth.unauthorized') || "Unauthorized",
+        description: t('auth.loggedOut') || "You are logged out. Logging in again...",
         variant: "destructive",
       });
       setTimeout(() => {
@@ -77,8 +79,8 @@ export default function AdminDashboard() {
       
       <div className="ml-64">
         <Header 
-          title="Admin Dashboard"
-          subtitle="Global workflow management and oversight"
+          title={t('dashboard.admin.title') || "Admin Dashboard"}
+          subtitle={t('dashboard.admin.subtitle') || "Global workflow management and oversight"}
           actions={
             <div className="flex items-center space-x-4">
               <Input 
@@ -100,7 +102,7 @@ export default function AdminDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-secondary">Total Clients</p>
+                    <p className="text-sm text-secondary">{t('dashboard.stats.totalClients') || 'Total Clients'}</p>
                     <p className="text-3xl font-bold text-gray-900">{stats.totalClients}</p>
                     <p className="text-sm text-success">
                       <i className="fas fa-arrow-up mr-1"></i>New clients
@@ -117,7 +119,7 @@ export default function AdminDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-secondary">Active Workers</p>
+                    <p className="text-sm text-secondary">{t('dashboard.stats.activeWorkers') || 'Active Workers'}</p>
                     <p className="text-3xl font-bold text-gray-900">{stats.activeWorkers}</p>
                     <p className="text-sm text-success">
                       <i className="fas fa-arrow-up mr-1"></i>Active cases

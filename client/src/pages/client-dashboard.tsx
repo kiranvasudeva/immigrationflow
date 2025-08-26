@@ -9,10 +9,12 @@ import WorkerList from "@/components/workers/worker-list";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ClientDashboard() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { t } = useLanguage();
 
   const { data: clients = [] } = useQuery<any[]>({
     queryKey: ["/api/clients"],
@@ -30,8 +32,8 @@ export default function ClientDashboard() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        title: t('auth.unauthorized') || "Unauthorized",
+        description: t('auth.loggedOut') || "You are logged out. Logging in again...",
         variant: "destructive",
       });
       setTimeout(() => {
@@ -65,11 +67,11 @@ export default function ClientDashboard() {
       
       <div className="ml-64">
         <Header 
-          title="Client Dashboard"
-          subtitle="Manage your workers and immigration workflows"
+          title={t('dashboard.client.title') || "Client Dashboard"}
+          subtitle={t('dashboard.client.subtitle') || "Manage your workers and immigration workflows"}
           actions={
             <Button data-testid="button-add-worker">
-              <i className="fas fa-plus mr-2"></i>Add Worker
+              <i className="fas fa-plus mr-2"></i>{t('action.addWorker') || 'Add Worker'}
             </Button>
           }
         />
