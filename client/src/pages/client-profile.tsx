@@ -65,6 +65,17 @@ export default function ClientProfile() {
     }
   });
 
+  // Debug logging - temporary
+  console.log('Client Profile Debug:', {
+    clientId,
+    isAuthenticated,
+    clientIdExists: !!clientId,
+    queryEnabled: !!clientId && isAuthenticated,
+    workersLoading,
+    workersData: workers,
+    workersError: workersError?.message
+  });
+
 
   // Update client mutation
   const updateClientMutation = useMutation({
