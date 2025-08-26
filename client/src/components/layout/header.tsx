@@ -20,17 +20,17 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
   }, []);
 
   return (
-    <header className={`sticky z-50 border-b border-gray-200 px-4 lg:px-8 py-4 transition-all duration-200 ${
+    <header className={`sticky z-50 border-b border-gray-200 px-4 lg:px-8 py-3 lg:py-4 transition-all duration-200 ${
       isScrolled 
         ? 'bg-white/95 backdrop-blur-sm shadow-sm' 
         : 'bg-surface'
     }`} style={{ top: 'var(--alert-height, 0px)' }}>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between min-h-[56px] lg:min-h-[64px]">
         <div className="ml-12 lg:ml-0">
-          <h1 className="text-xl lg:text-2xl font-bold text-gray-900">{title}</h1>
-          <p className="text-secondary text-sm lg:text-base">{subtitle}</p>
+          <h1 className="text-lg lg:text-2xl font-bold text-gray-900 leading-tight">{title}</h1>
+          <p className="text-secondary text-xs lg:text-base leading-tight">{subtitle}</p>
         </div>
-        {actions && <div>{actions}</div>}
+        {actions && <div className="flex-shrink-0">{actions}</div>}
       </div>
     </header>
   );

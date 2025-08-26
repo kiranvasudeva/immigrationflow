@@ -8,17 +8,26 @@ export function DummyDataAlert() {
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
-  // Set CSS variable for alert height
+  // Set CSS variable for alert height with responsive values
   useEffect(() => {
     if (isVisible) {
-      document.documentElement.style.setProperty('--alert-height', '64px');
+      // Smaller height on mobile to prevent overlap
+      const alertHeight = window.innerWidth < 1024 ? '56px' : '64px';
+      document.documentElement.style.setProperty('--alert-height', alertHeight);
+      
+      const handleResize = () => {
+        const newHeight = window.innerWidth < 1024 ? '56px' : '64px';
+        document.documentElement.style.setProperty('--alert-height', newHeight);
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        document.documentElement.style.setProperty('--alert-height', '0px');
+      };
     } else {
       document.documentElement.style.setProperty('--alert-height', '0px');
     }
-    
-    return () => {
-      document.documentElement.style.setProperty('--alert-height', '0px');
-    };
   }, [isVisible]);
 
   // Check if dummy data alert should be shown
