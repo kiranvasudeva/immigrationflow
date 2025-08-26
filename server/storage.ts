@@ -24,7 +24,7 @@ import {
   type AuditLog,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, like, desc, asc } from "drizzle-orm";
+import { eq, and, or, like, desc, asc, count, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -73,6 +73,24 @@ export interface IStorage {
   // Audit operations
   createAuditLog(log: Omit<AuditLog, 'id' | 'createdAt'>): Promise<AuditLog>;
   getAuditLogs(limit?: number): Promise<AuditLog[]>;
+  
+  // Dashboard statistics
+  getDashboardStats(): Promise<{
+    totalClients: number;
+    totalWorkers: number;
+    activeWorkers: number;
+    pendingActions: number;
+    completedThisMonth: number;
+    assignmentsByStatus: Record<string, number>;
+  }>;
+  
+  // Enhanced assignment queries for kanban
+  getAssignmentsWithDetails(): Promise<Array<Assignment & {
+    requirement: Requirement;
+    clientProfile: ClientProfile;
+    worker?: Worker;
+    stage: Stage;
+  }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -279,6 +297,114 @@ export class DatabaseStorage implements IStorage {
       .from(auditLogs)
       .orderBy(desc(auditLogs.createdAt))
       .limit(limit);
+  }
+
+  // Dashboard statistics
+  async getDashboardStats(): Promise<{
+    totalClients: number;
+    totalWorkers: number;
+    activeWorkers: number;
+    pendingActions: number;
+    completedThisMonth: number;
+    assignmentsByStatus: Record<string, number>;
+  }> {
+    // Get total clients
+    const totalClients = await db.select({ count: count() }).from(clientProfiles);
+    
+    // Get total workers
+    const totalWorkers = await db.select({ count: count() }).from(workers);
+    
+    // Get active workers (workers with assignments in progress)
+    const activeWorkersResult = await db
+      .selectDistinct({ workerId: assignments.workerId })
+      .from(assignments)
+      .where(
+        and(
+          eq(assignments.workerId, workers.id),
+          or(
+            eq(assignments.status, 'AWAITING_UPLOAD'),
+            eq(assignments.status, 'SUBMITTED_BY_USER'),
+            eq(assignments.status, 'RECEIVED_BY_ADMIN'),
+            eq(assignments.status, 'SUBMITTED_TO_INSTITUTION_DIGITAL'),
+            eq(assignments.status, 'SUBMITTED_TO_INSTITUTION_COURIER')
+          )
+        )
+      );
+    
+    // Get pending actions (assignments awaiting action)
+    const pendingActionsResult = await db
+      .select({ count: count() })
+      .from(assignments)
+      .where(
+        or(
+          eq(assignments.status, 'AWAITING_UPLOAD'),
+          eq(assignments.status, 'SUBMITTED_BY_USER'),
+          eq(assignments.status, 'RECEIVED_BY_ADMIN')
+        )
+      );
+    
+    // Get completed this month
+    const currentMonth = new Date();
+    currentMonth.setDate(1);
+    currentMonth.setHours(0, 0, 0, 0);
+    
+    const completedThisMonthResult = await db
+      .select({ count: count() })
+      .from(assignments)
+      .where(
+        and(
+          eq(assignments.status, 'ACCEPTED'),
+          sql`${assignments.approvedAt} >= ${currentMonth.toISOString()}`
+        )
+      );
+    
+    // Get assignments by status for kanban
+    const statusCounts = await db
+      .select({
+        status: assignments.status,
+        count: count()
+      })
+      .from(assignments)
+      .groupBy(assignments.status);
+    
+    const assignmentsByStatus = statusCounts.reduce((acc, row) => {
+      acc[row.status] = row.count;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return {
+      totalClients: totalClients[0]?.count ?? 0,
+      totalWorkers: totalWorkers[0]?.count ?? 0,
+      activeWorkers: activeWorkersResult.length,
+      pendingActions: pendingActionsResult[0]?.count ?? 0,
+      completedThisMonth: completedThisMonthResult[0]?.count ?? 0,
+      assignmentsByStatus,
+    };
+  }
+  
+  // Enhanced assignment queries for kanban
+  async getAssignmentsWithDetails(): Promise<Array<Assignment & {
+    requirement: Requirement;
+    clientProfile: ClientProfile;
+    worker?: Worker;
+    stage: Stage;
+  }>> {
+    const result = await db
+      .select()
+      .from(assignments)
+      .leftJoin(requirements, eq(assignments.requirementId, requirements.id))
+      .leftJoin(clientProfiles, eq(assignments.clientProfileId, clientProfiles.id))
+      .leftJoin(workers, eq(assignments.workerId, workers.id))
+      .leftJoin(stages, eq(requirements.stageId, stages.id))
+      .orderBy(desc(assignments.updatedAt));
+    
+    return result.map(row => ({
+      ...row.assignments,
+      requirement: row.requirements!,
+      clientProfile: row.client_profiles!,
+      worker: row.workers || undefined,
+      stage: row.stages!,
+    }));
   }
 }
 

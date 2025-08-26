@@ -10,6 +10,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Dashboard statistics
+  app.get('/api/dashboard/stats', isAuthenticated, auditMiddleware, async (req: any, res) => {
+    try {
+      const stats = await storage.getDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard statistics" });
+    }
+  });
+
+  app.get('/api/dashboard/assignments', isAuthenticated, auditMiddleware, async (req: any, res) => {
+    try {
+      const assignments = await storage.getAssignmentsWithDetails();
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching assignments with details:", error);
+      res.status(500).json({ message: "Failed to fetch assignments" });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {

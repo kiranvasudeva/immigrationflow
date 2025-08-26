@@ -25,6 +25,16 @@ export default function AdminDashboard() {
     enabled: isAuthenticated && !isLoading && user?.role === 'ADMIN',
   });
 
+  const { data: dashboardStats } = useQuery<any>({
+    queryKey: ["/api/dashboard/stats"],
+    enabled: isAuthenticated && !isLoading && user?.role === 'ADMIN',
+  });
+
+  const { data: assignments = [] } = useQuery<any[]>({
+    queryKey: ["/api/dashboard/assignments"],
+    enabled: isAuthenticated && !isLoading && user?.role === 'ADMIN',
+  });
+
   // Redirect if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -52,11 +62,13 @@ export default function AdminDashboard() {
     return null;
   }
 
-  const mockStats = {
-    totalClients: clients?.length || 0,
-    activeWorkers: 0, // Would be calculated from worker data
-    pendingActions: 0, // Would be calculated from assignments
-    completedThisMonth: 0, // Would be calculated from assignments
+  const stats = dashboardStats || {
+    totalClients: 0,
+    totalWorkers: 0,
+    activeWorkers: 0,
+    pendingActions: 0,
+    completedThisMonth: 0,
+    assignmentsByStatus: {},
   };
 
   return (
@@ -89,7 +101,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-secondary">Total Clients</p>
-                    <p className="text-3xl font-bold text-gray-900">{mockStats.totalClients}</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.totalClients}</p>
                     <p className="text-sm text-success">
                       <i className="fas fa-arrow-up mr-1"></i>New clients
                     </p>
@@ -106,7 +118,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-secondary">Active Workers</p>
-                    <p className="text-3xl font-bold text-gray-900">{mockStats.activeWorkers}</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.activeWorkers}</p>
                     <p className="text-sm text-success">
                       <i className="fas fa-arrow-up mr-1"></i>Active cases
                     </p>
@@ -123,7 +135,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-secondary">Pending Actions</p>
-                    <p className="text-3xl font-bold text-gray-900">{mockStats.pendingActions}</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.pendingActions}</p>
                     <p className="text-sm text-warning">
                       <i className="fas fa-clock mr-1"></i>Needs attention
                     </p>
@@ -140,7 +152,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-secondary">Completed This Month</p>
-                    <p className="text-3xl font-bold text-gray-900">{mockStats.completedThisMonth}</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.completedThisMonth}</p>
                     <p className="text-sm text-success">
                       <i className="fas fa-check mr-1"></i>This month
                     </p>
@@ -178,7 +190,7 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent className="p-6">
-              <WorkflowKanban />
+              <WorkflowKanban assignments={assignments} />
             </CardContent>
           </Card>
 

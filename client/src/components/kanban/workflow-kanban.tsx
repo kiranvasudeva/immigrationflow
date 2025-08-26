@@ -1,100 +1,109 @@
-export default function WorkflowKanban() {
-  // Mock data for the kanban columns
+interface Assignment {
+  id: string;
+  status: string;
+  requirement: {
+    title: string;
+  };
+  clientProfile: {
+    companyName: string;
+  };
+  worker?: {
+    firstName: string;
+    lastName: string;
+  };
+  stage: {
+    title: string;
+  };
+  updatedAt: string;
+}
+
+interface WorkflowKanbanProps {
+  assignments?: Assignment[];
+}
+
+export default function WorkflowKanban({ assignments = [] }: WorkflowKanbanProps) {
+  // Group assignments by status
+  const groupedAssignments = assignments.reduce((acc, assignment) => {
+    if (!acc[assignment.status]) {
+      acc[assignment.status] = [];
+    }
+    acc[assignment.status].push(assignment);
+    return acc;
+  }, {} as Record<string, Assignment[]>);
+
+  // Map status to column configuration
+  const statusConfig = {
+    'AWAITING_UPLOAD': { title: "Awaiting Client", color: "orange", type: "warning" },
+    'SUBMITTED_BY_USER': { title: "Awaiting Admin", color: "blue", type: "info" },
+    'RECEIVED_BY_ADMIN': { title: "Awaiting Admin", color: "blue", type: "success" },
+    'SUBMITTED_TO_INSTITUTION_DIGITAL': { title: "Submitted", color: "purple", type: "info" },
+    'SUBMITTED_TO_INSTITUTION_COURIER': { title: "Submitted", color: "purple", type: "info" },
+    'ACCEPTED': { title: "Approved", color: "green", type: "success" },
+    'REJECTED': { title: "Rejected", color: "red", type: "error" }
+  };
+
+  // Create columns with real data
   const columns = [
     {
       title: "Awaiting Client",
-      count: 8,
       color: "orange",
-      items: [
-        {
-          client: "TechCorp SRL",
-          worker: "John Smith - Work Contract",
-          dueInfo: "Due in 3 days",
-          type: "warning"
-        },
-        {
-          client: "Innovation Ltd",
-          worker: "Maria Popescu - Bank Statement", 
-          dueInfo: "Due in 5 days",
-          type: "warning"
-        },
-        {
-          client: "Digital Solutions",
-          worker: "Ahmed Hassan - Power of Attorney",
-          dueInfo: "Overdue 2 days",
-          type: "error"
-        }
-      ]
+      items: [...(groupedAssignments['AWAITING_UPLOAD'] || [])].map(assignment => ({
+        id: assignment.id,
+        client: assignment.clientProfile.companyName,
+        worker: `${assignment.worker?.firstName || 'N/A'} ${assignment.worker?.lastName || ''} - ${assignment.requirement.title}`,
+        dueInfo: "Awaiting upload",
+        type: "warning"
+      }))
     },
     {
       title: "Awaiting Admin",
-      count: 12,
-      color: "blue",
+      color: "blue", 
       items: [
-        {
-          client: "StartupHub SRL",
-          worker: "Ana Ionescu - AJOFM Application",
-          dueInfo: "Document received",
-          type: "info"
-        },
-        {
-          client: "GlobalTech SA",
-          worker: "Carlos Rodriguez - Medical Certificate",
-          dueInfo: "Ready to submit",
-          type: "success"
-        }
-      ]
+        ...(groupedAssignments['SUBMITTED_BY_USER'] || []),
+        ...(groupedAssignments['RECEIVED_BY_ADMIN'] || [])
+      ].map(assignment => ({
+        id: assignment.id,
+        client: assignment.clientProfile.companyName,
+        worker: `${assignment.worker?.firstName || 'N/A'} ${assignment.worker?.lastName || ''} - ${assignment.requirement.title}`,
+        dueInfo: assignment.status === 'RECEIVED_BY_ADMIN' ? "Ready to submit" : "Document received",
+        type: assignment.status === 'RECEIVED_BY_ADMIN' ? "success" : "info"
+      }))
     },
     {
       title: "Submitted",
-      count: 15,
       color: "purple",
       items: [
-        {
-          client: "DevCorp SRL",
-          worker: "Liu Wei - IGI Work Permit",
-          dueInfo: "Ref: IGI2024001",
-          type: "info"
-        },
-        {
-          client: "CloudSystems",
-          worker: "Priya Sharma - Visa D Application",
-          dueInfo: "Courier: DHL123456",
-          type: "info"
-        }
-      ]
+        ...(groupedAssignments['SUBMITTED_TO_INSTITUTION_DIGITAL'] || []),
+        ...(groupedAssignments['SUBMITTED_TO_INSTITUTION_COURIER'] || [])
+      ].map(assignment => ({
+        id: assignment.id,
+        client: assignment.clientProfile.companyName,
+        worker: `${assignment.worker?.firstName || 'N/A'} ${assignment.worker?.lastName || ''} - ${assignment.requirement.title}`,
+        dueInfo: "Submitted to institution",
+        type: "info"
+      }))
     },
     {
-      title: "Approved",
-      count: 23,
+      title: "Approved", 
       color: "green",
-      items: [
-        {
-          client: "InnovateLab",
-          worker: "Sebastian Klein - Work Permit",
-          dueInfo: "Approved today",
-          type: "success"
-        },
-        {
-          client: "TechStart SRL",
-          worker: "Elena Vasilev - Residence Permit",
-          dueInfo: "Valid until Dec 2025",
-          type: "success"
-        }
-      ]
+      items: [...(groupedAssignments['ACCEPTED'] || [])].map(assignment => ({
+        id: assignment.id,
+        client: assignment.clientProfile.companyName,
+        worker: `${assignment.worker?.firstName || 'N/A'} ${assignment.worker?.lastName || ''} - ${assignment.requirement.title}`,
+        dueInfo: "Approved",
+        type: "success"
+      }))
     },
     {
       title: "Rejected",
-      count: 3,
       color: "red",
-      items: [
-        {
-          client: "SmallBiz SRL",
-          worker: "Mohammed Al-Rashid - AJOFM Test",
-          dueInfo: "Missing documents",
-          type: "error"
-        }
-      ]
+      items: [...(groupedAssignments['REJECTED'] || [])].map(assignment => ({
+        id: assignment.id,
+        client: assignment.clientProfile.companyName,
+        worker: `${assignment.worker?.firstName || 'N/A'} ${assignment.worker?.lastName || ''} - ${assignment.requirement.title}`,
+        dueInfo: "Rejected",
+        type: "error"
+      }))
     }
   ];
 
@@ -147,7 +156,7 @@ export default function WorkflowKanban() {
           <div className="flex items-center justify-between">
             <h3 className="font-medium text-gray-900">{column.title}</h3>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColorClasses(column.color)}`}>
-              {column.count}
+              {column.items.length}
             </span>
           </div>
           <div className="space-y-3">
