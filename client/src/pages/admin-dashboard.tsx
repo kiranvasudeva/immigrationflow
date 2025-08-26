@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import WorkflowKanban from "@/components/kanban/workflow-kanban";
@@ -18,6 +19,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   
   // Collapsible states
   const [clientsOpen, setClientsOpen] = useState(true);
@@ -32,10 +34,21 @@ export default function AdminDashboard() {
   // Navigation states
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [editingClient, setEditingClient] = useState(false);
+  const [showNewClientForm, setShowNewClientForm] = useState(false);
   
   // Workers menu states
   const [selectedWorkflowClient, setSelectedWorkflowClient] = useState<any>(null);
   const [selectedWorkerDetail, setSelectedWorkerDetail] = useState<any>(null);
+  
+  // Form state
+  const [newClientForm, setNewClientForm] = useState({
+    companyName: '',
+    cui: '',
+    address: '',
+    caen: '',
+    contactEmail: '',
+    onrc: ''
+  });
 
   const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
     queryKey: ["/api/clients"],
@@ -71,6 +84,49 @@ export default function AdminDashboard() {
       return;
     }
   }, [isAuthenticated, isLoading, toast]);
+
+  // Create client mutation
+  const createClientMutation = useMutation({
+    mutationFn: async (clientData: any) => {
+      const response = await apiRequest("POST", "/api/clients", clientData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      setShowNewClientForm(false);
+      setNewClientForm({
+        companyName: '',
+        cui: '',
+        address: '',
+        caen: '',
+        contactEmail: '',
+        onrc: ''
+      });
+      toast({
+        title: "Success",
+        description: "Client created successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create client. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleCreateClient = (e: React.FormEvent) => {
+    e.preventDefault();
+    createClientMutation.mutate(newClientForm);
+  };
+
+  const handleFormChange = (field: string, value: string) => {
+    setNewClientForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   if (isLoading) {
     return (
@@ -264,8 +320,21 @@ export default function AdminDashboard() {
                   )}
 
                   {/* Client List View */}
-                  {!selectedClient && (
+                  {!selectedClient && !showNewClientForm && (
                     <div className="space-y-4">
+                      {/* New Client Button */}
+                      <div className="flex justify-between items-center mb-4">
+                        <h4 className="text-lg font-semibold text-gray-900">{t('common.clientList') || 'Client List'}</h4>
+                        <Button
+                          onClick={() => setShowNewClientForm(true)}
+                          className="bg-primary hover:bg-primary/90"
+                          data-testid="button-new-client"
+                        >
+                          <i className="fas fa-plus mr-2"></i>
+                          {t('actions.newClient') || 'New Client'}
+                        </Button>
+                      </div>
+                      
                       {clients.map((client: any, index: number) => (
                         <div 
                           key={client.id || index} 
@@ -289,6 +358,145 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {/* New Client Form */}
+                  {showNewClientForm && (
+                    <div className="space-y-6">
+                      {/* Form Header */}
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center space-x-2 text-sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => setShowNewClientForm(false)}
+                            className="text-primary hover:text-primary/80"
+                          >
+                            <i className="fas fa-arrow-left mr-2"></i>
+                            {t('common.clients') || 'Clients'}
+                          </Button>
+                          <ChevronRight className="h-4 w-4 text-gray-400" />
+                          <span className="text-gray-900 font-medium">{t('actions.newClient') || 'New Client'}</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-blue-50 rounded-lg p-6">
+                        <div className="flex items-center space-x-3 mb-6">
+                          <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
+                            <i className="fas fa-building text-white"></i>
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-900">{t('actions.addNewClient') || 'Add New Client'}</h3>
+                            <p className="text-gray-600">{t('common.fillClientDetails') || 'Fill in the client information below'}</p>
+                          </div>
+                        </div>
+
+                        <form className="space-y-4" onSubmit={handleCreateClient}>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium text-gray-700">{t('common.companyName') || 'Company Name'} *</label>
+                              <Input
+                                placeholder="e.g., Tech Solutions SRL"
+                                className="bg-white"
+                                data-testid="input-new-company-name"
+                                value={newClientForm.companyName}
+                                onChange={(e) => handleFormChange('companyName', e.target.value)}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium text-gray-700">{t('common.cui') || 'CUI'} *</label>
+                              <Input
+                                placeholder="e.g., RO12345678"
+                                className="bg-white"
+                                data-testid="input-new-cui"
+                                value={newClientForm.cui}
+                                onChange={(e) => handleFormChange('cui', e.target.value)}
+                                required
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">{t('common.address') || 'Address'} *</label>
+                            <Input
+                              placeholder="e.g., Strada Victoriei Nr. 10, Sector 1, București, România"
+                              className="bg-white"
+                              data-testid="input-new-address"
+                              value={newClientForm.address}
+                              onChange={(e) => handleFormChange('address', e.target.value)}
+                              required
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium text-gray-700">{t('common.caen') || 'CAEN Code'} *</label>
+                              <Input
+                                placeholder="e.g., 6201"
+                                className="bg-white"
+                                data-testid="input-new-caen"
+                                value={newClientForm.caen}
+                                onChange={(e) => handleFormChange('caen', e.target.value)}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium text-gray-700">{t('common.onrc') || 'ONRC Number'}</label>
+                              <Input
+                                placeholder="e.g., J40/12345/2020"
+                                className="bg-white"
+                                data-testid="input-new-onrc"
+                                value={newClientForm.onrc}
+                                onChange={(e) => handleFormChange('onrc', e.target.value)}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">{t('common.contactEmail') || 'Contact Email'} *</label>
+                            <Input
+                              type="email"
+                              placeholder="contact@company.com"
+                              className="bg-white"
+                              data-testid="input-new-contact-email"
+                              value={newClientForm.contactEmail}
+                              onChange={(e) => handleFormChange('contactEmail', e.target.value)}
+                              required
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-end space-x-3 mt-6 pt-4 border-t">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setShowNewClientForm(false)}
+                              data-testid="button-cancel-new-client"
+                            >
+                              {t('actions.cancel') || 'Cancel'}
+                            </Button>
+                            <Button
+                              type="submit"
+                              className="bg-primary hover:bg-primary/90"
+                              data-testid="button-save-new-client"
+                              disabled={createClientMutation.isPending}
+                            >
+                              {createClientMutation.isPending ? (
+                                <>
+                                  <i className="fas fa-spinner fa-spin mr-2"></i>
+                                  {t('actions.saving') || 'Saving...'}
+                                </>
+                              ) : (
+                                <>
+                                  <i className="fas fa-save mr-2"></i>
+                                  {t('actions.saveClient') || 'Save Client'}
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   )}
 

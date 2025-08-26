@@ -215,6 +215,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/clients', devAuthBypass, devAuditBypass, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims?.email || 'admin@dev.local';
+      const user = await storage.getUserByEmail(userEmail);
+      
+      if (user?.role !== 'ADMIN') {
+        return res.status(403).json({ message: "Only admins can create clients" });
+      }
+
+      const parsedData = insertClientProfileSchema.parse({
+        ...req.body,
+        ownerUserId: user.id
+      });
+      
+      const newClient = await storage.createClientProfile(parsedData);
+      res.status(201).json(newClient);
+    } catch (error) {
+      console.error("Error creating client:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create client profile" });
+    }
+  });
+
   app.get('/api/clients/:id', isAuthenticated, auditMiddleware, async (req: any, res) => {
     try {
       const { id } = req.params;

@@ -1,5 +1,5 @@
 import { db } from './db';
-import { stages, requirements, users } from '@shared/schema';
+import { stages, requirements, users, clientProfiles, workers, assignments } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 async function seedDatabase() {
@@ -225,6 +225,264 @@ async function seedDatabase() {
     }
 
     console.log('Requirements seeded successfully');
+
+    // Seed dummy client profiles with comprehensive data
+    const clientData = [
+      {
+        companyName: 'TechFlow Solutions SRL',
+        cui: 'RO12345678',
+        address: 'Strada Ion Campineanu Nr. 15, Sector 1, București 010031, România',
+        caen: '6201',
+        contactEmail: 'contact@techflow.ro',
+        onrc: 'J40/15234/2018',
+        ownerUserId: adminUser?.id || 'admin-user-1',
+      },
+      {
+        companyName: 'GlobalTech Industries SA',
+        cui: 'RO23456789',
+        address: 'Calea Victoriei Nr. 120, Sector 1, București 010096, România',
+        caen: '7022',
+        contactEmail: 'hr@globaltech.com',
+        onrc: 'J40/8765/2020',
+        ownerUserId: adminUser?.id || 'admin-user-1',
+      },
+      {
+        companyName: 'Innovation Labs Romania SRL',
+        cui: 'RO34567890',
+        address: 'Bulevardul Carol I Nr. 34-36, Sector 2, București 020922, România',
+        caen: '6209',
+        contactEmail: 'office@innovationlabs.ro',
+        onrc: 'J40/12987/2019',
+        ownerUserId: adminUser?.id || 'admin-user-1',
+      },
+      {
+        companyName: 'Digital Marketing Pro SRL',
+        cui: 'RO45678901',
+        address: 'Strada Magheru Nr. 28-30, Sector 1, București 010336, România',
+        caen: '7311',
+        contactEmail: 'contact@digitalmarketing.ro',
+        onrc: 'J40/9876/2021',
+        ownerUserId: adminUser?.id || 'admin-user-1',
+      },
+    ];
+
+    const createdClients = [];
+    for (const client of clientData) {
+      const [createdClient] = await db
+        .insert(clientProfiles)
+        .values(client)
+        .onConflictDoNothing()
+        .returning();
+      if (createdClient) {
+        createdClients.push(createdClient);
+      }
+    }
+
+    console.log('Client profiles seeded successfully');
+
+    // Seed dummy workers with comprehensive data for each client
+    const workerData = [
+      // Workers for TechFlow Solutions
+      {
+        clientProfileId: createdClients[0]?.id,
+        firstName: 'Alessandro',
+        lastName: 'Rodriguez',
+        dob: new Date('1985-03-15'),
+        nationality: 'Spanish',
+        passportNumber: 'ES123456789',
+        passportExpiry: new Date('2028-03-15'),
+        email: 'alessandro.rodriguez@gmail.com',
+        phone: '+40721123456',
+      },
+      {
+        clientProfileId: createdClients[0]?.id,
+        firstName: 'Maria',
+        lastName: 'Gonzalez',
+        dob: new Date('1992-07-22'),
+        nationality: 'Spanish',
+        passportNumber: 'ES987654321',
+        passportExpiry: new Date('2027-07-22'),
+        email: 'maria.gonzalez@gmail.com',
+        phone: '+40722234567',
+      },
+      {
+        clientProfileId: createdClients[0]?.id,
+        firstName: 'Kumar',
+        lastName: 'Patel',
+        dob: new Date('1988-11-08'),
+        nationality: 'Indian',
+        passportNumber: 'IN456789123',
+        passportExpiry: new Date('2029-11-08'),
+        email: 'kumar.patel@gmail.com',
+        phone: '+40723345678',
+      },
+      
+      // Workers for GlobalTech Industries
+      {
+        clientProfileId: createdClients[1]?.id,
+        firstName: 'Pierre',
+        lastName: 'Dubois',
+        dob: new Date('1990-05-12'),
+        nationality: 'French',
+        passportNumber: 'FR789123456',
+        passportExpiry: new Date('2028-05-12'),
+        email: 'pierre.dubois@gmail.com',
+        phone: '+40724456789',
+      },
+      {
+        clientProfileId: createdClients[1]?.id,
+        firstName: 'Sofia',
+        lastName: 'Ivanova',
+        dob: new Date('1987-09-30'),
+        nationality: 'Bulgarian',
+        passportNumber: 'BG123789456',
+        passportExpiry: new Date('2026-09-30'),
+        email: 'sofia.ivanova@gmail.com',
+        phone: '+40725567890',
+      },
+      {
+        clientProfileId: createdClients[1]?.id,
+        firstName: 'Ahmed',
+        lastName: 'Hassan',
+        dob: new Date('1991-02-14'),
+        nationality: 'Egyptian',
+        passportNumber: 'EG987321654',
+        passportExpiry: new Date('2027-02-14'),
+        email: 'ahmed.hassan@gmail.com',
+        phone: '+40726678901',
+      },
+      
+      // Workers for Innovation Labs
+      {
+        clientProfileId: createdClients[2]?.id,
+        firstName: 'João',
+        lastName: 'Silva',
+        dob: new Date('1989-12-03'),
+        nationality: 'Brazilian',
+        passportNumber: 'BR456123789',
+        passportExpiry: new Date('2029-12-03'),
+        email: 'joao.silva@gmail.com',
+        phone: '+40727789012',
+      },
+      {
+        clientProfileId: createdClients[2]?.id,
+        firstName: 'Yuki',
+        lastName: 'Tanaka',
+        dob: new Date('1986-06-18'),
+        nationality: 'Japanese',
+        passportNumber: 'JP321654987',
+        passportExpiry: new Date('2028-06-18'),
+        email: 'yuki.tanaka@gmail.com',
+        phone: '+40728890123',
+      },
+      {
+        clientProfileId: createdClients[2]?.id,
+        firstName: 'Elena',
+        lastName: 'Petrov',
+        dob: new Date('1993-04-25'),
+        nationality: 'Russian',
+        passportNumber: 'RU654987321',
+        passportExpiry: new Date('2026-04-25'),
+        email: 'elena.petrov@gmail.com',
+        phone: '+40729901234',
+      },
+      
+      // Workers for Digital Marketing Pro
+      {
+        clientProfileId: createdClients[3]?.id,
+        firstName: 'Luca',
+        lastName: 'Ferrari',
+        dob: new Date('1984-08-07'),
+        nationality: 'Italian',
+        passportNumber: 'IT789456123',
+        passportExpiry: new Date('2027-08-07'),
+        email: 'luca.ferrari@gmail.com',
+        phone: '+40720012345',
+      },
+      {
+        clientProfileId: createdClients[3]?.id,
+        firstName: 'Anna',
+        lastName: 'Müller',
+        dob: new Date('1990-10-15'),
+        nationality: 'German',
+        passportNumber: 'DE123456789',
+        passportExpiry: new Date('2028-10-15'),
+        email: 'anna.muller@gmail.com',
+        phone: '+40721123450',
+      },
+      {
+        clientProfileId: createdClients[3]?.id,
+        firstName: 'Chen',
+        lastName: 'Wei',
+        dob: new Date('1988-01-20'),
+        nationality: 'Chinese',
+        passportNumber: 'CN987654321',
+        passportExpiry: new Date('2029-01-20'),
+        email: 'chen.wei@gmail.com',
+        phone: '+40722234501',
+      },
+    ];
+
+    const createdWorkers = [];
+    for (const worker of workerData) {
+      if (worker.clientProfileId) {
+        const [createdWorker] = await db
+          .insert(workers)
+          .values(worker)
+          .onConflictDoNothing()
+          .returning();
+        if (createdWorker) {
+          createdWorkers.push(createdWorker);
+        }
+      }
+    }
+
+    console.log('Workers seeded successfully');
+
+    // Create some dummy assignments to show workflow progress
+    const assignmentData = [];
+    const jobTitles = [
+      'Software Engineer', 'Full Stack Developer', 'DevOps Engineer', 
+      'Data Analyst', 'UI/UX Designer', 'Project Manager',
+      'Marketing Specialist', 'Sales Representative', 'Business Analyst',
+      'Quality Assurance Engineer', 'Technical Writer', 'Product Manager'
+    ];
+    
+    const statuses = ['pending', 'in-progress', 'completed'];
+    const stageStatuses = ['pending', 'in-progress', 'completed', 'rejected'];
+
+    // Get some requirements to create assignments
+    const allRequirements = await db.select().from(requirements);
+    
+    createdWorkers.forEach((worker, index) => {
+      if (allRequirements.length > 0 && worker.clientProfileId) {
+        const randomRequirement = allRequirements[index % allRequirements.length];
+        const randomJobTitle = jobTitles[index % jobTitles.length];
+        const randomStatus = statuses[index % statuses.length];
+        
+        assignmentData.push({
+          requirementId: randomRequirement.id,
+          clientProfileId: worker.clientProfileId,
+          workerId: worker.id,
+          assignedToRole: 'WORKER' as const,
+          status: randomStatus === 'pending' ? 'NOT_STARTED' : 
+                 randomStatus === 'in-progress' ? 'SUBMITTED_BY_USER' : 
+                 'ACCEPTED',
+          institution: randomStatus === 'completed' ? 'AJOFM București' : null,
+          submissionChannel: randomStatus === 'completed' ? 'ONLINE' : null,
+          receiptNumber: randomStatus === 'completed' ? `REC${Date.now()}${index}` : null,
+        });
+      }
+    });
+
+    for (const assignment of assignmentData) {
+      await db
+        .insert(assignments)
+        .values(assignment)
+        .onConflictDoNothing();
+    }
+
+    console.log('Assignments seeded successfully');
     console.log('Database seed completed successfully');
   } catch (error) {
     console.error('Database seed failed:', error);
