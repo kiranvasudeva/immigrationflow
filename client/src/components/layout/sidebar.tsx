@@ -166,7 +166,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
       </div>
 
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block fixed inset-y-0 left-0 w-64">
+      <div className="hidden lg:block w-64 flex-shrink-0">
         <SidebarContent />
       </div>
     </>
