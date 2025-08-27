@@ -50,11 +50,10 @@ interface DocumentType {
 interface WorkflowStage {
   id: string;
   name: string;
-  responsible: 'admin' | 'client' | 'worker' | 'thirdParty' | 'institution';
-  approvalRequired: boolean;
-  timeframeDays: number;
-  statusLabel: string;
   description: string;
+  assignedRole: string;
+  estimatedDays: number;
+  required: boolean;
 }
 
 interface Workflow {
@@ -92,6 +91,14 @@ interface PaymentProcessor {
   webhookUrl: string;
 }
 
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  clients: number;
+  price: number | string;
+  features: string[];
+}
+
 export default function SettingsPage() {
   const { t } = useTranslation();
   const { setBreadcrumbs } = useBreadcrumb();
@@ -103,8 +110,77 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState(initialTab);
 
   // State for all settings sections
-  const [documentCategories, setDocumentCategories] = useState<DocumentCategory[]>([]);
-  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [documentCategories, setDocumentCategories] = useState<DocumentCategory[]>([
+    {
+      id: 'work-permits',
+      name: 'Work Permits',
+      description: 'Documents required for Romanian work permit applications',
+      types: [
+        {
+          id: 'initial-application',
+          name: 'Initial Work Permit Application',
+          description: 'First-time work permit application documents',
+          requiredFields: ['passport', 'employment_contract', 'medical_certificate'],
+          templateRequired: true
+        },
+        {
+          id: 'renewal',
+          name: 'Work Permit Renewal',
+          description: 'Renewal of existing work permit',
+          requiredFields: ['current_permit', 'employment_contract'],
+          templateRequired: true
+        }
+      ]
+    },
+    {
+      id: 'residence-permits',
+      name: 'Residence Permits',
+      description: 'Documents for Romanian residence permit applications',
+      types: [
+        {
+          id: 'temp-residence',
+          name: 'Temporary Residence Permit',
+          description: 'Documents for temporary residence permit',
+          requiredFields: ['passport', 'proof_of_accommodation'],
+          templateRequired: false
+        }
+      ]
+    }
+  ]);
+  
+  const [workflows, setWorkflows] = useState<Workflow[]>([
+    {
+      id: 'work-permit-workflow',
+      name: 'Work Permit Application Process',
+      description: 'Complete workflow for Romanian work permit applications',
+      stages: [
+        {
+          id: 'document-prep',
+          name: 'Document Preparation',
+          description: 'Gather and prepare all required documents',
+          assignedRole: 'WORKER',
+          estimatedDays: 5,
+          required: true
+        },
+        {
+          id: 'ajofm-submission',
+          name: 'AJOFM Labor Market Test',
+          description: 'Submit labor market test to AJOFM',
+          assignedRole: 'ADMIN',
+          estimatedDays: 14,
+          required: true
+        },
+        {
+          id: 'igi-application',
+          name: 'IGI Work Permit Application',
+          description: 'Submit work permit application to IGI',
+          assignedRole: 'ADMIN',
+          estimatedDays: 30,
+          required: true
+        }
+      ]
+    }
+  ]);
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({
     companyName: '',
     registrationNumber: '',
@@ -131,7 +207,7 @@ export default function SettingsPage() {
     { id: 'mobilpay', name: 'MobilPay', enabled: false, testMode: true, apiKey: '', secretKey: '', webhookUrl: '' }
   ]);
 
-  const subscriptionPlans = [
+  const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([
     { 
       id: 'basic', 
       name: 'Basic Plan', 
@@ -156,11 +232,11 @@ export default function SettingsPage() {
     { 
       id: 'custom', 
       name: 'Custom Plan', 
-      clients: '100+', 
+      clients: 100, 
       price: 'Contact us', 
       features: ['Enterprise features', 'Custom development', 'On-premise deployment'] 
     }
-  ];
+  ]);
 
   useEffect(() => {
     setBreadcrumbs([
@@ -778,59 +854,79 @@ export default function SettingsPage() {
                   <div className="flex items-start gap-3">
                     <Calendar className="h-5 w-5 text-yellow-600 mt-0.5" />
                     <div>
-                      <h3 className="font-medium text-yellow-800">Document Expiry Tracking</h3>
+                      <h3 className="font-medium text-yellow-800">Document Type Expiry Tracking</h3>
                       <p className="text-sm text-yellow-700 mt-1">
-                        Configure automatic alerts for document expiration dates. Recipients will receive notifications 
-                        at specified intervals before documents expire.
+                        Configure automatic alerts for specific document types. Set different alert periods 
+                        for each document type based on their importance and renewal requirements.
                       </p>
                     </div>
                   </div>
                 </div>
                 
-                <div className="grid gap-4">
-                  <Card className="border-l-4 border-l-orange-500">
-                    <CardContent className="p-4">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium">Work Permit Expiry Alerts</h4>
-                          <Switch defaultChecked />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-sm">Days Before Expiry to Send Alert</Label>
-                            <Input 
-                              type="number" 
-                              min="1"
-                              max="365"
-                              defaultValue="30" 
-                              className="w-32"
-                              placeholder="30"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                              System will send alerts this many days before document expires
-                            </p>
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-sm">Alert Recipients</Label>
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
+                <div className="space-y-4">
+                  {documentCategories.map((category) => (
+                    <div key={category.id} className="space-y-3">
+                      <h4 className="font-medium text-lg">{category.name}</h4>
+                      {category.types.map((docType) => (
+                        <Card key={docType.id} className="border-l-4 border-l-orange-500">
+                          <CardContent className="p-4">
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h5 className="font-medium">{docType.name}</h5>
+                                  <p className="text-sm text-muted-foreground">{docType.description}</p>
+                                </div>
                                 <Switch defaultChecked />
-                                <Label className="text-sm">Admin</Label>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Switch defaultChecked />
-                                <Label className="text-sm">Client</Label>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Switch />
-                                <Label className="text-sm">Worker</Label>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label className="text-sm">Days Before Expiry to Send Alert</Label>
+                                  <Input 
+                                    type="number" 
+                                    min="1"
+                                    max="365"
+                                    defaultValue={docType.id.includes('work-permit') || docType.id.includes('renewal') ? "60" : "30"}
+                                    className="w-32"
+                                    placeholder="30"
+                                  />
+                                  <p className="text-xs text-muted-foreground">
+                                    Alert will be sent this many days before {docType.name.toLowerCase()} expires
+                                  </p>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <Label className="text-sm">Alert Recipients</Label>
+                                  <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                      <Switch defaultChecked />
+                                      <Label className="text-sm">Admin</Label>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Switch defaultChecked />
+                                      <Label className="text-sm">Client Owner</Label>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Switch />
+                                      <Label className="text-sm">Worker</Label>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ))}
+                  
+                  {documentCategories.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No document types configured yet.</p>
+                      <p>Add document categories first to set up expiry alerts.</p>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex justify-end">
