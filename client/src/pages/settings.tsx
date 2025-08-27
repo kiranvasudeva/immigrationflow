@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -777,140 +777,294 @@ export default function SettingsPage() {
                     <p>Click "Add Category" to create your first category.</p>
                   </div>
                 ) : (
-                  <div className="space-y-6">
-                    {documentCategories.map((category) => (
-                      <Card key={category.id} className="border-l-4 border-l-primary">
-                        <CardContent className="p-4">
-                          <Input 
-                            value={category.name}
-                            onChange={(e) => {
-                              setDocumentCategories(cats => 
-                                cats.map(cat => 
-                                  cat.id === category.id 
-                                    ? { ...cat, name: e.target.value }
-                                    : cat
-                                )
-                              );
-                            }}
-                            className="font-medium text-lg border-none px-0 h-auto mb-4"
-                          />
-                          <Textarea
-                            value={category.description}
-                            onChange={(e) => {
-                              setDocumentCategories(cats => 
-                                cats.map(cat => 
-                                  cat.id === category.id 
-                                    ? { ...cat, description: e.target.value }
-                                    : cat
-                                )
-                              );
-                            }}
-                            placeholder="Category description..."
-                            className="resize-none"
-                            rows={2}
-                          />
-                          
-                          {/* Document Types within Category */}
-                          <div className="mt-4">
-                            <div className="flex justify-between items-center mb-3">
-                              <Label className="text-sm font-medium">Document Types</Label>
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => {
-                                  const newType = { 
-                                    id: `type-${Date.now()}`, 
-                                    name: 'New Document Type', 
-                                    description: '',
-                                    requiredFields: [],
-                                    templateRequired: false
-                                  };
-                                  setDocumentCategories(cats => 
-                                    cats.map(cat => 
-                                      cat.id === category.id 
-                                        ? { ...cat, types: [...cat.types, newType] }
-                                        : cat
-                                    )
-                                  );
-                                }}
-                              >
-                                <Plus className="h-3 w-3 mr-1" />
-                                Add Type
-                              </Button>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              {category.types.map((type, typeIndex) => (
-                                <div key={type.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                                  <Input
-                                    value={type.name}
-                                    onChange={(e) => {
-                                      setDocumentCategories(cats => 
-                                        cats.map(cat => 
-                                          cat.id === category.id 
-                                            ? { 
-                                                ...cat, 
-                                                types: cat.types.map(t => 
-                                                  t.id === type.id ? { ...t, name: e.target.value } : t
-                                                )
-                                              }
-                                            : cat
-                                        )
-                                      );
-                                    }}
-                                    className="flex-1"
-                                    placeholder="Document type name"
-                                  />
-                                  
-                                  <div className="flex items-center gap-2">
-                                    <Label className="text-xs">Template Required</Label>
-                                    <Switch 
-                                      checked={type.templateRequired}
-                                      onCheckedChange={(checked) => {
+                  <div className="space-y-4">
+                    {documentCategories.map((category) => {
+                      const isExpanded = expandedDocuments.has(category.id);
+                      return (
+                        <Card key={category.id} className="border-l-4 border-l-blue-500">
+                          <CardContent className="p-4">
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between cursor-pointer" 
+                                   onClick={() => toggleDocumentExpansion(category.id)}>
+                                <div className="flex items-center gap-2">
+                                  {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                  <h4 className="font-medium text-lg">{category.name}</h4>
+                                  <Badge variant="outline">{category.types.length} types</Badge>
+                                </div>
+                                <Button size="sm" variant="ghost" onClick={(e) => e.stopPropagation()}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              
+                              {!isExpanded && (
+                                <p className="text-sm text-muted-foreground">{category.description}</p>
+                              )}
+                              
+                              {isExpanded && (
+                                <div className="space-y-4">
+                                  <div className="space-y-2">
+                                    <Label className="text-sm font-medium">Category Name</Label>
+                                    <Input 
+                                      value={category.name}
+                                      onChange={(e) => {
                                         setDocumentCategories(cats => 
                                           cats.map(cat => 
                                             cat.id === category.id 
-                                              ? { 
-                                                  ...cat, 
-                                                  types: cat.types.map(t => 
-                                                    t.id === type.id ? { ...t, templateRequired: checked } : t
-                                                  )
-                                                }
+                                              ? { ...cat, name: e.target.value }
                                               : cat
                                           )
                                         );
                                       }}
+                                      placeholder="Enter category name"
                                     />
                                   </div>
                                   
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost"
-                                    onClick={() => {
-                                      setDocumentCategories(cats => 
-                                        cats.map(cat => 
-                                          cat.id === category.id 
-                                            ? { ...cat, types: cat.types.filter(t => t.id !== type.id) }
-                                            : cat
-                                        )
-                                      );
-                                    }}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                  <div className="space-y-2">
+                                    <Label className="text-sm font-medium">Description</Label>
+                                    <Textarea
+                                      value={category.description}
+                                      onChange={(e) => {
+                                        setDocumentCategories(cats => 
+                                          cats.map(cat => 
+                                            cat.id === category.id 
+                                              ? { ...cat, description: e.target.value }
+                                              : cat
+                                          )
+                                        );
+                                      }}
+                                      placeholder="Category description..."
+                                      className="resize-none"
+                                      rows={2}
+                                    />
+                                  </div>
+                                  
+                                  {/* Document Types within Category */}
+                                  <div className="space-y-3">
+                                    <div className="flex justify-between items-center">
+                                      <Label className="text-sm font-medium">Document Types</Label>
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={() => {
+                                          const newType = { 
+                                            id: `type-${Date.now()}`, 
+                                            name: 'New Document Type', 
+                                            description: '',
+                                            requiredFields: ['worker_name', 'passport_number'],
+                                            templateRequired: false
+                                          };
+                                          setDocumentCategories(cats => 
+                                            cats.map(cat => 
+                                              cat.id === category.id 
+                                                ? { ...cat, types: [...cat.types, newType] }
+                                                : cat
+                                            )
+                                          );
+                                        }}
+                                      >
+                                        <Plus className="h-3 w-3 mr-1" />
+                                        Add Type
+                                      </Button>
+                                    </div>
+                                    
+                                    <div className="space-y-3">
+                                      {category.types.map((type, typeIndex) => (
+                                        <Card key={type.id} className="bg-muted/30">
+                                          <CardContent className="p-4">
+                                            <div className="space-y-3">
+                                              <div className="flex items-start justify-between">
+                                                <div className="flex-1 space-y-2">
+                                                  <Input
+                                                    value={type.name}
+                                                    onChange={(e) => {
+                                                      setDocumentCategories(cats => 
+                                                        cats.map(cat => 
+                                                          cat.id === category.id 
+                                                            ? { 
+                                                                ...cat, 
+                                                                types: cat.types.map(t => 
+                                                                  t.id === type.id ? { ...t, name: e.target.value } : t
+                                                                )
+                                                              }
+                                                            : cat
+                                                        )
+                                                      );
+                                                    }}
+                                                    className="font-medium"
+                                                    placeholder="Document type name"
+                                                  />
+                                                  
+                                                  <Textarea
+                                                    value={type.description || ''}
+                                                    onChange={(e) => {
+                                                      setDocumentCategories(cats => 
+                                                        cats.map(cat => 
+                                                          cat.id === category.id 
+                                                            ? { 
+                                                                ...cat, 
+                                                                types: cat.types.map(t => 
+                                                                  t.id === type.id ? { ...t, description: e.target.value } : t
+                                                                )
+                                                              }
+                                                            : cat
+                                                        )
+                                                      );
+                                                    }}
+                                                    placeholder="Document type description..."
+                                                    rows={2}
+                                                    className="resize-none text-sm"
+                                                  />
+                                                  
+                                                  <div className="flex items-center gap-4">
+                                                    <Badge variant="secondary">{type.requiredFields.length} required fields</Badge>
+                                                    <div className="flex items-center gap-2">
+                                                      <Label className="text-xs">Template Required</Label>
+                                                      <Switch 
+                                                        checked={type.templateRequired}
+                                                        onCheckedChange={(checked) => {
+                                                          setDocumentCategories(cats => 
+                                                            cats.map(cat => 
+                                                              cat.id === category.id 
+                                                                ? { 
+                                                                    ...cat, 
+                                                                    types: cat.types.map(t => 
+                                                                      t.id === type.id ? { ...t, templateRequired: checked } : t
+                                                                    )
+                                                                  }
+                                                                : cat
+                                                            )
+                                                          );
+                                                        }}
+                                                      />
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                
+                                                <Button 
+                                                  size="sm" 
+                                                  variant="ghost"
+                                                  onClick={() => {
+                                                    setDocumentCategories(cats => 
+                                                      cats.map(cat => 
+                                                        cat.id === category.id 
+                                                          ? { ...cat, types: cat.types.filter(t => t.id !== type.id) }
+                                                          : cat
+                                                      )
+                                                    );
+                                                  }}
+                                                >
+                                                  <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                              </div>
+                                              
+                                              {type.templateRequired && (
+                                                <div className="mt-3 pt-3 border-t">
+                                                  {showTemplateForm === type.id ? (
+                                                    <Card className="border-dashed">
+                                                      <CardContent className="p-4">
+                                                        <div className="space-y-4">
+                                                          <div className="flex items-center justify-between">
+                                                            <h6 className="font-medium flex items-center gap-2">
+                                                              <Code className="h-4 w-4" />
+                                                              Template Editor - {type.name}
+                                                            </h6>
+                                                            <Button size="sm" variant="ghost" 
+                                                                   onClick={() => setShowTemplateForm(null)}>
+                                                              <XCircle className="h-4 w-4" />
+                                                            </Button>
+                                                          </div>
+                                                          <div className="space-y-3">
+                                                            <div>
+                                                              <Label className="text-sm">Template Name</Label>
+                                                              <Input defaultValue={`${type.name} Template`} className="mt-1" />
+                                                            </div>
+                                                            <div>
+                                                              <Label className="text-sm">Template Content (HTML/Text)</Label>
+                                                              <Textarea 
+                                                                className="mt-1 min-h-[200px] font-mono text-sm"
+                                                                defaultValue={`<div class="document-header">
+  <h1>${type.name}</h1>
+  <h2>Romanian Immigration Document</h2>
+  <p>Document Date: {{date}}</p>
+</div>
+
+<div class="content">
+  <h3>Worker Information</h3>
+  <p><strong>Full Name:</strong> {{worker_name}}</p>
+  <p><strong>Passport Number:</strong> {{passport_number}}</p>
+  <p><strong>Nationality:</strong> {{nationality}}</p>
+  <p><strong>Date of Birth:</strong> {{date_of_birth}}</p>
+  
+  <h3>Document Details</h3>
+  ${type.requiredFields.map(field => `  <p><strong>${field.charAt(0).toUpperCase() + field.slice(1).replace('_', ' ')}:</strong> {{${field}}}</p>`).join('\n')}
+  
+  <h3>Legal Information</h3>
+  <p><strong>Document Number:</strong> {{document_number}}</p>
+  <p><strong>Issue Date:</strong> {{issue_date}}</p>
+  <p><strong>Expiry Date:</strong> {{expiry_date}}</p>
+  <p><strong>Issued by:</strong> {{issuing_authority}}</p>
+</div>
+
+<div class="signature-section">
+  <p><strong>Authorized Signature:</strong> _______________________</p>
+  <p><strong>Official Stamp:</strong></p>
+  <p><strong>Date:</strong> {{current_date}}</p>
+</div>
+
+<div class="footer">
+  <p><em>This document is issued in accordance with Romanian immigration law.</em></p>
+  <p><em>Document generated on {{generation_date}} by Patra Immigration System.</em></p>
+</div>`}
+                                                              />
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                              <Button size="sm" onClick={() => {
+                                                                toast({ 
+                                                                  title: 'Success', 
+                                                                  description: `Template for ${type.name} saved successfully!` 
+                                                                });
+                                                                setShowTemplateForm(null);
+                                                              }}>
+                                                                <Save className="h-4 w-4 mr-2" />
+                                                                Save Template
+                                                              </Button>
+                                                              <Button size="sm" variant="outline">
+                                                                <Upload className="h-4 w-4 mr-2" />
+                                                                Upload Template File
+                                                              </Button>
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                      </CardContent>
+                                                    </Card>
+                                                  ) : (
+                                                    <Button size="sm" variant="outline" 
+                                                           onClick={() => setShowTemplateForm(type.id)}>
+                                                      <Code className="h-4 w-4 mr-2" />
+                                                      Create/Edit Template
+                                                    </Button>
+                                                  )}
+                                                </div>
+                                              )}
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+                                      ))}
+                                      
+                                      {category.types.length === 0 && (
+                                        <p className="text-sm text-muted-foreground text-center py-4">
+                                          No document types added yet. Click "Add Type" to create one.
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
-                              ))}
-                              
-                              {category.types.length === 0 && (
-                                <p className="text-sm text-muted-foreground text-center py-4">
-                                  No document types added yet. Click "Add Type" to create one.
-                                </p>
                               )}
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
                 <div className="flex justify-end pt-4">
@@ -946,47 +1100,94 @@ export default function SettingsPage() {
                     <p>Click "Add Workflow" to create your first workflow.</p>
                   </div>
                 ) : (
-                  <div className="space-y-6">
-                    {workflows.map((workflow) => (
-                      <Card key={workflow.id} className="border-l-4 border-l-green-500">
-                        <CardContent className="p-4">
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3 flex-1">
-                                <Input 
-                                  value={workflow.name}
-                                  onChange={(e) => {
-                                    setWorkflows(wfs => 
-                                      wfs.map(wf => 
-                                        wf.id === workflow.id 
-                                          ? { ...wf, name: e.target.value }
-                                          : wf
-                                      )
-                                    );
-                                  }}
-                                  className="font-medium text-lg border-none px-0 h-auto"
-                                />
-                                <Switch 
-                                  checked={workflow.isActive}
-                                  onCheckedChange={(checked) => {
-                                    setWorkflows(wfs => 
-                                      wfs.map(wf => 
-                                        wf.id === workflow.id 
-                                          ? { ...wf, isActive: checked }
-                                          : wf
-                                      )
-                                    );
-                                  }}
-                                />
-                                <Label className="text-sm">{workflow.isActive ? 'Active' : 'Inactive'}</Label>
+                  <div className="space-y-4">
+                    {workflows.map((workflow) => {
+                      const isExpanded = expandedWorkflows.has(workflow.id);
+                      return (
+                        <Card key={workflow.id} className="border-l-4 border-l-green-500">
+                          <CardContent className="p-4">
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between cursor-pointer" 
+                                   onClick={() => toggleWorkflowExpansion(workflow.id)}>
+                                <div className="flex items-center gap-2">
+                                  {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                  <h4 className="font-medium text-lg">{workflow.name}</h4>
+                                  <Badge variant="outline">{workflow.stages.length} stages</Badge>
+                                  <Badge variant={workflow.isActive ? "default" : "secondary"}>
+                                    {workflow.isActive ? 'Active' : 'Inactive'}
+                                  </Badge>
+                                </div>
+                                <Button size="sm" variant="ghost" onClick={(e) => e.stopPropagation()}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
                               </div>
-                              <Button variant="outline" size="sm" onClick={() => addWorkflowStage(workflow.id)}>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Stage
-                              </Button>
-                            </div>
-                            
-                            {workflow.stages.length > 0 && (
+                              
+                              {!isExpanded && (
+                                <p className="text-sm text-muted-foreground">{workflow.description}</p>
+                              )}
+                              
+                              {isExpanded && (
+                                <div className="space-y-4">
+                                  <div className="space-y-2">
+                                    <Label className="text-sm font-medium">Workflow Name</Label>
+                                    <Input 
+                                      value={workflow.name}
+                                      onChange={(e) => {
+                                        setWorkflows(wfs => 
+                                          wfs.map(wf => 
+                                            wf.id === workflow.id 
+                                              ? { ...wf, name: e.target.value }
+                                              : wf
+                                          )
+                                        );
+                                      }}
+                                      placeholder="Enter workflow name"
+                                    />
+                                  </div>
+                                  
+                                  <div className="space-y-2">
+                                    <Label className="text-sm font-medium">Description</Label>
+                                    <Textarea
+                                      value={workflow.description || ''}
+                                      onChange={(e) => {
+                                        setWorkflows(wfs => 
+                                          wfs.map(wf => 
+                                            wf.id === workflow.id 
+                                              ? { ...wf, description: e.target.value }
+                                              : wf
+                                          )
+                                        );
+                                      }}
+                                      placeholder="Workflow description..."
+                                      className="resize-none"
+                                      rows={2}
+                                    />
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                      <Label className="text-sm">Active</Label>
+                                      <Switch 
+                                        checked={workflow.isActive}
+                                        onCheckedChange={(checked) => {
+                                          setWorkflows(wfs => 
+                                            wfs.map(wf => 
+                                              wf.id === workflow.id 
+                                                ? { ...wf, isActive: checked }
+                                                : wf
+                                            )
+                                          );
+                                        }}
+                                      />
+                                    </div>
+                                    <Button variant="outline" size="sm" onClick={() => addWorkflowStage(workflow.id)}>
+                                      <Plus className="h-4 w-4 mr-2" />
+                                      Add Stage
+                                    </Button>
+                                  </div>
+                                  
+                                  {/* Workflow Stages within Expanded Section */}
+                                  {workflow.stages.length > 0 && (
                               <div className="space-y-2">
                                 <Label className="text-sm font-medium">Workflow Stages</Label>
                                 <div className="grid gap-3">
@@ -1152,12 +1353,15 @@ export default function SettingsPage() {
                                     </div>
                                   ))}
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                                  </div>
+                                )}
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
                 <div className="flex justify-end pt-4">
@@ -1193,62 +1397,147 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 
+                {/* Document Type Selector */}
                 <div className="space-y-4">
-                  {documentCategories.map((category) => (
-                    <div key={category.id} className="space-y-3">
-                      <h4 className="font-medium text-lg">{category.name}</h4>
-                      {category.types.map((docType) => (
-                        <Card key={docType.id} className="border-l-4 border-l-orange-500">
-                          <CardContent className="p-4">
-                            <div className="space-y-4">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <h5 className="font-medium">{docType.name}</h5>
-                                  <p className="text-sm text-muted-foreground">{docType.description}</p>
-                                </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Select Document Type to Configure</Label>
+                    <Select 
+                      value={selectedExpiryDocType} 
+                      onValueChange={setSelectedExpiryDocType}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Choose a document type to configure expiry alerts..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {documentCategories.length === 0 ? (
+                          <SelectItem value="" disabled>No document types available</SelectItem>
+                        ) : (
+                          documentCategories.map((category) => (
+                            <SelectGroup key={category.id}>
+                              <SelectLabel>{category.name}</SelectLabel>
+                              {category.types.map((docType) => (
+                                <SelectItem key={docType.id} value={docType.id}>
+                                  {docType.name}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {selectedExpiryDocType && (() => {
+                    const selectedType = documentCategories
+                      .flatMap(cat => cat.types)
+                      .find(type => type.id === selectedExpiryDocType);
+                    
+                    if (!selectedType) return null;
+                    
+                    return (
+                      <Card className="border-l-4 border-l-orange-500">
+                        <CardContent className="p-4">
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h5 className="font-medium flex items-center gap-2">
+                                  <FileText className="h-4 w-4" />
+                                  {selectedType.name}
+                                </h5>
+                                <p className="text-sm text-muted-foreground">{selectedType.description}</p>
+                                <Badge variant="outline" className="mt-2">
+                                  {documentCategories.find(cat => cat.types.some(t => t.id === selectedType.id))?.name}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Label className="text-sm">Enable Alerts</Label>
                                 <Switch defaultChecked />
                               </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-sm">Days Before Expiry to Send Alert</Label>
+                                <Input 
+                                  type="number" 
+                                  min="1"
+                                  max="365"
+                                  defaultValue={selectedType.id.includes('work-permit') || selectedType.id.includes('renewal') ? "60" : "30"}
+                                  className="w-32"
+                                  placeholder="30"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                  Alert will be sent this many days before {selectedType.name.toLowerCase()} expires
+                                </p>
+                              </div>
                               
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-sm">Alert Recipients</Label>
                                 <div className="space-y-2">
-                                  <Label className="text-sm">Days Before Expiry to Send Alert</Label>
-                                  <Input 
-                                    type="number" 
-                                    min="1"
-                                    max="365"
-                                    defaultValue={docType.id.includes('work-permit') || docType.id.includes('renewal') ? "60" : "30"}
-                                    className="w-32"
-                                    placeholder="30"
-                                  />
-                                  <p className="text-xs text-muted-foreground">
-                                    Alert will be sent this many days before {docType.name.toLowerCase()} expires
-                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    <Switch defaultChecked />
+                                    <Label className="text-sm">Admin</Label>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Switch defaultChecked />
+                                    <Label className="text-sm">Client Owner</Label>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Switch />
+                                    <Label className="text-sm">Worker</Label>
+                                  </div>
                                 </div>
-                                
-                                <div className="space-y-2">
-                                  <Label className="text-sm">Alert Recipients</Label>
+                              </div>
+                            </div>
+                            
+                            <div className="border-t pt-4">
+                              <div className="space-y-3">
+                                <Label className="text-sm font-medium">Advanced Settings</Label>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                   <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                      <Switch defaultChecked />
-                                      <Label className="text-sm">Admin</Label>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <Switch defaultChecked />
-                                      <Label className="text-sm">Client Owner</Label>
-                                    </div>
+                                    <Label className="text-xs">Reminder Frequency</Label>
+                                    <Select defaultValue="weekly">
+                                      <SelectTrigger className="h-8">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="daily">Daily</SelectItem>
+                                        <SelectItem value="weekly">Weekly</SelectItem>
+                                        <SelectItem value="monthly">Monthly</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  
+                                  <div className="space-y-2">
+                                    <Label className="text-xs">Priority Level</Label>
+                                    <Select defaultValue={selectedType.id.includes('work-permit') ? 'high' : 'medium'}>
+                                      <SelectTrigger className="h-8">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="low">Low</SelectItem>
+                                        <SelectItem value="medium">Medium</SelectItem>
+                                        <SelectItem value="high">High</SelectItem>
+                                        <SelectItem value="critical">Critical</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  
+                                  <div className="space-y-2">
+                                    <Label className="text-xs">Auto-extend</Label>
                                     <div className="flex items-center gap-2">
                                       <Switch />
-                                      <Label className="text-sm">Worker</Label>
+                                      <Label className="text-xs">Enable</Label>
                                     </div>
                                   </div>
                                 </div>
                               </div>
                             </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })()}
                   
                   {documentCategories.length === 0 && (
                     <div className="text-center py-8 text-muted-foreground">
