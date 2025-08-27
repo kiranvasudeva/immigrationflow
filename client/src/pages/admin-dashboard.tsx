@@ -1158,7 +1158,7 @@ export default function AdminDashboard() {
                             <span className="ml-2 font-medium">{selectedWorker.passportNumber || selectedWorker.worker?.passportNumber || 'Pending'}</span>
                           </div>
                           <div>
-                            <span className="text-gray-600">Date of Birth (dd/mm/yyyy):</span>
+                            <span className="text-gray-600">Date of Birth <span className="italic">(dd/mm/yyyy)</span>:</span>
                             <span className="ml-2 font-medium">
                               {(selectedWorker.dob || selectedWorker.worker?.dob) 
                                 ? new Date(selectedWorker.dob || selectedWorker.worker?.dob).toLocaleDateString('en-GB')
@@ -1167,7 +1167,7 @@ export default function AdminDashboard() {
                             </span>
                           </div>
                           <div>
-                            <span className="text-gray-600">Passport Expiry (dd/mm/yyyy):</span>
+                            <span className="text-gray-600">Passport Expiry <span className="italic">(dd/mm/yyyy)</span>:</span>
                             <span className="ml-2 font-medium">
                               {(selectedWorker.passportExpiry || selectedWorker.worker?.passportExpiry) 
                                 ? new Date(selectedWorker.passportExpiry || selectedWorker.worker?.passportExpiry).toLocaleDateString('en-GB')
@@ -1176,7 +1176,7 @@ export default function AdminDashboard() {
                             </span>
                           </div>
                           <div>
-                            <span className="text-gray-600">Started (dd/mm/yyyy):</span>
+                            <span className="text-gray-600">Started <span className="italic">(dd/mm/yyyy)</span>:</span>
                             <span className="ml-2 font-medium">
                               {selectedWorker.createdAt 
                                 ? new Date(selectedWorker.createdAt).toLocaleDateString('en-GB')
@@ -1790,7 +1790,7 @@ export default function AdminDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="dob">Date of Birth (dd/mm/yyyy)</Label>
+                  <Label htmlFor="dob">Date of Birth <span className="italic">(dd/mm/yyyy)</span></Label>
                   <Input
                     id="dob"
                     type="date"
@@ -1799,7 +1799,7 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="passportExpiry">Passport Expiry Date (dd/mm/yyyy)</Label>
+                  <Label htmlFor="passportExpiry">Passport Expiry Date <span className="italic">(dd/mm/yyyy)</span></Label>
                   <Input
                     id="passportExpiry"
                     type="date"
