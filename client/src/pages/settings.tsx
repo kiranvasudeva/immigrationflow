@@ -96,7 +96,11 @@ export default function SettingsPage() {
   const { t } = useTranslation();
   const { setBreadcrumb } = useBreadcrumb();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('general');
+  
+  // Get the tab from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialTab = urlParams.get('tab') || 'general';
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   // State for all settings sections
   const [documentCategories, setDocumentCategories] = useState<DocumentCategory[]>([]);
@@ -258,6 +262,28 @@ export default function SettingsPage() {
               <span className="hidden sm:inline">Plans</span>
             </TabsTrigger>
           </TabsList>
+
+          {/* Add navigation for additional tabs */}
+          <div className="mt-4">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="notifications" className="flex items-center gap-2">
+                <Bell className="h-4 w-4" />
+                <span className="hidden sm:inline">Notifications</span>
+              </TabsTrigger>
+              <TabsTrigger value="security" className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                <span className="hidden sm:inline">Security</span>
+              </TabsTrigger>
+              <TabsTrigger value="system" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">System</span>
+              </TabsTrigger>
+              <TabsTrigger value="backup" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">Backup</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* General Settings */}
           <TabsContent value="general" className="space-y-6">
@@ -904,6 +930,235 @@ export default function SettingsPage() {
                   <Button onClick={() => handleSaveSettings('Payment Processors')}>
                     <Save className="h-4 w-4 mr-2" />
                     Save Payment Settings
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Notifications Settings */}
+          <TabsContent value="notifications" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Notification Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-medium">Email Notifications</Label>
+                      <p className="text-sm text-muted-foreground">Receive notifications via email</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-medium">Document Deadlines</Label>
+                      <p className="text-sm text-muted-foreground">Alerts for approaching document deadlines</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-medium">Status Updates</Label>
+                      <p className="text-sm text-muted-foreground">Workflow status change notifications</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-medium">System Announcements</Label>
+                      <p className="text-sm text-muted-foreground">Important system updates and announcements</p>
+                    </div>
+                    <Switch />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button onClick={() => handleSaveSettings('Notifications')}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Notification Settings
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Security Settings */}
+          <TabsContent value="security" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Security Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Access Control</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">Two-Factor Authentication</Label>
+                        <Switch />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">Session Timeout (minutes)</Label>
+                        <Input className="w-20" defaultValue="60" type="number" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">Password Complexity</Label>
+                        <Switch defaultChecked />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Data Protection</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">Data Encryption</Label>
+                        <Switch defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">Audit Logging</Label>
+                        <Switch defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">GDPR Compliance</Label>
+                        <Switch defaultChecked />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button onClick={() => handleSaveSettings('Security')}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Security Settings
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* System Settings */}
+          <TabsContent value="system" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  System Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>System Environment</Label>
+                    <Select defaultValue="production">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="development">Development</SelectItem>
+                        <SelectItem value="staging">Staging</SelectItem>
+                        <SelectItem value="production">Production</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Log Level</Label>
+                    <Select defaultValue="info">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="debug">Debug</SelectItem>
+                        <SelectItem value="info">Info</SelectItem>
+                        <SelectItem value="warning">Warning</SelectItem>
+                        <SelectItem value="error">Error</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Cache Duration (hours)</Label>
+                    <Input type="number" defaultValue="24" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>API Rate Limit (requests/minute)</Label>
+                    <Input type="number" defaultValue="1000" />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button onClick={() => handleSaveSettings('System')}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save System Settings
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Backup Settings */}
+          <TabsContent value="backup" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Backup & Restore
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-medium">Automatic Backups</Label>
+                      <p className="text-sm text-muted-foreground">Automatically backup data daily</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Backup Frequency</Label>
+                    <Select defaultValue="daily">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hourly">Hourly</SelectItem>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Retention Period (days)</Label>
+                    <Input type="number" defaultValue="30" />
+                  </div>
+                  
+                  <div className="flex gap-4 pt-4">
+                    <Button variant="outline">
+                      Create Backup Now
+                    </Button>
+                    <Button variant="outline">
+                      Restore from Backup
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button onClick={() => handleSaveSettings('Backup')}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Backup Settings
                   </Button>
                 </div>
               </CardContent>
