@@ -2045,10 +2045,24 @@ export default function AdminDashboard() {
                           );
                         });
 
-                        // Invalidate and refetch all related data to show the new worker
+                        // Clear all cache entries that might contain stale worker data
+                        console.log("Invalidating cache for client:", selectedClient.id);
+                        
+                        // Clear the workers cache with multiple approaches
                         queryClient.invalidateQueries({
                           queryKey: ["/api/clients", selectedClient.id, "workers"]
                         });
+                        
+                        // Also clear any cached workers query that might use different key format
+                        queryClient.invalidateQueries({
+                          predicate: (query) => {
+                            return Array.isArray(query.queryKey) && 
+                                   query.queryKey.includes("workers") && 
+                                   query.queryKey.includes(selectedClient.id);
+                          }
+                        });
+                        
+                        // Clear related caches
                         queryClient.invalidateQueries({
                           queryKey: ["/api/clients", selectedClient.id, "assignments"]
                         });
@@ -2060,6 +2074,11 @@ export default function AdminDashboard() {
                         });
                         queryClient.invalidateQueries({
                           queryKey: ["/api/dashboard/stats"]
+                        });
+                        
+                        // Force immediate refetch of workers data
+                        queryClient.refetchQueries({
+                          queryKey: ["/api/clients", selectedClient.id, "workers"]
                         });
                         
                         toast({
