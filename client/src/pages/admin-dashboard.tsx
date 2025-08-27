@@ -69,6 +69,18 @@ export default function AdminDashboard() {
     dob: '',
     passportExpiry: ''
   });
+  
+  const [addingWorker, setAddingWorker] = useState(false);
+  const [addWorkerForm, setAddWorkerForm] = useState({
+    firstName: '',
+    lastName: '',
+    nationality: '',
+    email: '',
+    phone: '',
+    passportNumber: '',
+    dob: '',
+    passportExpiry: ''
+  });
 
   const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
     queryKey: ["/api/clients"],
@@ -818,6 +830,20 @@ export default function AdminDashboard() {
                           </Button>
                           <Button 
                             variant="outline"
+                            onClick={() => {
+                              // Reset form
+                              setAddWorkerForm({
+                                firstName: '',
+                                lastName: '',
+                                nationality: '',
+                                email: '',
+                                phone: '',
+                                passportNumber: '',
+                                dob: '',
+                                passportExpiry: ''
+                              });
+                              setAddingWorker(true);
+                            }}
                             data-testid="button-add-worker"
                           >
                             <i className="fas fa-plus mr-2"></i>
@@ -1877,6 +1903,162 @@ export default function AdminDashboard() {
                 >
                   <i className="fas fa-save mr-2"></i>
                   Save Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Worker Dialog */}
+        <Dialog open={addingWorker} onOpenChange={setAddingWorker}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Add New Worker</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="addFirstName">First Name</Label>
+                  <Input
+                    id="addFirstName"
+                    value={addWorkerForm.firstName}
+                    onChange={(e) => setAddWorkerForm({...addWorkerForm, firstName: e.target.value})}
+                    placeholder="Enter first name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="addLastName">Last Name</Label>
+                  <Input
+                    id="addLastName"
+                    value={addWorkerForm.lastName}
+                    onChange={(e) => setAddWorkerForm({...addWorkerForm, lastName: e.target.value})}
+                    placeholder="Enter last name"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="addNationality">Nationality</Label>
+                  <Input
+                    id="addNationality"
+                    value={addWorkerForm.nationality}
+                    onChange={(e) => setAddWorkerForm({...addWorkerForm, nationality: e.target.value})}
+                    placeholder="Enter nationality"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="addEmail">Email</Label>
+                  <Input
+                    id="addEmail"
+                    type="email"
+                    value={addWorkerForm.email}
+                    onChange={(e) => setAddWorkerForm({...addWorkerForm, email: e.target.value})}
+                    placeholder="Enter email address"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="addPhone">Phone Number</Label>
+                  <Input
+                    id="addPhone"
+                    value={addWorkerForm.phone}
+                    onChange={(e) => setAddWorkerForm({...addWorkerForm, phone: e.target.value})}
+                    placeholder="Enter phone number"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="addPassportNumber">Passport Number</Label>
+                  <Input
+                    id="addPassportNumber"
+                    value={addWorkerForm.passportNumber}
+                    onChange={(e) => setAddWorkerForm({...addWorkerForm, passportNumber: e.target.value})}
+                    placeholder="Enter passport number"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="addDob">Date of Birth <span className="italic">(dd/mm/yyyy)</span></Label>
+                  <Input
+                    id="addDob"
+                    type="date"
+                    value={addWorkerForm.dob}
+                    onChange={(e) => setAddWorkerForm({...addWorkerForm, dob: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="addPassportExpiry">Passport Expiry Date <span className="italic">(dd/mm/yyyy)</span></Label>
+                  <Input
+                    id="addPassportExpiry"
+                    type="date"
+                    value={addWorkerForm.passportExpiry}
+                    onChange={(e) => setAddWorkerForm({...addWorkerForm, passportExpiry: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setAddingWorker(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={async () => {
+                    try {
+                      if (!selectedClient?.id) {
+                        toast({
+                          title: "Error",
+                          description: "No client selected. Please try again.",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+
+                      // Create worker assignment with the form data
+                      const response = await apiRequest("POST", "/api/assignments", {
+                        clientId: selectedClient.id,
+                        ...addWorkerForm
+                      });
+                      
+                      if (response.ok) {
+                        // Invalidate and refetch assignments to show the new worker
+                        queryClient.invalidateQueries({
+                          queryKey: ["/api/clients", selectedClient.id, "assignments"]
+                        });
+                        queryClient.invalidateQueries({
+                          queryKey: ["/api/dashboard/assignments"]
+                        });
+                        queryClient.invalidateQueries({
+                          queryKey: ["/api/clients"]
+                        });
+                        
+                        toast({
+                          title: "Worker Added",
+                          description: "New worker has been added successfully.",
+                        });
+                        setAddingWorker(false);
+                      } else {
+                        throw new Error("Failed to add worker");
+                      }
+                    } catch (error) {
+                      console.error("Error adding worker:", error);
+                      toast({
+                        title: "Error",
+                        description: "Failed to add worker. Please try again.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  data-testid="button-save-new-worker"
+                >
+                  <i className="fas fa-save mr-2"></i>
+                  Add Worker
                 </Button>
               </div>
             </div>
