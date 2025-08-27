@@ -1012,6 +1012,14 @@ export default function AdminDashboard() {
                         assignment.clientProfileId === selectedClient.id
                       );
                       
+                      console.log("Debug worker display logic:", {
+                        selectedClientId: selectedClient.id,
+                        totalAssignments: assignments.length,
+                        clientAssignments: clientAssignments.length,
+                        directWorkers: directWorkers.length,
+                        assignmentWorkerIds: clientAssignments.map(a => a.workerId)
+                      });
+                      
                       // Group assignments by workerId to create worker entries with actual worker data
                       const workersMap = new Map();
                       clientAssignments.forEach((assignment: any) => {
@@ -1039,12 +1047,20 @@ export default function AdminDashboard() {
 
                       // If no workers with assignments, show all workers for this client
                       if (clientWorkers.length === 0 && directWorkers.length > 0) {
+                        console.log("No workers with assignments found, showing direct workers:", directWorkers);
                         clientWorkers = directWorkers.map((worker: any) => ({
                           ...worker,
                           assignments: [], // No assignments yet
                           status: 'pending' // Default status
                         }));
                       }
+
+                      console.log("Final workers to display:", {
+                        workersWithAssignments: Array.from(workersMap.values()).length,
+                        directWorkersCount: directWorkers.length,
+                        finalClientWorkers: clientWorkers.length,
+                        clientWorkers
+                      });
 
                       if (clientWorkers.length === 0) {
                         return (
