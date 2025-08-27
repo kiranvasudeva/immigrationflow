@@ -2027,6 +2027,12 @@ export default function AdminDashboard() {
                       });
                       
                       if (response.ok) {
+                        // Update the selected client's worker count immediately
+                        setSelectedClient((prev: any) => ({
+                          ...prev,
+                          activeWorkers: (prev.activeWorkers || 0) + 1
+                        }));
+
                         // Invalidate and refetch assignments to show the new worker
                         queryClient.invalidateQueries({
                           queryKey: ["/api/clients", selectedClient.id, "assignments"]
