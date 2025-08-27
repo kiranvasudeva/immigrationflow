@@ -2021,11 +2021,14 @@ export default function AdminDashboard() {
                       }
 
                       // Create worker for the client with the form data
+                      console.log("Submitting worker data:", addWorkerForm);
                       const response = await apiRequest("POST", `/api/clients/${selectedClient.id}/workers`, {
                         ...addWorkerForm
                       });
                       
+                      console.log("Add worker response:", response);
                       if (response.ok) {
+                        console.log("Worker added successfully, updating UI...");
                         // Update the selected client's worker count immediately
                         setSelectedClient((prev: any) => ({
                           ...prev,
