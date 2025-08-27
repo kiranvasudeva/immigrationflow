@@ -2020,9 +2020,8 @@ export default function AdminDashboard() {
                         return;
                       }
 
-                      // Create worker assignment with the form data
-                      const response = await apiRequest("POST", "/api/assignments", {
-                        clientId: selectedClient.id,
+                      // Create worker for the client with the form data
+                      const response = await apiRequest("POST", `/api/clients/${selectedClient.id}/workers`, {
                         ...addWorkerForm
                       });
                       
