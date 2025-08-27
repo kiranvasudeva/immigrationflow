@@ -1136,32 +1136,32 @@ export default function AdminDashboard() {
                           <div>
                             <span className="text-gray-600">Full Name:</span>
                             <span className="ml-2 font-medium">
-                              {selectedWorker.firstName && selectedWorker.lastName 
-                                ? `${selectedWorker.firstName} ${selectedWorker.lastName}`
+                              {(selectedWorker.firstName || selectedWorker.worker?.firstName) && (selectedWorker.lastName || selectedWorker.worker?.lastName)
+                                ? `${selectedWorker.firstName || selectedWorker.worker?.firstName} ${selectedWorker.lastName || selectedWorker.worker?.lastName}`
                                 : 'Name pending'}
                             </span>
                           </div>
                           <div>
                             <span className="text-gray-600">Nationality:</span>
-                            <span className="ml-2 font-medium">{selectedWorker.nationality || 'Pending'}</span>
+                            <span className="ml-2 font-medium">{selectedWorker.nationality || selectedWorker.worker?.nationality || 'Pending'}</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Email:</span>
-                            <span className="ml-2 font-medium">{selectedWorker.email || 'Pending'}</span>
+                            <span className="ml-2 font-medium">{selectedWorker.email || selectedWorker.worker?.email || 'Pending'}</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Phone:</span>
-                            <span className="ml-2 font-medium">{selectedWorker.phone || 'Pending'}</span>
+                            <span className="ml-2 font-medium">{selectedWorker.phone || selectedWorker.worker?.phone || 'Pending'}</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Passport Number:</span>
-                            <span className="ml-2 font-medium">{selectedWorker.passportNumber || 'Pending'}</span>
+                            <span className="ml-2 font-medium">{selectedWorker.passportNumber || selectedWorker.worker?.passportNumber || 'Pending'}</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Date of Birth:</span>
                             <span className="ml-2 font-medium">
-                              {selectedWorker.dob 
-                                ? new Date(selectedWorker.dob).toLocaleDateString('en-GB')
+                              {(selectedWorker.dob || selectedWorker.worker?.dob) 
+                                ? new Date(selectedWorker.dob || selectedWorker.worker?.dob).toLocaleDateString('en-GB')
                                 : 'Pending'
                               }
                             </span>
@@ -1169,8 +1169,8 @@ export default function AdminDashboard() {
                           <div>
                             <span className="text-gray-600">Passport Expiry:</span>
                             <span className="ml-2 font-medium">
-                              {selectedWorker.passportExpiry 
-                                ? new Date(selectedWorker.passportExpiry).toLocaleDateString('en-GB')
+                              {(selectedWorker.passportExpiry || selectedWorker.worker?.passportExpiry) 
+                                ? new Date(selectedWorker.passportExpiry || selectedWorker.worker?.passportExpiry).toLocaleDateString('en-GB')
                                 : 'Pending'
                               }
                             </span>
