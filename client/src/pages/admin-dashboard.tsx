@@ -1012,13 +1012,6 @@ export default function AdminDashboard() {
                         assignment.clientProfileId === selectedClient.id
                       );
                       
-                      console.log("=== WORKER DEBUG START ===");
-                      console.log("Selected Client ID:", selectedClient.id);
-                      console.log("Total assignments:", assignments.length);
-                      console.log("Client assignments:", clientAssignments.length);
-                      console.log("Direct workers count:", directWorkers.length);
-                      console.log("Direct workers data:", directWorkers);
-                      console.log("Assignment worker IDs:", clientAssignments.map(a => a.workerId));
                       
                       // Group assignments by workerId to create worker entries with actual worker data
                       const workersMap = new Map();
@@ -1052,7 +1045,6 @@ export default function AdminDashboard() {
                       );
                       
                       if (workersWithoutAssignments.length > 0) {
-                        console.log("Adding workers without assignments:", workersWithoutAssignments);
                         const mappedWorkersWithoutAssignments = workersWithoutAssignments.map((worker: any) => ({
                           ...worker,
                           assignments: [], // No assignments yet
@@ -1060,11 +1052,6 @@ export default function AdminDashboard() {
                         }));
                         clientWorkers = [...clientWorkers, ...mappedWorkersWithoutAssignments];
                       }
-
-                      console.log("Workers with assignments:", Array.from(workersMap.values()).length);
-                      console.log("Final client workers count:", clientWorkers.length);
-                      console.log("Final client workers data:", clientWorkers);
-                      console.log("=== WORKER DEBUG END ===");
 
                       if (clientWorkers.length === 0) {
                         return (

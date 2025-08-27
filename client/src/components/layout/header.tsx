@@ -38,7 +38,7 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
         : 'bg-surface'
     }`} style={{ top: 'var(--alert-height, 0px)' }}>
       <div className="flex items-center justify-between min-h-[56px] lg:min-h-[64px]">
-        <div className="ml-12 lg:ml-0">
+        <div className="ml-16 lg:ml-0">
           <h1 className="text-lg lg:text-2xl font-bold text-gray-900 leading-tight">{title}</h1>
           <p className="text-secondary text-xs lg:text-base leading-tight">{subtitle}</p>
         </div>

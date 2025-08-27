@@ -386,20 +386,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Convert date strings to Date objects if provided
       const workerData = { ...req.body, clientProfileId: clientId };
-      console.log("Raw worker data received:", workerData);
-      
       if (workerData.dob) {
-        console.log("Converting dob from string to Date:", workerData.dob);
         workerData.dob = new Date(workerData.dob);
-        console.log("Converted dob:", workerData.dob);
       }
       if (workerData.passportExpiry) {
-        console.log("Converting passportExpiry from string to Date:", workerData.passportExpiry);
         workerData.passportExpiry = new Date(workerData.passportExpiry);
-        console.log("Converted passportExpiry:", workerData.passportExpiry);
       }
-      
-      console.log("Final worker data before validation:", workerData);
 
       const data = insertWorkerSchema.parse(workerData);
 
