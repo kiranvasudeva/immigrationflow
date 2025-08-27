@@ -403,6 +403,105 @@ export default function SettingsPage() {
                             className="resize-none"
                             rows={2}
                           />
+                          
+                          {/* Document Types within Category */}
+                          <div className="mt-4">
+                            <div className="flex justify-between items-center mb-3">
+                              <Label className="text-sm font-medium">Document Types</Label>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => {
+                                  const newType = { 
+                                    id: `type-${Date.now()}`, 
+                                    name: 'New Document Type', 
+                                    description: '',
+                                    requiredFields: [],
+                                    templateRequired: false
+                                  };
+                                  setDocumentCategories(cats => 
+                                    cats.map(cat => 
+                                      cat.id === category.id 
+                                        ? { ...cat, types: [...cat.types, newType] }
+                                        : cat
+                                    )
+                                  );
+                                }}
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Add Type
+                              </Button>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              {category.types.map((type, typeIndex) => (
+                                <div key={type.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                                  <Input
+                                    value={type.name}
+                                    onChange={(e) => {
+                                      setDocumentCategories(cats => 
+                                        cats.map(cat => 
+                                          cat.id === category.id 
+                                            ? { 
+                                                ...cat, 
+                                                types: cat.types.map(t => 
+                                                  t.id === type.id ? { ...t, name: e.target.value } : t
+                                                )
+                                              }
+                                            : cat
+                                        )
+                                      );
+                                    }}
+                                    className="flex-1"
+                                    placeholder="Document type name"
+                                  />
+                                  
+                                  <div className="flex items-center gap-2">
+                                    <Label className="text-xs">Template Required</Label>
+                                    <Switch 
+                                      checked={type.templateRequired}
+                                      onCheckedChange={(checked) => {
+                                        setDocumentCategories(cats => 
+                                          cats.map(cat => 
+                                            cat.id === category.id 
+                                              ? { 
+                                                  ...cat, 
+                                                  types: cat.types.map(t => 
+                                                    t.id === type.id ? { ...t, templateRequired: checked } : t
+                                                  )
+                                                }
+                                              : cat
+                                          )
+                                        );
+                                      }}
+                                    />
+                                  </div>
+                                  
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setDocumentCategories(cats => 
+                                        cats.map(cat => 
+                                          cat.id === category.id 
+                                            ? { ...cat, types: cat.types.filter(t => t.id !== type.id) }
+                                            : cat
+                                        )
+                                      );
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                              
+                              {category.types.length === 0 && (
+                                <p className="text-sm text-muted-foreground text-center py-4">
+                                  No document types added yet. Click "Add Type" to create one.
+                                </p>
+                              )}
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
@@ -698,13 +797,18 @@ export default function SettingsPage() {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label className="text-sm">Alert Days Before Expiry</Label>
-                            <div className="flex gap-2">
-                              <Input placeholder="30" className="w-20" />
-                              <Input placeholder="15" className="w-20" />
-                              <Input placeholder="7" className="w-20" />
-                              <Input placeholder="3" className="w-20" />
-                            </div>
+                            <Label className="text-sm">Days Before Expiry to Send Alert</Label>
+                            <Input 
+                              type="number" 
+                              min="1"
+                              max="365"
+                              defaultValue="30" 
+                              className="w-32"
+                              placeholder="30"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              System will send alerts this many days before document expires
+                            </p>
                           </div>
                           <div className="space-y-2">
                             <Label className="text-sm">Alert Recipients</Label>
@@ -823,48 +927,170 @@ export default function SettingsPage() {
           <TabsContent value="subscription" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Subscription Plans
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    Subscription Plans
+                  </CardTitle>
+                  <Button size="sm" onClick={() => {
+                    const newPlan: SubscriptionPlan = {
+                      id: `plan-${Date.now()}`,
+                      name: 'New Plan',
+                      clients: 10,
+                      price: 100,
+                      features: ['Basic features']
+                    };
+                    setSubscriptionPlans([...subscriptionPlans, newPlan]);
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Plan
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {subscriptionPlans.map((plan) => (
-                    <Card key={plan.id} className={`relative ${plan.id === 'premium' ? 'border-primary shadow-md' : ''}`}>
-                      {plan.id === 'premium' && (
-                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                          <Badge className="bg-primary text-primary-foreground">Most Popular</Badge>
-                        </div>
-                      )}
-                      <CardContent className="p-6">
-                        <div className="text-center space-y-4">
-                          <h3 className="font-bold text-lg">{plan.name}</h3>
-                          <div className="space-y-1">
-                            <p className="text-3xl font-bold">
-                              {typeof plan.price === 'number' ? (
-                                <>
-                                  <span className="text-lg">RON</span> {plan.price}
-                                  <span className="text-sm font-normal">/month</span>
-                                </>
-                              ) : (
-                                plan.price
-                              )}
-                            </p>
-                            <p className="text-sm text-muted-foreground">Up to {plan.clients} clients</p>
+                {/* Plan Configuration Forms */}
+                <div className="space-y-4">
+                  {subscriptionPlans.map((plan, index) => (
+                    <Card key={plan.id} className="border">
+                      <CardContent className="p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label>Plan Name</Label>
+                            <Input 
+                              value={plan.name}
+                              onChange={(e) => {
+                                const updated = [...subscriptionPlans];
+                                updated[index] = { ...plan, name: e.target.value };
+                                setSubscriptionPlans(updated);
+                              }}
+                              placeholder="e.g., Premium Plan"
+                            />
                           </div>
-                          <ul className="space-y-2 text-sm">
-                            {plan.features.map((feature, index) => (
-                              <li key={index} className="flex items-center gap-2">
-                                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
+                          
+                          <div className="space-y-2">
+                            <Label>Price (RON/month)</Label>
+                            <Input 
+                              type="number"
+                              min="0"
+                              value={typeof plan.price === 'number' ? plan.price : 0}
+                              onChange={(e) => {
+                                const updated = [...subscriptionPlans];
+                                updated[index] = { ...plan, price: parseInt(e.target.value) || 0 };
+                                setSubscriptionPlans(updated);
+                              }}
+                              placeholder="299"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Max Clients</Label>
+                            <Input 
+                              type="number"
+                              min="1"
+                              value={plan.clients}
+                              onChange={(e) => {
+                                const updated = [...subscriptionPlans];
+                                updated[index] = { ...plan, clients: parseInt(e.target.value) || 1 };
+                                setSubscriptionPlans(updated);
+                              }}
+                              placeholder="50"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="mt-4 space-y-2">
+                          <Label>Features (one per line)</Label>
+                          <Textarea
+                            value={plan.features.join('\n')}
+                            onChange={(e) => {
+                              const updated = [...subscriptionPlans];
+                              updated[index] = { ...plan, features: e.target.value.split('\n').filter(f => f.trim()) };
+                              setSubscriptionPlans(updated);
+                            }}
+                            placeholder="Advanced workflows&#10;Custom templates&#10;Priority support"
+                            rows={4}
+                          />
+                        </div>
+                        
+                        <div className="mt-4 flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <Switch 
+                              checked={plan.id === 'premium'}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  const updated = subscriptionPlans.map(p => ({ ...p, id: p.id === plan.id ? 'premium' : p.id }));
+                                  setSubscriptionPlans(updated);
+                                }
+                              }}
+                            />
+                            <Label className="text-sm">Mark as "Most Popular"</Label>
+                          </div>
+                          
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            onClick={() => {
+                              setSubscriptionPlans(subscriptionPlans.filter((_, i) => i !== index));
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+                
+                {/* Plan Preview */}
+                <div className="border-t pt-6">
+                  <h4 className="font-medium mb-4">Plan Preview</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {subscriptionPlans.map((plan) => (
+                      <Card key={plan.id} className={`relative ${plan.id === 'premium' ? 'border-primary shadow-md' : ''}`}>
+                        {plan.id === 'premium' && (
+                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                            <Badge className="bg-primary text-primary-foreground">Most Popular</Badge>
+                          </div>
+                        )}
+                        <CardContent className="p-4">
+                          <div className="text-center space-y-3">
+                            <h3 className="font-bold text-sm">{plan.name}</h3>
+                            <div className="space-y-1">
+                              <p className="text-xl font-bold">
+                                {typeof plan.price === 'number' ? (
+                                  <>
+                                    <span className="text-sm">RON</span> {plan.price}
+                                    <span className="text-xs font-normal">/month</span>
+                                  </>
+                                ) : (
+                                  plan.price
+                                )}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Up to {plan.clients} clients</p>
+                            </div>
+                            <ul className="space-y-1 text-xs">
+                              {plan.features.slice(0, 3).map((feature, index) => (
+                                <li key={index} className="flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3 text-green-500" />
+                                  {feature}
+                                </li>
+                              ))}
+                              {plan.features.length > 3 && (
+                                <li className="text-muted-foreground">+{plan.features.length - 3} more</li>
+                              )}
+                            </ul>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button onClick={() => handleSaveSettings('Subscription Plans')}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Plan Settings
+                  </Button>
                 </div>
               </CardContent>
             </Card>
