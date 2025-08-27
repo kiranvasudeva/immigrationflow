@@ -19,6 +19,7 @@ import DocumentsPage from "@/pages/documents";
 import DeadlinesPage from "@/pages/deadlines";
 import ProfilePage from "@/pages/profile";
 import ClientProfile from "@/pages/client-profile";
+import SettingsPage from "@/pages/settings";
 import { User } from "@shared/schema";
 
 function Router() {
@@ -88,6 +89,7 @@ function Router() {
           <Route path="/documents" component={DocumentsPage} />
           <Route path="/payments" component={() => <ClientDashboard />} />
           <Route path="/deadlines" component={DeadlinesPage} />
+          <Route path="/settings" component={SettingsPage} />
         </>
       )}
         <Route component={NotFound} />

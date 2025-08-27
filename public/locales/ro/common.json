@@ -81,21 +81,32 @@
     "templates": "Șabloane",
     "reports": "Rapoarte",
     "settings": "Setări",
+    "requirements": "Cerințe",
+    "reminders": "Memento-uri",
+    "audit": "Jurnale de Audit",
     "logout": "Deconectare"
   },
   "settings": {
+    "title": "Setări Patra",
     "general": "Setări Generale",
     "notifications": "Notificări",
     "security": "Securitate",
     "system": "Setări Sistem",
-    "backup": "Backup și Restaurare"
+    "backup": "Backup și Restaurare",
+    "documentCategories": "Categorii Documente",
+    "workflows": "Gestionarea Fluxurilor",
+    "expiryAlerts": "Alerte Expirare Documente",
+    "companyInfo": "Informații Companie",
+    "subscriptions": "Gestionarea Abonamentelor",
+    "paymentProcessors": "Procesatori de Plată"
   },
   "auth": {
     "loggedOut": "TODO: translate",
     "unauthorized": "TODO: translate"
   },
   "complete": "TODO: translate",
-  "immigrationFlow": "TODO: translate",
+  "appName": "Patra",
+  "immigrationFlow": "Fluxul de Imigratie",
   "progress": {
     "overall": "TODO: translate"
   },
@@ -294,5 +305,13 @@
     "myDocuments": "TODO: translate",
     "nextSteps": "TODO: translate",
     "urgentActions": "TODO: translate"
-  }
+  },
+  "save": "Salvează",
+  "cancel": "Anulează",
+  "edit": "Editează",
+  "delete": "Șterge",
+  "add": "Adaugă",
+  "enable": "Activează",
+  "disable": "Dezactivează",
+  "configure": "Configurează"
 }

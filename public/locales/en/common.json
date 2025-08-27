@@ -81,20 +81,133 @@
     "templates": "Templates",
     "reports": "Reports",
     "settings": "Settings",
+    "requirements": "Requirements",
+    "reminders": "Reminders",
+    "audit": "Audit Logs",
     "logout": "Logout"
   },
   "settings": {
+    "title": "Patra Settings",
     "general": "General Settings",
     "notifications": "Notifications",
     "security": "Security",
     "system": "System Settings",
-    "backup": "Backup & Restore"
+    "backup": "Backup & Restore",
+    "documentCategories": "Document Categories",
+    "workflows": "Workflow Management",
+    "expiryAlerts": "Document Expiry Alerts",
+    "companyInfo": "Company Information",
+    "subscriptions": "Subscription Management",
+    "paymentProcessors": "Payment Processors",
+    "tabs": {
+      "general": {
+        "title": "General Settings",
+        "description": "Configure general application settings for Patra",
+        "systemName": "Patra System",
+        "timezone": "Timezone",
+        "language": "Default Language",
+        "dateFormat": "Date Format",
+        "currency": "Default Currency"
+      },
+      "documents": {
+        "title": "Document Categories & Types",
+        "description": "Configure document categories and types for workflows",
+        "addCategory": "Add Category",
+        "addType": "Add Document Type",
+        "categoryName": "Category Name",
+        "typeName": "Document Type Name",
+        "description": "Description",
+        "requiredFields": "Required Fields",
+        "templateRequired": "Template Required"
+      },
+      "workflows": {
+        "title": "Workflow Management",
+        "description": "Define editable workflows with responsibility assignments",
+        "addWorkflow": "Add Workflow",
+        "workflowName": "Workflow Name",
+        "documentType": "Document Type",
+        "stages": "Workflow Stages",
+        "addStage": "Add Stage",
+        "stageName": "Stage Name",
+        "responsible": "Responsible Party",
+        "approvalRequired": "Approval Required",
+        "timeframe": "Timeframe (Days)",
+        "statusLabel": "Status Label",
+        "responsibilities": {
+          "admin": "Admin",
+          "client": "Client",
+          "worker": "Worker",
+          "thirdParty": "Third Party",
+          "institution": "Institution"
+        }
+      },
+      "expiry": {
+        "title": "Document Expiry Alerts",
+        "description": "Configure document expiry tracking and alert notifications",
+        "documentType": "Document Type",
+        "expiryTracking": "Enable Expiry Tracking",
+        "alertRecipients": "Alert Recipients",
+        "alertDays": "Alert Days Before Expiry",
+        "addAlert": "Add Alert Rule",
+        "recipients": {
+          "admin": "Admin",
+          "client": "Client",
+          "worker": "Worker",
+          "all": "All Parties"
+        }
+      },
+      "company": {
+        "title": "Company Information",
+        "description": "Configure admin company information for invoicing",
+        "companyName": "Company Name",
+        "registrationNumber": "Registration Number (CUI)",
+        "vatNumber": "VAT Number",
+        "address": "Company Address",
+        "city": "City",
+        "country": "Country",
+        "postalCode": "Postal Code",
+        "phone": "Phone Number",
+        "email": "Contact Email",
+        "website": "Website",
+        "bankDetails": "Bank Details",
+        "bankName": "Bank Name",
+        "accountNumber": "Account Number",
+        "iban": "IBAN",
+        "swift": "SWIFT Code"
+      },
+      "subscriptions": {
+        "title": "Subscription Management",
+        "description": "Configure subscription tiers and pricing",
+        "basicPlan": "Basic Plan (20 Clients)",
+        "premiumPlan": "Premium Plan (50 Clients)",
+        "enterprisePlan": "Enterprise Plan (100 Clients)",
+        "customPlan": "Custom Plan (100+ Clients)",
+        "pricing": "Pricing (RON/month)",
+        "features": "Included Features",
+        "paymentProcessors": "Payment Processors",
+        "enableProcessor": "Enable Processor",
+        "testMode": "Test Mode",
+        "productionMode": "Production Mode",
+        "apiKeys": "API Keys",
+        "webhooks": "Webhook URLs",
+        "processors": {
+          "stripe": "Stripe",
+          "paypal": "PayPal",
+          "netopia": "Netopia Payments",
+          "euplatesc": "EuPlatesc",
+          "payU": "PayU Romania",
+          "mobilpay": "MobilPay",
+          "librapay": "Libra Internet Bank"
+        }
+      }
+    }
   },
   "auth": {
     "loggedOut": "Logged Out",
     "unauthorized": "Unauthorized"
   },
   "complete": "Complete",
+  "appName": "Patra",
   "immigrationFlow": "Immigration Flow",
   "progress": {
     "overall": "Overall"
@@ -255,6 +368,14 @@
   "table": {
     "headers": {
       "actions": "Actions",
+  "save": "Save",
+  "cancel": "Cancel",
+  "edit": "Edit",
+  "delete": "Delete",
+  "add": "Add",
+  "enable": "Enable",
+  "disable": "Disable",
+  "configure": "Configure",
       "document": "Document",
       "dueDate": "Due Date",
       "stage": "Stage",
