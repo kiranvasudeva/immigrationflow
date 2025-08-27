@@ -17,6 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
+import { NavigationBreadcrumb } from "@/components/layout/NavigationBreadcrumb";
 
 export default function AdminDashboard() {
   const { toast } = useToast();
@@ -24,6 +26,7 @@ export default function AdminDashboard() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
+  const { addBreadcrumb, setBreadcrumbs } = useBreadcrumb();
   
   // Collapsible states
   const [clientsOpen, setClientsOpen] = useState(true);
@@ -44,6 +47,32 @@ export default function AdminDashboard() {
   const [showNewClientForm, setShowNewClientForm] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
   const [editingWorker, setEditingWorker] = useState(false);
+
+  // Breadcrumb management
+  useEffect(() => {
+    const breadcrumbMap: Record<string, { label: string; href: string }> = {
+      overview: { label: 'Dashboard', href: '/dashboard' },
+      clients: { label: 'Clients', href: '/clients' },
+      workers: { label: 'Workers', href: '/workers' },
+      documents: { label: 'Templates', href: '/templates' },
+      reports: { label: 'Reports', href: '/reports' },
+      requirements: { label: 'Requirements', href: '/requirements' },
+      reminders: { label: 'Reminders', href: '/reminders' },
+      audit: { label: 'Audit Logs', href: '/audit' }
+    };
+
+    if (activeSection === 'overview') {
+      setBreadcrumbs([]);
+    } else if (selectedClient && (activeSection === 'clients' || activeSection === 'workers')) {
+      const baseBreadcrumb = breadcrumbMap[activeSection];
+      setBreadcrumbs([
+        baseBreadcrumb,
+        { label: selectedClient.legalName, href: `${baseBreadcrumb.href}/${selectedClient.id}` }
+      ]);
+    } else if (breadcrumbMap[activeSection]) {
+      setBreadcrumbs([breadcrumbMap[activeSection]]);
+    }
+  }, [activeSection, selectedClient, setBreadcrumbs]);
   
   
   // Form state
@@ -271,6 +300,7 @@ export default function AdminDashboard() {
 
         <div className="flex-1 overflow-auto">
           <div className="p-4 lg:p-8 max-w-full overflow-x-hidden" style={{ paddingTop: 'calc(1rem + var(--header-offset, 0px))' }}>
+            <NavigationBreadcrumb />
             {activeSection === "overview" && (
               <>
                 {/* Stats Cards */}
@@ -1698,12 +1728,237 @@ export default function AdminDashboard() {
               {/* Reports Section */}
               {activeSection === "reports" && (
                 <div className="space-y-6">
-                  <Card>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    
+                    {/* Client Reports */}
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer" data-testid="report-client-overview">
+                      <CardContent className="p-6">
+                        <div className="flex items-center space-x-3 mb-4">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i className="fas fa-building text-blue-600"></i>
+                          </div>
+                          <h3 className="text-lg font-semibold">Client Reports</h3>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-4">Comprehensive client analytics and performance metrics</p>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>• Client Performance Overview</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Active vs Inactive Clients</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Client Timeline Analysis</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Revenue by Client</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Worker Reports */}
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer" data-testid="report-worker-analysis">
+                      <CardContent className="p-6">
+                        <div className="flex items-center space-x-3 mb-4">
+                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i className="fas fa-users text-green-600"></i>
+                          </div>
+                          <h3 className="text-lg font-semibold">Worker Analytics</h3>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-4">Detailed worker progress and workflow analytics</p>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>• Worker Status Distribution</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Progress by Nationality</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Average Processing Times</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Success Rate Analysis</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Workflow Reports */}
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer" data-testid="report-workflow-metrics">
+                      <CardContent className="p-6">
+                        <div className="flex items-center space-x-3 mb-4">
+                          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i className="fas fa-route text-purple-600"></i>
+                          </div>
+                          <h3 className="text-lg font-semibold">Workflow Metrics</h3>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-4">Stage-by-stage workflow performance analysis</p>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>• Stage Completion Rates</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Bottleneck Identification</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Processing Time Trends</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Stage Performance Comparison</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Document Reports */}
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer" data-testid="report-document-status">
+                      <CardContent className="p-6">
+                        <div className="flex items-center space-x-3 mb-4">
+                          <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                            <i className="fas fa-file-alt text-orange-600"></i>
+                          </div>
+                          <h3 className="text-lg font-semibold">Document Analytics</h3>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-4">Document submission and approval tracking</p>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>• Document Status Overview</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Approval/Rejection Rates</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Document Type Analysis</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Submission Timeline Trends</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Financial Reports */}
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer" data-testid="report-financial-overview">
+                      <CardContent className="p-6">
+                        <div className="flex items-center space-x-3 mb-4">
+                          <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <i className="fas fa-euro-sign text-yellow-600"></i>
+                          </div>
+                          <h3 className="text-lg font-semibold">Financial Reports</h3>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-4">Revenue, costs, and financial performance metrics</p>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>• Revenue by Service Type</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Monthly Financial Trends</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Cost Analysis by Stage</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Profitability by Client</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Compliance Reports */}
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer" data-testid="report-compliance-audit">
+                      <CardContent className="p-6">
+                        <div className="flex items-center space-x-3 mb-4">
+                          <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                            <i className="fas fa-shield-alt text-red-600"></i>
+                          </div>
+                          <h3 className="text-lg font-semibold">Compliance & Audit</h3>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-4">Regulatory compliance and audit trail reports</p>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>• GDPR Compliance Status</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Audit Trail Summary</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Data Retention Reports</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>• Security Incident Logs</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Custom Report Builder */}
+                  <Card data-testid="custom-report-builder">
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <i className="fas fa-magic text-primary"></i>
+                        <span>Custom Report Builder</span>
+                      </CardTitle>
+                    </CardHeader>
                     <CardContent className="p-6">
-                      <div className="text-center py-8">
-                        <i className="fas fa-chart-bar text-gray-400 text-3xl mb-4"></i>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Reports & Analytics</h3>
-                        <p className="text-secondary">Detailed insights and analytics for immigration workflows</p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">Data Source</Label>
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select data source" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="clients">Clients</SelectItem>
+                              <SelectItem value="workers">Workers</SelectItem>
+                              <SelectItem value="assignments">Assignments</SelectItem>
+                              <SelectItem value="documents">Documents</SelectItem>
+                              <SelectItem value="workflow">Workflow Stages</SelectItem>
+                              <SelectItem value="financial">Financial Data</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">Time Period</Label>
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select time period" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="today">Today</SelectItem>
+                              <SelectItem value="week">This Week</SelectItem>
+                              <SelectItem value="month">This Month</SelectItem>
+                              <SelectItem value="quarter">This Quarter</SelectItem>
+                              <SelectItem value="year">This Year</SelectItem>
+                              <SelectItem value="custom">Custom Range</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">Export Format</Label>
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select format" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pdf">PDF Report</SelectItem>
+                              <SelectItem value="excel">Excel Spreadsheet</SelectItem>
+                              <SelectItem value="csv">CSV Data</SelectItem>
+                              <SelectItem value="chart">Interactive Chart</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="mt-6 flex items-center space-x-4">
+                        <Button className="flex items-center space-x-2" data-testid="button-generate-report">
+                          <i className="fas fa-chart-line"></i>
+                          <span>Generate Report</span>
+                        </Button>
+                        <Button variant="outline" className="flex items-center space-x-2" data-testid="button-save-template">
+                          <i className="fas fa-save"></i>
+                          <span>Save as Template</span>
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>

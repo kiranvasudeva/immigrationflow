@@ -14,6 +14,7 @@
   "workers": "Workers",
   "templates": "Templates",
   "analytics": "Analytics",
+  "reports": "Reports",
   "profile": {
     "joined": "Joined",
     "manageInfo": "Manage Info",
@@ -72,6 +73,22 @@
     "addWorker": "Add Worker",
     "newClient": "New Client",
     "uploadDocument": "Upload Document"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "clients": "Clients",
+    "workers": "Workers",
+    "templates": "Templates",
+    "reports": "Reports",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "settings": {
+    "general": "General Settings",
+    "notifications": "Notifications",
+    "security": "Security",
+    "system": "System Settings",
+    "backup": "Backup & Restore"
   },
   "auth": {
     "loggedOut": "Logged Out",

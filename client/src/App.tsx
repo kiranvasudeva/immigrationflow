@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/contexts/I18nProvider";
+import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
 import { useAuth } from "@/hooks/useAuth";
 import { DummyDataAlert } from "@/components/dummy-data-alert";
 import { useRoleBasedLanguage } from "@/hooks/useRoleBasedLanguage";
@@ -76,7 +77,7 @@ function Router() {
             }
           }} />
           <Route path="/templates" component={TemplatesPage} />
-          <Route path="/analytics" component={AnalyticsPage} />
+          <Route path="/reports" component={() => <AdminDashboard />} />
           <Route path="/clients" component={() => <AdminDashboard />} />
           <Route path="/clients/:id" component={ClientProfile} />
           <Route path="/workers" component={() => <AdminDashboard />} />
@@ -99,10 +100,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <BreadcrumbProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </BreadcrumbProvider>
       </I18nProvider>
     </QueryClientProvider>
   );

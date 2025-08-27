@@ -70,7 +70,7 @@ export default function Sidebar({ userRole, onSectionChange, currentSection }: S
           { icon: 'fas fa-building', label: 'Clients', href: '/clients', sectionKey: 'clients', active: isActive('/clients', 'clients') },
           { icon: 'fas fa-users', label: 'Workers', href: '/workers', sectionKey: 'workers', active: isActive('/workers', 'workers') },
           { icon: 'fas fa-file-text', label: 'Templates', href: '/templates', sectionKey: 'documents', active: isActive('/templates', 'documents') },
-          { icon: 'fas fa-bar-chart', label: 'Analytics', href: '/analytics', sectionKey: 'reports', active: isActive('/analytics', 'reports') },
+          { icon: 'fas fa-chart-line', label: 'Reports', href: '/reports', sectionKey: 'reports', active: isActive('/reports', 'reports') },
           { icon: 'fas fa-clipboard-list', label: 'Requirements', href: '/requirements', sectionKey: 'requirements', active: isActive('/requirements', 'requirements') },
           { icon: 'fas fa-bell', label: 'Reminders', href: '/reminders', sectionKey: 'reminders', active: isActive('/reminders', 'reminders') },
           { icon: 'fas fa-history', label: 'Audit Logs', href: '/audit', sectionKey: 'audit', active: isActive('/audit', 'audit') }
@@ -81,7 +81,7 @@ export default function Sidebar({ userRole, onSectionChange, currentSection }: S
           { icon: 'fas fa-building', label: t('nav.companyProfile') || 'Company Profile', href: '/profile', active: isActive('/profile') },
           { icon: 'fas fa-users', label: t('common.workers') || 'Workers', href: '/workers', active: isActive('/workers') },
           { icon: 'fas fa-file-alt', label: t('nav.documents') || 'Documents', href: '/documents', active: isActive('/documents') },
-          { icon: 'fas fa-bar-chart', label: t('common.analytics') || 'Analytics', href: '/analytics', active: isActive('/analytics') },
+          { icon: 'fas fa-chart-line', label: t('nav.reports') || 'Reports', href: '/reports', active: isActive('/reports') },
           { icon: 'fas fa-euro-sign', label: t('nav.payments') || 'Payments', href: '/payments', active: isActive('/payments') }
         ];
       case 'WORKER':

@@ -33,7 +33,7 @@ export function MobileNavigation({ user, onLogout }: MobileNavigationProps) {
     { href: '/clients', icon: Users, label: t('nav.clients') },
     { href: '/workers', icon: UserCheck, label: t('nav.workers') },
     { href: '/templates', icon: FileText, label: t('nav.templates') },
-    { href: '/analytics', icon: BarChart3, label: t('nav.analytics') },
+    { href: '/reports', icon: BarChart3, label: t('nav.reports') },
     { href: '/settings', icon: Settings, label: t('nav.settings') },
   ];
 
