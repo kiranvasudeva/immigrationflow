@@ -2045,7 +2045,10 @@ export default function AdminDashboard() {
                           );
                         });
 
-                        // Invalidate and refetch assignments to show the new worker
+                        // Invalidate and refetch all related data to show the new worker
+                        queryClient.invalidateQueries({
+                          queryKey: ["/api/clients", selectedClient.id, "workers"]
+                        });
                         queryClient.invalidateQueries({
                           queryKey: ["/api/clients", selectedClient.id, "assignments"]
                         });
@@ -2054,6 +2057,9 @@ export default function AdminDashboard() {
                         });
                         queryClient.invalidateQueries({
                           queryKey: ["/api/clients"]
+                        });
+                        queryClient.invalidateQueries({
+                          queryKey: ["/api/dashboard/stats"]
                         });
                         
                         toast({
