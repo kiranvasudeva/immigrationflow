@@ -28,7 +28,12 @@ import {
   Globe,
   Clock,
   Euro,
-  CheckCircle2
+  CheckCircle2,
+  ChevronRight,
+  ChevronLeft,
+  XCircle,
+  UserCheck,
+  GitBranch
 } from 'lucide-react';
 import PatraIcon from '@/components/icons/PatraIcon';
 
@@ -54,11 +59,17 @@ interface WorkflowStage {
   assignedRole: string;
   estimatedDays: number;
   required: boolean;
+  approvalRequired: boolean;
+  approver?: string;
+  statusLabel: string;
+  responsible: string;
+  timeframeDays: number;
 }
 
 interface Workflow {
   id: string;
   name: string;
+  description: string;
   documentTypeId: string;
   stages: WorkflowStage[];
   isActive: boolean;
@@ -150,33 +161,317 @@ export default function SettingsPage() {
   
   const [workflows, setWorkflows] = useState<Workflow[]>([
     {
-      id: 'work-permit-workflow',
-      name: 'Work Permit Application Process',
-      description: 'Complete workflow for Romanian work permit applications',
+      id: 'work-permit-initial',
+      name: 'Initial Work Permit Application',
+      description: 'Complete Romanian work permit application process from AJOFM labor market test through IGI permit issuance',
+      documentTypeId: 'work-permit-initial',
+      isActive: true,
       stages: [
         {
-          id: 'document-prep',
-          name: 'Document Preparation',
-          description: 'Gather and prepare all required documents',
+          id: 'doc-collection',
+          name: 'Initial Document Collection',
+          description: 'Collect passport, diplomas, employment contract, and personal documents from worker',
           assignedRole: 'WORKER',
-          estimatedDays: 5,
-          required: true
+          estimatedDays: 3,
+          required: true,
+          approvalRequired: false,
+          statusLabel: 'Collecting Documents',
+          responsible: 'WORKER',
+          timeframeDays: 3
+        },
+        {
+          id: 'doc-review',
+          name: 'Document Review & Translation',
+          description: 'Review document completeness, prepare certified translations, and notarizations',
+          assignedRole: 'ADMIN',
+          estimatedDays: 2,
+          required: true,
+          approvalRequired: true,
+          approver: 'Legal Team',
+          statusLabel: 'Under Review',
+          responsible: 'ADMIN',
+          timeframeDays: 2
+        },
+        {
+          id: 'employer-declaration',
+          name: 'Employer Declaration Preparation',
+          description: 'Prepare detailed employer declaration with job description, salary, and company information',
+          assignedRole: 'CLIENT',
+          estimatedDays: 2,
+          required: true,
+          approvalRequired: true,
+          approver: 'Client Owner',
+          statusLabel: 'Awaiting Employer Declaration',
+          responsible: 'CLIENT',
+          timeframeDays: 2
         },
         {
           id: 'ajofm-submission',
-          name: 'AJOFM Labor Market Test',
-          description: 'Submit labor market test to AJOFM',
+          name: 'AJOFM Labor Market Test Submission',
+          description: 'Submit application to AJOFM/ANOFM for labor market test and job advertisement',
           assignedRole: 'ADMIN',
-          estimatedDays: 14,
-          required: true
+          estimatedDays: 1,
+          required: true,
+          approvalRequired: false,
+          statusLabel: 'Submitted to AJOFM',
+          responsible: 'ADMIN',
+          timeframeDays: 1
         },
         {
-          id: 'igi-application',
-          name: 'IGI Work Permit Application',
-          description: 'Submit work permit application to IGI',
-          assignedRole: 'ADMIN',
+          id: 'ajofm-processing',
+          name: 'AJOFM Labor Market Test Processing',
+          description: 'AJOFM evaluates job position availability and publishes job advertisement for 30 days',
+          assignedRole: 'INSTITUTION',
           estimatedDays: 30,
-          required: true
+          required: true,
+          approvalRequired: true,
+          approver: 'AJOFM Officer',
+          statusLabel: 'AJOFM Processing',
+          responsible: 'INSTITUTION',
+          timeframeDays: 30
+        },
+        {
+          id: 'ajofm-approval',
+          name: 'AJOFM Approval Certificate',
+          description: 'Receive AJOFM approval certificate confirming no Romanian/EU candidates available',
+          assignedRole: 'ADMIN',
+          estimatedDays: 1,
+          required: true,
+          approvalRequired: false,
+          statusLabel: 'AJOFM Approved',
+          responsible: 'ADMIN',
+          timeframeDays: 1
+        },
+        {
+          id: 'igi-prep',
+          name: 'IGI Application Package Preparation',
+          description: 'Prepare complete IGI work permit application with all supporting documents and AJOFM approval',
+          assignedRole: 'ADMIN',
+          estimatedDays: 3,
+          required: true,
+          approvalRequired: true,
+          approver: 'Immigration Specialist',
+          statusLabel: 'Preparing IGI Application',
+          responsible: 'ADMIN',
+          timeframeDays: 3
+        },
+        {
+          id: 'igi-submission',
+          name: 'IGI Work Permit Submission',
+          description: 'Submit work permit application to Romanian Immigration Office (IGI) with all required documents',
+          assignedRole: 'ADMIN',
+          estimatedDays: 1,
+          required: true,
+          approvalRequired: false,
+          statusLabel: 'Submitted to IGI',
+          responsible: 'ADMIN',
+          timeframeDays: 1
+        },
+        {
+          id: 'igi-processing',
+          name: 'IGI Work Permit Processing',
+          description: 'IGI reviews and processes work permit application, may request additional documents',
+          assignedRole: 'INSTITUTION',
+          estimatedDays: 30,
+          required: true,
+          approvalRequired: true,
+          approver: 'IGI Immigration Officer',
+          statusLabel: 'IGI Processing',
+          responsible: 'INSTITUTION',
+          timeframeDays: 30
+        },
+        {
+          id: 'permit-issued',
+          name: 'Work Permit Issuance',
+          description: 'Work permit successfully issued by IGI - worker can now apply for visa at Romanian consulate',
+          assignedRole: 'ADMIN',
+          estimatedDays: 1,
+          required: true,
+          approvalRequired: false,
+          statusLabel: 'Work Permit Issued',
+          responsible: 'ADMIN',
+          timeframeDays: 1
+        },
+        {
+          id: 'visa-prep',
+          name: 'Consulate Visa Application Preparation',
+          description: 'Prepare visa application documents for Romanian consulate appointment',
+          assignedRole: 'WORKER',
+          estimatedDays: 5,
+          required: true,
+          approvalRequired: false,
+          statusLabel: 'Preparing Visa Application',
+          responsible: 'WORKER',
+          timeframeDays: 5
+        },
+        {
+          id: 'visa-appointment',
+          name: 'Consulate Visa Application',
+          description: 'Submit visa application at Romanian consulate with work permit and supporting documents',
+          assignedRole: 'WORKER',
+          estimatedDays: 15,
+          required: true,
+          approvalRequired: true,
+          approver: 'Consulate Officer',
+          statusLabel: 'Visa Processing',
+          responsible: 'WORKER',
+          timeframeDays: 15
+        },
+        {
+          id: 'visa-issued',
+          name: 'Visa Issuance & Travel',
+          description: 'Visa issued - worker can travel to Romania and begin employment',
+          assignedRole: 'WORKER',
+          estimatedDays: 1,
+          required: true,
+          approvalRequired: false,
+          statusLabel: 'Process Complete',
+          responsible: 'WORKER',
+          timeframeDays: 1
+        }
+      ]
+    },
+    {
+      id: 'residence-permit-temp',
+      name: 'Temporary Residence Permit Application',
+      description: 'Romanian temporary residence permit application for workers already in Romania with valid work permits',
+      documentTypeId: 'residence-permit-temp',
+      isActive: true,
+      stages: [
+        {
+          id: 'residence-docs',
+          name: 'Residence Document Collection',
+          description: 'Collect documents for residence permit: work permit, employment contract, housing proof, insurance',
+          assignedRole: 'WORKER',
+          estimatedDays: 5,
+          required: true,
+          approvalRequired: false,
+          statusLabel: 'Collecting Documents',
+          responsible: 'WORKER',
+          timeframeDays: 5
+        },
+        {
+          id: 'medical-exam',
+          name: 'Medical Examination',
+          description: 'Complete required medical examination at authorized Romanian medical center',
+          assignedRole: 'WORKER',
+          estimatedDays: 3,
+          required: true,
+          approvalRequired: true,
+          approver: 'Authorized Doctor',
+          statusLabel: 'Medical Examination',
+          responsible: 'WORKER',
+          timeframeDays: 3
+        },
+        {
+          id: 'residence-submission',
+          name: 'IGI Residence Permit Submission',
+          description: 'Submit residence permit application to IGI within 30 days of arrival in Romania',
+          assignedRole: 'ADMIN',
+          estimatedDays: 1,
+          required: true,
+          approvalRequired: true,
+          approver: 'Immigration Specialist',
+          statusLabel: 'Submitted to IGI',
+          responsible: 'ADMIN',
+          timeframeDays: 1
+        },
+        {
+          id: 'residence-processing',
+          name: 'IGI Processing & Interview',
+          description: 'IGI processes residence permit application and may schedule interview with worker',
+          assignedRole: 'INSTITUTION',
+          estimatedDays: 30,
+          required: true,
+          approvalRequired: true,
+          approver: 'IGI Immigration Officer',
+          statusLabel: 'IGI Processing',
+          responsible: 'INSTITUTION',
+          timeframeDays: 30
+        },
+        {
+          id: 'residence-issued',
+          name: 'Residence Permit Issuance',
+          description: 'Temporary residence permit issued - valid for work permit duration',
+          assignedRole: 'ADMIN',
+          estimatedDays: 1,
+          required: true,
+          approvalRequired: false,
+          statusLabel: 'Residence Permit Issued',
+          responsible: 'ADMIN',
+          timeframeDays: 1
+        }
+      ]
+    },
+    {
+      id: 'work-permit-renewal',
+      name: 'Work Permit Renewal Process',
+      description: 'Renewal process for existing work permits before expiration (must be initiated 60 days before expiry)',
+      documentTypeId: 'work-permit-renewal',
+      isActive: true,
+      stages: [
+        {
+          id: 'renewal-assessment',
+          name: 'Renewal Assessment',
+          description: 'Assess renewal eligibility and gather updated employer and worker information',
+          assignedRole: 'ADMIN',
+          estimatedDays: 2,
+          required: true,
+          approvalRequired: true,
+          approver: 'Immigration Specialist',
+          statusLabel: 'Assessing Renewal',
+          responsible: 'ADMIN',
+          timeframeDays: 2
+        },
+        {
+          id: 'updated-docs',
+          name: 'Updated Documentation',
+          description: 'Prepare updated employment contract, salary confirmation, and company documents',
+          assignedRole: 'CLIENT',
+          estimatedDays: 3,
+          required: true,
+          approvalRequired: true,
+          approver: 'Client Owner',
+          statusLabel: 'Updating Documents',
+          responsible: 'CLIENT',
+          timeframeDays: 3
+        },
+        {
+          id: 'renewal-submission',
+          name: 'IGI Renewal Submission',
+          description: 'Submit work permit renewal application to IGI with updated documentation',
+          assignedRole: 'ADMIN',
+          estimatedDays: 1,
+          required: true,
+          approvalRequired: false,
+          statusLabel: 'Submitted for Renewal',
+          responsible: 'ADMIN',
+          timeframeDays: 1
+        },
+        {
+          id: 'renewal-processing',
+          name: 'IGI Renewal Processing',
+          description: 'IGI processes work permit renewal application (faster than initial application)',
+          assignedRole: 'INSTITUTION',
+          estimatedDays: 20,
+          required: true,
+          approvalRequired: true,
+          approver: 'IGI Immigration Officer',
+          statusLabel: 'Renewal Processing',
+          responsible: 'INSTITUTION',
+          timeframeDays: 20
+        },
+        {
+          id: 'renewal-issued',
+          name: 'Renewed Work Permit Issuance',
+          description: 'Renewed work permit issued with extended validity period',
+          assignedRole: 'ADMIN',
+          estimatedDays: 1,
+          required: true,
+          approvalRequired: false,
+          statusLabel: 'Renewal Complete',
+          responsible: 'ADMIN',
+          timeframeDays: 1
         }
       ]
     }
@@ -273,6 +568,7 @@ export default function SettingsPage() {
     const newWorkflow: Workflow = {
       id: `wf_${Date.now()}`,
       name: 'New Workflow',
+      description: 'Custom workflow for immigration process',
       documentTypeId: '',
       stages: [],
       isActive: true
@@ -284,11 +580,14 @@ export default function SettingsPage() {
     const newStage: WorkflowStage = {
       id: `stage_${Date.now()}`,
       name: 'New Stage',
-      responsible: 'admin',
+      description: 'New workflow stage',
+      assignedRole: 'ADMIN',
+      estimatedDays: 7,
+      required: true,
       approvalRequired: false,
-      timeframeDays: 7,
       statusLabel: 'Pending',
-      description: ''
+      responsible: 'ADMIN',
+      timeframeDays: 7
     };
     
     setWorkflows(workflows => 
