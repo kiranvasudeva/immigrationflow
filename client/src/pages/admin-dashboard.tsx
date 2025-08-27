@@ -1158,7 +1158,7 @@ export default function AdminDashboard() {
                             <span className="ml-2 font-medium">{selectedWorker.passportNumber || selectedWorker.worker?.passportNumber || 'Pending'}</span>
                           </div>
                           <div>
-                            <span className="text-gray-600">Date of Birth:</span>
+                            <span className="text-gray-600">Date of Birth (dd/mm/yyyy):</span>
                             <span className="ml-2 font-medium">
                               {(selectedWorker.dob || selectedWorker.worker?.dob) 
                                 ? new Date(selectedWorker.dob || selectedWorker.worker?.dob).toLocaleDateString('en-GB')
@@ -1167,7 +1167,7 @@ export default function AdminDashboard() {
                             </span>
                           </div>
                           <div>
-                            <span className="text-gray-600">Passport Expiry:</span>
+                            <span className="text-gray-600">Passport Expiry (dd/mm/yyyy):</span>
                             <span className="ml-2 font-medium">
                               {(selectedWorker.passportExpiry || selectedWorker.worker?.passportExpiry) 
                                 ? new Date(selectedWorker.passportExpiry || selectedWorker.worker?.passportExpiry).toLocaleDateString('en-GB')
@@ -1176,7 +1176,7 @@ export default function AdminDashboard() {
                             </span>
                           </div>
                           <div>
-                            <span className="text-gray-600">Started:</span>
+                            <span className="text-gray-600">Started (dd/mm/yyyy):</span>
                             <span className="ml-2 font-medium">
                               {selectedWorker.createdAt 
                                 ? new Date(selectedWorker.createdAt).toLocaleDateString('en-GB')
