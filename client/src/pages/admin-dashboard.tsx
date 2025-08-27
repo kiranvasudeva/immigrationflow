@@ -102,6 +102,12 @@ export default function AdminDashboard() {
     enabled: isAuthenticated && !isLoading,
   });
 
+  // Fetch workers for selected client
+  const { data: directWorkers = [] } = useQuery({
+    queryKey: ["/api/clients", selectedClient?.id, "workers"],
+    enabled: isAuthenticated && !isLoading && !!selectedClient?.id,
+  });
+
   const { data: recentActivities = [] } = useQuery<any[]>({
     queryKey: ["/api/dashboard/activities"],
     enabled: isAuthenticated && !isLoading && user?.role === 'ADMIN',
@@ -1029,7 +1035,16 @@ export default function AdminDashboard() {
                         workersMap.get(workerId).assignments.push(assignment);
                       });
                       
-                      const clientWorkers = Array.from(workersMap.values());
+                      let clientWorkers = Array.from(workersMap.values());
+
+                      // If no workers with assignments, show all workers for this client
+                      if (clientWorkers.length === 0 && directWorkers.length > 0) {
+                        clientWorkers = directWorkers.map((worker: any) => ({
+                          ...worker,
+                          assignments: [], // No assignments yet
+                          status: 'pending' // Default status
+                        }));
+                      }
 
                       if (clientWorkers.length === 0) {
                         return (
@@ -1416,7 +1431,16 @@ export default function AdminDashboard() {
                             workersMap.get(workerId).assignments.push(assignment);
                           });
                           
-                          const clientWorkers = Array.from(workersMap.values());
+                          let clientWorkers = Array.from(workersMap.values());
+
+                          // If no workers with assignments, show all workers for this client
+                          if (clientWorkers.length === 0 && directWorkers.length > 0) {
+                            clientWorkers = directWorkers.map((worker: any) => ({
+                              ...worker,
+                              assignments: [], // No assignments yet
+                              status: 'pending' // Default status
+                            }));
+                          }
                           
                           if (clientWorkers.length === 0) {
                             return (
@@ -2047,6 +2071,7 @@ export default function AdminDashboard() {
 
                         // Clear all cache entries that might contain stale worker data
                         console.log("Invalidating cache for client:", selectedClient.id);
+                        console.log("NOTE: Workers are displayed based on assignments, not direct workers list!");
                         
                         // Clear the workers cache with multiple approaches
                         queryClient.invalidateQueries({
