@@ -2033,6 +2033,16 @@ export default function AdminDashboard() {
                           activeWorkers: (prev.activeWorkers || 0) + 1
                         }));
 
+                        // Update the client in the main clients list as well
+                        queryClient.setQueryData(["/api/clients"], (oldClients: any[]) => {
+                          if (!oldClients) return oldClients;
+                          return oldClients.map(client => 
+                            client.id === selectedClient.id
+                              ? { ...client, activeWorkers: (client.activeWorkers || 0) + 1 }
+                              : client
+                          );
+                        });
+
                         // Invalidate and refetch assignments to show the new worker
                         queryClient.invalidateQueries({
                           queryKey: ["/api/clients", selectedClient.id, "assignments"]
