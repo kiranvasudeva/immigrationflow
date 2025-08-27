@@ -94,7 +94,7 @@ interface PaymentProcessor {
 
 export default function SettingsPage() {
   const { t } = useTranslation();
-  const { setBreadcrumb } = useBreadcrumb();
+  const { setBreadcrumbs } = useBreadcrumb();
   const { toast } = useToast();
   
   // Get the tab from URL parameters
@@ -163,10 +163,10 @@ export default function SettingsPage() {
   ];
 
   useEffect(() => {
-    setBreadcrumb([
+    setBreadcrumbs([
       { label: 'Settings', href: '/settings' }
     ]);
-  }, [setBreadcrumb]);
+  }, [setBreadcrumbs]);
 
   const handleSaveSettings = async (section: string) => {
     try {
