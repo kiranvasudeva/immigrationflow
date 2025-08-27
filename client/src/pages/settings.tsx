@@ -33,7 +33,11 @@ import {
   ChevronLeft,
   XCircle,
   UserCheck,
-  GitBranch
+  GitBranch,
+  ChevronDown,
+  ChevronUp,
+  Code,
+  Upload
 } from 'lucide-react';
 import PatraIcon from '@/components/icons/PatraIcon';
 
@@ -532,6 +536,33 @@ export default function SettingsPage() {
       features: ['Enterprise features', 'Custom development', 'On-premise deployment'] 
     }
   ]);
+
+  const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
+  const [showWorkflowDetails, setShowWorkflowDetails] = useState(false);
+  const [expandedDocuments, setExpandedDocuments] = useState<Set<string>>(new Set());
+  const [expandedWorkflows, setExpandedWorkflows] = useState<Set<string>>(new Set());
+  const [showTemplateForm, setShowTemplateForm] = useState<string | null>(null);
+  const [selectedExpiryDocType, setSelectedExpiryDocType] = useState<string>('');
+
+  const toggleDocumentExpansion = (id: string) => {
+    const newExpanded = new Set(expandedDocuments);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedDocuments(newExpanded);
+  };
+
+  const toggleWorkflowExpansion = (id: string) => {
+    const newExpanded = new Set(expandedWorkflows);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedWorkflows(newExpanded);
+  };
 
   useEffect(() => {
     setBreadcrumbs([
