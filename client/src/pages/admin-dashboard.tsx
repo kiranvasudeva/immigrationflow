@@ -1045,14 +1045,20 @@ export default function AdminDashboard() {
                       
                       let clientWorkers = Array.from(workersMap.values());
 
-                      // If no workers with assignments, show all workers for this client
-                      if (clientWorkers.length === 0 && directWorkers.length > 0) {
-                        console.log("No workers with assignments found, showing direct workers:", directWorkers);
-                        clientWorkers = directWorkers.map((worker: any) => ({
+                      // Add any workers from direct API that don't have assignments yet
+                      const workerIdsWithAssignments = new Set(clientWorkers.map(w => w.id));
+                      const workersWithoutAssignments = directWorkers.filter((worker: any) => 
+                        !workerIdsWithAssignments.has(worker.id)
+                      );
+                      
+                      if (workersWithoutAssignments.length > 0) {
+                        console.log("Adding workers without assignments:", workersWithoutAssignments);
+                        const mappedWorkersWithoutAssignments = workersWithoutAssignments.map((worker: any) => ({
                           ...worker,
                           assignments: [], // No assignments yet
                           status: 'pending' // Default status
                         }));
+                        clientWorkers = [...clientWorkers, ...mappedWorkersWithoutAssignments];
                       }
 
                       console.log("Workers with assignments:", Array.from(workersMap.values()).length);
@@ -1447,13 +1453,19 @@ export default function AdminDashboard() {
                           
                           let clientWorkers = Array.from(workersMap.values());
 
-                          // If no workers with assignments, show all workers for this client
-                          if (clientWorkers.length === 0 && directWorkers.length > 0) {
-                            clientWorkers = directWorkers.map((worker: any) => ({
+                          // Add any workers from direct API that don't have assignments yet
+                          const workerIdsWithAssignments = new Set(clientWorkers.map(w => w.id));
+                          const workersWithoutAssignments = directWorkers.filter((worker: any) => 
+                            !workerIdsWithAssignments.has(worker.id)
+                          );
+                          
+                          if (workersWithoutAssignments.length > 0) {
+                            const mappedWorkersWithoutAssignments = workersWithoutAssignments.map((worker: any) => ({
                               ...worker,
                               assignments: [], // No assignments yet
                               status: 'pending' // Default status
                             }));
+                            clientWorkers = [...clientWorkers, ...mappedWorkersWithoutAssignments];
                           }
                           
                           if (clientWorkers.length === 0) {

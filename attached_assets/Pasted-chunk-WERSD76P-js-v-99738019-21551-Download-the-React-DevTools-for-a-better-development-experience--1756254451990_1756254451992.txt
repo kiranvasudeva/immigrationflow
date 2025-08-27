@@ -1,0 +1,76 @@
+chunk-WERSD76P.js?v=99738019:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+queryClient.ts:32  GET https://b973af17-5c05-4aa9-ac0f-47cf783880f0-00-2d6nz3p7hu1sg.riker.replit.dev/api/audit 401 (Unauthorized)
+(anonymous) @ queryClient.ts:32
+fetchFn @ @tanstack_react-query.js?v=99738019:840
+run @ @tanstack_react-query.js?v=99738019:494
+start @ @tanstack_react-query.js?v=99738019:536
+fetch @ @tanstack_react-query.js?v=99738019:926
+executeFetch_fn @ @tanstack_react-query.js?v=99738019:2211
+onSubscribe @ @tanstack_react-query.js?v=99738019:1898
+subscribe @ @tanstack_react-query.js?v=99738019:24
+(anonymous) @ @tanstack_react-query.js?v=99738019:3022
+subscribeToStore @ chunk-WERSD76P.js?v=99738019:11984
+commitHookEffectListMount @ chunk-WERSD76P.js?v=99738019:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=99738019:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=99738019:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=99738019:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=99738019:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=99738019:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=99738019:19447
+commitRootImpl @ chunk-WERSD76P.js?v=99738019:19416
+commitRoot @ chunk-WERSD76P.js?v=99738019:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=99738019:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=99738019:9119
+(anonymous) @ chunk-WERSD76P.js?v=99738019:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=99738019:555
+flush @ @tanstack_react-query.js?v=99738019:569
+batch @ @tanstack_react-query.js?v=99738019:587
+dispatch_fn @ @tanstack_react-query.js?v=99738019:996
+setData @ @tanstack_react-query.js?v=99738019:696
+onSuccess @ @tanstack_react-query.js?v=99738019:897
+resolve @ @tanstack_react-query.js?v=99738019:456
+Promise.then
+run @ @tanstack_react-query.js?v=99738019:498
+start @ @tanstack_react-query.js?v=99738019:536
+fetch @ @tanstack_react-query.js?v=99738019:926
+executeFetch_fn @ @tanstack_react-query.js?v=99738019:2211
+onSubscribe @ @tanstack_react-query.js?v=99738019:1898
+subscribe @ @tanstack_react-query.js?v=99738019:24
+(anonymous) @ @tanstack_react-query.js?v=99738019:3022
+subscribeToStore @ chunk-WERSD76P.js?v=99738019:11984
+commitHookEffectListMount @ chunk-WERSD76P.js?v=99738019:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=99738019:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=99738019:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=99738019:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=99738019:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=99738019:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=99738019:19447
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=99738019:18868
+flushSyncCallbacks @ chunk-WERSD76P.js?v=99738019:9119
+commitRootImpl @ chunk-WERSD76P.js?v=99738019:19432
+commitRoot @ chunk-WERSD76P.js?v=99738019:19277
+finishConcurrentRender @ chunk-WERSD76P.js?v=99738019:18805
+performConcurrentWorkOnRoot @ chunk-WERSD76P.js?v=99738019:18718
+workLoop @ chunk-WERSD76P.js?v=99738019:197
+flushWork @ chunk-WERSD76P.js?v=99738019:176
+performWorkUntilDeadline @ chunk-WERSD76P.js?v=99738019:384
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+admin-dashboard.tsx:1015 === WORKER DEBUG START ===
+admin-dashboard.tsx:1016 Selected Client ID: a51ccb98-a664-4e58-ae60-d46eeda1cf50
+admin-dashboard.tsx:1017 Total assignments: 84
+admin-dashboard.tsx:1018 Client assignments: 3
+admin-dashboard.tsx:1019 Direct workers count: 4
+admin-dashboard.tsx:1020 Direct workers data: (4) [{…}, {…}, {…}, {…}]
+admin-dashboard.tsx:1021 Assignment worker IDs: (3) ['58db1785-9dc7-4e8b-8819-3978537bc874', 'f97b30ea-d872-497a-8526-8f1c0ec593ef', '68947db3-f55e-4722-a0a5-0dea73ce0537']
+admin-dashboard.tsx:1058 Workers with assignments: 3
+admin-dashboard.tsx:1059 Final client workers count: 3
+admin-dashboard.tsx:1060 Final client workers data: (3) [{…}, {…}, {…}]
+admin-dashboard.tsx:1061 === WORKER DEBUG END ===
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
