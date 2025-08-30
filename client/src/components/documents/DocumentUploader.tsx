@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -48,6 +48,13 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Connect camera stream to video element when available
+  useEffect(() => {
+    if (photoStream && videoRef.current) {
+      videoRef.current.srcObject = photoStream;
+    }
+  }, [photoStream]);
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -129,6 +136,11 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
       }
       
       setPhotoStream(stream);
+      
+      // Set video source immediately
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
       
       toast({
         title: "Camera Ready",
@@ -830,11 +842,6 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
                       autoPlay
                       playsInline
                       className="w-full h-64 object-cover"
-                      onLoadedMetadata={() => {
-                        if (videoRef.current && photoStream) {
-                          videoRef.current.srcObject = photoStream;
-                        }
-                      }}
                     />
                     <div className="absolute inset-0 border-2 border-dashed border-yellow-400 m-4 rounded-lg pointer-events-none">
                       <div className="absolute top-2 left-2 text-yellow-400 text-xs bg-black bg-opacity-50 px-2 py-1 rounded">
