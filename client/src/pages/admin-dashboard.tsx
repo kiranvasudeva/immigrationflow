@@ -356,6 +356,17 @@ export default function AdminDashboard() {
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
   const [editingWorker, setEditingWorker] = useState(false);
   const [showClientWorkers, setShowClientWorkers] = useState(false);
+  const [editClientForm, setEditClientForm] = useState({
+    legalName: '',
+    registrationNumber: '',
+    cui: '',
+    caen: '',
+    legalAddress: '',
+    adminName: '',
+    phoneNumber: '',
+    contactEmail: '',
+    bankIban: ''
+  });
 
   // Set active section based on current route
   useEffect(() => {
@@ -540,6 +551,30 @@ export default function AdminDashboard() {
     }
   });
 
+  // Update client mutation
+  const updateClientMutation = useMutation({
+    mutationFn: async (data: { clientId: string, clientData: any }) => {
+      const response = await apiRequest("PUT", `/api/clients/${data.clientId}`, data.clientData);
+      return response.json();
+    },
+    onSuccess: (updatedClient) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      setEditingClient(false);
+      setSelectedClient(updatedClient);
+      toast({
+        title: "Success",
+        description: "Client updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update client. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleCreateClient = (e: React.FormEvent) => {
     e.preventDefault();
     createClientMutation.mutate(newClientForm);
@@ -550,6 +585,30 @@ export default function AdminDashboard() {
       ...prev,
       [field]: value
     }));
+  };
+
+  const startEditingClient = (client: any) => {
+    setEditingClient(true);
+    setEditClientForm({
+      legalName: client.legalName || '',
+      registrationNumber: client.registrationNumber || '',
+      cui: client.cui || '',
+      caen: client.caen || '',
+      legalAddress: client.legalAddress || '',
+      adminName: client.adminName || '',
+      phoneNumber: client.phoneNumber || '',
+      contactEmail: client.contactEmail || '',
+      bankIban: client.bankIban || ''
+    });
+  };
+
+  const saveClient = async () => {
+    if (selectedClient) {
+      await updateClientMutation.mutateAsync({ 
+        clientId: selectedClient.id, 
+        clientData: editClientForm 
+      });
+    }
   };
 
   if (isLoading) {
@@ -1342,13 +1401,35 @@ export default function AdminDashboard() {
                           <i className="fas fa-arrow-left mr-2"></i>
                           Back to Clients
                         </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => setEditingClient(!editingClient)}
-                        >
-                          <i className={`fas ${editingClient ? 'fa-save' : 'fa-edit'} mr-2`}></i>
-                          {editingClient ? 'Save' : 'Edit'}
-                        </Button>
+                        {editingClient ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              onClick={saveClient}
+                              disabled={updateClientMutation.isPending}
+                              className="text-green-600 border-green-200 hover:bg-green-50"
+                            >
+                              <i className="fas fa-save mr-2"></i>
+                              {updateClientMutation.isPending ? 'Saving...' : 'Save'}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              onClick={() => setEditingClient(false)}
+                              className="text-gray-500 hover:text-gray-700"
+                            >
+                              <i className="fas fa-ban mr-2"></i>
+                              Cancel
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            onClick={() => startEditingClient(selectedClient)}
+                          >
+                            <i className="fas fa-edit mr-2"></i>
+                            Edit
+                          </Button>
+                        )}
                       </div>
                       
                       <div className="bg-blue-50 rounded-lg p-6">
@@ -1357,23 +1438,57 @@ export default function AdminDashboard() {
                             <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center">
                               <i className="fas fa-building text-white text-xl"></i>
                             </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-gray-900">{selectedClient.legalName}</h3>
-                              <p className="text-gray-600">CUI: {selectedClient.cui}</p>
-                              <div className="flex flex-wrap items-center mt-2 gap-x-4 gap-y-1 text-sm">
-                                <span className="text-gray-600">
-                                  <i className="fas fa-map-marker-alt mr-1"></i>
-                                  {selectedClient.legalAddress || 'Address not provided'}
-                                </span>
-                                <span className="text-gray-600">
-                                  <i className="fas fa-phone mr-1"></i>
-                                  {selectedClient.phoneNumber || 'Phone not provided'}
-                                </span>
-                                <span className="text-gray-600">
-                                  <i className="fas fa-envelope mr-1"></i>
-                                  {selectedClient.contactEmail || 'Email not provided'}
-                                </span>
-                              </div>
+                            <div className="flex-1">
+                              {editingClient ? (
+                                <div className="space-y-3">
+                                  <div className="space-y-1">
+                                    <label className="text-xs text-gray-600">Legal Name:</label>
+                                    <Input
+                                      value={editClientForm.legalName}
+                                      onChange={(e) => setEditClientForm({...editClientForm, legalName: e.target.value})}
+                                      className="h-8 text-sm bg-white"
+                                      placeholder="Company Legal Name"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-xs text-gray-600">CUI:</label>
+                                    <Input
+                                      value={editClientForm.cui}
+                                      onChange={(e) => setEditClientForm({...editClientForm, cui: e.target.value})}
+                                      className="h-8 text-sm bg-white"
+                                      placeholder="e.g., RO12345678"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-xs text-gray-600">Legal Address:</label>
+                                    <Input
+                                      value={editClientForm.legalAddress}
+                                      onChange={(e) => setEditClientForm({...editClientForm, legalAddress: e.target.value})}
+                                      className="h-8 text-sm bg-white"
+                                      placeholder="Full legal address"
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <h3 className="text-xl font-bold text-gray-900">{selectedClient.legalName}</h3>
+                                  <p className="text-gray-600">CUI: {selectedClient.cui}</p>
+                                  <div className="flex flex-wrap items-center mt-2 gap-x-4 gap-y-1 text-sm">
+                                    <span className="text-gray-600">
+                                      <i className="fas fa-map-marker-alt mr-1"></i>
+                                      {selectedClient.legalAddress || 'Address not provided'}
+                                    </span>
+                                    <span className="text-gray-600">
+                                      <i className="fas fa-phone mr-1"></i>
+                                      {selectedClient.phoneNumber || 'Phone not provided'}
+                                    </span>
+                                    <span className="text-gray-600">
+                                      <i className="fas fa-envelope mr-1"></i>
+                                      {selectedClient.contactEmail || 'Email not provided'}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="text-right">
@@ -1386,51 +1501,122 @@ export default function AdminDashboard() {
                       </div>
                       
                       {/* Client Details Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <h4 className="font-semibold text-gray-900">Company Information</h4>
-                          <div className="space-y-3 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Registration Number:</span>
-                              <span className="font-medium">{selectedClient.registrationNumber || 'N/A'}</span>
+                      {!editingClient ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <h4 className="font-semibold text-gray-900">Company Information</h4>
+                            <div className="space-y-3 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Registration Number:</span>
+                                <span className="font-medium">{selectedClient.registrationNumber || 'N/A'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">CAEN Code:</span>
+                                <span className="font-medium">{selectedClient.caen || 'N/A'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Bank IBAN:</span>
+                                <span className="font-medium">{selectedClient.bankIban || 'N/A'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Status:</span>
+                                <span className={`font-medium ${selectedClient.status === 'active' ? 'text-green-600' : 'text-gray-600'}`}>
+                                  {selectedClient.status || 'Active'}
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">CAEN Code:</span>
-                              <span className="font-medium">{selectedClient.caen || 'N/A'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Bank IBAN:</span>
-                              <span className="font-medium">{selectedClient.bankIban || 'N/A'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Status:</span>
-                              <span className={`font-medium ${selectedClient.status === 'active' ? 'text-green-600' : 'text-gray-600'}`}>
-                                {selectedClient.status || 'Active'}
-                              </span>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <h4 className="font-semibold text-gray-900">Contact Information</h4>
+                            <div className="space-y-3 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Administrator:</span>
+                                <span className="font-medium">{selectedClient.adminName || 'N/A'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Created:</span>
+                                <span className="font-medium">
+                                  {selectedClient.createdAt ? new Date(selectedClient.createdAt).toLocaleDateString() : 'N/A'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Workers:</span>
+                                <span className="font-medium">{selectedClient.activeWorkers || 0} active</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                        
-                        <div className="space-y-4">
-                          <h4 className="font-semibold text-gray-900">Contact Information</h4>
-                          <div className="space-y-3 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Administrator:</span>
-                              <span className="font-medium">{selectedClient.adminName || 'N/A'}</span>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <h4 className="font-semibold text-gray-900">Company Information</h4>
+                            <div className="space-y-3">
+                              <div className="space-y-1">
+                                <label className="text-xs text-gray-600">Registration Number:</label>
+                                <Input
+                                  value={editClientForm.registrationNumber}
+                                  onChange={(e) => setEditClientForm({...editClientForm, registrationNumber: e.target.value})}
+                                  className="h-8 text-sm"
+                                  placeholder="e.g., J40/12345/2020"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-xs text-gray-600">CAEN Code:</label>
+                                <Input
+                                  value={editClientForm.caen}
+                                  onChange={(e) => setEditClientForm({...editClientForm, caen: e.target.value})}
+                                  className="h-8 text-sm"
+                                  placeholder="e.g., 6201"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-xs text-gray-600">Bank IBAN:</label>
+                                <Input
+                                  value={editClientForm.bankIban}
+                                  onChange={(e) => setEditClientForm({...editClientForm, bankIban: e.target.value})}
+                                  className="h-8 text-sm"
+                                  placeholder="e.g., RO49AAAA1B31007593840000"
+                                />
+                              </div>
                             </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Created:</span>
-                              <span className="font-medium">
-                                {selectedClient.createdAt ? new Date(selectedClient.createdAt).toLocaleDateString() : 'N/A'}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Workers:</span>
-                              <span className="font-medium">{selectedClient.activeWorkers || 0} active</span>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <h4 className="font-semibold text-gray-900">Contact Information</h4>
+                            <div className="space-y-3">
+                              <div className="space-y-1">
+                                <label className="text-xs text-gray-600">Administrator Name:</label>
+                                <Input
+                                  value={editClientForm.adminName}
+                                  onChange={(e) => setEditClientForm({...editClientForm, adminName: e.target.value})}
+                                  className="h-8 text-sm"
+                                  placeholder="e.g., Ion Popescu"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-xs text-gray-600">Phone Number:</label>
+                                <Input
+                                  value={editClientForm.phoneNumber}
+                                  onChange={(e) => setEditClientForm({...editClientForm, phoneNumber: e.target.value})}
+                                  className="h-8 text-sm"
+                                  placeholder="e.g., +40 123 456 789"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-xs text-gray-600">Contact Email:</label>
+                                <Input
+                                  type="email"
+                                  value={editClientForm.contactEmail}
+                                  onChange={(e) => setEditClientForm({...editClientForm, contactEmail: e.target.value})}
+                                  className="h-8 text-sm"
+                                  placeholder="contact@company.com"
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
+                      )}
                       
                       {/* Quick Actions */}
                       <div className="border-t pt-6">
