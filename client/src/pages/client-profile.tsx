@@ -109,10 +109,16 @@ export default function ClientProfile() {
   });
 
   // Fetch selected worker details with workflow
-  const { data: selectedWorker, isLoading: selectedWorkerLoading } = useQuery<SelectedWorkerData>({
+  const { data: selectedWorker, isLoading: selectedWorkerLoading, error: selectedWorkerError } = useQuery<SelectedWorkerData>({
     queryKey: ['/api/workers', selectedWorkerId],
     enabled: !!selectedWorkerId && isAuthenticated,
   });
+
+  // Debug logging
+  console.log('Selected Worker ID:', selectedWorkerId);
+  console.log('Selected Worker Data:', selectedWorker);
+  console.log('Selected Worker Loading:', selectedWorkerLoading);
+  console.log('Selected Worker Error:', selectedWorkerError);
 
 
 
@@ -499,7 +505,10 @@ export default function ClientProfile() {
                             <div 
                               key={worker.id} 
                               className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                              onClick={() => setSelectedWorkerId(worker.id)}
+                              onClick={() => {
+                                console.log('Worker clicked:', worker.id);
+                                setSelectedWorkerId(worker.id);
+                              }}
                               data-testid={`worker-card-${worker.id}`}
                             >
                               <div className="flex items-center space-x-3">
