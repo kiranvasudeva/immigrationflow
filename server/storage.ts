@@ -950,6 +950,53 @@ export class DatabaseStorage implements IStorage {
     const [template] = await db.select().from(documentTemplates).where(eq(documentTemplates.id, templateId));
     return template;
   }
+
+  // Data consistency fixes
+  async getInconsistentAssignments(): Promise<Assignment[]> {
+    // Find assignments with SUBMITTED_BY_USER status but no documents
+    const submittedAssignments = await db
+      .select({ assignment: assignments })
+      .from(assignments)
+      .where(eq(assignments.status, 'SUBMITTED_BY_USER'));
+
+    const inconsistentAssignments = [];
+    
+    for (const { assignment } of submittedAssignments) {
+      const documents = await db
+        .select()
+        .from(documentFiles)
+        .where(eq(documentFiles.assignmentId, assignment.id));
+      
+      if (documents.length === 0) {
+        inconsistentAssignments.push(assignment);
+      }
+    }
+    
+    return inconsistentAssignments;
+  }
+
+  async fixInconsistentAssignmentStatuses(): Promise<number> {
+    const inconsistentAssignments = await this.getInconsistentAssignments();
+    
+    if (inconsistentAssignments.length === 0) {
+      return 0;
+    }
+
+    // Reset status to AWAITING_UPLOAD and clear submission timestamp
+    const assignmentIds = inconsistentAssignments.map(a => a.id);
+    
+    for (const assignmentId of assignmentIds) {
+      await db
+        .update(assignments)
+        .set({ 
+          status: 'AWAITING_UPLOAD',
+          submittedAt: null
+        })
+        .where(eq(assignments.id, assignmentId));
+    }
+
+    return inconsistentAssignments.length;
+  }
 }
 
 export const storage = new DatabaseStorage();

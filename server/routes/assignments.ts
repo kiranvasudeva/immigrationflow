@@ -62,6 +62,16 @@ router.patch('/:id/status', isAuthenticated, auditMiddleware, async (req: any, r
       }
     }
 
+    // Validate that SUBMITTED_BY_USER status has documents
+    if (data.status === 'SUBMITTED_BY_USER') {
+      const existingDocuments = await storage.getDocumentFilesByAssignment(id);
+      if (existingDocuments.length === 0) {
+        return res.status(400).json({ 
+          message: 'Cannot mark as submitted without uploading documents first' 
+        });
+      }
+    }
+
     // Update assignment with appropriate timestamps
     const updateData: any = { ...data };
     
@@ -351,6 +361,38 @@ router.get('/:assignmentId/documents', isAuthenticated, auditMiddleware, async (
   } catch (error) {
     console.error('Error fetching documents:', error);
     res.status(500).json({ message: 'Failed to fetch documents' });
+  }
+});
+
+// Admin-only route to fix data inconsistencies: Reset assignments with "SUBMITTED_BY_USER" status but no documents
+router.post('/fix-inconsistent-statuses', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  try {
+    const userId = req.user.claims.sub;
+    const user = await storage.getUser(userId);
+
+    // Only admin can run this fix
+    if (user?.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Unauthorized - Admin access required' });
+    }
+
+    // Find assignments with SUBMITTED_BY_USER status but no documents
+    const inconsistentAssignments = await storage.getInconsistentAssignments();
+    
+    // Reset their status to AWAITING_UPLOAD
+    const fixedCount = await storage.fixInconsistentAssignmentStatuses();
+
+    res.json({
+      message: `Fixed ${fixedCount} assignments with inconsistent status`,
+      fixedAssignments: inconsistentAssignments.map(a => ({
+        id: a.id,
+        workerId: a.workerId,
+        status: a.status
+      }))
+    });
+
+  } catch (error) {
+    console.error('Error fixing inconsistent assignment statuses:', error);
+    res.status(500).json({ message: 'Failed to fix assignment statuses' });
   }
 });
 
