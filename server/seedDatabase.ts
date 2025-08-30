@@ -97,6 +97,7 @@ export async function seedDatabase() {
           passportExpiry: new Date('2028-12-31'),
           email: `test.worker.alpha.${client.cui}@replit.dev`,
           phone: `+40700${Math.floor(Math.random() * 900000) + 100000}`,
+          assignedWorkflowIds: ['work-permit-initial'],
         },
         {
           clientProfileId: client.id,
@@ -108,6 +109,7 @@ export async function seedDatabase() {
           passportExpiry: new Date('2029-06-15'),
           email: `test.worker.beta.${client.cui}@replit.dev`,
           phone: `+40701${Math.floor(Math.random() * 900000) + 100000}`,
+          assignedWorkflowIds: ['work-permit-initial', 'residence-permit-temp'],
         },
         {
           clientProfileId: client.id,
@@ -119,6 +121,7 @@ export async function seedDatabase() {
           passportExpiry: new Date('2027-10-20'),
           email: `test.worker.gamma.${client.cui}@replit.dev`,
           phone: `+40702${Math.floor(Math.random() * 900000) + 100000}`,
+          assignedWorkflowIds: ['work-permit-renewal'],
         }
       ];
       testWorkers.push(...workersForClient);

@@ -5,7 +5,10 @@ import { insertWorkerSchema } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { z } from "zod";
+import { useState, useEffect } from "react";
 
 const workerFormSchema = insertWorkerSchema.extend({
   clientProfileId: z.string().optional(),
@@ -33,6 +36,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
       phone: initialData?.phone || "",
       dob: initialData?.dob || undefined,
       passportExpiry: initialData?.passportExpiry || undefined,
+      assignedWorkflowIds: initialData?.assignedWorkflowIds || [],
       clientProfileId,
     },
   });
@@ -197,6 +201,59 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
               </FormItem>
             )}
           />
+        </div>
+
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Workflow Assignment</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name="assignedWorkflowIds"
+                render={({ field }) => {
+                  const [workflows] = useState([
+                    { id: 'work-permit-initial', name: 'Initial Work Permit Application', description: 'Complete Romanian work permit application process' },
+                    { id: 'residence-permit-temp', name: 'Temporary Residence Permit', description: 'Romanian temporary residence permit application' },
+                    { id: 'work-permit-renewal', name: 'Work Permit Renewal', description: 'Renewal process for existing work permits' },
+                  ]);
+                  
+                  return (
+                    <FormItem>
+                      <FormLabel className="text-base font-medium">Select Applicable Workflows</FormLabel>
+                      <div className="grid grid-cols-1 gap-3 mt-3">
+                        {workflows.map((workflow) => (
+                          <div 
+                            key={workflow.id} 
+                            className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50"
+                          >
+                            <Checkbox 
+                              checked={field.value?.includes(workflow.id) || false}
+                              onCheckedChange={(checked) => {
+                                const currentValues = field.value || [];
+                                if (checked) {
+                                  field.onChange([...currentValues, workflow.id]);
+                                } else {
+                                  field.onChange(currentValues.filter((id: string) => id !== workflow.id));
+                                }
+                              }}
+                              data-testid={`checkbox-workflow-${workflow.id}`}
+                            />
+                            <div className="flex-1">
+                              <h4 className="font-medium">{workflow.name}</h4>
+                              <p className="text-sm text-muted-foreground">{workflow.description}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+            </CardContent>
+          </Card>
         </div>
 
         <div className="flex justify-end space-x-4">

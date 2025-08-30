@@ -79,6 +79,8 @@ interface Workflow {
   documentTypeId: string;
   stages: WorkflowStage[];
   isActive: boolean;
+  executionType: 'sequential' | 'parallel';
+  stageOrder: string[];
 }
 
 interface CompanyInfo {
@@ -173,6 +175,8 @@ export default function SettingsPage() {
       description: 'Complete Romanian work permit application process from AJOFM labor market test through IGI permit issuance',
       documentTypeId: 'work-permit-initial',
       isActive: true,
+      executionType: 'sequential',
+      stageOrder: ['doc-collection', 'doc-review', 'employer-declaration', 'ajofm-submission', 'ajofm-processing', 'ajofm-approval', 'igi-prep', 'igi-submission', 'igi-processing', 'igi-approval', 'consulate-prep', 'consulate-submission'],
       stages: [
         {
           id: 'doc-collection',
@@ -344,6 +348,8 @@ export default function SettingsPage() {
       description: 'Romanian temporary residence permit application for workers already in Romania with valid work permits',
       documentTypeId: 'residence-permit-temp',
       isActive: true,
+      executionType: 'sequential',
+      stageOrder: ['residence-docs', 'medical-exam', 'residence-submission', 'residence-processing', 'residence-approval'],
       stages: [
         {
           id: 'residence-docs',
@@ -416,6 +422,8 @@ export default function SettingsPage() {
       description: 'Renewal process for existing work permits before expiration (must be initiated 60 days before expiry)',
       documentTypeId: 'work-permit-renewal',
       isActive: true,
+      executionType: 'sequential',
+      stageOrder: ['renewal-assessment', 'renewal-documents', 'renewal-submission', 'renewal-processing', 'renewal-completion'],
       stages: [
         {
           id: 'renewal-assessment',
@@ -862,7 +870,9 @@ export default function SettingsPage() {
       description: 'Custom workflow for immigration process',
       documentTypeId: '',
       stages: [],
-      isActive: true
+      isActive: true,
+      executionType: 'sequential',
+      stageOrder: []
     };
     setWorkflows([...workflows, newWorkflow]);
   };
@@ -1504,6 +1514,40 @@ export default function SettingsPage() {
                                     />
                                   </div>
                                   
+                                  <div className="space-y-2">
+                                    <Label className="text-sm font-medium">Execution Type</Label>
+                                    <Select
+                                      value={workflow.executionType}
+                                      onValueChange={(value: 'sequential' | 'parallel') => {
+                                        setWorkflows(wfs => 
+                                          wfs.map(wf => 
+                                            wf.id === workflow.id 
+                                              ? { ...wf, executionType: value }
+                                              : wf
+                                          )
+                                        );
+                                      }}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select execution type" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="sequential">
+                                          <div className="flex items-center gap-2">
+                                            <ChevronRight className="h-4 w-4" />
+                                            Sequential - Stages run one after another
+                                          </div>
+                                        </SelectItem>
+                                        <SelectItem value="parallel">
+                                          <div className="flex items-center gap-2">
+                                            <GitBranch className="h-4 w-4" />
+                                            Parallel - Multiple stages can run simultaneously
+                                          </div>
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  
                                   <div className="flex items-center gap-4">
                                     <div className="flex items-center gap-2">
                                       <Label className="text-sm">Active</Label>
@@ -1641,27 +1685,76 @@ export default function SettingsPage() {
                                           />
                                         </div>
                                         
-                                        <div className="flex items-center gap-2 pt-6">
-                                          <Switch 
-                                            checked={stage.approvalRequired}
-                                            onCheckedChange={(checked) => {
-                                              setWorkflows(wfs => 
-                                                wfs.map(wf => 
-                                                  wf.id === workflow.id 
-                                                    ? {
-                                                        ...wf, 
-                                                        stages: wf.stages.map(s => 
-                                                          s.id === stage.id 
-                                                            ? { ...s, approvalRequired: checked }
-                                                            : s
-                                                        )
-                                                      }
-                                                    : wf
-                                                )
-                                              );
-                                            }}
-                                          />
-                                          <Label className="text-xs">Approval Required</Label>
+                                        <div className="space-y-3 pt-6">
+                                          <div className="flex items-center gap-2">
+                                            <Switch 
+                                              checked={stage.approvalRequired}
+                                              onCheckedChange={(checked) => {
+                                                setWorkflows(wfs => 
+                                                  wfs.map(wf => 
+                                                    wf.id === workflow.id 
+                                                      ? {
+                                                          ...wf, 
+                                                          stages: wf.stages.map(s => 
+                                                            s.id === stage.id 
+                                                              ? { ...s, approvalRequired: checked, approver: checked ? (s.approver || '') : undefined }
+                                                              : s
+                                                          )
+                                                        }
+                                                      : wf
+                                                  )
+                                                );
+                                              }}
+                                            />
+                                            <Label className="text-xs">Approval Required</Label>
+                                          </div>
+                                          
+                                          {stage.approvalRequired && (
+                                            <div className="space-y-2">
+                                              <Label className="text-xs">Approver</Label>
+                                              <Select
+                                                value={stage.approver || ''}
+                                                onValueChange={(value) => {
+                                                  setWorkflows(wfs => 
+                                                    wfs.map(wf => 
+                                                      wf.id === workflow.id 
+                                                        ? {
+                                                            ...wf, 
+                                                            stages: wf.stages.map(s => 
+                                                              s.id === stage.id 
+                                                                ? { ...s, approver: value }
+                                                                : s
+                                                            )
+                                                          }
+                                                        : wf
+                                                    )
+                                                  );
+                                                }}
+                                              >
+                                                <SelectTrigger className="h-8">
+                                                  <SelectValue placeholder="Select who approves this stage" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  <SelectGroup>
+                                                    <SelectLabel>Internal Approvers</SelectLabel>
+                                                    <SelectItem value="Admin">Admin</SelectItem>
+                                                    <SelectItem value="Legal Team">Legal Team</SelectItem>
+                                                    <SelectItem value="Immigration Specialist">Immigration Specialist</SelectItem>
+                                                    <SelectItem value="Client Owner">Client Owner</SelectItem>
+                                                    <SelectItem value="HR Manager">HR Manager</SelectItem>
+                                                  </SelectGroup>
+                                                  <SelectGroup>
+                                                    <SelectLabel>External Approvers</SelectLabel>
+                                                    <SelectItem value="AJOFM Officer">AJOFM Officer</SelectItem>
+                                                    <SelectItem value="IGI Immigration Officer">IGI Immigration Officer</SelectItem>
+                                                    <SelectItem value="Consulate Officer">Consulate Officer</SelectItem>
+                                                    <SelectItem value="Authorized Doctor">Authorized Doctor</SelectItem>
+                                                    <SelectItem value="Ministry Official">Ministry Official</SelectItem>
+                                                  </SelectGroup>
+                                                </SelectContent>
+                                              </Select>
+                                            </div>
+                                          )}
                                         </div>
                                       </div>
                                       
