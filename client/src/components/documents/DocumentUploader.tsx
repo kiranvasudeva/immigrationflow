@@ -102,19 +102,58 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
 
   const startPhotoCapture = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment',
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        } 
-      });
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera not supported in this browser');
+      }
+
+      // First try with rear camera (better for documents)
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          } 
+        });
+      } catch (err) {
+        // Fallback to any available camera
+        console.log('Rear camera not available, trying front camera...');
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          } 
+        });
+      }
+      
       setPhotoStream(stream);
-    } catch (error) {
+      
+      toast({
+        title: "Camera Ready",
+        description: "Position your document within the frame and capture.",
+      });
+    } catch (error: any) {
       console.error('Error accessing camera:', error);
+      
+      let errorMessage = "Unable to access camera. ";
+      
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMessage += "Please allow camera permissions and try again.";
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        errorMessage += "No camera found on this device.";
+      } else if (error.name === 'NotSupportedError') {
+        errorMessage += "Camera is not supported in this browser.";
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        errorMessage += "Camera is already in use by another application.";
+      } else {
+        errorMessage += "Please check your camera permissions and try again.";
+      }
+      
       toast({
         title: "Camera Error",
-        description: "Unable to access camera. Please check permissions.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
