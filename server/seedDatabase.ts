@@ -53,21 +53,27 @@ export async function seedDatabase() {
       const admin = insertedAdmins[i];
       const clientsForAdmin = [
         {
-          companyName: `Test Construction Company ${i + 1}`,
+          legalName: `Test Construction Company ${i + 1}`,
+          registrationNumber: `J40/${1000 + i}/2024`,
           cui: `RO${20000000 + i * 1000 + 1}`,
-          address: `Test Address ${i + 1}, Sector ${i + 1}, București, România`,
-          caen: '4120',
+          legalAddress: `Test Address ${i + 1}, Sector ${i + 1}, București, România`,
+          adminName: `Admin ${i + 1}`,
           contactEmail: `test.company${i + 1}@replit.dev`,
-          onrc: `J40/${1000 + i}/2024`,
+          phoneNumber: `+40${720000000 + i * 1000 + 1}`,
+          bankIban: `RO49AAAA1B31007593840${1000 + i}`,
+          caen: '4120',
           ownerUserId: admin.id,
         },
         {
-          companyName: `Test IT Solutions ${i + 1}`,
+          legalName: `Test IT Solutions ${i + 1}`,
+          registrationNumber: `J12/${1000 + i}/2024`,
           cui: `RO${20000000 + i * 1000 + 2}`,
-          address: `Test IT Address ${i + 1}, Cluj-Napoca, România`,
-          caen: '6201',
+          legalAddress: `Test IT Address ${i + 1}, Cluj-Napoca, România`,
+          adminName: `IT Admin ${i + 1}`,
           contactEmail: `test.it${i + 1}@replit.dev`,
-          onrc: `J12/${1000 + i}/2024`,
+          phoneNumber: `+40${730000000 + i * 1000 + 1}`,
+          bankIban: `RO49BBBB1B31007593840${2000 + i}`,
+          caen: '6201',
           ownerUserId: admin.id,
         }
       ];

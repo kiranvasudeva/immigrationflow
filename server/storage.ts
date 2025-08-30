@@ -282,22 +282,22 @@ export class DatabaseStorage implements IStorage {
       .where(eq(assignments.workerId, id));
 
     // Get document files for each assignment
-    const assignmentIds = assignmentsData.map(a => a.assignment.id);
+    const assignmentIds = assignmentsData.map((a: any) => a.assignment.id);
     const documents = assignmentIds.length > 0 
       ? await db.select().from(documentFiles).where(
-          assignmentIds.map(id => eq(documentFiles.assignmentId, id)).reduce((acc, curr) => or(acc, curr))
+          assignmentIds.map((assignId: string) => eq(documentFiles.assignmentId, assignId)).reduce((acc: any, curr: any) => or(acc, curr))
         )
       : [];
 
     // Group documents by assignment ID
-    const documentsByAssignment = documents.reduce((acc, doc) => {
+    const documentsByAssignment = documents.reduce((acc: any, doc: any) => {
       if (!acc[doc.assignmentId]) acc[doc.assignmentId] = [];
       acc[doc.assignmentId].push(doc);
       return acc;
     }, {} as Record<string, typeof documents>);
 
     // Combine assignments with their documents
-    const assignments = assignmentsData.map(({ assignment, requirement, stage }) => ({
+    const workerAssignments = assignmentsData.map(({ assignment, requirement, stage }: any) => ({
       id: assignment.id,
       requirement: {
         id: requirement?.id,
@@ -319,7 +319,7 @@ export class DatabaseStorage implements IStorage {
     return {
       ...worker,
       clientProfile,
-      assignments
+      assignments: workerAssignments
     };
   }
 
