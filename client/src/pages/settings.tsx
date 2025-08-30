@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { useTranslation } from '@/contexts/I18nProvider';
 import { useBreadcrumb } from '@/contexts/BreadcrumbContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +34,7 @@ import {
   ChevronLeft,
   XCircle,
   UserCheck,
+  ArrowLeft,
   GitBranch,
   ChevronDown,
   ChevronUp,
@@ -118,6 +120,7 @@ export default function SettingsPage() {
   const { t } = useTranslation();
   const { setBreadcrumbs } = useBreadcrumb();
   const { toast } = useToast();
+  const [location, setLocation] = useLocation();
   
   // Get the tab from URL parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -890,12 +893,23 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4 max-w-6xl">
-        <div className="flex items-center gap-3 mb-8">
-          <PatraIcon className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">Patra Settings</h1>
-            <p className="text-muted-foreground">Configure your application settings and preferences</p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <PatraIcon className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Patra Settings</h1>
+              <p className="text-muted-foreground">Configure your application settings and preferences</p>
+            </div>
           </div>
+          <Button 
+            variant="outline" 
+            onClick={() => setLocation('/')}
+            className="flex items-center gap-2"
+            data-testid="button-back-to-app"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to App
+          </Button>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
