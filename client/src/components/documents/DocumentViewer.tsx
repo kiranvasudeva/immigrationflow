@@ -211,6 +211,15 @@ export function DocumentViewer({ assignmentId }: DocumentViewerProps) {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => window.open(`/api/documents/${document.id}/view`, '_blank')}
+                  data-testid={`button-view-${document.id}`}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => handleDownload(document)}
                   data-testid={`button-download-${document.id}`}
                 >

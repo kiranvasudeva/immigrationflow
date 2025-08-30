@@ -711,6 +711,8 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: {
   selectedWorker: any; 
   setSelectedWorker: (worker: any) => void; 
 }) {
+  const [workerSearchTerm, setWorkerSearchTerm] = useState("");
+
   const { data: workers = [], isLoading } = useQuery({
     queryKey: ['/api/clients', clientId, 'workers'],
   });
@@ -718,6 +720,18 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: {
   const { data: assignments = [] } = useQuery({
     queryKey: ['/api/dashboard/assignments'],
     enabled: !!selectedWorker
+  });
+
+  // Filter workers based on search term
+  const filteredWorkers = workers.filter((worker: any) => {
+    const matchesSearch = !workerSearchTerm || 
+      worker.firstName.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
+      worker.lastName.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
+      worker.nationality.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
+      worker.passportNumber.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
+      (worker.email && worker.email.toLowerCase().includes(workerSearchTerm.toLowerCase()));
+    
+    return matchesSearch;
   });
 
   if (isLoading) {
@@ -752,9 +766,31 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: {
       <div className="flex items-center justify-between mb-4">
         <h4 className="font-semibold text-gray-900">Workers ({workers.length})</h4>
       </div>
+
+      {/* Worker Search Filter */}
+      <div className="mb-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search workers..."
+            value={workerSearchTerm}
+            onChange={(e) => setWorkerSearchTerm(e.target.value)}
+            className="pl-10"
+            data-testid="input-search-workers"
+          />
+        </div>
+      </div>
       
       <div className="space-y-3">
-        {workers.map((worker: any) => (
+        {filteredWorkers.length === 0 ? (
+          <div className="text-center py-4">
+            <UserCheck className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-gray-600 text-sm">
+              {workerSearchTerm ? 'No workers match your search criteria.' : 'No workers found.'}
+            </p>
+          </div>
+        ) : (
+          filteredWorkers.map((worker: any) => (
           <div key={worker.id} className="border rounded-lg p-4 hover:bg-gray-50">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -848,7 +884,8 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: {
               </div>
             )}
           </div>
-        ))}
+        ))
+        )}
       </div>
     </div>
   );

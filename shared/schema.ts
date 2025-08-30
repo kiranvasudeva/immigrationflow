@@ -731,6 +731,83 @@ export type CreateRequirement = z.infer<typeof createRequirementSchema>;
 export type UpdateRequirement = z.infer<typeof updateRequirementSchema>;
 export type RequirementResponse = z.infer<typeof requirementResponseSchema>;
 
+// Document Data Extraction Tables
+export const documentTypeEnum = pgEnum('document_type', [
+  'BIRTH_CERTIFICATE', 
+  'MARRIAGE_CERTIFICATE', 
+  'PASSPORT', 
+  'ID_CARD', 
+  'DIPLOMA', 
+  'EMPLOYMENT_CONTRACT', 
+  'BANK_STATEMENT',
+  'OTHER'
+]);
+
+export const extractedDocumentData = pgTable("extracted_document_data", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  documentFileId: uuid("document_file_id").notNull(),
+  documentType: documentTypeEnum("document_type").notNull(),
+  extractedText: text("extracted_text"), // Raw OCR text
+  structuredData: jsonb("structured_data"), // Parsed structured data
+  confidence: integer("confidence"), // OCR confidence percentage
+  extractedAt: timestamp("extracted_at").defaultNow(),
+  verifiedAt: timestamp("verified_at"),
+  verifiedByUserId: varchar("verified_by_user_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const documentFieldMappings = pgTable("document_field_mappings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  extractedDataId: uuid("extracted_data_id").notNull(),
+  fieldName: varchar("field_name", { length: 100 }).notNull(), // e.g., "firstName", "birthDate"
+  fieldValue: text("field_value"), // Extracted field value
+  confidence: integer("confidence"), // Field-specific confidence
+  position: jsonb("position"), // Location in document where field was found
+  verified: boolean("verified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Relations for extracted data
+export const extractedDocumentDataRelations = relations(extractedDocumentData, ({ one, many }) => ({
+  documentFile: one(documentFiles, {
+    fields: [extractedDocumentData.documentFileId],
+    references: [documentFiles.id],
+  }),
+  fieldMappings: many(documentFieldMappings),
+  verifiedBy: one(users, {
+    fields: [extractedDocumentData.verifiedByUserId],
+    references: [users.id],
+  }),
+}));
+
+export const documentFieldMappingsRelations = relations(documentFieldMappings, ({ one }) => ({
+  extractedData: one(extractedDocumentData, {
+    fields: [documentFieldMappings.extractedDataId],
+    references: [extractedDocumentData.id],
+  }),
+}));
+
+// Zod schemas for extracted data
+export const createExtractedDocumentDataSchema = createInsertSchema(extractedDocumentData).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const createDocumentFieldMappingSchema = createInsertSchema(documentFieldMappings).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const updateExtractedDocumentDataSchema = createExtractedDocumentDataSchema.partial();
+
+// Types
+export type ExtractedDocumentData = typeof extractedDocumentData.$inferSelect;
+export type InsertExtractedDocumentData = z.infer<typeof createExtractedDocumentDataSchema>;
+export type DocumentFieldMapping = typeof documentFieldMappings.$inferSelect;
+export type InsertDocumentFieldMapping = z.infer<typeof createDocumentFieldMappingSchema>;
+
 export type SuccessResponse = z.infer<typeof successResponseSchema>;
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;
 export type Pagination = z.infer<typeof paginationSchema>;

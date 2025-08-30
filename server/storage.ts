@@ -46,6 +46,12 @@ import {
   type AnalyticsEvent,
   type Invitation,
   type InsertInvitation,
+  extractedDocumentData,
+  documentFieldMappings,
+  type ExtractedDocumentData,
+  type InsertExtractedDocumentData,
+  type DocumentFieldMapping,
+  type InsertDocumentFieldMapping,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, like, desc, asc, count, sql } from "drizzle-orm";
@@ -102,6 +108,15 @@ export interface IStorage {
   createDocumentFile(file: Omit<DocumentFile, 'id' | 'createdAt'>): Promise<DocumentFile>;
   updateDocumentFileStatus(documentId: string, status: string, notes?: string): Promise<DocumentFile>;
   deleteDocumentFile(documentId: string): Promise<boolean>;
+  
+  // Extracted Document Data operations
+  getExtractedDocumentData(documentFileId: string): Promise<ExtractedDocumentData | undefined>;
+  createExtractedDocumentData(data: InsertExtractedDocumentData): Promise<ExtractedDocumentData>;
+  updateExtractedDocumentData(id: string, updates: Partial<InsertExtractedDocumentData>): Promise<ExtractedDocumentData>;
+  getDocumentFieldMappings(extractedDataId: string): Promise<DocumentFieldMapping[]>;
+  createDocumentFieldMapping(mapping: InsertDocumentFieldMapping): Promise<DocumentFieldMapping>;
+  updateDocumentFieldMapping(id: string, updates: Partial<InsertDocumentFieldMapping>): Promise<DocumentFieldMapping>;
+  verifyExtractedData(id: string, verifiedByUserId: string): Promise<ExtractedDocumentData>;
   
   // Search operations
   searchClientsAndWorkers(query: string): Promise<{clients: ClientProfile[], workers: Worker[]}>;
@@ -489,6 +504,63 @@ export class DatabaseStorage implements IStorage {
   async deleteDocumentFile(documentId: string): Promise<boolean> {
     const result = await db.delete(documentFiles).where(eq(documentFiles.id, documentId));
     return result.rowCount > 0;
+  }
+
+  // Extracted Document Data operations
+  async getExtractedDocumentData(documentFileId: string): Promise<ExtractedDocumentData | undefined> {
+    const [result] = await db
+      .select()
+      .from(extractedDocumentData)
+      .where(eq(extractedDocumentData.documentFileId, documentFileId));
+    return result;
+  }
+
+  async createExtractedDocumentData(data: InsertExtractedDocumentData): Promise<ExtractedDocumentData> {
+    const [result] = await db.insert(extractedDocumentData).values(data).returning();
+    return result;
+  }
+
+  async updateExtractedDocumentData(id: string, updates: Partial<InsertExtractedDocumentData>): Promise<ExtractedDocumentData> {
+    const [result] = await db
+      .update(extractedDocumentData)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(extractedDocumentData.id, id))
+      .returning();
+    return result;
+  }
+
+  async getDocumentFieldMappings(extractedDataId: string): Promise<DocumentFieldMapping[]> {
+    return await db
+      .select()
+      .from(documentFieldMappings)
+      .where(eq(documentFieldMappings.extractedDataId, extractedDataId));
+  }
+
+  async createDocumentFieldMapping(mapping: InsertDocumentFieldMapping): Promise<DocumentFieldMapping> {
+    const [result] = await db.insert(documentFieldMappings).values(mapping).returning();
+    return result;
+  }
+
+  async updateDocumentFieldMapping(id: string, updates: Partial<InsertDocumentFieldMapping>): Promise<DocumentFieldMapping> {
+    const [result] = await db
+      .update(documentFieldMappings)
+      .set(updates)
+      .where(eq(documentFieldMappings.id, id))
+      .returning();
+    return result;
+  }
+
+  async verifyExtractedData(id: string, verifiedByUserId: string): Promise<ExtractedDocumentData> {
+    const [result] = await db
+      .update(extractedDocumentData)
+      .set({ 
+        verifiedAt: new Date(),
+        verifiedByUserId,
+        updatedAt: new Date()
+      })
+      .where(eq(extractedDocumentData.id, id))
+      .returning();
+    return result;
   }
 
   // Search operations

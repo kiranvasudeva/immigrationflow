@@ -73,7 +73,10 @@ router.post('/confirm-upload', isAuthenticated, auditMiddleware, async (req: any
       kind: 'USER_UPLOAD',
       s3Key,
       fileName,
+      fileSize: 0, // Will be updated after upload
+      fileHash: '', // Will be calculated after upload
       mimeType: contentType,
+      scanResult: 'PENDING',
       uploadedByUserId: userId,
     });
 
@@ -128,6 +131,50 @@ router.get('/:fileId/download', isAuthenticated, auditMiddleware, async (req: an
   } catch (error) {
     console.error('Error generating download URL:', error);
     res.status(500).json({ message: 'Failed to generate download URL' });
+  }
+});
+
+// View document in browser
+router.get('/:fileId/view', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  try {
+    const { fileId } = req.params;
+    
+    const documentFile = await storage.getDocumentFile(fileId);
+    if (!documentFile) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+
+    // Check authorization
+    const assignment = await storage.getAssignment(documentFile.assignmentId);
+    if (!assignment) {
+      return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    const userId = req.user.claims.sub;
+    const user = await storage.getUser(userId);
+    
+    if (user?.role !== 'ADMIN') {
+      const client = await storage.getClientProfile(assignment.clientProfileId);
+      const isOwner = client?.ownerUserId === userId;
+      const isWorker = assignment.workerId === userId;
+      
+      if (!isOwner && !isWorker) {
+        return res.status(403).json({ message: 'Unauthorized' });
+      }
+    }
+
+    // Get the file from S3 and stream it directly
+    const fileStream = await s3Service.getFileStream(documentFile.s3Key);
+    
+    // Set appropriate headers for viewing in browser
+    res.setHeader('Content-Type', documentFile.mimeType || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${documentFile.fileName}"`);
+    
+    // Stream the file
+    fileStream.pipe(res);
+  } catch (error) {
+    console.error('Error viewing document:', error);
+    res.status(500).json({ message: 'Failed to view document' });
   }
 });
 

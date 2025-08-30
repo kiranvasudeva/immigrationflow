@@ -86,6 +86,21 @@ export class S3Service {
     await this.s3Client.send(command);
   }
 
+  async getFileStream(key: string): Promise<NodeJS.ReadableStream> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+    });
+
+    const response = await this.s3Client.send(command);
+    
+    if (!response.Body) {
+      throw new Error('File not found or empty response');
+    }
+
+    return response.Body as NodeJS.ReadableStream;
+  }
+
   generateFileKey(prefix: string, filename: string): string {
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 15);
@@ -116,6 +131,7 @@ export const s3Service = {
   get generateDownloadUrl() { return getS3Service().generateDownloadUrl.bind(getS3Service()); },
   get uploadFile() { return getS3Service().uploadFile.bind(getS3Service()); },
   get deleteFile() { return getS3Service().deleteFile.bind(getS3Service()); },
+  get getFileStream() { return getS3Service().getFileStream.bind(getS3Service()); },
   get generateFileKey() { return getS3Service().generateFileKey.bind(getS3Service()); },
   get ensureBucketExists() { return getS3Service().ensureBucketExists.bind(getS3Service()); },
 };

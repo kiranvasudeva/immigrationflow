@@ -21,6 +21,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
   const [isOpen, setIsOpen] = useState(false);
   const [files, setFiles] = useState<FileList | null>(null);
   const [documentKind, setDocumentKind] = useState<'USER_UPLOAD' | 'ADMIN_RECEIPT' | 'GENERATED_PDF'>('USER_UPLOAD');
+  const [documentType, setDocumentType] = useState<'BIRTH_CERTIFICATE' | 'MARRIAGE_CERTIFICATE' | 'PASSPORT' | 'ID_CARD' | 'DIPLOMA' | 'EMPLOYMENT_CONTRACT' | 'BANK_STATEMENT' | 'OTHER'>('OTHER');
   const [scanMode, setScanMode] = useState<'upload' | 'scan' | 'photo'>('upload');
   const [isScanning, setIsScanning] = useState(false);
   const [scannedText, setScannedText] = useState('');
@@ -151,6 +152,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
     }
     
     formData.append('documentKind', documentKind);
+    formData.append('documentType', documentType);
     if (notes) {
       formData.append('notes', notes);
     }
@@ -222,9 +224,9 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
             </p>
           </div>
 
-          {/* Document Type */}
+          {/* Document Kind */}
           <div className="space-y-2">
-            <Label>Document Type</Label>
+            <Label>Document Kind</Label>
             <Select value={documentKind} onValueChange={(value: any) => setDocumentKind(value)}>
               <SelectTrigger data-testid="select-document-kind">
                 <SelectValue />
@@ -233,6 +235,26 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
                 <SelectItem value="USER_UPLOAD">User Upload</SelectItem>
                 <SelectItem value="ADMIN_RECEIPT">Admin Receipt</SelectItem>
                 <SelectItem value="GENERATED_PDF">Generated PDF</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Document Type */}
+          <div className="space-y-2">
+            <Label>Document Type</Label>
+            <Select value={documentType} onValueChange={(value: any) => setDocumentType(value)}>
+              <SelectTrigger data-testid="select-document-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="BIRTH_CERTIFICATE">Birth Certificate</SelectItem>
+                <SelectItem value="MARRIAGE_CERTIFICATE">Marriage Certificate</SelectItem>
+                <SelectItem value="PASSPORT">Passport</SelectItem>
+                <SelectItem value="ID_CARD">ID Card</SelectItem>
+                <SelectItem value="DIPLOMA">Diploma</SelectItem>
+                <SelectItem value="EMPLOYMENT_CONTRACT">Employment Contract</SelectItem>
+                <SelectItem value="BANK_STATEMENT">Bank Statement</SelectItem>
+                <SelectItem value="OTHER">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
