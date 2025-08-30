@@ -1006,6 +1006,159 @@ export default function AdminDashboard() {
               </>
             )}
 
+          {/* Clients Section */}
+          {activeSection === "clients" && (
+            <div className="space-y-6">
+              <Card data-testid="card-clients">
+                <CardContent className="p-6">
+                  {/* Client List View */}
+                  {!selectedClient && !showNewClientForm && (
+                    <div className="space-y-4">
+                      {/* New Client Button */}
+                      <div className="flex justify-between items-center mb-4">
+                        <h4 className="text-lg font-semibold text-gray-900">{t('common.clientList') || 'Client List'}</h4>
+                        <Button
+                          onClick={() => setShowNewClientForm(true)}
+                          className="bg-primary hover:bg-primary/90"
+                          data-testid="button-new-client"
+                        >
+                          <i className="fas fa-plus mr-2"></i>
+                          {t('actions.newClient') || 'New Client'}
+                        </Button>
+                      </div>
+                      
+                      {(() => {
+                        const filteredClients = clients.filter((client: any) => {
+                          const matchesSearch = !clientSearchTerm || 
+                            client.legalName?.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                            client.cui?.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                            client.contactEmail?.toLowerCase().includes(clientSearchTerm.toLowerCase());
+                          
+                          const matchesStatus = statusFilter === "all" || 
+                            (client.status || "active").toLowerCase() === statusFilter.toLowerCase();
+                          
+                          const matchesClientFilter = clientFilter === "all" || 
+                            (clientFilter === "active" && (client.status || "active") === "active") ||
+                            (clientFilter === "inactive" && client.status === "inactive");
+                          
+                          return matchesSearch && matchesStatus && matchesClientFilter;
+                        });
+
+                        if (filteredClients.length === 0) {
+                          return (
+                            <div className="text-center py-8">
+                              <i className="fas fa-building text-gray-400 text-3xl mb-4"></i>
+                              <p className="text-secondary">
+                                {clientSearchTerm || clientFilter !== "all" || statusFilter !== "all" 
+                                  ? "No clients match your filters"
+                                  : "No clients found"
+                                }
+                              </p>
+                            </div>
+                          );
+                        }
+
+                        return filteredClients.map((client: any, index: number) => (
+                          <div 
+                            key={client.id || index} 
+                            className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors" 
+                            onClick={() => {
+                              setSelectedClient(client);
+                              setSelectedWorker(null); // Reset worker selection when selecting new client
+                            }}
+                            data-testid={`client-${index}`}
+                          >
+                          <div className="flex items-center space-x-4">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                              <i className="fas fa-building text-primary"></i>
+                            </div>
+                            <div>
+                              <p className="font-medium">{client.legalName}</p>
+                              <p className="text-sm text-secondary">CUI: {client.cui}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-medium">{client.activeWorkers || 0} workers</p>
+                            <p className="text-xs text-secondary">{client.status || 'active'}</p>
+                            <ChevronRight className="h-4 w-4 text-gray-400 mt-1" />
+                          </div>
+                        </div>
+                        ));
+                      })()}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Templates Section */}
+          {activeSection === "documents" && (
+            <div className="space-y-6">
+              <Card data-testid="card-templates">
+                <CardContent className="p-6">
+                  <div className="text-center py-8">
+                    <i className="fas fa-file-alt text-gray-400 text-3xl mb-4"></i>
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">Document Templates</h4>
+                    <p className="text-gray-600 mb-4">Manage Romanian immigration document templates</p>
+                    <Button 
+                      onClick={() => window.location.href = '/templates'}
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      <i className="fas fa-arrow-right mr-2"></i>
+                      Go to Templates
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Requirements Section */}
+          {activeSection === "requirements" && (
+            <div className="space-y-6">
+              <Card data-testid="card-requirements">
+                <CardContent className="p-6">
+                  <div className="text-center py-8">
+                    <i className="fas fa-clipboard-list text-gray-400 text-3xl mb-4"></i>
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">Immigration Requirements</h4>
+                    <p className="text-gray-600">Manage Romanian immigration requirements and workflows</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Reminders Section */}
+          {activeSection === "reminders" && (
+            <div className="space-y-6">
+              <Card data-testid="card-reminders">
+                <CardContent className="p-6">
+                  <div className="text-center py-8">
+                    <i className="fas fa-bell text-gray-400 text-3xl mb-4"></i>
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">Automated Reminders</h4>
+                    <p className="text-gray-600">Manage email reminders and notifications</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Audit Section */}
+          {activeSection === "audit" && (
+            <div className="space-y-6">
+              <Card data-testid="card-audit">
+                <CardContent className="p-6">
+                  <div className="text-center py-8">
+                    <i className="fas fa-history text-gray-400 text-3xl mb-4"></i>
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">Audit Logs</h4>
+                    <p className="text-gray-600">View system activity and security logs</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {/* Workers Section - Available for both mobile and desktop */}
           {activeSection === "workers" && (
             <div className="space-y-6">
