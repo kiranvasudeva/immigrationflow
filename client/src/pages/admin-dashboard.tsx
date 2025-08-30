@@ -21,7 +21,7 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { NavigationBreadcrumb } from "@/components/layout/NavigationBreadcrumb";
 
 // Component to display client-specific workers
-function ClientWorkersDisplay({ clientId }: { clientId: string }) {
+function ClientWorkersDisplay({ clientId, setSelectedWorker }: { clientId: string, setSelectedWorker: (worker: any) => void }) {
   const { data: workers, isLoading } = useQuery({
     queryKey: ['/api/clients', clientId, 'workers'],
     queryFn: async () => {
@@ -55,7 +55,8 @@ function ClientWorkersDisplay({ clientId }: { clientId: string }) {
       {workers.map((worker: any, index: number) => (
         <div
           key={worker.id || index}
-          className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+          className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+          onClick={() => setSelectedWorker(worker)}
         >
           <div className="flex items-center space-x-4">
             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -1222,7 +1223,89 @@ export default function AdminDashboard() {
                       {showClientWorkers && selectedClient && (
                         <div className="border-t pt-6">
                           <h4 className="font-semibold text-gray-900 mb-4">Workers for {selectedClient.legalName}</h4>
-                          <ClientWorkersDisplay clientId={selectedClient.id} />
+                          <ClientWorkersDisplay clientId={selectedClient.id} setSelectedWorker={setSelectedWorker} />
+                        </div>
+                      )}
+                      
+                      {/* Selected Worker Details */}
+                      {selectedWorker && (
+                        <div className="border-t pt-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <h4 className="font-semibold text-gray-900">Worker Details</h4>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedWorker(null)}
+                              className="text-primary hover:text-primary/80"
+                            >
+                              <i className="fas fa-times mr-2"></i>
+                              Close
+                            </Button>
+                          </div>
+                          
+                          <div className="bg-green-50 rounded-lg p-6">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-16 h-16 bg-green-600 rounded-lg flex items-center justify-center">
+                                <i className="fas fa-user text-white text-xl"></i>
+                              </div>
+                              <div>
+                                <h3 className="text-xl font-bold text-gray-900">{selectedWorker.firstName} {selectedWorker.lastName}</h3>
+                                <p className="text-gray-600">{selectedWorker.nationality} National</p>
+                                <div className="flex flex-wrap items-center mt-2 gap-x-4 gap-y-1 text-sm">
+                                  <span className="text-gray-600">
+                                    <i className="fas fa-envelope mr-1"></i>
+                                    {selectedWorker.email || 'Email not provided'}
+                                  </span>
+                                  <span className="text-gray-600">
+                                    <i className="fas fa-phone mr-1"></i>
+                                    {selectedWorker.phone || 'Phone not provided'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            <div className="space-y-4">
+                              <h5 className="font-semibold text-gray-900">Personal Information</h5>
+                              <div className="space-y-3 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Date of Birth:</span>
+                                  <span className="font-medium">
+                                    {selectedWorker.dob ? new Date(selectedWorker.dob).toLocaleDateString() : 'N/A'}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Passport Number:</span>
+                                  <span className="font-medium">{selectedWorker.passportNumber || 'N/A'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Passport Expires:</span>
+                                  <span className="font-medium">
+                                    {selectedWorker.passportExpiry ? new Date(selectedWorker.passportExpiry).toLocaleDateString() : 'N/A'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-4">
+                              <h5 className="font-semibold text-gray-900">Work Information</h5>
+                              <div className="space-y-3 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Status:</span>
+                                  <span className={`font-medium ${selectedWorker.status === 'active' ? 'text-green-600' : 'text-gray-600'}`}>
+                                    {selectedWorker.status || 'Active'}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Created:</span>
+                                  <span className="font-medium">
+                                    {selectedWorker.createdAt ? new Date(selectedWorker.createdAt).toLocaleDateString() : 'N/A'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
