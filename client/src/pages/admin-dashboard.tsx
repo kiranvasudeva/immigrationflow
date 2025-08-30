@@ -435,9 +435,9 @@ export default function AdminDashboard() {
                 )}
 
                 {/* Clients List */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="space-y-4">
                   {filteredClients.length === 0 ? (
-                    <Card className="lg:col-span-2 xl:col-span-3">
+                    <Card>
                       <CardContent className="py-8 text-center">
                         <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No clients found</h3>
@@ -448,12 +448,12 @@ export default function AdminDashboard() {
                     </Card>
                   ) : (
                     filteredClients.map((client: any) => (
-                      <Card key={client.id} className="hover:shadow-md transition-shadow h-fit">
+                      <Card key={client.id} className="hover:shadow-md transition-shadow">
                         <CardHeader>
                           <div className="flex items-center justify-between">
-                            <div className="space-y-1">
-                              <CardTitle className="text-lg">{client.legalName}</CardTitle>
-                              <CardDescription>
+                            <div className="space-y-1 min-w-0 flex-1 mr-4">
+                              <CardTitle className="text-lg truncate" title={client.legalName}>{client.legalName}</CardTitle>
+                              <CardDescription className="truncate" title={`CUI: ${client.cui} | Registration: ${client.registrationNumber}`}>
                                 CUI: {client.cui} | Registration: {client.registrationNumber}
                               </CardDescription>
                             </div>
@@ -497,19 +497,19 @@ export default function AdminDashboard() {
                         </CardHeader>
                         
                         <CardContent>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                            <div>
-                              <span className="font-medium text-gray-600">Contact:</span>
-                              <p>{client.contactEmail}</p>
-                              <p>{client.phoneNumber}</p>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                            <div className="space-y-1 min-w-0">
+                              <span className="font-medium text-gray-600 block">Contact:</span>
+                              <p className="truncate text-gray-800" title={client.contactEmail}>{client.contactEmail}</p>
+                              <p className="truncate text-gray-800" title={client.phoneNumber}>{client.phoneNumber}</p>
                             </div>
-                            <div>
-                              <span className="font-medium text-gray-600">Administrator:</span>
-                              <p>{client.adminName}</p>
+                            <div className="space-y-1 min-w-0">
+                              <span className="font-medium text-gray-600 block">Administrator:</span>
+                              <p className="truncate text-gray-800" title={client.adminName}>{client.adminName}</p>
                             </div>
-                            <div>
-                              <span className="font-medium text-gray-600">CAEN:</span>
-                              <p>{client.caen}</p>
+                            <div className="space-y-1 min-w-0">
+                              <span className="font-medium text-gray-600 block">CAEN:</span>
+                              <p className="truncate text-gray-800" title={client.caen}>{client.caen}</p>
                             </div>
                           </div>
 
