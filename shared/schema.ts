@@ -143,6 +143,11 @@ export const documentFiles = pgTable("document_files", {
   s3Key: varchar("s3_key", { length: 500 }).notNull(),
   fileName: varchar("file_name", { length: 255 }).notNull(),
   mimeType: varchar("mime_type", { length: 100 }),
+  fileSize: integer("file_size"), // File size in bytes
+  fileHash: varchar("file_hash", { length: 64 }), // SHA256 hash
+  scanResult: varchar("scan_result", { length: 20 }), // 'CLEAN', 'INFECTED', 'SCAN_FAILED', 'PENDING'
+  virusName: varchar("virus_name", { length: 255 }), // Name of virus if infected
+  scannedAt: timestamp("scanned_at"), // When file was scanned
   uploadedByUserId: varchar("uploaded_by_user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });

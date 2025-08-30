@@ -10,6 +10,8 @@ import { requireRole, requireOwnership, requireRoleAndOwnership, applyTenantFilt
 import { governmentApiService } from "./services/government-api";
 import { ocrService } from "./services/ocr-service";
 import { workflowEngine } from "./services/workflow-engine";
+import { SecureUploadService } from "./services/secureUploadService";
+import { fileScanningService } from "./services/fileScanningService";
 import { z } from "zod";
 import { nanoid } from 'nanoid';
 import { 
@@ -1255,6 +1257,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error creating invitation:', error);
       res.status(500).json({ error: 'Failed to create invitation' });
     }
+  });
+
+  // Secure Upload Routes - Protected with authentication and scanning
+  app.post('/api/secure-upload', isAuthenticated, auditMiddleware, SecureUploadService.upload, SecureUploadService.processSecureUpload);
+  
+  app.get('/api/secure-download/:fileId', isAuthenticated, auditMiddleware, SecureUploadService.getSecureDownloadUrl);
+  
+  // Upload configuration and health check
+  app.get('/api/upload-config', isAuthenticated, SecureUploadService.getUploadConfiguration);
+  
+  app.get('/api/upload-health', isAuthenticated, SecureUploadService.healthCheck);
+
+  // File scanning service health check
+  app.get('/api/file-scanner/health', isAuthenticated, async (req, res) => {
+    const health = await fileScanningService.healthCheck();
+    res.status(health.healthy ? 200 : 503).json(health);
   });
 
   const httpServer = createServer(app);

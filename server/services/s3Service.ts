@@ -31,6 +31,12 @@ export class S3Service {
       Bucket: this.bucket,
       Key: key,
       ContentType: contentType,
+      ACL: 'private', // Ensure private access only
+      ServerSideEncryption: 'AES256', // Enable server-side encryption
+      Metadata: {
+        'uploaded-via': 'patra-security-service',
+        'encryption-enabled': 'true'
+      }
     });
 
     return await getSignedUrl(this.s3Client, command, { expiresIn });
@@ -45,12 +51,19 @@ export class S3Service {
     return await getSignedUrl(this.s3Client, command, { expiresIn });
   }
 
-  async uploadFile(key: string, buffer: Buffer, contentType: string): Promise<void> {
+  async uploadFile(key: string, buffer: Buffer, contentType: string, metadata?: Record<string, string>): Promise<void> {
     const command = new PutObjectCommand({
       Bucket: this.bucket,
       Key: key,
       Body: buffer,
       ContentType: contentType,
+      ACL: 'private', // Ensure private access only
+      ServerSideEncryption: 'AES256', // Enable server-side encryption
+      Metadata: {
+        'uploaded-via': 'patra-security-service',
+        'encryption-enabled': 'true',
+        ...metadata // Allow additional metadata
+      }
     });
 
     await this.s3Client.send(command);
