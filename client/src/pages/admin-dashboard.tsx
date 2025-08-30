@@ -448,7 +448,7 @@ export default function AdminDashboard() {
                     </Card>
                   ) : (
                     filteredClients.map((client: any) => (
-                      <Card key={client.id} className="hover:shadow-md transition-shadow">
+                      <Card key={client.id} className="hover:shadow-md transition-shadow w-full">
                         <CardHeader>
                           <div className="flex items-center justify-between">
                             <div className="space-y-1 min-w-0 flex-1 mr-4">
@@ -497,7 +497,7 @@ export default function AdminDashboard() {
                         </CardHeader>
                         
                         <CardContent>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 text-sm">
                             <div className="space-y-1 min-w-0">
                               <span className="font-medium text-gray-600 block">Contact:</span>
                               <p className="truncate text-gray-800" title={client.contactEmail}>{client.contactEmail}</p>
