@@ -54,13 +54,13 @@ export default function Sidebar({ userRole, onSectionChange, currentSection }: S
       if (userRole === 'ADMIN' && currentSection && sectionKey) {
         return currentSection === sectionKey;
       }
-      // Fallback to URL-based matching
+      // Fallback to URL-based matching for non-admin or when no currentSection
       if (href === '/' && (location === '/' || location === '/dashboard')) return true;
       return location.startsWith(href) && href !== '/';
     };
 
     const commonItems = [
-      { icon: 'fas fa-chart-bar', label: 'Dashboard', href: '/dashboard', sectionKey: 'overview', active: isActive('/dashboard', 'overview') || isActive('/') }
+      { icon: 'fas fa-chart-bar', label: 'Dashboard', href: '/dashboard', sectionKey: 'overview', active: isActive('/dashboard', 'overview') }
     ];
 
     switch (userRole) {
