@@ -507,6 +507,7 @@ export default function ClientProfile() {
                               className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
                               onClick={() => {
                                 console.log('Worker clicked:', worker.id);
+                                alert(`Worker clicked: ${worker.firstName} ${worker.lastName} (${worker.id})`);
                                 setSelectedWorkerId(worker.id);
                               }}
                               data-testid={`worker-card-${worker.id}`}

@@ -1,0 +1,68 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+queryClient.ts:32  GET https://b973af17-5c05-4aa9-ac0f-47cf783880f0-00-2d6nz3p7hu1sg.riker.replit.dev/api/audit 500 (Internal Server Error)
+(anonymous) @ queryClient.ts:32
+fetchFn @ @tanstack_react-query.js?v=5017064a:840
+run @ @tanstack_react-query.js?v=5017064a:494
+start @ @tanstack_react-query.js?v=5017064a:536
+fetch @ @tanstack_react-query.js?v=5017064a:926
+executeFetch_fn @ @tanstack_react-query.js?v=5017064a:2211
+onSubscribe @ @tanstack_react-query.js?v=5017064a:1898
+subscribe @ @tanstack_react-query.js?v=5017064a:24
+(anonymous) @ @tanstack_react-query.js?v=5017064a:3022
+subscribeToStore @ chunk-WERSD76P.js?v=5017064a:11984
+commitHookEffectListMount @ chunk-WERSD76P.js?v=5017064a:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=5017064a:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=5017064a:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=5017064a:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=5017064a:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=5017064a:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=5017064a:19447
+commitRootImpl @ chunk-WERSD76P.js?v=5017064a:19416
+commitRoot @ chunk-WERSD76P.js?v=5017064a:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=5017064a:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=5017064a:9119
+(anonymous) @ chunk-WERSD76P.js?v=5017064a:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=5017064a:555
+flush @ @tanstack_react-query.js?v=5017064a:569
+batch @ @tanstack_react-query.js?v=5017064a:587
+dispatch_fn @ @tanstack_react-query.js?v=5017064a:996
+setData @ @tanstack_react-query.js?v=5017064a:696
+onSuccess @ @tanstack_react-query.js?v=5017064a:897
+resolve @ @tanstack_react-query.js?v=5017064a:456
+Promise.then
+run @ @tanstack_react-query.js?v=5017064a:498
+start @ @tanstack_react-query.js?v=5017064a:536
+fetch @ @tanstack_react-query.js?v=5017064a:926
+executeFetch_fn @ @tanstack_react-query.js?v=5017064a:2211
+onSubscribe @ @tanstack_react-query.js?v=5017064a:1898
+subscribe @ @tanstack_react-query.js?v=5017064a:24
+(anonymous) @ @tanstack_react-query.js?v=5017064a:3022
+subscribeToStore @ chunk-WERSD76P.js?v=5017064a:11984
+commitHookEffectListMount @ chunk-WERSD76P.js?v=5017064a:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=5017064a:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=5017064a:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=5017064a:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=5017064a:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=5017064a:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=5017064a:19447
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=5017064a:18868
+flushSyncCallbacks @ chunk-WERSD76P.js?v=5017064a:9119
+commitRootImpl @ chunk-WERSD76P.js?v=5017064a:19432
+commitRoot @ chunk-WERSD76P.js?v=5017064a:19277
+finishConcurrentRender @ chunk-WERSD76P.js?v=5017064a:18805
+performConcurrentWorkOnRoot @ chunk-WERSD76P.js?v=5017064a:18718
+workLoop @ chunk-WERSD76P.js?v=5017064a:197
+flushWork @ chunk-WERSD76P.js?v=5017064a:176
+performWorkUntilDeadline @ chunk-WERSD76P.js?v=5017064a:384Understand this error
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
+LanguageSelector.tsx:14 LanguageSelector render: {currentLanguage: 'en', availableLanguages: Array(2)}
