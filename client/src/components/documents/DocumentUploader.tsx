@@ -63,12 +63,31 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
   const checkCameraAvailability = async () => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        console.log('MediaDevices API not supported');
         setHasCameraAccess(false);
+        return;
+      }
+
+      // First, request permission to get camera info
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach(track => track.stop()); // Stop the test stream
+        console.log('Camera permission granted');
+      } catch (permError) {
+        console.error('Camera permission denied:', permError);
+        setHasCameraAccess(false);
+        toast({
+          title: "Camera Permission Required",
+          description: "Please allow camera access and try again.",
+          variant: "destructive",
+        });
         return;
       }
 
       const devices = await navigator.mediaDevices.enumerateDevices();
       const cameras = devices.filter(device => device.kind === 'videoinput');
+      
+      console.log('Available cameras:', cameras);
       
       setAvailableCameras(cameras);
       setHasCameraAccess(cameras.length > 0);
@@ -80,11 +99,21 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
           camera.label.toLowerCase().includes('rear') ||
           camera.label.toLowerCase().includes('environment')
         );
-        setSelectedCameraId(backCamera?.deviceId || cameras[0].deviceId);
+        const selectedCamera = backCamera?.deviceId || cameras[0].deviceId;
+        setSelectedCameraId(selectedCamera);
+        console.log('Selected camera:', selectedCamera);
       }
     } catch (error) {
       console.error('Error checking camera availability:', error);
       setHasCameraAccess(false);
+      setAvailableCameras([]);
+      setSelectedCameraId('');
+      
+      toast({
+        title: "Camera Error",
+        description: "Unable to access camera. Please check permissions.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -147,17 +176,24 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
   };
 
   const startPhotoCapture = async () => {
+    console.log('Starting photo capture...');
+    console.log('Available cameras:', availableCameras);
+    console.log('Selected camera ID:', selectedCameraId);
+    
     try {
       // If no camera selected, pick the first available one
       let cameraId = selectedCameraId;
       if (!cameraId && availableCameras.length > 0) {
         cameraId = availableCameras[0].deviceId;
         setSelectedCameraId(cameraId);
+        console.log('Auto-selected camera:', cameraId);
       }
       
       if (!cameraId) {
         throw new Error('No camera available');
       }
+
+      console.log('Requesting camera with ID:', cameraId);
 
       const constraints = {
         video: {
@@ -167,12 +203,19 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
         }
       };
 
+      console.log('Camera constraints:', constraints);
+      
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('Camera stream obtained:', stream);
+      
       setPhotoStream(stream);
       
       // Set video source immediately
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        console.log('Video source set');
+      } else {
+        console.log('Video ref not available');
       }
       
       toast({
@@ -181,6 +224,8 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
       });
     } catch (error: any) {
       console.error('Error accessing camera:', error);
+      console.log('Error name:', error.name);
+      console.log('Error message:', error.message);
       
       let errorMessage = "Unable to access camera. ";
       
@@ -193,7 +238,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
       } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
         errorMessage += "Camera is already in use by another application.";
       } else {
-        errorMessage += "Please check your camera permissions and try again.";
+        errorMessage += `Error: ${error.message || 'Unknown error'}`;
       }
       
       toast({
