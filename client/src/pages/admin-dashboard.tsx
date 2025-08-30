@@ -712,7 +712,7 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: {
                     {(() => {
                       // Group assignments by stage for better organization
                       const stageGroups = workerDetailsData.assignments.reduce((acc: any, assignment: any) => {
-                        const stage = assignment.workRequirement?.stage || 'Unknown';
+                        const stage = assignment.requirement?.stage?.key || 'Unknown';
                         if (!acc[stage]) {
                           acc[stage] = [];
                         }
@@ -721,7 +721,7 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: {
                       }, {});
 
                       // Define stage order
-                      const stageOrder = ['AJOFM', 'WORK_PERMIT', 'VISA', 'RESIDENCE_PERMIT'];
+                      const stageOrder = ['AJOFM', 'IGI_WORK_PERMIT', 'CONSULATE_VISA', 'IGI_RESIDENCE'];
                       
                       return stageOrder.map((stage) => {
                         const assignments = stageGroups[stage] || [];
@@ -732,19 +732,19 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: {
                             <div className="flex items-center justify-between mb-3">
                               <h6 className="font-medium text-gray-800 text-sm">
                                 {stage === 'AJOFM' ? 'AJOFM Labor Market Test' :
-                                 stage === 'WORK_PERMIT' ? 'IGI Work Permit' :
-                                 stage === 'VISA' ? 'Consulate Visa Application' :
-                                 stage === 'RESIDENCE_PERMIT' ? 'Residence Permit' : stage}
+                                 stage === 'IGI_WORK_PERMIT' ? 'IGI Work Permit' :
+                                 stage === 'CONSULATE_VISA' ? 'Consulate Visa Application' :
+                                 stage === 'IGI_RESIDENCE' ? 'IGI Residence Permit' : stage}
                               </h6>
                               <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                assignments.some((a: any) => a.status === 'completed') ? 'bg-green-100 text-green-800' :
-                                assignments.some((a: any) => a.status === 'in_progress') ? 'bg-blue-100 text-blue-800' :
-                                assignments.some((a: any) => a.status === 'pending') ? 'bg-yellow-100 text-yellow-800' :
+                                assignments.some((a: any) => a.status === 'APPROVED_BY_ADMIN') ? 'bg-green-100 text-green-800' :
+                                assignments.some((a: any) => a.status === 'SUBMITTED_BY_USER' || a.status === 'RECEIVED_BY_ADMIN') ? 'bg-blue-100 text-blue-800' :
+                                assignments.some((a: any) => a.status === 'AWAITING_UPLOAD') ? 'bg-yellow-100 text-yellow-800' :
                                 'bg-gray-100 text-gray-800'
                               }`}>
-                                {assignments.some((a: any) => a.status === 'completed') ? 'Completed' :
-                                 assignments.some((a: any) => a.status === 'in_progress') ? 'In Progress' :
-                                 assignments.some((a: any) => a.status === 'pending') ? 'Pending' : 'Not Started'}
+                                {assignments.some((a: any) => a.status === 'APPROVED_BY_ADMIN') ? 'Completed' :
+                                 assignments.some((a: any) => a.status === 'SUBMITTED_BY_USER' || a.status === 'RECEIVED_BY_ADMIN') ? 'In Progress' :
+                                 assignments.some((a: any) => a.status === 'AWAITING_UPLOAD') ? 'Pending' : 'Not Started'}
                               </span>
                             </div>
                             
@@ -752,16 +752,20 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: {
                               {assignments.map((assignment: any, index: number) => (
                                 <div key={assignment.id || index} className="flex items-center justify-between text-sm">
                                   <span className="text-gray-700">
-                                    {assignment.workRequirement?.title || `Requirement ${index + 1}`}
+                                    {assignment.requirement?.title || `Requirement ${index + 1}`}
                                   </span>
                                   <div className="flex items-center space-x-2">
                                     <span className={`px-2 py-1 text-xs rounded-full ${
-                                      assignment.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                      assignment.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                                      assignment.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                      assignment.status === 'APPROVED_BY_ADMIN' ? 'bg-green-100 text-green-700' :
+                                      assignment.status === 'SUBMITTED_BY_USER' || assignment.status === 'RECEIVED_BY_ADMIN' ? 'bg-blue-100 text-blue-700' :
+                                      assignment.status === 'AWAITING_UPLOAD' ? 'bg-yellow-100 text-yellow-700' :
                                       'bg-gray-100 text-gray-700'
                                     }`}>
-                                      {assignment.status || 'pending'}
+                                      {assignment.status === 'APPROVED_BY_ADMIN' ? 'Approved' :
+                                       assignment.status === 'SUBMITTED_BY_USER' ? 'Submitted' :
+                                       assignment.status === 'RECEIVED_BY_ADMIN' ? 'Under Review' :
+                                       assignment.status === 'AWAITING_UPLOAD' ? 'Pending Upload' :
+                                       assignment.status === 'NOT_STARTED' ? 'Not Started' : assignment.status}
                                     </span>
                                     {assignment.documentFiles && assignment.documentFiles.length > 0 && (
                                       <span className="text-xs text-gray-500">
