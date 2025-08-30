@@ -20,7 +20,375 @@ import { useTranslation } from "@/contexts/LanguageContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { NavigationBreadcrumb } from "@/components/layout/NavigationBreadcrumb";
 
-// Component to display client-specific workers
+// Component to display all workers from all clients
+function AllWorkersDisplay({ selectedWorker, setSelectedWorker }: { selectedWorker: any, setSelectedWorker: (worker: any) => void }) {
+  const [editingWorker, setEditingWorker] = useState<any>(null);
+  const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
+    nationality: '',
+    email: '',
+    phone: '',
+    passportNumber: '',
+    dob: '',
+    passportExpiry: ''
+  });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Get all workers
+  const { data: allWorkers, isLoading } = useQuery({
+    queryKey: ['/api/workers'],
+    queryFn: async () => {
+      const response = await fetch('/api/workers');
+      if (!response.ok) {
+        throw new Error('Failed to fetch workers');
+      }
+      return response.json();
+    }
+  });
+
+  // Update worker mutation
+  const updateWorkerMutation = useMutation({
+    mutationFn: async (data: { workerId: string, workerData: any }) => {
+      const response = await apiRequest("PUT", `/api/workers/${data.workerId}`, data.workerData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workers'] });
+      setEditingWorker(null);
+      toast({
+        title: "Success",
+        description: "Worker updated successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error", 
+        description: "Failed to update worker",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const startEditing = (worker: any) => {
+    setEditingWorker(worker.id);
+    setEditForm({
+      firstName: worker.firstName || '',
+      lastName: worker.lastName || '',
+      nationality: worker.nationality || '',
+      email: worker.email || '',
+      phone: worker.phone || '',
+      passportNumber: worker.passportNumber || '',
+      dob: worker.dob ? new Date(worker.dob).toISOString().split('T')[0] : '',
+      passportExpiry: worker.passportExpiry ? new Date(worker.passportExpiry).toISOString().split('T')[0] : ''
+    });
+  };
+
+  const saveWorker = async (workerId: string) => {
+    await updateWorkerMutation.mutateAsync({ workerId, workerData: editForm });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  const workers = allWorkers || [];
+
+  // Filter workers by search term and status
+  const filteredWorkers = workers.filter((worker: any) => {
+    const matchesSearch = !searchTerm || 
+      `${worker.firstName} ${worker.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      worker.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      worker.clientName?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || worker.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Header with Search and Filters */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-xl font-bold text-gray-900">All Workers</h3>
+          <p className="text-gray-600">Manage workers across all clients</p>
+        </div>
+        <div className="flex items-center space-x-4">
+          <Input
+            placeholder="Search workers..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-64"
+          />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Workers List */}
+      {filteredWorkers.length === 0 ? (
+        <div className="text-center py-8">
+          <i className="fas fa-user-plus text-gray-400 text-3xl mb-4"></i>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Workers Found</h3>
+          <p className="text-gray-600">No workers match your current filters.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredWorkers.map((worker: any) => (
+            <div key={worker.id} className="border rounded-lg">
+              <div 
+                className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 ${
+                  selectedWorker?.id === worker.id ? 'bg-blue-50 border-blue-200' : ''
+                }`}
+                onClick={() => setSelectedWorker(selectedWorker?.id === worker.id ? null : worker)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <i className="fas fa-user text-blue-600"></i>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">
+                        {worker.firstName} {worker.lastName}
+                      </h4>
+                      <div className="flex items-center space-x-4 text-sm text-gray-600">
+                        <span>
+                          <i className="fas fa-building mr-1"></i>
+                          {worker.clientName || 'Unassigned'}
+                        </span>
+                        <span>
+                          <i className="fas fa-flag mr-1"></i>
+                          {worker.nationality || 'N/A'}
+                        </span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          worker.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {worker.status || 'Active'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <i className={`fas ${selectedWorker?.id === worker.id ? 'fa-chevron-up' : 'fa-chevron-down'} text-gray-400`}></i>
+                  </div>
+                </div>
+              </div>
+
+              {/* Worker Details */}
+              {selectedWorker?.id === worker.id && (
+                <div className="border-t bg-gray-50 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h5 className="font-semibold text-gray-900">Worker Details</h5>
+                    <div className="flex space-x-2">
+                      {editingWorker === worker.id ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => saveWorker(worker.id)}
+                            disabled={updateWorkerMutation.isPending}
+                            className="text-green-600 border-green-200 hover:bg-green-50"
+                          >
+                            <i className="fas fa-save mr-2"></i>
+                            {updateWorkerMutation.isPending ? 'Saving...' : 'Save'}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingWorker(null)}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            <i className="fas fa-ban mr-2"></i>
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => startEditing(worker)}
+                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                        >
+                          <i className="fas fa-edit mr-2"></i>
+                          Edit Worker
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Personal Info */}
+                    <div className="space-y-3">
+                      <h6 className="font-medium text-gray-900 text-sm">Personal Information</h6>
+                      <div className="space-y-2 text-sm">
+                        <div className="space-y-1">
+                          <span className="text-gray-600 text-xs">First Name:</span>
+                          {editingWorker === worker.id ? (
+                            <Input
+                              value={editForm.firstName}
+                              onChange={(e) => setEditForm({...editForm, firstName: e.target.value})}
+                              className="h-8 text-sm"
+                            />
+                          ) : (
+                            <span className="font-medium block">{worker.firstName || 'N/A'}</span>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-gray-600 text-xs">Last Name:</span>
+                          {editingWorker === worker.id ? (
+                            <Input
+                              value={editForm.lastName}
+                              onChange={(e) => setEditForm({...editForm, lastName: e.target.value})}
+                              className="h-8 text-sm"
+                            />
+                          ) : (
+                            <span className="font-medium block">{worker.lastName || 'N/A'}</span>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-gray-600 text-xs">Nationality:</span>
+                          {editingWorker === worker.id ? (
+                            <Input
+                              value={editForm.nationality}
+                              onChange={(e) => setEditForm({...editForm, nationality: e.target.value})}
+                              className="h-8 text-sm"
+                            />
+                          ) : (
+                            <span className="font-medium block">{worker.nationality || 'N/A'}</span>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-gray-600 text-xs">Date of Birth:</span>
+                          {editingWorker === worker.id ? (
+                            <Input
+                              type="date"
+                              value={editForm.dob}
+                              onChange={(e) => setEditForm({...editForm, dob: e.target.value})}
+                              className="h-8 text-sm"
+                            />
+                          ) : (
+                            <span className="font-medium block">
+                              {worker.dob ? new Date(worker.dob).toLocaleDateString() : 'N/A'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contact & Documents */}
+                    <div className="space-y-3">
+                      <h6 className="font-medium text-gray-900 text-sm">Contact & Documents</h6>
+                      <div className="space-y-2 text-sm">
+                        <div className="space-y-1">
+                          <span className="text-gray-600 text-xs">Email:</span>
+                          {editingWorker === worker.id ? (
+                            <Input
+                              type="email"
+                              value={editForm.email}
+                              onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                              className="h-8 text-sm"
+                            />
+                          ) : (
+                            <span className="font-medium block">{worker.email || 'N/A'}</span>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-gray-600 text-xs">Phone:</span>
+                          {editingWorker === worker.id ? (
+                            <Input
+                              value={editForm.phone}
+                              onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                              className="h-8 text-sm"
+                            />
+                          ) : (
+                            <span className="font-medium block">{worker.phone || 'N/A'}</span>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-gray-600 text-xs">Passport Number:</span>
+                          {editingWorker === worker.id ? (
+                            <Input
+                              value={editForm.passportNumber}
+                              onChange={(e) => setEditForm({...editForm, passportNumber: e.target.value})}
+                              className="h-8 text-sm"
+                            />
+                          ) : (
+                            <span className="font-medium block">{worker.passportNumber || 'N/A'}</span>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-gray-600 text-xs">Passport Expires:</span>
+                          {editingWorker === worker.id ? (
+                            <Input
+                              type="date"
+                              value={editForm.passportExpiry}
+                              onChange={(e) => setEditForm({...editForm, passportExpiry: e.target.value})}
+                              className="h-8 text-sm"
+                            />
+                          ) : (
+                            <span className="font-medium block">
+                              {worker.passportExpiry ? new Date(worker.passportExpiry).toLocaleDateString() : 'N/A'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Client & Status Info */}
+                    <div className="space-y-3">
+                      <h6 className="font-medium text-gray-900 text-sm">Client & Status</h6>
+                      <div className="space-y-2 text-sm">
+                        <div className="space-y-1">
+                          <span className="text-gray-600 text-xs">Client Company:</span>
+                          <span className="font-medium block">{worker.clientName || 'Unassigned'}</span>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-gray-600 text-xs">Status:</span>
+                          <span className={`font-medium block ${
+                            worker.status === 'active' ? 'text-green-600' : 'text-gray-600'
+                          }`}>
+                            {worker.status || 'Active'}
+                          </span>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-gray-600 text-xs">Created:</span>
+                          <span className="font-medium block">
+                            {worker.createdAt ? new Date(worker.createdAt).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Component to display client-specific workers  
 function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: { clientId: string, selectedWorker: any, setSelectedWorker: (worker: any) => void }) {
   const [editingWorker, setEditingWorker] = useState<any>(null);
   const [editForm, setEditForm] = useState({
@@ -1819,387 +2187,17 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* Workers Section - Available for both mobile and desktop */}
+          {/* Workers Section - Show all workers from all clients */}
           {activeSection === "workers" && (
             <div className="space-y-6">
-              {!selectedClient ? (
-                // Step 1: Show message to select a client first
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="text-center py-8">
-                      <i className="fas fa-users text-gray-400 text-3xl mb-4"></i>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Workers & Workflow Management</h3>
-                      <p className="text-gray-600 mb-4">Select a client from the Clients section to view their workers and workflow</p>
-                      <Button 
-                        onClick={() => setActiveSection("clients")}
-                        className="mt-2"
-                        data-testid="button-go-to-clients"
-                      >
-                        <i className="fas fa-building mr-2"></i>
-                        Go to Clients
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : !selectedWorker ? (
-                // Step 2: Show workers list for selected client
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center">
-                          <i className="fas fa-users mr-2"></i>
-                          Workers for {selectedClient.legalName}
-                        </CardTitle>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Click on a worker to view their immigration workflow
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        onClick={() => setSelectedClient(null)}
-                        data-testid="button-back-to-client-selection"
-                      >
-                        <i className="fas fa-arrow-left mr-2"></i>
-                        Back to Client Selection
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {(() => {
-                      // Filter assignments by matching clientProfileId to selectedClient.id
-                      const clientAssignments = assignments.filter((assignment: any) => 
-                        assignment.clientProfileId === selectedClient.id
-                      );
-                      
-                      
-                      // Group assignments by workerId to create worker entries with actual worker data
-                      const workersMap = new Map();
-                      clientAssignments.forEach((assignment: any) => {
-                        const workerId = assignment.workerId;
-                        const workerData = assignment.worker; // This contains the actual worker info!
-                        
-                        if (!workersMap.has(workerId)) {
-                          workersMap.set(workerId, {
-                            id: workerId,
-                            assignments: [],
-                            status: assignment.status,
-                            createdAt: assignment.createdAt,
-                            // Use actual worker data if available
-                            firstName: workerData?.firstName,
-                            lastName: workerData?.lastName,
-                            nationality: workerData?.nationality,
-                            email: workerData?.email,
-                            worker: workerData // Keep full worker object for reference
-                          });
-                        }
-                        workersMap.get(workerId).assignments.push(assignment);
-                      });
-                      
-                      let clientWorkers = Array.from(workersMap.values());
-
-                      // Add any workers from direct API that don't have assignments yet
-                      const workerIdsWithAssignments = new Set(clientWorkers.map(w => w.id));
-                      const workersWithoutAssignments = directWorkers.filter((worker: any) => 
-                        !workerIdsWithAssignments.has(worker.id)
-                      );
-                      
-                      if (workersWithoutAssignments.length > 0) {
-                        const mappedWorkersWithoutAssignments = workersWithoutAssignments.map((worker: any) => ({
-                          ...worker,
-                          assignments: [], // No assignments yet
-                          status: 'pending' // Default status
-                        }));
-                        clientWorkers = [...clientWorkers, ...mappedWorkersWithoutAssignments];
-                      }
-
-                      if (clientWorkers.length === 0) {
-                        return (
-                          <div className="text-center py-8">
-                            <i className="fas fa-user-plus text-gray-400 text-3xl mb-4"></i>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">No Workers Found</h3>
-                            <p className="text-gray-600 mb-4">This client doesn't have any workers assigned yet.</p>
-                            <Button data-testid="button-add-first-worker">
-                              <i className="fas fa-plus mr-2"></i>
-                              Add First Worker
-                            </Button>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div className="space-y-3">
-                          {clientWorkers.map((worker: any, index: number) => (
-                            <div 
-                              key={worker.id || index}
-                              className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                              onClick={() => setSelectedWorker(worker)}
-                              data-testid={`worker-${index}`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-4">
-                                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                                    <i className="fas fa-user text-blue-600 text-lg"></i>
-                                  </div>
-                                  <div>
-                                    <h5 className="font-semibold text-gray-900">
-                                      {worker.firstName && worker.lastName 
-                                        ? `${worker.firstName} ${worker.lastName}`
-                                        : `Worker #${index + 1}`}
-                                    </h5>
-                                    <p className="text-sm text-gray-600">
-                                      {worker.nationality || 'Nationality pending'}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      Started: {worker.createdAt ? new Date(worker.createdAt).toLocaleDateString('en-GB') : 'Date pending'}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                    worker.status === 'ACCEPTED' || worker.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                    worker.status === 'SUBMITTED_BY_USER' || worker.status === 'RECEIVED_BY_ADMIN' || worker.status === 'active' ? 'bg-blue-100 text-blue-800' :
-                                    worker.status === 'AWAITING_UPLOAD' ? 'bg-yellow-100 text-yellow-800' :
-                                    worker.status === 'REJECTED' || worker.status === 'blocked' ? 'bg-red-100 text-red-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
-                                    {worker.status === 'NOT_STARTED' ? 'Not Started' :
-                                     worker.status === 'AWAITING_UPLOAD' ? 'Awaiting Upload' :
-                                     worker.status === 'SUBMITTED_BY_USER' ? 'Submitted' :
-                                     worker.status === 'RECEIVED_BY_ADMIN' ? 'Under Review' :
-                                     worker.status === 'ACCEPTED' ? 'Accepted' :
-                                     worker.status === 'REJECTED' ? 'Rejected' :
-                                     worker.status || 'Pending'}
-                                  </span>
-                                  <div className="mt-1">
-                                    <i className="fas fa-chevron-right text-gray-400"></i>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </CardContent>
-                </Card>
-              ) : (
-                // Step 3: Show detailed workflow for selected worker
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center">
-                          <i className="fas fa-clipboard-list mr-2"></i>
-                          Immigration Workflow: {selectedWorker.worker?.firstName && selectedWorker.worker?.lastName 
-                            ? `${selectedWorker.worker.firstName} ${selectedWorker.worker.lastName}`
-                            : selectedWorker.firstName && selectedWorker.lastName 
-                            ? `${selectedWorker.firstName} ${selectedWorker.lastName}`
-                            : 'Worker'}
-                        </CardTitle>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Client: {selectedClient.legalName}
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        onClick={() => setSelectedWorker(null)}
-                        data-testid="button-back-to-workers-list"
-                      >
-                        <i className="fas fa-arrow-left mr-2"></i>
-                        Back to Workers List
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      {/* Worker Information */}
-                      <div className="border rounded-lg p-4 bg-gray-50">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-semibold text-gray-900">Worker Information</h4>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              // Initialize form with current worker data
-                              setEditWorkerForm({
-                                firstName: selectedWorker.worker?.firstName || '',
-                                lastName: selectedWorker.worker?.lastName || '',
-                                nationality: selectedWorker.worker?.nationality || '',
-                                email: selectedWorker.worker?.email || '',
-                                phone: selectedWorker.worker?.phone || '',
-                                passportNumber: selectedWorker.worker?.passportNumber || '',
-                                dob: selectedWorker.worker?.dob ? new Date(selectedWorker.worker.dob).toISOString().split('T')[0] : '',
-                                passportExpiry: selectedWorker.worker?.passportExpiry ? new Date(selectedWorker.worker.passportExpiry).toISOString().split('T')[0] : ''
-                              });
-                              setEditingWorker(true);
-                            }}
-                            data-testid="button-edit-worker-profile"
-                          >
-                            <i className="fas fa-edit mr-2"></i>
-                            Edit Profile
-                          </Button>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="text-gray-600">Full Name:</span>
-                            <span className="ml-2 font-medium">
-                              {(selectedWorker.firstName || selectedWorker.worker?.firstName) && (selectedWorker.lastName || selectedWorker.worker?.lastName)
-                                ? `${selectedWorker.firstName || selectedWorker.worker?.firstName} ${selectedWorker.lastName || selectedWorker.worker?.lastName}`
-                                : 'Name pending'}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Nationality:</span>
-                            <span className="ml-2 font-medium">{selectedWorker.nationality || selectedWorker.worker?.nationality || 'Pending'}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Email:</span>
-                            <span className="ml-2 font-medium">{selectedWorker.email || selectedWorker.worker?.email || 'Pending'}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Phone:</span>
-                            <span className="ml-2 font-medium">{selectedWorker.phone || selectedWorker.worker?.phone || 'Pending'}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Passport Number:</span>
-                            <span className="ml-2 font-medium">{selectedWorker.passportNumber || selectedWorker.worker?.passportNumber || 'Pending'}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Date of Birth <span className="italic">(dd/mm/yyyy)</span>:</span>
-                            <span className="ml-2 font-medium">
-                              {(selectedWorker.dob || selectedWorker.worker?.dob) 
-                                ? new Date(selectedWorker.dob || selectedWorker.worker?.dob).toLocaleDateString('en-GB')
-                                : 'Pending'
-                              }
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Passport Expiry <span className="italic">(dd/mm/yyyy)</span>:</span>
-                            <span className="ml-2 font-medium">
-                              {(selectedWorker.passportExpiry || selectedWorker.worker?.passportExpiry) 
-                                ? new Date(selectedWorker.passportExpiry || selectedWorker.worker?.passportExpiry).toLocaleDateString('en-GB')
-                                : 'Pending'
-                              }
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Started <span className="italic">(dd/mm/yyyy)</span>:</span>
-                            <span className="ml-2 font-medium">
-                              {selectedWorker.createdAt 
-                                ? new Date(selectedWorker.createdAt).toLocaleDateString('en-GB')
-                                : 'Date pending'
-                              }
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Workflow Status */}
-                      <div>
-                        <h4 className="font-semibold text-gray-900 mb-4">Immigration Process Status</h4>
-                        <div className="space-y-4">
-                          {/* AJOFM (Labor Market Test) */}
-                          <div className="flex items-center justify-between p-4 border rounded-lg">
-                            <div className="flex items-center space-x-3">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                selectedWorker.ajofmStatus === 'completed' || selectedWorker.ajofmStatus === 'approved' 
-                                  ? 'bg-green-100 text-green-600' 
-                                  : 'bg-gray-100 text-gray-600'
-                              }`}>
-                                <i className="fas fa-briefcase text-sm"></i>
-                              </div>
-                              <div>
-                                <h5 className="font-medium">AJOFM Labor Market Test</h5>
-                                <p className="text-sm text-gray-600">Romanian Employment Agency approval</p>
-                              </div>
-                            </div>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              selectedWorker.ajofmStatus === 'completed' || selectedWorker.ajofmStatus === 'approved' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {selectedWorker.ajofmStatus === 'completed' || selectedWorker.ajofmStatus === 'approved' ? 'Completed' : 'Pending'}
-                            </span>
-                          </div>
-
-                          {/* IGI Work Permit */}
-                          <div className="flex items-center justify-between p-4 border rounded-lg">
-                            <div className="flex items-center space-x-3">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                selectedWorker.igiStatus === 'completed' || selectedWorker.igiStatus === 'approved' 
-                                  ? 'bg-green-100 text-green-600' 
-                                  : 'bg-gray-100 text-gray-600'
-                              }`}>
-                                <i className="fas fa-id-card text-sm"></i>
-                              </div>
-                              <div>
-                                <h5 className="font-medium">IGI Work Permit</h5>
-                                <p className="text-sm text-gray-600">Romanian Immigration Office work authorization</p>
-                              </div>
-                            </div>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              selectedWorker.igiStatus === 'completed' || selectedWorker.igiStatus === 'approved' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {selectedWorker.igiStatus === 'completed' || selectedWorker.igiStatus === 'approved' ? 'Completed' : 'Pending'}
-                            </span>
-                          </div>
-
-                          {/* Consulate Visa */}
-                          <div className="flex items-center justify-between p-4 border rounded-lg">
-                            <div className="flex items-center space-x-3">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                selectedWorker.visaStatus === 'completed' || selectedWorker.visaStatus === 'approved' 
-                                  ? 'bg-green-100 text-green-600' 
-                                  : 'bg-gray-100 text-gray-600'
-                              }`}>
-                                <i className="fas fa-passport text-sm"></i>
-                              </div>
-                              <div>
-                                <h5 className="font-medium">Consulate Visa Application</h5>
-                                <p className="text-sm text-gray-600">Romanian consulate visa processing</p>
-                              </div>
-                            </div>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              selectedWorker.visaStatus === 'completed' || selectedWorker.visaStatus === 'approved' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {selectedWorker.visaStatus === 'completed' || selectedWorker.visaStatus === 'approved' ? 'Completed' : 'Pending'}
-                            </span>
-                          </div>
-
-                          {/* Residence Permit */}
-                          <div className="flex items-center justify-between p-4 border rounded-lg">
-                            <div className="flex items-center space-x-3">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                selectedWorker.residenceStatus === 'completed' || selectedWorker.residenceStatus === 'approved' 
-                                  ? 'bg-green-100 text-green-600' 
-                                  : 'bg-gray-100 text-gray-600'
-                              }`}>
-                                <i className="fas fa-home text-sm"></i>
-                              </div>
-                              <div>
-                                <h5 className="font-medium">Residence Permit</h5>
-                                <p className="text-sm text-gray-600">Final residence permit in Romania</p>
-                              </div>
-                            </div>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              selectedWorker.residenceStatus === 'completed' || selectedWorker.residenceStatus === 'approved' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {selectedWorker.residenceStatus === 'completed' || selectedWorker.residenceStatus === 'approved' ? 'Completed' : 'Pending'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              <Card data-testid="card-workers">
+                <CardContent className="p-6">
+                  <AllWorkersDisplay 
+                    selectedWorker={selectedWorker}
+                    setSelectedWorker={setSelectedWorker}
+                  />
+                </CardContent>
+              </Card>
             </div>
           )}
 
@@ -2225,27 +2223,16 @@ export default function AdminDashboard() {
               {/* Workers Section */}
               {activeSection === "workers" && (
                 <div className="space-y-6">
-                  {!selectedClient ? (
-                    // Step 1: Show message to select a client first
-                    <Card>
-                      <CardContent className="p-6">
-                        <div className="text-center py-8">
-                          <i className="fas fa-users text-gray-400 text-3xl mb-4"></i>
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">Workers & Workflow Management</h3>
-                          <p className="text-gray-600 mb-4">Select a client from the Clients section to view their workers and workflow</p>
-                          <Button 
-                            onClick={() => setActiveSection("clients")}
-                            className="mt-2"
-                            data-testid="button-go-to-clients"
-                          >
-                            <i className="fas fa-building mr-2"></i>
-                            Go to Clients
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ) : !selectedWorker ? (
-                    // Step 2: Show workers list for selected client
+                  <Card data-testid="card-workers-mobile">
+                    <CardContent className="p-6">
+                      <AllWorkersDisplay 
+                        selectedWorker={selectedWorker}
+                        setSelectedWorker={setSelectedWorker}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
                     <Card>
                       <CardHeader>
                         <div className="flex items-center justify-between">
