@@ -315,15 +315,14 @@ function getAssignmentFilterForUser(userId: string, role: UserRole) {
 export function devRbacBypass(originalMiddleware: RequestHandler): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {
     if (process.env.NODE_ENV === 'development' && req.path.includes('/api/')) {
-      // In dev, mock a user with appropriate role based on the route
+      // In dev, mock a user with ADMIN role for all API calls to ensure access
       if (!req.user?.dbUser) {
-        const mockRole: UserRole = req.path.includes('admin') ? 'ADMIN' : 'OWNER';
         (req.user as any) = {
           ...req.user,
           dbUser: {
             id: 'dev-admin-1',
             email: 'admin@dev.local',
-            role: mockRole,
+            role: 'ADMIN' as UserRole,
             invitedById: null
           }
         };

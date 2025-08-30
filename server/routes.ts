@@ -238,19 +238,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let clients;
       if (user?.role === 'ADMIN') {
         clients = await storage.getAllClientProfiles();
-        
-        // Add worker count to each client
-        const clientsWithWorkerCount = await Promise.all(
-          clients.map(async (client) => {
-            const workers = await storage.getWorkersByClientId(client.id);
-            return {
-              ...client,
-              activeWorkers: workers.length
-            };
-          })
-        );
-        
-        res.json(clientsWithWorkerCount);
       } else if (user?.role === 'OWNER') {
         // Owners see only their own clients
         clients = await storage.getClientsByOwner(user.id);
