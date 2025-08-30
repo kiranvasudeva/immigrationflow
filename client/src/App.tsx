@@ -10,6 +10,8 @@ import { DummyDataAlert } from "@/components/dummy-data-alert";
 import { useRoleBasedLanguage } from "@/hooks/useRoleBasedLanguage";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
+import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
+import AppSidebar from "@/components/layout/sidebar";
 import AdminDashboard from "@/pages/admin-dashboard";
 import ClientDashboard from "@/pages/client-dashboard";
 import WorkerDashboard from "@/pages/worker-dashboard";
@@ -49,52 +51,57 @@ function Router() {
         {!isAuthenticated ? (
           <Route path="/" component={Landing} />
         ) : (
-        <>
-          <Route path="/" component={() => {
-            switch (user?.role) {
-              case 'ADMIN':
-                return <AdminDashboard />;
-              case 'OWNER':
-                return <ClientDashboard />;
-              case 'WORKER':
-                return <WorkerDashboard />;
-              case 'VIEWER':
-                return <AdminDashboard />;
-              default:
-                return <ClientDashboard />;
-            }
-          }} />
-          <Route path="/dashboard" component={() => {
-            switch (user?.role) {
-              case 'ADMIN':
-                return <AdminDashboard />;
-              case 'OWNER':
-                return <ClientDashboard />;
-              case 'WORKER':
-                return <WorkerDashboard />;
-              case 'VIEWER':
-                return <AdminDashboard />;
-              default:
-                return <ClientDashboard />;
-            }
-          }} />
-          <Route path="/templates" component={TemplatesPage} />
-          <Route path="/reports" component={AnalyticsPage} />
-          <Route path="/clients" component={() => <AdminDashboard />} />
-          <Route path="/clients/:id" component={ClientProfile} />
-          <Route path="/workers" component={() => <AdminDashboard />} />
-          <Route path="/workers/:id" component={WorkerProfile} />
-          <Route path="/requirements" component={() => <AdminDashboard />} />
-          <Route path="/reminders" component={() => <AdminDashboard />} />
-          <Route path="/audit" component={() => <AdminDashboard />} />
-          <Route path="/profile" component={ProfilePage} />
-          <Route path="/documents" component={DocumentsPage} />
-          <Route path="/payments" component={() => <ClientDashboard />} />
-          <Route path="/deadlines" component={DeadlinesPage} />
-          <Route path="/settings" component={SettingsPage} />
-        </>
-      )}
-        <Route component={NotFound} />
+          <SidebarProvider>
+            <AppSidebar userRole={user?.role || 'VIEWER'} />
+            <SidebarInset>
+              <Switch>
+                <Route path="/" component={() => {
+                  switch (user?.role) {
+                    case 'ADMIN':
+                      return <AdminDashboard />;
+                    case 'OWNER':
+                      return <ClientDashboard />;
+                    case 'WORKER':
+                      return <WorkerDashboard />;
+                    case 'VIEWER':
+                      return <AdminDashboard />;
+                    default:
+                      return <ClientDashboard />;
+                  }
+                }} />
+                <Route path="/dashboard" component={() => {
+                  switch (user?.role) {
+                    case 'ADMIN':
+                      return <AdminDashboard />;
+                    case 'OWNER':
+                      return <ClientDashboard />;
+                    case 'WORKER':
+                      return <WorkerDashboard />;
+                    case 'VIEWER':
+                      return <AdminDashboard />;
+                    default:
+                      return <ClientDashboard />;
+                  }
+                }} />
+                <Route path="/templates" component={TemplatesPage} />
+                <Route path="/reports" component={AnalyticsPage} />
+                <Route path="/clients" component={() => <AdminDashboard />} />
+                <Route path="/clients/:id" component={ClientProfile} />
+                <Route path="/workers" component={() => <AdminDashboard />} />
+                <Route path="/workers/:id" component={WorkerProfile} />
+                <Route path="/requirements" component={() => <AdminDashboard />} />
+                <Route path="/reminders" component={() => <AdminDashboard />} />
+                <Route path="/audit" component={() => <AdminDashboard />} />
+                <Route path="/profile" component={ProfilePage} />
+                <Route path="/documents" component={DocumentsPage} />
+                <Route path="/payments" component={() => <ClientDashboard />} />
+                <Route path="/deadlines" component={DeadlinesPage} />
+                <Route path="/settings" component={SettingsPage} />
+                <Route component={NotFound} />
+              </Switch>
+            </SidebarInset>
+          </SidebarProvider>
+        )}
       </Switch>
     </div>
   );
