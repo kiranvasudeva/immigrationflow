@@ -242,8 +242,8 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Dashboard Statistics */}
-        {stats && (
+        {/* Dashboard Statistics - Only show on overview */}
+        {activeSection === 'overview' && stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
               <CardHeader className="pb-2">
@@ -283,7 +283,8 @@ export default function AdminDashboard() {
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Clients Section */}
+          {/* Clients Section - Only show when activeSection is 'clients' or 'overview' */}
+          {(activeSection === 'clients' || activeSection === 'overview') && (
           <div className="lg:col-span-2">
             <Collapsible open={clientsOpen} onOpenChange={setClientsOpen}>
               <CollapsibleTrigger asChild>
@@ -591,6 +592,7 @@ export default function AdminDashboard() {
               </CollapsibleContent>
             </Collapsible>
           </div>
+          )}
 
           {/* Workflow Activity Panel */}
           <div className="space-y-6">
