@@ -53,3 +53,61 @@ A comprehensive SaaS platform for managing Romanian immigration workflows includ
 ```bash
 git clone <repository-url>
 cd immigration-flow
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Set up environment variables (copy from .env.example):
+```bash
+cp .env.example .env
+```
+
+4. Start the development server:
+```bash
+npm run dev
+```
+
+## Production Deployment with Docker
+
+### Docker Build and Deployment
+
+The application includes a multi-stage Dockerfile optimized for production deployment:
+
+- **Stage 1**: Install dependencies
+- **Stage 2**: Build client with Vite and bundle server with esbuild
+- **Stage 3**: Production runtime with Node.js 20 Alpine
+
+To build and run the complete application stack:
+
+```bash
+docker compose up --build
+```
+
+This command will:
+- Build the production Docker image
+- Start PostgreSQL, Redis, MinIO (S3), ClamAV, and MailHog services
+- Run the application on port 5000 with health checks
+- Include proper service dependencies and restart policies
+
+The application will be available at `http://localhost:5000` once all services are healthy.
+
+### Environment Configuration
+
+The Docker setup includes:
+- **Database**: PostgreSQL 15 with health checks
+- **Cache/Queue**: Redis 7 for BullMQ job processing
+- **File Storage**: MinIO for S3-compatible object storage
+- **Email Testing**: MailHog for development email testing
+- **Security**: ClamAV for file scanning and malware detection
+
+### Health Monitoring
+
+The application includes comprehensive health checks:
+- Application health: `http://localhost:5000/health`
+- Database connectivity: `http://localhost:5000/health/db`
+- Docker services automatically restart on failure
+
+## Development Setup
