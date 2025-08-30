@@ -10,11 +10,19 @@ export class S3Service {
     const region = process.env.S3_REGION || 'eu-central-1';
     
     if (!endpoint) {
-      throw new Error('S3_ENDPOINT environment variable is required');
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️  S3_ENDPOINT not configured, using development defaults');
+        // Use localhost MinIO defaults for development
+        process.env.S3_ENDPOINT = 'http://localhost:9000';
+        process.env.S3_ACCESS_KEY = process.env.S3_ACCESS_KEY || 'minioadmin';
+        process.env.S3_SECRET_KEY = process.env.S3_SECRET_KEY || 'minioadmin';
+      } else {
+        throw new Error('S3_ENDPOINT environment variable is required');
+      }
     }
 
     this.s3Client = new S3Client({
-      endpoint,
+      endpoint: process.env.S3_ENDPOINT,
       region,
       credentials: {
         accessKeyId: process.env.S3_ACCESS_KEY!,
@@ -93,4 +101,21 @@ export class S3Service {
   }
 }
 
-export const s3Service = new S3Service();
+let _s3ServiceInstance: S3Service | null = null;
+
+export function getS3Service(): S3Service {
+  if (!_s3ServiceInstance) {
+    _s3ServiceInstance = new S3Service();
+  }
+  return _s3ServiceInstance;
+}
+
+// For backwards compatibility
+export const s3Service = {
+  get generateUploadUrl() { return getS3Service().generateUploadUrl.bind(getS3Service()); },
+  get generateDownloadUrl() { return getS3Service().generateDownloadUrl.bind(getS3Service()); },
+  get uploadFile() { return getS3Service().uploadFile.bind(getS3Service()); },
+  get deleteFile() { return getS3Service().deleteFile.bind(getS3Service()); },
+  get generateFileKey() { return getS3Service().generateFileKey.bind(getS3Service()); },
+  get ensureBucketExists() { return getS3Service().ensureBucketExists.bind(getS3Service()); },
+};

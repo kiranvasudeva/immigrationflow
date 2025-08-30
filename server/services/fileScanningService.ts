@@ -1,4 +1,4 @@
-import clamscan from 'clamscan';
+import NodeClam from 'clamscan';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
@@ -41,7 +41,7 @@ export class FileScanningService {
       const clamAVHost = process.env.CLAMAV_HOST || 'localhost';
       const clamAVPort = parseInt(process.env.CLAMAV_PORT || '3310');
 
-      this.clamAV = await clamscan({
+      this.clamAV = new NodeClam({
         clamdscan: {
           host: clamAVHost,
           port: clamAVPort,
@@ -56,6 +56,9 @@ export class FileScanningService {
         },
         preference: 'clamdscan'
       });
+      
+      // Initialize the scanner
+      await this.clamAV.init();
 
       this.isInitialized = true;
       console.log(`✅ ClamAV initialized successfully (${clamAVHost}:${clamAVPort})`);
@@ -295,7 +298,7 @@ export class FileScanningService {
         details.clamAVConnected = true;
       } catch (error) {
         details.clamAVConnected = false;
-        details.clamAVError = error.message;
+        details.clamAVError = error instanceof Error ? error.message : String(error);
       }
     }
 
@@ -305,5 +308,19 @@ export class FileScanningService {
   }
 }
 
-// Singleton instance
-export const fileScanningService = new FileScanningService();
+let _fileScanningServiceInstance: FileScanningService | null = null;
+
+export function getFileScanningService(): FileScanningService {
+  if (!_fileScanningServiceInstance) {
+    _fileScanningServiceInstance = new FileScanningService();
+  }
+  return _fileScanningServiceInstance;
+}
+
+// For backwards compatibility
+export const fileScanningService = {
+  get validateAndScanFile() { return getFileScanningService().validateAndScanFile.bind(getFileScanningService()); },
+  get quickValidate() { return getFileScanningService().quickValidate.bind(getFileScanningService()); },
+  get getConfiguration() { return getFileScanningService().getConfiguration.bind(getFileScanningService()); },
+  get healthCheck() { return getFileScanningService().healthCheck.bind(getFileScanningService()); },
+};
