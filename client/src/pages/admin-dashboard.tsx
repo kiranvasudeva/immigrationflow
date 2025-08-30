@@ -1129,7 +1129,7 @@ export default function AdminDashboard() {
                             size="sm"
                             onClick={() => {
                               setActiveSection('workers');
-                              navigate('/workers');
+                              setLocation('/workers');
                             }}
                           >
                             <i className="fas fa-users mr-2"></i>
@@ -1139,7 +1139,7 @@ export default function AdminDashboard() {
                             variant="outline" 
                             size="sm"
                             onClick={() => {
-                              navigate('/templates');
+                              setLocation('/templates');
                             }}
                           >
                             <i className="fas fa-file-alt mr-2"></i>
@@ -1150,7 +1150,7 @@ export default function AdminDashboard() {
                             size="sm"
                             onClick={() => {
                               setActiveSection('reports');
-                              navigate('/reports');
+                              setLocation('/reports');
                             }}
                           >
                             <i className="fas fa-chart-line mr-2"></i>
