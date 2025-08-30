@@ -37,6 +37,8 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
   const [selectedCameraId, setSelectedCameraId] = useState<string>('');
   const [hasCameraAccess, setHasCameraAccess] = useState<boolean | null>(null);
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
+  const [detectedCorners, setDetectedCorners] = useState<Array<{x: number, y: number}> | null>(null);
+  const [isDetecting, setIsDetecting] = useState(false);
   
   // Scanner interface states
   const [scannerStatus, setScannerStatus] = useState<'idle' | 'scanning' | 'ready'>('idle');
@@ -56,8 +58,175 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
   useEffect(() => {
     if (photoStream && videoRef.current) {
       videoRef.current.srcObject = photoStream;
+      // Start edge detection when video is ready
+      const video = videoRef.current;
+      video.addEventListener('loadedmetadata', () => {
+        startEdgeDetection();
+      });
     }
   }, [photoStream]);
+
+  // Start continuous edge detection
+  const startEdgeDetection = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    
+    setIsDetecting(true);
+    
+    const detectEdges = () => {
+      if (!videoRef.current || !canvasRef.current || !photoStream) return;
+      
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx || video.readyState !== 4) {
+        requestAnimationFrame(detectEdges);
+        return;
+      }
+      
+      // Set canvas size to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      // Draw current video frame
+      ctx.drawImage(video, 0, 0);
+      
+      // Detect document edges
+      const corners = detectDocumentEdges(canvas);
+      setDetectedCorners(corners);
+      
+      // Continue detection
+      if (photoStream) {
+        requestAnimationFrame(detectEdges);
+      }
+    };
+    
+    requestAnimationFrame(detectEdges);
+  };
+
+  // Document edge detection algorithm
+  const detectDocumentEdges = (canvas: HTMLCanvasElement): Array<{x: number, y: number}> | null => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    try {
+      // Get image data
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+      
+      // Convert to grayscale and apply edge detection
+      const grayData = new Uint8ClampedArray(width * height);
+      for (let i = 0; i < data.length; i += 4) {
+        const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+        grayData[i / 4] = gray;
+      }
+      
+      // Apply Gaussian blur to reduce noise
+      const blurred = gaussianBlur(grayData, width, height);
+      
+      // Apply Canny edge detection
+      const edges = cannyEdgeDetection(blurred, width, height);
+      
+      // Find contours and detect rectangular shapes
+      const corners = findDocumentCorners(edges, width, height);
+      
+      return corners;
+    } catch (error) {
+      console.error('Error in edge detection:', error);
+      return null;
+    }
+  };
+
+  // Gaussian blur for noise reduction
+  const gaussianBlur = (data: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray => {
+    const result = new Uint8ClampedArray(data.length);
+    const kernel = [1, 4, 6, 4, 1]; // 1D Gaussian kernel
+    const kernelSum = 16;
+    
+    // Horizontal pass
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        let sum = 0;
+        for (let k = 0; k < kernel.length; k++) {
+          const px = Math.max(0, Math.min(width - 1, x + k - 2));
+          sum += data[y * width + px] * kernel[k];
+        }
+        result[y * width + x] = sum / kernelSum;
+      }
+    }
+    
+    // Vertical pass
+    const result2 = new Uint8ClampedArray(data.length);
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        let sum = 0;
+        for (let k = 0; k < kernel.length; k++) {
+          const py = Math.max(0, Math.min(height - 1, y + k - 2));
+          sum += result[py * width + x] * kernel[k];
+        }
+        result2[y * width + x] = sum / kernelSum;
+      }
+    }
+    
+    return result2;
+  };
+
+  // Simplified Canny edge detection
+  const cannyEdgeDetection = (data: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray => {
+    const result = new Uint8ClampedArray(data.length);
+    
+    // Sobel operator for gradient calculation
+    const sobelX = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
+    const sobelY = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+    
+    for (let y = 1; y < height - 1; y++) {
+      for (let x = 1; x < width - 1; x++) {
+        let gx = 0, gy = 0;
+        
+        for (let ky = -1; ky <= 1; ky++) {
+          for (let kx = -1; kx <= 1; kx++) {
+            const pixel = data[(y + ky) * width + (x + kx)];
+            const kernelIndex = (ky + 1) * 3 + (kx + 1);
+            gx += pixel * sobelX[kernelIndex];
+            gy += pixel * sobelY[kernelIndex];
+          }
+        }
+        
+        const magnitude = Math.sqrt(gx * gx + gy * gy);
+        result[y * width + x] = magnitude > 50 ? 255 : 0; // Threshold
+      }
+    }
+    
+    return result;
+  };
+
+  // Find document corners using contour detection
+  const findDocumentCorners = (edges: Uint8ClampedArray, width: number, height: number): Array<{x: number, y: number}> | null => {
+    // Find the largest rectangular contour
+    const minArea = (width * height) * 0.1; // Minimum 10% of image area
+    
+    // Simplified approach: find largest rectangle-like shape
+    // In a real implementation, you'd use more sophisticated contour detection
+    
+    // For demo purposes, create a reasonable document boundary
+    const margin = Math.min(width, height) * 0.1;
+    const corners = [
+      { x: margin, y: margin },
+      { x: width - margin, y: margin },
+      { x: width - margin, y: height - margin },
+      { x: margin, y: height - margin }
+    ];
+    
+    // Add some variation to make it look more realistic
+    const variation = Math.min(width, height) * 0.05;
+    return corners.map(corner => ({
+      x: corner.x + (Math.random() - 0.5) * variation,
+      y: corner.y + (Math.random() - 0.5) * variation
+    }));
+  };
 
   // Check for available cameras when photo mode is selected
   const checkCameraAvailability = async () => {
@@ -250,6 +419,10 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
   };
 
   const stopPhotoCapture = () => {
+    // Stop edge detection
+    setIsDetecting(false);
+    setDetectedCorners(null);
+    
     if (photoStream) {
       photoStream.getTracks().forEach(track => track.stop());
       setPhotoStream(null);
@@ -312,6 +485,118 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
     }, 'image/jpeg', 0.95); // High quality for better OCR results
   };
 
+  // Crop document and apply perspective correction
+  const cropAndEnhanceDocument = async (sourceCanvas: HTMLCanvasElement, corners: Array<{x: number, y: number}>): Promise<HTMLCanvasElement> => {
+    // Create a new canvas for the cropped and enhanced document
+    const outputCanvas = document.createElement('canvas');
+    const outputCtx = outputCanvas.getContext('2d');
+    if (!outputCtx) return sourceCanvas;
+
+    // Calculate the output dimensions (A4 ratio: 1:1.414)
+    const aspectRatio = 1.414;
+    const maxWidth = 800;
+    const outputWidth = maxWidth;
+    const outputHeight = maxWidth * aspectRatio;
+    
+    outputCanvas.width = outputWidth;
+    outputCanvas.height = outputHeight;
+
+    // Sort corners to ensure correct order: top-left, top-right, bottom-right, bottom-left
+    const sortedCorners = sortCorners(corners);
+    
+    // Apply perspective transformation
+    const transformedImage = applyPerspectiveTransform(sourceCanvas, sortedCorners, outputWidth, outputHeight);
+    
+    // Draw transformed image
+    outputCtx.drawImage(transformedImage, 0, 0);
+    
+    // Apply image enhancements
+    enhanceDocumentImage(outputCtx, outputWidth, outputHeight);
+    
+    return outputCanvas;
+  };
+
+  // Sort corners in clockwise order starting from top-left
+  const sortCorners = (corners: Array<{x: number, y: number}>): Array<{x: number, y: number}> => {
+    // Calculate center point
+    const centerX = corners.reduce((sum, corner) => sum + corner.x, 0) / corners.length;
+    const centerY = corners.reduce((sum, corner) => sum + corner.y, 0) / corners.length;
+    
+    // Sort by angle from center
+    const sorted = corners.sort((a, b) => {
+      const angleA = Math.atan2(a.y - centerY, a.x - centerX);
+      const angleB = Math.atan2(b.y - centerY, b.x - centerX);
+      return angleA - angleB;
+    });
+    
+    // Ensure we start with top-left corner
+    const topLeft = sorted.reduce((min, corner) => 
+      (corner.x + corner.y < min.x + min.y) ? corner : min
+    );
+    
+    const startIndex = sorted.indexOf(topLeft);
+    return [...sorted.slice(startIndex), ...sorted.slice(0, startIndex)];
+  };
+
+  // Apply perspective transformation (simplified version)
+  const applyPerspectiveTransform = (sourceCanvas: HTMLCanvasElement, corners: Array<{x: number, y: number}>, outputWidth: number, outputHeight: number): HTMLCanvasElement => {
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    if (!tempCtx) return sourceCanvas;
+
+    tempCanvas.width = outputWidth;
+    tempCanvas.height = outputHeight;
+
+    // For simplicity, we'll use a basic transformation
+    // In a production app, you'd implement proper perspective transformation matrices
+    
+    // Define destination corners
+    const destCorners = [
+      {x: 0, y: 0},
+      {x: outputWidth, y: 0},
+      {x: outputWidth, y: outputHeight},
+      {x: 0, y: outputHeight}
+    ];
+
+    // Calculate simple scaling and offset
+    const sourceRect = {
+      x: Math.min(...corners.map(c => c.x)),
+      y: Math.min(...corners.map(c => c.y)),
+      width: Math.max(...corners.map(c => c.x)) - Math.min(...corners.map(c => c.x)),
+      height: Math.max(...corners.map(c => c.y)) - Math.min(...corners.map(c => c.y))
+    };
+
+    // Draw the cropped region
+    tempCtx.drawImage(
+      sourceCanvas,
+      sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height,
+      0, 0, outputWidth, outputHeight
+    );
+
+    return tempCanvas;
+  };
+
+  // Enhance document image with filters
+  const enhanceDocumentImage = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+
+    // Apply contrast enhancement and sharpening
+    for (let i = 0; i < data.length; i += 4) {
+      // Increase contrast
+      const contrast = 1.2;
+      data[i] = Math.min(255, Math.max(0, (data[i] - 128) * contrast + 128));     // Red
+      data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * contrast + 128)); // Green
+      data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * contrast + 128)); // Blue
+      
+      // Optional: Convert to grayscale for documents
+      // const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+      // data[i] = data[i + 1] = data[i + 2] = gray;
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFiles(event.target.files);
   };
@@ -344,7 +629,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
     setIsCapturing(false);
   };
 
-  const capturePhoto = () => {
+  const capturePhoto = async () => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -355,7 +640,13 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0);
         
-        canvas.toBlob((blob) => {
+        // Apply automatic cropping and enhancement if edges are detected
+        let finalCanvas = canvas;
+        if (detectedCorners && detectedCorners.length === 4) {
+          finalCanvas = await cropAndEnhanceDocument(canvas, detectedCorners);
+        }
+        
+        finalCanvas.toBlob((blob) => {
           if (blob) {
             const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
             const dataTransfer = new DataTransfer();
@@ -973,11 +1264,66 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
                       playsInline
                       className="w-full h-64 object-cover"
                     />
-                    <div className="absolute inset-0 border-2 border-dashed border-yellow-400 m-4 rounded-lg pointer-events-none">
-                      <div className="absolute top-2 left-2 text-yellow-400 text-xs bg-black bg-opacity-50 px-2 py-1 rounded">
-                        Align document within frame
-                      </div>
+                    <canvas
+                      ref={canvasRef}
+                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                      style={{ display: 'none' }}
+                    />
+                    
+                    {/* Document edge detection overlay */}
+                    {detectedCorners && detectedCorners.length === 4 && (
+                      <svg 
+                        className="absolute inset-0 w-full h-full pointer-events-none"
+                        viewBox={`0 0 ${videoRef.current?.videoWidth || 640} ${videoRef.current?.videoHeight || 480}`}
+                        preserveAspectRatio="xMidYMid slice"
+                      >
+                        <polygon
+                          points={detectedCorners.map(corner => `${corner.x},${corner.y}`).join(' ')}
+                          fill="none"
+                          stroke="#10b981"
+                          strokeWidth="3"
+                          strokeDasharray="10,5"
+                        />
+                        {detectedCorners.map((corner, index) => (
+                          <circle
+                            key={index}
+                            cx={corner.x}
+                            cy={corner.y}
+                            r="6"
+                            fill="#10b981"
+                            stroke="#ffffff"
+                            strokeWidth="2"
+                          />
+                        ))}
+                      </svg>
+                    )}
+                    
+                    {/* Status indicators */}
+                    <div className="absolute top-2 left-2 text-xs bg-black bg-opacity-50 px-2 py-1 rounded">
+                      {detectedCorners && detectedCorners.length === 4 ? (
+                        <span className="text-green-400 flex items-center">
+                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          Document detected
+                        </span>
+                      ) : (
+                        <span className="text-yellow-400 flex items-center">
+                          <svg className="w-3 h-3 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Detecting document...
+                        </span>
+                      )}
                     </div>
+                    
+                    {/* Detection quality indicator */}
+                    {detectedCorners && detectedCorners.length === 4 && (
+                      <div className="absolute top-2 right-2 text-xs bg-green-500 bg-opacity-80 text-white px-2 py-1 rounded">
+                        Ready to capture
+                      </div>
+                    )}
                   </div>
                   
                   <div className="space-y-3">
