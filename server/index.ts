@@ -1,41 +1,20 @@
 import express, { type Request, Response, NextFunction } from "express";
 import path from "path";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { setupVite, serveStatic } from "./vite";
+import { logger, httpLogger, logInfo, logError } from "./services/loggingService";
+import { httpMetricsMiddleware, getMetrics, initializeMetrics } from "./services/metricsService";
+import { register } from 'prom-client';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+// Add Pino HTTP logging middleware
+app.use(httpLogger);
 
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
-});
+// Add Prometheus metrics middleware
+app.use(httpMetricsMiddleware());
 
 (async () => {
   try {
@@ -44,10 +23,24 @@ app.use((req, res, next) => {
       throw new Error("DATABASE_URL environment variable is required");
     }
     
-    log("Starting server initialization...");
+    // Initialize metrics collection
+    initializeMetrics();
+    logInfo("Starting server initialization...");
     
     const server = await registerRoutes(app);
-    log("Routes registered successfully");
+    logInfo("Routes registered successfully");
+
+    // Add Prometheus metrics endpoint
+    app.get('/metrics', async (req, res) => {
+      try {
+        const metrics = await getMetrics();
+        res.set('Content-Type', register.contentType);
+        res.end(metrics);
+      } catch (error) {
+        logError('Failed to generate metrics', error);
+        res.status(500).json({ error: 'Failed to generate metrics' });
+      }
+    });
 
     // Add health check endpoint
     app.get('/health', (req, res) => {
@@ -72,7 +65,7 @@ app.use((req, res, next) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        log('Database health check failed:', error instanceof Error ? error.message : String(error));
+        logError('Database health check failed', error);
         res.status(503).json({ 
           status: 'error', 
           database: 'disconnected',
@@ -89,12 +82,12 @@ app.use((req, res, next) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
       
-      log(`Error: ${status} - ${message}`);
+      logError(`HTTP Error: ${status} - ${message}`);
       res.status(status).json({ message });
       
       // Don't re-throw the error to prevent crashes
       if (status >= 500) {
-        log('Server error details:', err);
+        logError('Server error details', err);
       }
     });
 
@@ -103,10 +96,10 @@ app.use((req, res, next) => {
     // doesn't interfere with the other routes
     if (app.get("env") === "development") {
       await setupVite(app, server);
-      log("Vite development server setup complete");
+      logInfo("Vite development server setup complete");
     } else {
       serveStatic(app);
-      log("Static file serving setup complete");
+      logInfo("Static file serving setup complete");
     }
 
     // ALWAYS serve the app on the port specified in the environment variable PORT
@@ -120,27 +113,27 @@ app.use((req, res, next) => {
       host: "0.0.0.0",
       reusePort: true,
     }, () => {
-      log(`Server successfully started and listening on host 0.0.0.0:${port}`);
-      log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      log(`Health check available at /health`);
-      log(`Database health check available at /health/db`);
+      logInfo(`Server successfully started and listening on host 0.0.0.0:${port}`);
+      logInfo(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      logInfo(`Health check available at /health`);
+      logInfo(`Database health check available at /health/db`);
     });
     
     // Handle server startup errors
     server.on('error', (error: any) => {
       if (error.code === 'EADDRINUSE') {
-        log(`Port ${port} is already in use. Server startup failed.`);
+        logError(`Port ${port} is already in use. Server startup failed.`);
         process.exit(1);
       } else {
-        log('Server error:', error instanceof Error ? error.message : String(error));
+        logError('Server error', error);
         process.exit(1);
       }
     });
     
   } catch (error) {
-    log('Failed to start server:', error instanceof Error ? error.message : String(error));
+    logError('Failed to start server', error);
     if (error instanceof Error && error.stack) {
-      log('Stack trace:', error.stack);
+      logError('Stack trace', new Error(error.stack));
     }
     process.exit(1);
   }
@@ -148,22 +141,36 @@ app.use((req, res, next) => {
 
 // Handle uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (error) => {
-  log('Uncaught Exception:', error instanceof Error ? error.message : String(error));
+  logError('Uncaught Exception', error);
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  log(`Unhandled Rejection at: ${String(promise)} reason: ${String(reason)}`);
+  logError(`Unhandled Rejection at: ${String(promise)} reason: ${String(reason)}`);
   process.exit(1);
 });
 
 // Graceful shutdown handling
-process.on('SIGINT', () => {
-  log('Received SIGINT, shutting down gracefully...');
-  process.exit(0);
+process.on('SIGINT', async () => {
+  logInfo('Received SIGINT, shutting down gracefully...');
+  await performGracefulShutdown();
 });
 
-process.on('SIGTERM', () => {
-  log('Received SIGTERM, shutting down gracefully...');
-  process.exit(0);
+process.on('SIGTERM', async () => {
+  logInfo('Received SIGTERM, shutting down gracefully...');
+  await performGracefulShutdown();
 });
+
+async function performGracefulShutdown() {
+  try {
+    // Shutdown queues first
+    const { gracefulShutdown: shutdownQueues } = await import('./workers/queue');
+    await shutdownQueues();
+    
+    logInfo('Graceful shutdown completed');
+    process.exit(0);
+  } catch (error) {
+    logError('Error during graceful shutdown', error);
+    process.exit(1);
+  }
+}

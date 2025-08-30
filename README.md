@@ -110,4 +110,154 @@ The application includes comprehensive health checks:
 - Database connectivity: `http://localhost:5000/health/db`
 - Docker services automatically restart on failure
 
+## Environment Variables
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | ✅ | - |
+| `REDIS_URL` | Redis connection string for job queues | ✅ | - |
+| `S3_ENDPOINT` | S3-compatible storage endpoint | ✅ | `http://localhost:9000` (dev) |
+| `S3_REGION` | S3 region | ❌ | `eu-central-1` |
+| `S3_BUCKET` | S3 bucket name | ❌ | `immigration-flow-documents` |
+| `S3_ACCESS_KEY` | S3 access key | ✅ | `minioadmin` (dev) |
+| `S3_SECRET_KEY` | S3 secret key | ✅ | `minioadmin` (dev) |
+| `JWT_SECRET` | JWT signing secret | ✅ | - |
+| `SESSION_SECRET` | Session encryption secret | ✅ | - |
+| `REPLIT_DOMAINS` | Authorized domains for Replit Auth | ✅ | - |
+| `NODE_ENV` | Environment mode | ❌ | `development` |
+| `PORT` | Server port | ❌ | `5000` |
+| `LOG_LEVEL` | Logging level (debug, info, warn, error) | ❌ | `info` |
+| `CLAMAV_HOST` | ClamAV daemon host | ❌ | `localhost` |
+| `CLAMAV_PORT` | ClamAV daemon port | ❌ | `3310` |
+| `MAX_FILE_SIZE` | Maximum file upload size in bytes | ❌ | `10485760` (10MB) |
+| `ALLOWED_FILE_TYPES` | Comma-separated allowed file extensions | ❌ | `pdf,doc,docx,jpg,jpeg,png,gif,txt` |
+| `MAIL_FROM` | Email sender address | ✅ | - |
+| `MAIL_API_KEY` | Email service API key | ✅ | - |
+| `WATERMARK_TOGGLE` | Enable PDF watermarking | ❌ | `true` |
+
+## Monitoring & Observability
+
+### Health Checks
+- **Application**: `GET /health` - Server status and uptime
+- **Database**: `GET /health/db` - Database connectivity test
+- **All services**: Docker Compose includes health checks for all dependencies
+
+### Metrics
+- **Prometheus**: `GET /metrics` - Application metrics in Prometheus format
+- **Included metrics**:
+  - HTTP request count and duration
+  - Queue depth and job processing statistics
+  - PDF generation metrics
+  - File upload statistics
+  - Database query performance
+  - Business logic metrics (clients, workers, assignments)
+
+### Logging
+- **Structured logging** with Pino JSON format
+- **PII scrubbing** automatically removes sensitive data
+- **Request/response logging** for all API endpoints
+- **Error tracking** with stack traces and context
+
+## Operations Runbook
+
+### Starting the Application
+
+**Development Mode:**
+```bash
+npm run dev
+```
+
+**Production Mode:**
+```bash
+# Build the application
+npm run build
+
+# Start the production server
+npm start
+```
+
+**Docker Production:**
+```bash
+docker compose up --build
+```
+
+### Database Operations
+
+```bash
+# Push schema changes to database
+npm run db:push
+
+# Force push (when data loss warning appears)
+npm run db:push --force
+
+# Seed development data
+node scripts/seed.js
+
+# Create additional sample assignments  
+node scripts/create-sample-assignments.js
+```
+
+### Queue Management
+
+The application uses BullMQ for background job processing:
+
+- **Reminder Queue**: Daily reminder evaluation and deadline notifications
+- **Email Queue**: Template-based email sending with retry logic
+- **PDF Queue**: Document generation and processing
+- **Dead Letter Queue**: Failed jobs for manual review
+
+### Troubleshooting
+
+#### Common Issues
+
+**App won't start:**
+1. Check `DATABASE_URL` is set and accessible
+2. Verify `REDIS_URL` for queue functionality
+3. Ensure `S3_ENDPOINT` and credentials are configured
+4. Check logs for specific error messages
+
+**Database connection failed:**
+```bash
+# Test database connectivity
+curl http://localhost:5000/health/db
+```
+
+**Queue jobs not processing:**
+1. Verify Redis connection
+2. Check worker logs for errors
+3. Monitor queue depth via metrics endpoint
+
+**File uploads failing:**
+1. Verify S3 configuration
+2. Check ClamAV is running (for production)
+3. Validate file size and type restrictions
+
+**Performance issues:**
+1. Monitor metrics at `/metrics`
+2. Check database query performance
+3. Review queue processing times
+4. Monitor memory usage
+
+#### Log Analysis
+
+**Development:**
+- Logs are pretty-printed with colors
+- All requests/responses logged
+- PII automatically scrubbed
+
+**Production:**
+- Structured JSON logs
+- Integration ready for log aggregation
+- Error tracking with correlation IDs
+
+### Security Considerations
+
+- **PII Protection**: All logging automatically scrubs personal data
+- **File Security**: ClamAV scanning for malware detection
+- **Access Control**: Role-based permissions (Admin, Owner, Worker, Viewer)
+- **Audit Trail**: Complete activity logging for compliance
+- **Session Security**: HTTP-only cookies with secure session storage
+- **Data Encryption**: S3 server-side encryption enabled
+- **Input Validation**: Zod schemas for all API endpoints
+
 ## Development Setup

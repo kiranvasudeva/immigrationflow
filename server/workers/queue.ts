@@ -2,6 +2,8 @@ import { Queue, Worker, Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { reminderService } from '../services/reminderService';
 import { emailService } from '../services/emailService';
+import { logInfo, logError, logWarn, createModuleLogger } from '../services/loggingService';
+import { recordJobMetrics, updateQueueMetrics } from '../services/metricsService';
 
 if (!process.env.REDIS_URL) {
   throw new Error('REDIS_URL environment variable is required');
@@ -64,30 +66,43 @@ export interface PdfJobData {
   outputPath?: string;
 }
 
+const queueLogger = createModuleLogger('queue');
+
 // Enhanced error handling and logging
 function logJobError(job: Job, error: Error) {
-  console.error(`Job ${job.name} failed:`, {
-    id: job.id,
-    name: job.name,
-    data: job.data,
-    error: error.message,
-    stack: error.stack,
+  const duration = job.finishedOn ? job.finishedOn - (job.processedOn || 0) : 0;
+  
+  logError(`Job ${job.name} failed`, error, {
+    jobId: job.id,
+    jobName: job.name,
     attemptsMade: job.attemptsMade,
     attemptsLeft: (job.opts.attempts || 1) - job.attemptsMade,
+    duration
   });
+  
+  // Record metrics
+  recordJobMetrics(job.queueName, job.name, 'failed', duration);
 }
 
 function logJobSuccess(job: Job) {
-  console.log(`Job ${job.name} completed successfully:`, {
-    id: job.id,
-    name: job.name,
+  const duration = job.finishedOn ? job.finishedOn - (job.processedOn || 0) : 0;
+  
+  logInfo(`Job ${job.name} completed successfully`, {
+    jobId: job.id,
+    jobName: job.name,
     processedOn: new Date(job.processedOn || Date.now()).toISOString(),
-    duration: job.finishedOn ? job.finishedOn - (job.processedOn || 0) : 0,
+    duration
   });
+  
+  // Record metrics
+  recordJobMetrics(job.queueName, job.name, 'completed', duration);
 }
 
 // Setup workers with enhanced error handling and retries
 export function setupWorkers() {
+  // Clear existing workers array
+  workers = [];
+  
   // Enhanced reminder worker
   const reminderWorker = new Worker<ReminderJobData>(
     'reminder',
@@ -104,14 +119,14 @@ export function setupWorkers() {
               throw new Error('Missing assignmentId or userId for deadline reminder');
             }
             // await reminderService.sendDeadlineReminder(data.assignmentId, data.userId);
-            console.log('Deadline reminder:', data.assignmentId, data.userId);
+            logInfo('Processing deadline reminder', { assignmentId: data.assignmentId, userId: data.userId });
             break;
           case 'send-expiry-reminder':
             if (!data?.documentId || !data?.userId) {
               throw new Error('Missing documentId or userId for expiry reminder');
             }
             // await reminderService.sendExpiryReminder(data.documentId, data.userId);
-            console.log('Expiry reminder:', data.documentId, data.userId);
+            logInfo('Processing expiry reminder', { documentId: data.documentId, userId: data.userId });
             break;
           default:
             throw new Error(`Unknown reminder job type: ${type}`);
@@ -193,13 +208,13 @@ export function setupWorkers() {
       
       try {
         // PDF generation would be handled here
-        console.log(`Generating PDF for template ${templateKey}, assignment ${assignmentId}`);
+        logInfo('Generating PDF', { templateKey, assignmentId });
         
         // Simulate PDF generation process
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         if (outputPath) {
-          console.log(`PDF saved to: ${outputPath}`);
+          logInfo('PDF saved', { outputPath });
         }
         
         logJobSuccess(job);
@@ -234,7 +249,7 @@ export function setupWorkers() {
       // 4. Store in database for later analysis
       
       // For now, just log and mark as processed
-      console.log('Dead letter job logged for manual review');
+      logInfo('Dead letter job logged for manual review');
     },
     {
       connection,
@@ -242,16 +257,17 @@ export function setupWorkers() {
     }
   );
 
-  // Set up error handlers for all workers
-  const workers = [reminderWorker, emailWorker, pdfWorker, deadLetterWorker];
+  // Store worker instances for graceful shutdown
+  const workerInstances = [reminderWorker, emailWorker, pdfWorker, deadLetterWorker];
+  workers.push(...workerInstances);
   
-  workers.forEach((worker) => {
+  workerInstances.forEach((worker) => {
     worker.on('error', (error) => {
-      console.error(`Worker ${worker.name} error:`, error);
+      logError(`Worker ${worker.name} error`, error);
     });
     
     worker.on('stalled', (jobId) => {
-      console.warn(`Job ${jobId} in worker ${worker.name} stalled`);
+      logWarn(`Job ${jobId} in worker ${worker.name} stalled`);
     });
     
     worker.on('failed', async (job, err) => {
@@ -270,8 +286,11 @@ export function setupWorkers() {
 
   // Schedule recurring jobs
   scheduleRecurringJobs();
+  
+  // Start queue metrics collection
+  startQueueMetricsCollection();
 
-  console.log('Enhanced workers setup completed with retry mechanisms and dead letter queue');
+  logInfo('Enhanced workers setup completed with retry mechanisms and dead letter queue');
 
   return { reminderWorker, emailWorker, pdfWorker, deadLetterWorker };
 }
@@ -297,7 +316,7 @@ async function scheduleRecurringJobs() {
     }
   );
 
-  console.log('Recurring jobs scheduled');
+  logInfo('Recurring jobs scheduled');
 }
 
 // Utility functions for adding jobs with proper typing
@@ -374,15 +393,47 @@ export async function getQueueStats() {
   };
 }
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('Shutting down queue workers...');
-  await connection.quit();
-  process.exit(0);
-});
+// Store worker instances for graceful shutdown
+let workers: Worker[] = [];
 
-process.on('SIGINT', async () => {
-  console.log('Shutting down queue workers...');
-  await connection.quit();
-  process.exit(0);
-});
+// Enhanced graceful shutdown
+export async function gracefulShutdown() {
+  logInfo('Initiating graceful shutdown of queue workers...');
+  
+  try {
+    // Close all workers
+    await Promise.all(workers.map(worker => worker.close()));
+    logInfo('All queue workers closed successfully');
+    
+    // Close Redis connection
+    await connection.quit();
+    logInfo('Redis connection closed');
+    
+  } catch (error) {
+    logError('Error during graceful shutdown', error);
+  }
+}
+
+// Update queue metrics periodically
+export function startQueueMetricsCollection() {
+  const updateMetrics = async () => {
+    try {
+      const stats = await getQueueStats();
+      
+      // Update queue depth metrics
+      updateQueueMetrics('reminder', stats.reminder.waiting + stats.reminder.active);
+      updateQueueMetrics('email', stats.email.waiting + stats.email.active);
+      updateQueueMetrics('pdf', stats.pdf.waiting + stats.pdf.active);
+      updateQueueMetrics('dead-letter', stats.deadLetter.waiting + stats.deadLetter.active);
+      
+    } catch (error) {
+      logError('Failed to update queue metrics', error);
+    }
+  };
+  
+  // Update metrics every 30 seconds
+  setInterval(updateMetrics, 30000);
+  
+  // Initial update
+  updateMetrics();
+}
