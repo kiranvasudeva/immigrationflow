@@ -146,10 +146,28 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
     // Convert to blob with high quality for OCR
     canvas.toBlob((blob) => {
       if (blob) {
-        const file = new File([blob], `captured-document-${Date.now()}.jpg`, { type: 'image/jpeg' });
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        setFiles(dataTransfer.files);
+        // Create a File-like object from the blob
+        const fileName = `captured-document-${Date.now()}.jpg`;
+        const fileObject = new Blob([blob], { type: 'image/jpeg' });
+        
+        // Add file properties to make it compatible with File interface
+        Object.defineProperty(fileObject, 'name', {
+          value: fileName,
+          writable: false
+        });
+        Object.defineProperty(fileObject, 'lastModified', {
+          value: Date.now(),
+          writable: false
+        });
+        
+        // Create a FileList-like object
+        const fileList = {
+          0: fileObject,
+          length: 1,
+          item: function(index: number) { return index === 0 ? fileObject : null; }
+        };
+        
+        setFiles(fileList as FileList);
         
         // Create photo URL for preview
         setCapturedPhoto(URL.createObjectURL(blob));
@@ -336,10 +354,28 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
         
         canvas.toBlob((blob) => {
           if (blob) {
-            const file = new File([blob], `scanned-${documentType}-${Date.now()}.jpg`, { type: 'image/jpeg' });
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            setFiles(dataTransfer.files);
+            // Create a File-like object from the blob
+            const fileName = `scanned-${documentType}-${Date.now()}.jpg`;
+            const fileObject = new Blob([blob], { type: 'image/jpeg' });
+            
+            // Add file properties to make it compatible with File interface
+            Object.defineProperty(fileObject, 'name', {
+              value: fileName,
+              writable: false
+            });
+            Object.defineProperty(fileObject, 'lastModified', {
+              value: Date.now(),
+              writable: false
+            });
+            
+            // Create a FileList-like object
+            const fileList = {
+              0: fileObject,
+              length: 1,
+              item: function(index: number) { return index === 0 ? fileObject : null; }
+            };
+            
+            setFiles(fileList as FileList);
             
             toast({
               title: "Document Scanned",
