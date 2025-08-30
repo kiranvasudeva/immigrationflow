@@ -806,14 +806,19 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
               {!photoStream && !capturedPhoto && (
                 <div className="text-center space-y-4">
                   <p className="text-sm text-gray-600">Use your camera to capture documents</p>
-                  <Button
-                    type="button"
-                    onClick={startPhotoCapture}
-                    className="bg-purple-600 hover:bg-purple-700"
-                  >
-                    <Camera className="h-4 w-4 mr-2" />
-                    Start Camera
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      type="button"
+                      onClick={startPhotoCapture}
+                      className="w-full bg-purple-600 hover:bg-purple-700"
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      Start Camera
+                    </Button>
+                    <p className="text-xs text-gray-500">
+                      Alternative: Use File Upload mode to upload photos taken with your phone's camera app
+                    </p>
+                  </div>
                 </div>
               )}
 
