@@ -733,6 +733,7 @@ export type RequirementResponse = z.infer<typeof requirementResponseSchema>;
 
 // Document Data Extraction Tables
 export const documentTypeEnum = pgEnum('document_type', [
+  // Personal Identity Documents
   'BIRTH_CERTIFICATE', 
   'MARRIAGE_CERTIFICATE', 
   'PASSPORT', 
@@ -740,6 +741,27 @@ export const documentTypeEnum = pgEnum('document_type', [
   'DIPLOMA', 
   'EMPLOYMENT_CONTRACT', 
   'BANK_STATEMENT',
+  
+  // Romanian Immigration Workflow Forms
+  'WORK_CONTRACT_TEMPLATE',
+  'POWER_OF_ATTORNEY_TEMPLATE', 
+  'JOB_DESCRIPTION_TEMPLATE',
+  'VISA_APPLICATION_FORM',
+  'RESIDENCE_APPLICATION_TEMPLATE',
+  'AJOFM_WORK_PERMIT_APPLICATION',
+  'IGI_WORK_PERMIT_APPLICATION',
+  'CONSULATE_VISA_FORM',
+  'IGI_RESIDENCE_PERMIT_FORM',
+  'MEDICAL_CERTIFICATE',
+  'CRIMINAL_RECORD_CERTIFICATE',
+  'APOSTILLE_DOCUMENT',
+  'TRANSLATION_CERTIFICATE',
+  'HOUSING_CONTRACT',
+  'COMPANY_REGISTRATION_CERTIFICATE',
+  'TAX_CERTIFICATE',
+  'SALARY_CERTIFICATE',
+  'INSURANCE_CERTIFICATE',
+  
   'OTHER'
 ]);
 

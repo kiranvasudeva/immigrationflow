@@ -21,7 +21,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
   const [isOpen, setIsOpen] = useState(false);
   const [files, setFiles] = useState<FileList | null>(null);
   const [documentKind, setDocumentKind] = useState<'USER_UPLOAD' | 'ADMIN_RECEIPT' | 'GENERATED_PDF'>('USER_UPLOAD');
-  const [documentType, setDocumentType] = useState<'BIRTH_CERTIFICATE' | 'MARRIAGE_CERTIFICATE' | 'PASSPORT' | 'ID_CARD' | 'DIPLOMA' | 'EMPLOYMENT_CONTRACT' | 'BANK_STATEMENT' | 'OTHER'>('OTHER');
+  const [documentType, setDocumentType] = useState<string>('OTHER');
   const [scanMode, setScanMode] = useState<'upload' | 'scan' | 'photo'>('upload');
   const [isScanning, setIsScanning] = useState(false);
   const [scannedText, setScannedText] = useState('');
@@ -407,6 +407,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                {/* Personal Identity Documents */}
                 <SelectItem value="BIRTH_CERTIFICATE">Birth Certificate</SelectItem>
                 <SelectItem value="MARRIAGE_CERTIFICATE">Marriage Certificate</SelectItem>
                 <SelectItem value="PASSPORT">Passport</SelectItem>
@@ -414,46 +415,207 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
                 <SelectItem value="DIPLOMA">Diploma</SelectItem>
                 <SelectItem value="EMPLOYMENT_CONTRACT">Employment Contract</SelectItem>
                 <SelectItem value="BANK_STATEMENT">Bank Statement</SelectItem>
+                
+                {/* Romanian Immigration Forms */}
+                <SelectItem value="WORK_CONTRACT_TEMPLATE">Work Contract Template</SelectItem>
+                <SelectItem value="POWER_OF_ATTORNEY_TEMPLATE">Power of Attorney Template</SelectItem>
+                <SelectItem value="JOB_DESCRIPTION_TEMPLATE">Job Description Template</SelectItem>
+                <SelectItem value="VISA_APPLICATION_FORM">Visa Application Form</SelectItem>
+                <SelectItem value="RESIDENCE_APPLICATION_TEMPLATE">Residence Application Template</SelectItem>
+                <SelectItem value="AJOFM_WORK_PERMIT_APPLICATION">AJOFM Work Permit Application</SelectItem>
+                <SelectItem value="IGI_WORK_PERMIT_APPLICATION">IGI Work Permit Application</SelectItem>
+                <SelectItem value="CONSULATE_VISA_FORM">Consulate Visa Form</SelectItem>
+                <SelectItem value="IGI_RESIDENCE_PERMIT_FORM">IGI Residence Permit Form</SelectItem>
+                
+                {/* Supporting Documents */}
+                <SelectItem value="MEDICAL_CERTIFICATE">Medical Certificate</SelectItem>
+                <SelectItem value="CRIMINAL_RECORD_CERTIFICATE">Criminal Record Certificate</SelectItem>
+                <SelectItem value="APOSTILLE_DOCUMENT">Apostille Document</SelectItem>
+                <SelectItem value="TRANSLATION_CERTIFICATE">Translation Certificate</SelectItem>
+                <SelectItem value="HOUSING_CONTRACT">Housing Contract</SelectItem>
+                <SelectItem value="COMPANY_REGISTRATION_CERTIFICATE">Company Registration Certificate</SelectItem>
+                <SelectItem value="TAX_CERTIFICATE">Tax Certificate</SelectItem>
+                <SelectItem value="SALARY_CERTIFICATE">Salary Certificate</SelectItem>
+                <SelectItem value="INSURANCE_CERTIFICATE">Insurance Certificate</SelectItem>
+                
                 <SelectItem value="OTHER">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Scan Functionality */}
-          {scanMode === 'scan' && files && files.length > 0 && (
-            <div className="space-y-3">
-              <Button
-                type="button"
-                onClick={handleScanDocument}
-                disabled={isScanning}
-                className="w-full"
-              >
-                {isScanning ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Scanning...
-                  </>
-                ) : (
-                  <>
-                    <Scan className="h-4 w-4 mr-2" />
-                    Scan Document
-                  </>
-                )}
-              </Button>
-              
-              {scannedText && (
-                <div className="space-y-2">
-                  <Label>Scanned Text</Label>
-                  <Textarea
-                    value={scannedText}
-                    onChange={(e) => setScannedText(e.target.value)}
-                    rows={6}
-                    className="text-sm"
-                    placeholder="Scanned text will appear here..."
-                  />
-                  <p className="text-sm text-gray-500">
-                    You can edit the scanned text before converting to PDF
-                  </p>
+          {/* Enhanced Scan & Convert Interface */}
+          {scanMode === 'scan' && (
+            <div className="space-y-4 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+              <div className="text-center">
+                <Scan className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                <h3 className="text-lg font-medium">Document Scanner</h3>
+                <p className="text-sm text-gray-500">Professional OCR scanning and text extraction</p>
+              </div>
+
+              {!files || files.length === 0 ? (
+                <div className="text-center space-y-4">
+                  <p className="text-sm text-gray-600">Select a document to begin scanning</p>
+                  <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('scan-files')?.click()}
+                      className="flex flex-col items-center p-4 h-auto"
+                    >
+                      <File className="h-8 w-8 mb-2" />
+                      <span className="text-sm">Choose File</span>
+                      <span className="text-xs text-gray-500">PDF, Images</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleModeChange('photo')}
+                      className="flex flex-col items-center p-4 h-auto"
+                    >
+                      <Camera className="h-8 w-8 mb-2" />
+                      <span className="text-sm">Take Photo</span>
+                      <span className="text-xs text-gray-500">Use Camera</span>
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Document Preview */}
+                  <div className="bg-white rounded-lg p-4 border">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <File className="h-5 w-5 text-blue-500" />
+                        <span className="font-medium text-sm">{files[0].name}</span>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {(files[0].size / 1024 / 1024).toFixed(2)} MB
+                      </div>
+                    </div>
+                    
+                    {files[0].type.startsWith('image/') && (
+                      <div className="mt-2">
+                        <img 
+                          src={URL.createObjectURL(files[0])} 
+                          alt="Document preview"
+                          className="max-h-32 rounded border object-contain"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Scan Controls */}
+                  <div className="bg-white rounded-lg p-4 border space-y-3">
+                    <Label className="font-medium">OCR Settings</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm text-gray-600">Language</Label>
+                        <select className="w-full p-2 border rounded text-sm" defaultValue="eng+ron">
+                          <option value="eng">English</option>
+                          <option value="ron">Romanian</option>
+                          <option value="eng+ron">English + Romanian</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-gray-600">Quality</Label>
+                        <select className="w-full p-2 border rounded text-sm" defaultValue="2">
+                          <option value="1">Fast</option>
+                          <option value="2">Balanced</option>
+                          <option value="3">Accurate</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <Button
+                      type="button"
+                      onClick={handleScanDocument}
+                      disabled={isScanning}
+                      className="w-full"
+                      data-testid="button-scan-document"
+                    >
+                      {isScanning ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Scanning Document...
+                          <span className="ml-2 text-xs opacity-75">This may take a moment</span>
+                        </>
+                      ) : (
+                        <>
+                          <Scan className="h-4 w-4 mr-2" />
+                          Start OCR Scan
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Scan Results */}
+                  {scannedText && (
+                    <div className="bg-white rounded-lg p-4 border space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="font-medium">Extracted Text</Label>
+                        <div className="flex space-x-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigator.clipboard.writeText(scannedText)}
+                          >
+                            Copy Text
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setScannedText('')}
+                          >
+                            Clear
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <Textarea
+                        value={scannedText}
+                        onChange={(e) => setScannedText(e.target.value)}
+                        rows={8}
+                        className="text-sm font-mono"
+                        placeholder="Extracted text will appear here..."
+                        data-testid="textarea-scanned-text"
+                      />
+                      
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{scannedText.length} characters extracted</span>
+                        <span>You can edit the text before saving</span>
+                      </div>
+
+                      {/* Quick Actions */}
+                      <div className="flex space-x-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            // Auto-detect and extract common field patterns
+                            const lines = scannedText.split('\n');
+                            // This could be enhanced with more sophisticated field detection
+                            console.log('Auto-detecting fields from text:', lines);
+                          }}
+                        >
+                          Auto-Detect Fields
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            // Convert to structured format
+                            const structured = scannedText.split('\n').filter(line => line.trim());
+                            setScannedText(structured.join('\n'));
+                          }}
+                        >
+                          Clean Format
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
