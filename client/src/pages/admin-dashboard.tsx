@@ -462,8 +462,10 @@ export default function AdminDashboard() {
                                 variant="outline" 
                                 size="sm"
                                 onClick={() => {
+                                  console.log('View Workers clicked for client:', client.legalName);
                                   setSelectedClient(client);
                                   setShowClientWorkers(true);
+                                  console.log('State updated - showClientWorkers:', true);
                                 }}
                                 data-testid={`button-view-workers-${client.id}`}
                               >
