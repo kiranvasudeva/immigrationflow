@@ -495,16 +495,6 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
               </Button>
               <Button
                 type="button"
-                variant={scanMode === 'scan' ? 'default' : 'outline'}
-                onClick={() => handleModeChange('scan')}
-                className="flex-1"
-                data-testid="button-mode-scan"
-              >
-                <Scan className="h-4 w-4 mr-2" />
-                Scan & Convert
-              </Button>
-              <Button
-                type="button"
                 variant={scanMode === 'photo' ? 'default' : 'outline'}
                 onClick={() => handleModeChange('photo')}
                 className="flex-1"
@@ -516,104 +506,6 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
             </div>
           </div>
 
-          {/* File Selection - Only show for upload mode */}
-          {scanMode === 'upload' && (
-            <div className="space-y-2">
-              <Label htmlFor="files">Select Files</Label>
-              <Input
-                id="files"
-                type="file"
-                multiple
-                accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.txt"
-                onChange={handleFileChange}
-                data-testid="input-document-files"
-              />
-              <p className="text-sm text-gray-500">
-                Supported formats: PDF, Images (JPG, PNG, GIF), Documents (DOC, DOCX), Text files
-              </p>
-            </div>
-          )}
-
-          {/* Scan Mode - File Selection */}
-          {scanMode === 'scan' && (
-            <div className="space-y-2">
-              <Label htmlFor="scan-files">Select Document to Scan</Label>
-              <Input
-                id="scan-files"
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png,.gif"
-                onChange={handleFileChange}
-                data-testid="input-scan-files"
-              />
-              <p className="text-sm text-gray-500">
-                Select an image or PDF file to extract text with OCR
-              </p>
-            </div>
-          )}
-
-          {/* Photo Capture Mode */}
-          {scanMode === 'photo' && (
-            <div className="space-y-4">
-              {!isCapturing ? (
-                <div className="text-center">
-                  <Button
-                    type="button"
-                    onClick={startCamera}
-                    className="w-full"
-                    data-testid="button-start-camera"
-                  >
-                    <Camera className="h-4 w-4 mr-2" />
-                    Start Camera
-                  </Button>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Click to start camera and capture document photos
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="relative bg-black rounded-lg overflow-hidden">
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      className="w-full h-64 object-cover"
-                    />
-                    <canvas ref={canvasRef} className="hidden" />
-                  </div>
-                  
-                  <div className="flex space-x-3">
-                    <Button
-                      type="button"
-                      onClick={capturePhoto}
-                      className="flex-1"
-                      data-testid="button-capture-photo"
-                    >
-                      <Camera className="h-4 w-4 mr-2" />
-                      Capture Photo
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={stopCamera}
-                      data-testid="button-stop-camera"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                  
-                  <p className="text-sm text-gray-500 text-center">
-                    Position document within the camera view and click capture
-                  </p>
-                </div>
-              )}
-              
-              {files && files.length > 0 && (
-                <div className="text-sm text-green-600">
-                  ✓ Photo captured: {files[0].name}
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Document Kind */}
           <div className="space-y-2">
