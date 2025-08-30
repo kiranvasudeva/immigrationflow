@@ -100,6 +100,8 @@ export interface IStorage {
   getDocumentFile(id: string): Promise<DocumentFile | undefined>;
   getDocumentFilesByAssignment(assignmentId: string): Promise<DocumentFile[]>;
   createDocumentFile(file: Omit<DocumentFile, 'id' | 'createdAt'>): Promise<DocumentFile>;
+  updateDocumentFileStatus(documentId: string, status: string, notes?: string): Promise<DocumentFile>;
+  deleteDocumentFile(documentId: string): Promise<boolean>;
   
   // Search operations
   searchClientsAndWorkers(query: string): Promise<{clients: ClientProfile[], workers: Worker[]}>;
@@ -463,6 +465,30 @@ export class DatabaseStorage implements IStorage {
   async createDocumentFile(file: Omit<DocumentFile, 'id' | 'createdAt'>): Promise<DocumentFile> {
     const [newFile] = await db.insert(documentFiles).values(file).returning();
     return newFile;
+  }
+
+  async updateDocumentFileStatus(documentId: string, status: string, notes?: string): Promise<DocumentFile> {
+    // Note: The documentFiles table doesn't have status/notes fields in current schema
+    // For now, we'll create an audit log entry and return the file
+    await this.createAuditLog({
+      userId: 'system',
+      action: 'document_status_update',
+      entityType: 'document_file',
+      entityId: documentId,
+      metadata: { status, notes }
+    });
+    
+    const file = await this.getDocumentFile(documentId);
+    if (!file) {
+      throw new Error('Document file not found');
+    }
+    
+    return file;
+  }
+
+  async deleteDocumentFile(documentId: string): Promise<boolean> {
+    const result = await db.delete(documentFiles).where(eq(documentFiles.id, documentId));
+    return result.rowCount > 0;
   }
 
   // Search operations

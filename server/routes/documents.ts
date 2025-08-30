@@ -163,4 +163,88 @@ router.get('/assignment/:assignmentId', isAuthenticated, auditMiddleware, async 
   }
 });
 
+// Update document status
+router.put('/:documentId/status', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  try {
+    const { documentId } = req.params;
+    const schema = z.object({
+      status: z.string().min(1),
+      notes: z.string().optional(),
+    });
+
+    const { status, notes } = schema.parse(req.body);
+    
+    const documentFile = await storage.getDocumentFile(documentId);
+    if (!documentFile) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+
+    // Check authorization
+    const assignment = await storage.getAssignment(documentFile.assignmentId);
+    if (!assignment) {
+      return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    const userId = req.user.claims.sub;
+    const user = await storage.getUser(userId);
+    
+    if (user?.role !== 'ADMIN') {
+      const client = await storage.getClientProfile(assignment.clientProfileId);
+      const isOwner = client?.ownerUserId === userId;
+      
+      if (!isOwner) {
+        return res.status(403).json({ message: 'Unauthorized' });
+      }
+    }
+
+    // Update document status (this would need to be implemented in storage)
+    const updatedDocument = await storage.updateDocumentFileStatus(documentId, status, notes);
+    
+    res.json(updatedDocument);
+  } catch (error) {
+    console.error('Error updating document status:', error);
+    res.status(500).json({ message: 'Failed to update document status' });
+  }
+});
+
+// Delete document
+router.delete('/:documentId', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  try {
+    const { documentId } = req.params;
+    
+    const documentFile = await storage.getDocumentFile(documentId);
+    if (!documentFile) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+
+    // Check authorization
+    const assignment = await storage.getAssignment(documentFile.assignmentId);
+    if (!assignment) {
+      return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    const userId = req.user.claims.sub;
+    const user = await storage.getUser(userId);
+    
+    if (user?.role !== 'ADMIN') {
+      const client = await storage.getClientProfile(assignment.clientProfileId);
+      const isOwner = client?.ownerUserId === userId;
+      const isUploader = documentFile.uploadedByUserId === userId;
+      
+      if (!isOwner && !isUploader) {
+        return res.status(403).json({ message: 'Unauthorized' });
+      }
+    }
+
+    // Delete from S3 and database
+    await s3Service.deleteFile(documentFile.s3Key);
+    await storage.deleteDocumentFile(documentId);
+    
+    res.json({ success: true, message: 'Document deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting document:', error);
+    res.status(500).json({ message: 'Failed to delete document' });
+  }
+});
+
 export { router as documentsRouter };
