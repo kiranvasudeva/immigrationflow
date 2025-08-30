@@ -62,6 +62,10 @@ export default function AdminDashboard() {
     const currentSection = routeToSection[location] || 'overview';
     if (currentSection !== activeSection) {
       setActiveSection(currentSection);
+      // Reset selected client when changing sections to prevent flash
+      if (currentSection === 'clients' && selectedClient) {
+        setSelectedClient(null);
+      }
     }
   }, [location]);
 
@@ -1120,15 +1124,35 @@ export default function AdminDashboard() {
                       <div className="border-t pt-6">
                         <h4 className="font-semibold text-gray-900 mb-4">Quick Actions</h4>
                         <div className="flex flex-wrap gap-3">
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setActiveSection('workers');
+                              navigate('/workers');
+                            }}
+                          >
                             <i className="fas fa-users mr-2"></i>
                             View Workers ({selectedClient.activeWorkers || 0})
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              navigate('/templates');
+                            }}
+                          >
                             <i className="fas fa-file-alt mr-2"></i>
                             Documents
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setActiveSection('reports');
+                              navigate('/reports');
+                            }}
+                          >
                             <i className="fas fa-chart-line mr-2"></i>
                             Reports
                           </Button>
