@@ -32,6 +32,8 @@ import {
 } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { DocumentViewer } from "@/components/documents/DocumentViewer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface WorkerAssignment {
   id: string;
@@ -81,6 +83,7 @@ export default function WorkerProfile() {
   const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null);
   
   // Extract worker ID from URL
   const workerId = location.split('/workers/')[1];
@@ -623,9 +626,26 @@ export default function WorkerProfile() {
                                       <div className="flex items-center space-x-3">
                                         {getStatusBadge(assignment.status)}
                                         <div className="flex space-x-1">
-                                          <Button variant="ghost" size="sm" data-testid={`button-view-requirement-${assignment.id}`}>
-                                            <Eye className="h-4 w-4" />
-                                          </Button>
+                                          <Dialog>
+                                            <DialogTrigger asChild>
+                                              <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                data-testid={`button-view-requirement-${assignment.id}`}
+                                                onClick={() => setSelectedAssignmentId(assignment.id)}
+                                              >
+                                                <Eye className="h-4 w-4" />
+                                              </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-4xl max-h-[80vh]">
+                                              <DialogHeader>
+                                                <DialogTitle>{assignment.requirement.title} - Documents</DialogTitle>
+                                              </DialogHeader>
+                                              <div className="overflow-y-auto">
+                                                <DocumentViewer assignmentId={assignment.id} />
+                                              </div>
+                                            </DialogContent>
+                                          </Dialog>
                                           {assignment.status === 'AWAITING_UPLOAD' && (
                                             <Button variant="ghost" size="sm" data-testid={`button-upload-document-${assignment.id}`}>
                                               <Upload className="h-4 w-4" />
