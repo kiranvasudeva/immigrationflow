@@ -108,6 +108,27 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated, isLoading, setLocation]);
 
+  // Update active section based on current route
+  useEffect(() => {
+    if (location === '/' || location === '/dashboard') {
+      setActiveSection('overview');
+    } else if (location === '/clients') {
+      setActiveSection('clients');
+    } else if (location === '/workers') {
+      setActiveSection('workers');
+    } else if (location === '/templates') {
+      setActiveSection('documents');
+    } else if (location === '/reports') {
+      setActiveSection('reports');
+    } else if (location === '/requirements') {
+      setActiveSection('requirements');
+    } else if (location === '/reminders') {
+      setActiveSection('reminders');
+    } else if (location === '/audit') {
+      setActiveSection('audit');
+    }
+  }, [location]);
+
   // Fetch data
   const { data: stats } = useQuery({
     queryKey: ['/api/dashboard/stats'],
