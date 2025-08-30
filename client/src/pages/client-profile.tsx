@@ -83,13 +83,13 @@ export default function ClientProfile() {
   });
 
   // Fetch client data
-  const { data: client, isLoading: clientLoading, error: clientError } = useQuery({
+  const { data: client, isLoading: clientLoading, error: clientError } = useQuery<any>({
     queryKey: ['/api/clients', clientId],
     enabled: !!clientId && isAuthenticated,
   });
 
   // Fetch workers for this client  
-  const { data: workers, isLoading: workersLoading, error: workersError } = useQuery({
+  const { data: workers, isLoading: workersLoading, error: workersError } = useQuery<any[]>({
     queryKey: ['/api/clients', clientId, 'workers'],
     enabled: !!clientId && isAuthenticated,
     retry: (failureCount, error) => {
@@ -109,16 +109,16 @@ export default function ClientProfile() {
   });
 
   // Fetch selected worker details with workflow
-  const { data: selectedWorker, isLoading: selectedWorkerLoading, error: selectedWorkerError } = useQuery<SelectedWorkerData>({
+  const { data: selectedWorker, isLoading: selectedWorkerLoading, error: selectedWorkerError } = useQuery<any>({
     queryKey: ['/api/workers', selectedWorkerId],
     enabled: !!selectedWorkerId && isAuthenticated,
   });
 
   // Debug logging
-  console.log('Selected Worker ID:', selectedWorkerId);
-  console.log('Selected Worker Data:', selectedWorker);
-  console.log('Selected Worker Loading:', selectedWorkerLoading);
-  console.log('Selected Worker Error:', selectedWorkerError);
+  console.log('🔍 Selected Worker ID:', selectedWorkerId);
+  console.log('🔍 Selected Worker Data:', selectedWorker);
+  console.log('🔍 Selected Worker Loading:', selectedWorkerLoading);
+  console.log('🔍 Selected Worker Error:', selectedWorkerError);
 
 
 
@@ -220,7 +220,7 @@ export default function ClientProfile() {
         <Sidebar userRole={user.role} onSectionChange={() => {}} />
         
         <div className="flex-1 flex flex-col min-w-0">
-          <Header />
+          <Header title="Client Profile" subtitle="Manage client information" />
           
           <main className="flex-1 overflow-y-auto p-6">
             <div className="max-w-4xl mx-auto space-y-6">
