@@ -462,10 +462,8 @@ export default function AdminDashboard() {
                                 variant="outline" 
                                 size="sm"
                                 onClick={() => {
-                                  console.log('View Workers clicked for client:', client.legalName);
                                   setSelectedClient(client);
                                   setShowClientWorkers(true);
-                                  console.log('State updated - showClientWorkers:', true);
                                 }}
                                 data-testid={`button-view-workers-${client.id}`}
                               >
@@ -543,6 +541,15 @@ export default function AdminDashboard() {
                                     />
                                   </div>
                                   <div>
+                                    <Label htmlFor="edit-registrationNumber">Registration Number</Label>
+                                    <Input
+                                      id="edit-registrationNumber"
+                                      value={editClientForm.registrationNumber}
+                                      onChange={(e) => setEditClientForm({...editClientForm, registrationNumber: e.target.value})}
+                                      required
+                                    />
+                                  </div>
+                                  <div>
                                     <Label htmlFor="edit-contactEmail">Contact Email</Label>
                                     <Input
                                       id="edit-contactEmail"
@@ -558,6 +565,42 @@ export default function AdminDashboard() {
                                       id="edit-phoneNumber"
                                       value={editClientForm.phoneNumber}
                                       onChange={(e) => setEditClientForm({...editClientForm, phoneNumber: e.target.value})}
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="edit-adminName">Admin Name</Label>
+                                    <Input
+                                      id="edit-adminName"
+                                      value={editClientForm.adminName}
+                                      onChange={(e) => setEditClientForm({...editClientForm, adminName: e.target.value})}
+                                      required
+                                    />
+                                  </div>
+                                  <div className="md:col-span-2">
+                                    <Label htmlFor="edit-legalAddress">Legal Address</Label>
+                                    <Textarea
+                                      id="edit-legalAddress"
+                                      value={editClientForm.legalAddress}
+                                      onChange={(e) => setEditClientForm({...editClientForm, legalAddress: e.target.value})}
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="edit-bankIban">Bank IBAN</Label>
+                                    <Input
+                                      id="edit-bankIban"
+                                      value={editClientForm.bankIban}
+                                      onChange={(e) => setEditClientForm({...editClientForm, bankIban: e.target.value})}
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="edit-caen">CAEN Code</Label>
+                                    <Input
+                                      id="edit-caen"
+                                      value={editClientForm.caen}
+                                      onChange={(e) => setEditClientForm({...editClientForm, caen: e.target.value})}
                                       required
                                     />
                                   </div>
