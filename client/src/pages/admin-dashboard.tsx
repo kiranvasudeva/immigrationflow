@@ -22,6 +22,61 @@ import { NavigationBreadcrumb } from "@/components/layout/NavigationBreadcrumb";
 
 // Component to display client-specific workers
 function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: { clientId: string, selectedWorker: any, setSelectedWorker: (worker: any) => void }) {
+  const [editingWorker, setEditingWorker] = useState<any>(null);
+  const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
+    nationality: '',
+    email: '',
+    phone: '',
+    passportNumber: '',
+    dob: '',
+    passportExpiry: ''
+  });
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Mutation for updating worker
+  const updateWorkerMutation = useMutation({
+    mutationFn: async (data: { workerId: string, workerData: any }) => {
+      const response = await apiRequest("PUT", `/api/workers/${data.workerId}`, data.workerData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/clients', clientId, 'workers'] });
+      setEditingWorker(null);
+      toast({
+        title: "Success",
+        description: "Worker updated successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update worker",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const startEditing = (worker: any) => {
+    setEditingWorker(worker.id);
+    setEditForm({
+      firstName: worker.firstName || '',
+      lastName: worker.lastName || '',
+      nationality: worker.nationality || '',
+      email: worker.email || '',
+      phone: worker.phone || '',
+      passportNumber: worker.passportNumber || '',
+      dob: worker.dob ? new Date(worker.dob).toISOString().split('T')[0] : '',
+      passportExpiry: worker.passportExpiry ? new Date(worker.passportExpiry).toISOString().split('T')[0] : ''
+    });
+  };
+
+  const saveWorker = async (workerId: string) => {
+    await updateWorkerMutation.mutateAsync({ workerId, workerData: editForm });
+  };
+
   const { data: workers, isLoading } = useQuery({
     queryKey: ['/api/clients', clientId, 'workers'],
     queryFn: async () => {
@@ -87,14 +142,48 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: {
               <div className="flex items-center justify-between mb-4">
                 <h5 className="font-semibold text-gray-900">Worker Details</h5>
                 <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                  >
-                    <i className="fas fa-edit mr-2"></i>
-                    Edit Worker
-                  </Button>
+                  {editingWorker === worker.id ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          saveWorker(worker.id);
+                        }}
+                        disabled={updateWorkerMutation.isPending}
+                        className="text-green-600 border-green-200 hover:bg-green-50"
+                      >
+                        <i className="fas fa-save mr-2"></i>
+                        {updateWorkerMutation.isPending ? 'Saving...' : 'Save'}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingWorker(null);
+                        }}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        <i className="fas fa-ban mr-2"></i>
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEditing(worker);
+                      }}
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <i className="fas fa-edit mr-2"></i>
+                      Edit Worker
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -113,47 +202,120 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: {
                 <div className="space-y-4">
                   <h6 className="font-medium text-gray-900 text-sm">Personal Information</h6>
                   <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Date of Birth:</span>
-                      <span className="font-medium">
-                        {worker.dob ? new Date(worker.dob).toLocaleDateString() : 'N/A'}
-                      </span>
+                    <div className="space-y-1">
+                      <span className="text-gray-600 text-xs">First Name:</span>
+                      {editingWorker === worker.id ? (
+                        <Input
+                          value={editForm.firstName}
+                          onChange={(e) => setEditForm({...editForm, firstName: e.target.value})}
+                          className="h-8 text-sm"
+                          placeholder="First Name"
+                        />
+                      ) : (
+                        <span className="font-medium block">{worker.firstName || 'N/A'}</span>
+                      )}
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Passport Number:</span>
-                      <span className="font-medium">{worker.passportNumber || 'N/A'}</span>
+                    <div className="space-y-1">
+                      <span className="text-gray-600 text-xs">Last Name:</span>
+                      {editingWorker === worker.id ? (
+                        <Input
+                          value={editForm.lastName}
+                          onChange={(e) => setEditForm({...editForm, lastName: e.target.value})}
+                          className="h-8 text-sm"
+                          placeholder="Last Name"
+                        />
+                      ) : (
+                        <span className="font-medium block">{worker.lastName || 'N/A'}</span>
+                      )}
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Passport Expires:</span>
-                      <span className="font-medium">
-                        {worker.passportExpiry ? new Date(worker.passportExpiry).toLocaleDateString() : 'N/A'}
-                      </span>
+                    <div className="space-y-1">
+                      <span className="text-gray-600 text-xs">Nationality:</span>
+                      {editingWorker === worker.id ? (
+                        <Input
+                          value={editForm.nationality}
+                          onChange={(e) => setEditForm({...editForm, nationality: e.target.value})}
+                          className="h-8 text-sm"
+                          placeholder="Nationality"
+                        />
+                      ) : (
+                        <span className="font-medium block">{worker.nationality || 'N/A'}</span>
+                      )}
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Phone:</span>
-                      <span className="font-medium">{worker.phone || 'N/A'}</span>
+                    <div className="space-y-1">
+                      <span className="text-gray-600 text-xs">Date of Birth:</span>
+                      {editingWorker === worker.id ? (
+                        <Input
+                          type="date"
+                          value={editForm.dob}
+                          onChange={(e) => setEditForm({...editForm, dob: e.target.value})}
+                          className="h-8 text-sm"
+                        />
+                      ) : (
+                        <span className="font-medium block">
+                          {worker.dob ? new Date(worker.dob).toLocaleDateString() : 'N/A'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
                 
                 <div className="space-y-4">
-                  <h6 className="font-medium text-gray-900 text-sm">Work Information</h6>
+                  <h6 className="font-medium text-gray-900 text-sm">Contact & Document Info</h6>
                   <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <span className={`font-medium ${worker.status === 'active' ? 'text-green-600' : 'text-gray-600'}`}>
-                        {worker.status || 'Active'}
-                      </span>
+                    <div className="space-y-1">
+                      <span className="text-gray-600 text-xs">Email:</span>
+                      {editingWorker === worker.id ? (
+                        <Input
+                          type="email"
+                          value={editForm.email}
+                          onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                          className="h-8 text-sm"
+                          placeholder="Email"
+                        />
+                      ) : (
+                        <span className="font-medium block">{worker.email || 'N/A'}</span>
+                      )}
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Created:</span>
-                      <span className="font-medium">
-                        {worker.createdAt ? new Date(worker.createdAt).toLocaleDateString() : 'N/A'}
-                      </span>
+                    <div className="space-y-1">
+                      <span className="text-gray-600 text-xs">Phone:</span>
+                      {editingWorker === worker.id ? (
+                        <Input
+                          value={editForm.phone}
+                          onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                          className="h-8 text-sm"
+                          placeholder="Phone Number"
+                        />
+                      ) : (
+                        <span className="font-medium block">{worker.phone || 'N/A'}</span>
+                      )}
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Email:</span>
-                      <span className="font-medium">{worker.email || 'N/A'}</span>
+                    <div className="space-y-1">
+                      <span className="text-gray-600 text-xs">Passport Number:</span>
+                      {editingWorker === worker.id ? (
+                        <Input
+                          value={editForm.passportNumber}
+                          onChange={(e) => setEditForm({...editForm, passportNumber: e.target.value})}
+                          className="h-8 text-sm"
+                          placeholder="Passport Number"
+                        />
+                      ) : (
+                        <span className="font-medium block">{worker.passportNumber || 'N/A'}</span>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-gray-600 text-xs">Passport Expires:</span>
+                      {editingWorker === worker.id ? (
+                        <Input
+                          type="date"
+                          value={editForm.passportExpiry}
+                          onChange={(e) => setEditForm({...editForm, passportExpiry: e.target.value})}
+                          className="h-8 text-sm"
+                        />
+                      ) : (
+                        <span className="font-medium block">
+                          {worker.passportExpiry ? new Date(worker.passportExpiry).toLocaleDateString() : 'N/A'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
