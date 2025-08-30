@@ -504,12 +504,14 @@ export default function ClientProfile() {
                           {workers.map((worker) => (
                             <div 
                               key={worker.id} 
-                              className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                              onClick={() => {
+                              className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer relative"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 console.log('Worker clicked:', worker.id);
-                                alert(`Worker clicked: ${worker.firstName} ${worker.lastName} (${worker.id})`);
                                 setSelectedWorkerId(worker.id);
                               }}
+                              style={{ cursor: 'pointer', zIndex: 10 }}
                               data-testid={`worker-card-${worker.id}`}
                             >
                               <div className="flex items-center space-x-3">
@@ -525,13 +527,26 @@ export default function ClientProfile() {
                                   </p>
                                 </div>
                               </div>
-                              <div className="text-right">
+                              <div className="text-right space-y-2">
                                 <Badge variant="outline" className="mb-1">
                                   {worker.passportNumber}
                                 </Badge>
                                 <p className="text-xs text-gray-500">
                                   Expires: {new Date(worker.passportExpiry).toLocaleDateString()}
                                 </p>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log('View Details clicked for worker:', worker.id);
+                                    setSelectedWorkerId(worker.id);
+                                  }}
+                                  data-testid={`button-view-worker-${worker.id}`}
+                                >
+                                  View Details
+                                </Button>
                               </div>
                             </div>
                           ))}
