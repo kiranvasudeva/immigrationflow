@@ -281,11 +281,9 @@ export default function AdminDashboard() {
         )}
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Clients Section - Only show when activeSection is 'clients' */}
-          {activeSection === 'clients' && (
-          <div className="lg:col-span-2">
+        {activeSection === 'clients' ? (
+          // Full width layout for clients section
+          <div className="w-full">
             <Collapsible open={clientsOpen} onOpenChange={setClientsOpen}>
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="w-full justify-between p-0 h-auto">
@@ -497,7 +495,7 @@ export default function AdminDashboard() {
                         </CardHeader>
                         
                         <CardContent>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 text-sm">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 text-sm">
                             <div className="space-y-1 min-w-0">
                               <span className="font-medium text-gray-600 block">Contact:</span>
                               <p className="truncate text-gray-800" title={client.contactEmail}>{client.contactEmail}</p>
@@ -508,8 +506,20 @@ export default function AdminDashboard() {
                               <p className="truncate text-gray-800" title={client.adminName}>{client.adminName}</p>
                             </div>
                             <div className="space-y-1 min-w-0">
-                              <span className="font-medium text-gray-600 block">CAEN:</span>
+                              <span className="font-medium text-gray-600 block">Registration:</span>
+                              <p className="truncate text-gray-800" title={client.registrationNumber}>{client.registrationNumber}</p>
+                            </div>
+                            <div className="space-y-1 min-w-0">
+                              <span className="font-medium text-gray-600 block">CAEN Code:</span>
                               <p className="truncate text-gray-800" title={client.caen}>{client.caen}</p>
+                            </div>
+                            <div className="space-y-1 min-w-0">
+                              <span className="font-medium text-gray-600 block">Bank IBAN:</span>
+                              <p className="truncate text-gray-800" title={client.bankIban}>{client.bankIban}</p>
+                            </div>
+                            <div className="space-y-1 min-w-0 md:col-span-2 lg:col-span-3 2xl:col-span-1">
+                              <span className="font-medium text-gray-600 block">Legal Address:</span>
+                              <p className="truncate text-gray-800" title={client.legalAddress}>{client.legalAddress}</p>
                             </div>
                           </div>
 
@@ -637,11 +647,12 @@ export default function AdminDashboard() {
               </CollapsibleContent>
             </Collapsible>
           </div>
-          )}
-
-          {/* Workflow Activity Panel - Only show on dashboard overview */}
-          {activeSection === 'overview' && (
-          <div className="space-y-6">
+        ) : (
+          // Grid layout for other sections (overview)
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Workflow Activity Panel - Only show on dashboard overview */}
+            {activeSection === 'overview' && (
+            <div className="lg:col-span-2 space-y-6">
             <Collapsible open={workflowOpen} onOpenChange={setWorkflowOpen}>
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="w-full justify-between p-0 h-auto">
@@ -685,9 +696,10 @@ export default function AdminDashboard() {
                 )}
               </CollapsibleContent>
             </Collapsible>
+            </div>
+            )}
           </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
