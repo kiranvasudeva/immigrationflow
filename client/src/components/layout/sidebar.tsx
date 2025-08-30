@@ -67,8 +67,7 @@ export default function Sidebar({ userRole, onSectionChange, currentSection }: S
       case 'ADMIN':
         return [
           ...commonItems,
-          { icon: 'fas fa-building', label: 'Clients', href: '/clients', sectionKey: 'clients', active: isActive('/clients', 'clients') },
-          { icon: 'fas fa-users', label: 'Workers', href: '/workers', sectionKey: 'workers', active: isActive('/workers', 'workers') },
+          { icon: 'fas fa-building', label: 'Clients & Workers', href: '/clients', sectionKey: 'clients', active: isActive('/clients', 'clients') },
           { icon: 'fas fa-file-text', label: 'Templates', href: '/templates', sectionKey: 'documents', active: isActive('/templates', 'documents') },
           { icon: 'fas fa-chart-line', label: 'Reports', href: '/reports', sectionKey: 'reports', active: isActive('/reports', 'reports') },
           { icon: 'fas fa-clipboard-list', label: 'Requirements', href: '/requirements', sectionKey: 'requirements', active: isActive('/requirements', 'requirements') },
