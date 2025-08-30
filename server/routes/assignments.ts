@@ -322,4 +322,36 @@ router.post('/:id/documents', isAuthenticated, auditMiddleware, upload.array('fi
   }
 });
 
+// Get documents for assignment - this route handles the URL format expected by DocumentViewer
+router.get('/:assignmentId/documents', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  try {
+    const { assignmentId } = req.params;
+    
+    const assignment = await storage.getAssignment(assignmentId);
+    if (!assignment) {
+      return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    // Check authorization
+    const userId = req.user.claims.sub;
+    const user = await storage.getUser(userId);
+    
+    if (user?.role !== 'ADMIN') {
+      const client = await storage.getClientProfile(assignment.clientProfileId);
+      const isOwner = client?.ownerUserId === userId;
+      const isWorker = assignment.workerId === userId;
+      
+      if (!isOwner && !isWorker) {
+        return res.status(403).json({ message: 'Unauthorized' });
+      }
+    }
+
+    const documents = await storage.getDocumentFilesByAssignment(assignmentId);
+    res.json(documents);
+  } catch (error) {
+    console.error('Error fetching documents:', error);
+    res.status(500).json({ message: 'Failed to fetch documents' });
+  }
+});
+
 export { router as assignmentsRouter };
