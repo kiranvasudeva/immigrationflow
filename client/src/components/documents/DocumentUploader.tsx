@@ -138,6 +138,10 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
     setScanMode(mode);
     
     if (mode === 'photo') {
+      // Reset camera state and auto-check
+      setHasCameraAccess(null);
+      setAvailableCameras([]);
+      setSelectedCameraId('');
       checkCameraAvailability();
     }
   };
@@ -848,15 +852,10 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
                 <div className="text-center space-y-4">
                   {hasCameraAccess === null && (
                     <div>
-                      <p className="text-sm text-gray-600">Checking for camera...</p>
-                      <Button
-                        type="button"
-                        onClick={checkCameraAvailability}
-                        className="w-full bg-purple-600 hover:bg-purple-700 mt-2"
-                      >
-                        <Camera className="h-4 w-4 mr-2" />
-                        Check Camera
-                      </Button>
+                      <p className="text-sm text-gray-600">Preparing camera...</p>
+                      <div className="mt-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+                      </div>
                     </div>
                   )}
                   
@@ -871,6 +870,14 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
                           </div>
                         </div>
                       </div>
+                      <Button
+                        type="button"
+                        onClick={checkCameraAvailability}
+                        className="w-full bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Camera className="h-4 w-4 mr-2" />
+                        Try Again
+                      </Button>
                       <p className="text-xs text-gray-500">
                         Alternative: Use File Upload mode to upload photos taken with your phone's camera app
                       </p>
