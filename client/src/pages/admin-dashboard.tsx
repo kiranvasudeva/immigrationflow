@@ -391,6 +391,7 @@ function AllWorkersDisplay({ selectedWorker, setSelectedWorker }: { selectedWork
 // Component to display client-specific workers  
 function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: { clientId: string, selectedWorker: any, setSelectedWorker: (worker: any) => void }) {
   const [editingWorker, setEditingWorker] = useState<any>(null);
+  const [selectedWorkerDetails, setSelectedWorkerDetails] = useState<any>(null);
   const [editForm, setEditForm] = useState({
     firstName: '',
     lastName: '',
@@ -454,6 +455,20 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: {
       }
       return response.json();
     }
+  });
+
+  // Fetch detailed worker info with assignments when a worker is selected
+  const { data: workerDetailsData, isLoading: workerDetailsLoading } = useQuery({
+    queryKey: ['/api/workers', selectedWorker?.id],
+    queryFn: async () => {
+      if (!selectedWorker?.id) return null;
+      const response = await fetch(`/api/workers/${selectedWorker.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch worker details');
+      }
+      return response.json();
+    },
+    enabled: !!selectedWorker?.id
   });
 
   if (isLoading) {
@@ -688,6 +703,92 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: {
                   </div>
                 </div>
               </div>
+              
+              {/* Immigration Workflow Section */}
+              {!editingWorker && workerDetailsData && workerDetailsData.assignments && workerDetailsData.assignments.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-gray-100">
+                  <h6 className="font-medium text-gray-900 text-sm mb-4">Immigration Workflow Status</h6>
+                  <div className="space-y-3">
+                    {(() => {
+                      // Group assignments by stage for better organization
+                      const stageGroups = workerDetailsData.assignments.reduce((acc: any, assignment: any) => {
+                        const stage = assignment.workRequirement?.stage || 'Unknown';
+                        if (!acc[stage]) {
+                          acc[stage] = [];
+                        }
+                        acc[stage].push(assignment);
+                        return acc;
+                      }, {});
+
+                      // Define stage order
+                      const stageOrder = ['AJOFM', 'WORK_PERMIT', 'VISA', 'RESIDENCE_PERMIT'];
+                      
+                      return stageOrder.map((stage) => {
+                        const assignments = stageGroups[stage] || [];
+                        if (assignments.length === 0) return null;
+
+                        return (
+                          <div key={stage} className="bg-gray-50 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <h6 className="font-medium text-gray-800 text-sm">
+                                {stage === 'AJOFM' ? 'AJOFM Labor Market Test' :
+                                 stage === 'WORK_PERMIT' ? 'IGI Work Permit' :
+                                 stage === 'VISA' ? 'Consulate Visa Application' :
+                                 stage === 'RESIDENCE_PERMIT' ? 'Residence Permit' : stage}
+                              </h6>
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                assignments.some((a: any) => a.status === 'completed') ? 'bg-green-100 text-green-800' :
+                                assignments.some((a: any) => a.status === 'in_progress') ? 'bg-blue-100 text-blue-800' :
+                                assignments.some((a: any) => a.status === 'pending') ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {assignments.some((a: any) => a.status === 'completed') ? 'Completed' :
+                                 assignments.some((a: any) => a.status === 'in_progress') ? 'In Progress' :
+                                 assignments.some((a: any) => a.status === 'pending') ? 'Pending' : 'Not Started'}
+                              </span>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              {assignments.map((assignment: any, index: number) => (
+                                <div key={assignment.id || index} className="flex items-center justify-between text-sm">
+                                  <span className="text-gray-700">
+                                    {assignment.workRequirement?.title || `Requirement ${index + 1}`}
+                                  </span>
+                                  <div className="flex items-center space-x-2">
+                                    <span className={`px-2 py-1 text-xs rounded-full ${
+                                      assignment.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                      assignment.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                                      assignment.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                      'bg-gray-100 text-gray-700'
+                                    }`}>
+                                      {assignment.status || 'pending'}
+                                    </span>
+                                    {assignment.documentFiles && assignment.documentFiles.length > 0 && (
+                                      <span className="text-xs text-gray-500">
+                                        📄 {assignment.documentFiles.length} doc{assignment.documentFiles.length !== 1 ? 's' : ''}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }).filter(Boolean);
+                    })()}
+                  </div>
+                </div>
+              )}
+              
+              {/* Loading state for workflow data */}
+              {!editingWorker && selectedWorker && workerDetailsLoading && (
+                <div className="mt-6 pt-6 border-t border-gray-100">
+                  <div className="flex items-center justify-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    <span className="ml-2 text-sm text-gray-600">Loading workflow status...</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
