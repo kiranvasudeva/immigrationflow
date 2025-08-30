@@ -203,29 +203,223 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
     return result;
   };
 
-  // Find document corners using contour detection
+  // Find document corners using contour detection with document-specific criteria
   const findDocumentCorners = (edges: Uint8ClampedArray, width: number, height: number): Array<{x: number, y: number}> | null => {
-    // Find the largest rectangular contour
-    const minArea = (width * height) * 0.1; // Minimum 10% of image area
+    // Document detection criteria
+    const minArea = (width * height) * 0.15; // Minimum 15% of image area (documents should be substantial)
+    const maxArea = (width * height) * 0.85; // Maximum 85% of image area (leave some margin)
+    const minAspectRatio = 0.5; // Minimum width/height ratio (not too thin)
+    const maxAspectRatio = 2.0; // Maximum width/height ratio (not too wide)
     
-    // Simplified approach: find largest rectangle-like shape
-    // In a real implementation, you'd use more sophisticated contour detection
+    // Find potential rectangular contours using edge detection
+    const contours = findRectangularContours(edges, width, height);
     
-    // For demo purposes, create a reasonable document boundary
-    const margin = Math.min(width, height) * 0.1;
-    const corners = [
-      { x: margin, y: margin },
-      { x: width - margin, y: margin },
-      { x: width - margin, y: height - margin },
-      { x: margin, y: height - margin }
-    ];
+    // Filter contours to find document-like shapes
+    for (const contour of contours) {
+      const area = calculatePolygonArea(contour);
+      const boundingRect = getBoundingRect(contour);
+      const aspectRatio = boundingRect.width / boundingRect.height;
+      
+      // Check if this contour meets document criteria
+      if (area >= minArea && area <= maxArea &&
+          aspectRatio >= minAspectRatio && aspectRatio <= maxAspectRatio) {
+        
+        // Additional document checks
+        if (isLikelyDocument(contour, edges, width, height)) {
+          return contour;
+        }
+      }
+    }
     
-    // Add some variation to make it look more realistic
-    const variation = Math.min(width, height) * 0.05;
-    return corners.map(corner => ({
-      x: corner.x + (Math.random() - 0.5) * variation,
-      y: corner.y + (Math.random() - 0.5) * variation
-    }));
+    return null; // No valid document detected
+  };
+
+  // Find rectangular contours in the edge image
+  const findRectangularContours = (edges: Uint8ClampedArray, width: number, height: number): Array<Array<{x: number, y: number}>> => {
+    const contours: Array<Array<{x: number, y: number}>> = [];
+    
+    // Simplified contour detection - look for rectangular patterns
+    // In production, you'd use more sophisticated algorithms like Suzuki-Abe
+    
+    // For now, use a grid-based approach to find strong edge clusters
+    const gridSize = 20;
+    const strongEdgeThreshold = 200;
+    
+    for (let y = gridSize; y < height - gridSize; y += gridSize) {
+      for (let x = gridSize; x < width - gridSize; x += gridSize) {
+        // Check if this grid cell has strong edges indicating a corner
+        if (hasStrongEdges(edges, x, y, gridSize, width, height, strongEdgeThreshold)) {
+          // Try to trace a rectangular contour from this point
+          const rect = traceRectangle(edges, x, y, width, height);
+          if (rect && rect.length === 4) {
+            contours.push(rect);
+          }
+        }
+      }
+    }
+    
+    return contours;
+  };
+
+  // Check if a region has strong edges (potential corner)
+  const hasStrongEdges = (edges: Uint8ClampedArray, centerX: number, centerY: number, radius: number, width: number, height: number, threshold: number): boolean => {
+    let edgeCount = 0;
+    let totalPixels = 0;
+    
+    for (let y = Math.max(0, centerY - radius); y < Math.min(height, centerY + radius); y++) {
+      for (let x = Math.max(0, centerX - radius); x < Math.min(width, centerX + radius); x++) {
+        const pixel = edges[y * width + x];
+        if (pixel > threshold) edgeCount++;
+        totalPixels++;
+      }
+    }
+    
+    return (edgeCount / totalPixels) > 0.3; // At least 30% of pixels should be edges
+  };
+
+  // Trace a rectangular contour from a starting point
+  const traceRectangle = (edges: Uint8ClampedArray, startX: number, startY: number, width: number, height: number): Array<{x: number, y: number}> | null => {
+    // Simplified rectangle tracing - look for document-like rectangular patterns
+    // This is a basic implementation; production would use more sophisticated tracing
+    
+    const minSize = Math.min(width, height) * 0.2;
+    const maxSize = Math.min(width, height) * 0.8;
+    
+    // Try different rectangle sizes around the starting point
+    for (let size = minSize; size < maxSize; size += 20) {
+      const rect = [
+        { x: Math.max(10, startX - size/2), y: Math.max(10, startY - size/2) },
+        { x: Math.min(width-10, startX + size/2), y: Math.max(10, startY - size/2) },
+        { x: Math.min(width-10, startX + size/2), y: Math.min(height-10, startY + size/2) },
+        { x: Math.max(10, startX - size/2), y: Math.min(height-10, startY + size/2) }
+      ];
+      
+      // Check if this rectangle has good edge support
+      if (hasGoodEdgeSupport(edges, rect, width, height)) {
+        return rect;
+      }
+    }
+    
+    return null;
+  };
+
+  // Check if a rectangle has good edge support (likely to be a document)
+  const hasGoodEdgeSupport = (edges: Uint8ClampedArray, rect: Array<{x: number, y: number}>, width: number, height: number): boolean => {
+    let edgeSupport = 0;
+    const perimeterPoints = 100; // Sample points along the perimeter
+    
+    // Check edges along the rectangle perimeter
+    for (let i = 0; i < 4; i++) {
+      const start = rect[i];
+      const end = rect[(i + 1) % 4];
+      
+      for (let t = 0; t <= 1; t += 1 / perimeterPoints) {
+        const x = Math.round(start.x + t * (end.x - start.x));
+        const y = Math.round(start.y + t * (end.y - start.y));
+        
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+          if (edges[y * width + x] > 100) {
+            edgeSupport++;
+          }
+        }
+      }
+    }
+    
+    return (edgeSupport / (perimeterPoints * 4)) > 0.15; // At least 15% edge support
+  };
+
+  // Additional checks to determine if a contour is likely a document
+  const isLikelyDocument = (contour: Array<{x: number, y: number}>, edges: Uint8ClampedArray, width: number, height: number): boolean => {
+    // Check if the contour has document-like properties
+    
+    // 1. Check for consistent edges along borders
+    const edgeConsistency = checkEdgeConsistency(contour, edges, width, height);
+    if (edgeConsistency < 0.2) return false;
+    
+    // 2. Check that it's not too close to image edges (documents shouldn't fill entire frame)
+    const margin = Math.min(width, height) * 0.05;
+    for (const point of contour) {
+      if (point.x < margin || point.x > width - margin || 
+          point.y < margin || point.y > height - margin) {
+        // Allow some tolerance but not full-frame objects
+        continue;
+      }
+    }
+    
+    // 3. Check for rectangular-ness (corners should be roughly 90 degrees)
+    const rectangularness = checkRectangularness(contour);
+    if (rectangularness < 0.7) return false;
+    
+    return true;
+  };
+
+  // Helper functions
+  const calculatePolygonArea = (points: Array<{x: number, y: number}>): number => {
+    let area = 0;
+    for (let i = 0; i < points.length; i++) {
+      const j = (i + 1) % points.length;
+      area += points[i].x * points[j].y;
+      area -= points[j].x * points[i].y;
+    }
+    return Math.abs(area) / 2;
+  };
+
+  const getBoundingRect = (points: Array<{x: number, y: number}>): {x: number, y: number, width: number, height: number} => {
+    const xs = points.map(p => p.x);
+    const ys = points.map(p => p.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+  };
+
+  const checkEdgeConsistency = (contour: Array<{x: number, y: number}>, edges: Uint8ClampedArray, width: number, height: number): number => {
+    // Check how consistently the contour follows actual edges
+    let hits = 0;
+    let total = 0;
+    
+    for (let i = 0; i < contour.length; i++) {
+      const point = contour[i];
+      const x = Math.round(point.x);
+      const y = Math.round(point.y);
+      
+      if (x >= 0 && x < width && y >= 0 && y < height) {
+        if (edges[y * width + x] > 50) hits++;
+        total++;
+      }
+    }
+    
+    return total > 0 ? hits / total : 0;
+  };
+
+  const checkRectangularness = (contour: Array<{x: number, y: number}>): number => {
+    if (contour.length !== 4) return 0;
+    
+    // Calculate angles between consecutive edges
+    let angleScore = 0;
+    for (let i = 0; i < 4; i++) {
+      const p1 = contour[i];
+      const p2 = contour[(i + 1) % 4];
+      const p3 = contour[(i + 2) % 4];
+      
+      const angle = calculateAngle(p1, p2, p3);
+      const deviation = Math.abs(angle - Math.PI / 2); // Deviation from 90 degrees
+      angleScore += Math.max(0, 1 - deviation / (Math.PI / 4)); // Score based on how close to 90 degrees
+    }
+    
+    return angleScore / 4; // Average score
+  };
+
+  const calculateAngle = (p1: {x: number, y: number}, p2: {x: number, y: number}, p3: {x: number, y: number}): number => {
+    const v1 = { x: p1.x - p2.x, y: p1.y - p2.y };
+    const v2 = { x: p3.x - p2.x, y: p3.y - p2.y };
+    
+    const dot = v1.x * v2.x + v1.y * v2.y;
+    const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+    const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+    
+    return Math.acos(Math.max(-1, Math.min(1, dot / (mag1 * mag2))));
   };
 
   // Check for available cameras when photo mode is selected
