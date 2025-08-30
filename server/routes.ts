@@ -1,5 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import swaggerUi from 'swagger-ui-express';
+import { readFileSync } from 'fs';
+import path from 'path';
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { auditMiddleware } from "./middleware/auth";
@@ -18,11 +21,45 @@ import {
   insertPaymentSchema,
   insertWorkflowRuleSchema,
   insertTranslationSchema,
-  insertInvitationSchema
+  insertInvitationSchema,
+  createClientSchema,
+  updateClientSchema,
+  clientResponseSchema,
+  createWorkerSchema,
+  updateWorkerSchema,
+  workerResponseSchema,
+  createStageSchema,
+  updateStageSchema,
+  stageResponseSchema,
+  createRequirementSchema,
+  updateRequirementSchema,
+  requirementResponseSchema,
+  errorResponseSchema,
+  successResponseSchema
 } from "@shared/schema";
 import { seedDatabase } from "./seedDatabase";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // OpenAPI Documentation endpoint
+  try {
+    const openApiSpec = JSON.parse(
+      readFileSync(path.join(process.cwd(), 'server', 'docs', 'openapi.json'), 'utf8')
+    );
+    
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec, {
+      customSiteTitle: 'Patra API Documentation',
+      customCss: '.swagger-ui .topbar { display: none }',
+      swaggerOptions: {
+        defaultModelsExpandDepth: 0,
+        docExpansion: 'list',
+        filter: true,
+        showRequestHeaders: true,
+      }
+    }));
+  } catch (error) {
+    console.warn('OpenAPI documentation not available:', error);
+  }
+
   // Auth middleware
   await setupAuth(app);
 
@@ -248,19 +285,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = req.user.dbUser || await storage.getUserByEmail(req.user.claims?.email || 'admin@dev.local');
 
-      const parsedData = insertClientProfileSchema.parse({
-        ...req.body,
+      const parsedData = createClientSchema.parse(req.body);
+      const clientData = {
+        ...parsedData,
         ownerUserId: user.id
-      });
+      };
       
-      const newClient = await storage.createClientProfile(parsedData);
+      const newClient = await storage.createClientProfile(clientData);
       res.status(201).json(newClient);
     } catch (error) {
       console.error("Error creating client:", error);
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res.status(400).json({ success: false, message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create client profile" });
+      res.status(500).json({ success: false, message: "Failed to create client profile" });
     }
   });
 
@@ -292,40 +330,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
 
-      const parsedData = insertClientProfileSchema.omit({ id: true, ownerUserId: true }).parse(req.body);
-      
+      const parsedData = updateClientSchema.parse(req.body);
       const updatedClient = await storage.updateClientProfile(id, parsedData);
+      
+      if (!updatedClient) {
+        return res.status(404).json({ success: false, message: "Client not found" });
+      }
+      
       res.json(updatedClient);
     } catch (error) {
       console.error("Error updating client:", error);
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res.status(400).json({ success: false, message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to update client" });
+      res.status(500).json({ success: false, message: "Failed to update client" });
     }
   });
 
-  app.post('/api/clients', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  app.delete('/api/clients/:id',
+    devRbacBypass(requireRole(['ADMIN'])),
+    requireOwnership('client'),
+    auditMiddleware,
+    async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const { id } = req.params;
       
-      if (user?.role !== 'ADMIN' && user?.role !== 'OWNER') {
-        return res.status(403).json({ message: "Unauthorized" });
+      const deleted = await storage.deleteClientProfile(id);
+      if (!deleted) {
+        return res.status(404).json({ success: false, message: "Client not found" });
       }
-
-      const data = insertClientProfileSchema.parse({
-        ...req.body,
-        ownerUserId: user.role === 'OWNER' ? userId : req.body.ownerUserId
-      });
-
-      const client = await storage.createClientProfile(data);
-      res.status(201).json(client);
+      
+      res.json({ success: true, message: "Client deleted successfully" });
     } catch (error) {
-      console.error("Error creating client:", error);
-      res.status(500).json({ message: "Failed to create client" });
+      console.error("Error deleting client:", error);
+      res.status(500).json({ success: false, message: "Failed to delete client" });
     }
   });
+
 
   // Worker routes
   app.get('/api/clients/:clientId/workers', devAuthBypass, devAuditBypass, async (req: any, res) => {
@@ -421,37 +462,293 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Stage routes
-  app.get('/api/stages', isAuthenticated, async (req: any, res) => {
+  // ========== Workers CRUD API ==========
+  
+  // GET /api/workers - List all workers with proper RBAC filtering
+  app.get('/api/workers', devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])), devAuditBypass, async (req: any, res) => {
+    try {
+      const user = req.user.dbUser || await storage.getUserByEmail(req.user.claims?.email || 'admin@dev.local');
+      
+      let workers;
+      if (user?.role === 'ADMIN') {
+        workers = await storage.getAllWorkers();
+      } else if (user?.role === 'OWNER') {
+        // Owners see workers from their clients
+        const clients = await storage.getClientsByOwner(user.id);
+        const clientIds = clients.map(c => c.id);
+        workers = [];
+        for (const clientId of clientIds) {
+          const clientWorkers = await storage.getWorkersByClientId(clientId);
+          workers.push(...clientWorkers);
+        }
+      } else if (user?.role === 'WORKER') {
+        // Workers see only their own profile
+        const worker = await storage.getWorkerProfile(user.id);
+        workers = worker ? [worker] : [];
+      } else {
+        workers = [];
+      }
+      
+      res.json(workers);
+    } catch (error) {
+      console.error("Error fetching workers:", error);
+      res.status(500).json({ success: false, message: "Failed to fetch workers" });
+    }
+  });
+
+  // POST /api/workers - Create new worker
+  app.post('/api/workers', devRbacBypass(requireRole(['ADMIN', 'OWNER'])), devAuditBypass, async (req: any, res) => {
+    try {
+      const parsedData = createWorkerSchema.parse(req.body);
+      const newWorker = await storage.createWorker(parsedData);
+      res.status(201).json(newWorker);
+    } catch (error) {
+      console.error("Error creating worker:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ success: false, message: "Failed to create worker" });
+    }
+  });
+
+  // GET /api/workers/:id - Get specific worker
+  app.get('/api/workers/:id',
+    devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])),
+    requireOwnership('worker'),
+    devAuditBypass,
+    async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const worker = await storage.getWorker(id);
+      
+      if (!worker) {
+        return res.status(404).json({ success: false, message: "Worker not found" });
+      }
+      
+      res.json(worker);
+    } catch (error) {
+      console.error("Error fetching worker:", error);
+      res.status(500).json({ success: false, message: "Failed to fetch worker" });
+    }
+  });
+
+  // PUT /api/workers/:id - Update worker
+  app.put('/api/workers/:id',
+    devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER'])),
+    requireOwnership('worker'),
+    devAuditBypass,
+    async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const parsedData = updateWorkerSchema.parse(req.body);
+      
+      const updatedWorker = await storage.updateWorker(id, parsedData);
+      if (!updatedWorker) {
+        return res.status(404).json({ success: false, message: "Worker not found" });
+      }
+      
+      res.json(updatedWorker);
+    } catch (error) {
+      console.error("Error updating worker:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ success: false, message: "Failed to update worker" });
+    }
+  });
+
+  // DELETE /api/workers/:id - Delete worker
+  app.delete('/api/workers/:id',
+    devRbacBypass(requireRole(['ADMIN', 'OWNER'])),
+    requireOwnership('worker'),
+    devAuditBypass,
+    async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      const deleted = await storage.deleteWorker(id);
+      if (!deleted) {
+        return res.status(404).json({ success: false, message: "Worker not found" });
+      }
+      
+      res.json({ success: true, message: "Worker deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting worker:", error);
+      res.status(500).json({ success: false, message: "Failed to delete worker" });
+    }
+  });
+
+  // ========== Stages CRUD API ==========
+  
+  // GET /api/stages - List all stages
+  app.get('/api/stages', devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])), devAuditBypass, async (req: any, res) => {
     try {
       const stages = await storage.getAllStages();
       res.json(stages);
     } catch (error) {
       console.error("Error fetching stages:", error);
-      res.status(500).json({ message: "Failed to fetch stages" });
+      res.status(500).json({ success: false, message: "Failed to fetch stages" });
     }
   });
 
-  // Requirements routes
-  app.post('/api/requirements', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  // POST /api/stages - Create new stage
+  app.post('/api/stages', devRbacBypass(requireRole(['ADMIN'])), devAuditBypass, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (user?.role !== 'ADMIN') {
-        return res.status(403).json({ message: "Unauthorized" });
+      const parsedData = createStageSchema.parse(req.body);
+      const newStage = await storage.createStage(parsedData);
+      res.status(201).json(newStage);
+    } catch (error) {
+      console.error("Error creating stage:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid data", errors: error.errors });
       }
+      res.status(500).json({ success: false, message: "Failed to create stage" });
+    }
+  });
 
-      const data = insertRequirementSchema.parse({
-        ...req.body,
-        createdByUserId: userId
-      });
+  // GET /api/stages/:id - Get specific stage
+  app.get('/api/stages/:id', devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])), devAuditBypass, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const stage = await storage.getStage(id);
+      
+      if (!stage) {
+        return res.status(404).json({ success: false, message: "Stage not found" });
+      }
+      
+      res.json(stage);
+    } catch (error) {
+      console.error("Error fetching stage:", error);
+      res.status(500).json({ success: false, message: "Failed to fetch stage" });
+    }
+  });
 
-      const requirement = await storage.createRequirement(data);
-      res.status(201).json(requirement);
+  // PUT /api/stages/:id - Update stage
+  app.put('/api/stages/:id', devRbacBypass(requireRole(['ADMIN'])), devAuditBypass, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const parsedData = updateStageSchema.parse(req.body);
+      
+      const updatedStage = await storage.updateStage(id, parsedData);
+      if (!updatedStage) {
+        return res.status(404).json({ success: false, message: "Stage not found" });
+      }
+      
+      res.json(updatedStage);
+    } catch (error) {
+      console.error("Error updating stage:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ success: false, message: "Failed to update stage" });
+    }
+  });
+
+  // DELETE /api/stages/:id - Delete stage
+  app.delete('/api/stages/:id', devRbacBypass(requireRole(['ADMIN'])), devAuditBypass, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      const deleted = await storage.deleteStage(id);
+      if (!deleted) {
+        return res.status(404).json({ success: false, message: "Stage not found" });
+      }
+      
+      res.json({ success: true, message: "Stage deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting stage:", error);
+      res.status(500).json({ success: false, message: "Failed to delete stage" });
+    }
+  });
+
+  // ========== Requirements CRUD API ==========
+  
+  // GET /api/requirements - List all requirements or filter by stage
+  app.get('/api/requirements', devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])), devAuditBypass, async (req: any, res) => {
+    try {
+      const { stageId } = req.query;
+      let requirements;
+      
+      if (stageId) {
+        requirements = await storage.getRequirementsByStage(stageId);
+      } else {
+        requirements = await storage.getAllRequirements();
+      }
+      
+      res.json(requirements);
+    } catch (error) {
+      console.error("Error fetching requirements:", error);
+      res.status(500).json({ success: false, message: "Failed to fetch requirements" });
+    }
+  });
+
+  // POST /api/requirements - Create new requirement
+  app.post('/api/requirements', devRbacBypass(requireRole(['ADMIN', 'OWNER'])), devAuditBypass, async (req: any, res) => {
+    try {
+      const parsedData = createRequirementSchema.parse(req.body);
+      const newRequirement = await storage.createRequirement(parsedData);
+      res.status(201).json(newRequirement);
     } catch (error) {
       console.error("Error creating requirement:", error);
-      res.status(500).json({ message: "Failed to create requirement" });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ success: false, message: "Failed to create requirement" });
+    }
+  });
+
+  // GET /api/requirements/:id - Get specific requirement
+  app.get('/api/requirements/:id', devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])), devAuditBypass, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const requirement = await storage.getRequirement(id);
+      
+      if (!requirement) {
+        return res.status(404).json({ success: false, message: "Requirement not found" });
+      }
+      
+      res.json(requirement);
+    } catch (error) {
+      console.error("Error fetching requirement:", error);
+      res.status(500).json({ success: false, message: "Failed to fetch requirement" });
+    }
+  });
+
+  // PUT /api/requirements/:id - Update requirement
+  app.put('/api/requirements/:id', devRbacBypass(requireRole(['ADMIN', 'OWNER'])), devAuditBypass, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const parsedData = updateRequirementSchema.parse(req.body);
+      
+      const updatedRequirement = await storage.updateRequirement(id, parsedData);
+      if (!updatedRequirement) {
+        return res.status(404).json({ success: false, message: "Requirement not found" });
+      }
+      
+      res.json(updatedRequirement);
+    } catch (error) {
+      console.error("Error updating requirement:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ success: false, message: "Failed to update requirement" });
+    }
+  });
+
+  // DELETE /api/requirements/:id - Delete requirement
+  app.delete('/api/requirements/:id', devRbacBypass(requireRole(['ADMIN', 'OWNER'])), devAuditBypass, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      const deleted = await storage.deleteRequirement(id);
+      if (!deleted) {
+        return res.status(404).json({ success: false, message: "Requirement not found" });
+      }
+      
+      res.json({ success: true, message: "Requirement deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting requirement:", error);
+      res.status(500).json({ success: false, message: "Failed to delete requirement" });
     }
   });
 

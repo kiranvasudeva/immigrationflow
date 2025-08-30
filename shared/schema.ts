@@ -589,3 +589,141 @@ export type InsertTranslation = z.infer<typeof insertTranslationSchema>;
 export type Invitation = typeof invitations.$inferSelect;
 export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+
+// ========== CRUD API SCHEMAS ==========
+
+// Client CRUD Schemas
+export const createClientSchema = insertClientProfileSchema.omit({ 
+  ownerUserId: true 
+});
+export const updateClientSchema = insertClientProfileSchema.partial().omit({
+  id: true,
+  ownerUserId: true,
+  createdAt: true,
+  updatedAt: true
+});
+export const clientResponseSchema = z.object({
+  id: z.string().uuid(),
+  fullName: z.string(),
+  email: z.string().email().nullable(),
+  phone: z.string().nullable(),
+  company: z.string().nullable(),
+  address: z.string().nullable(),
+  nationality: z.string().nullable(),
+  ownerUserId: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+// Worker CRUD Schemas  
+export const createWorkerSchema = insertWorkerSchema;
+export const updateWorkerSchema = insertWorkerSchema.partial().omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export const workerResponseSchema = z.object({
+  id: z.string().uuid(),
+  fullName: z.string(),
+  email: z.string().email().nullable(),
+  phone: z.string().nullable(),
+  dateOfBirth: z.date().nullable(),
+  nationality: z.string().nullable(),
+  passportNumber: z.string().nullable(),
+  passportExpiry: z.date().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+// Stage CRUD Schemas
+export const createStageSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  order: z.number().int().min(0),
+  color: z.string().optional(),
+  isActive: z.boolean().default(true),
+});
+export const updateStageSchema = createStageSchema.partial();
+export const stageResponseSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  description: z.string().nullable(),
+  order: z.number(),
+  color: z.string().nullable(),
+  isActive: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+// Requirement CRUD Schemas
+export const createRequirementSchema = insertRequirementSchema.omit({
+  createdByUserId: true
+});
+export const updateRequirementSchema = insertRequirementSchema.partial().omit({
+  id: true,
+  createdByUserId: true,
+  createdAt: true,
+  updatedAt: true
+});
+export const requirementResponseSchema = z.object({
+  id: z.string().uuid(),
+  stageId: z.string().uuid(),
+  type: z.enum(['document', 'form', 'payment', 'approval']),
+  title: z.string(),
+  description: z.string().nullable(),
+  required: z.boolean(),
+  autoPopulate: z.boolean(),
+  templateKey: z.string().nullable(),
+  dueRule: z.string().nullable(),
+  createdByUserId: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+// Generic API Response Schemas
+export const successResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+
+export const errorResponseSchema = z.object({
+  success: z.literal(false),
+  message: z.string(),
+  errors: z.array(z.any()).optional(),
+});
+
+export const paginationSchema = z.object({
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().min(1).max(100).default(20),
+});
+
+export const paginatedResponseSchema = <T extends z.ZodType>(itemSchema: T) => z.object({
+  data: z.array(itemSchema),
+  pagination: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
+  }),
+});
+
+// CRUD Types
+export type CreateClient = z.infer<typeof createClientSchema>;
+export type UpdateClient = z.infer<typeof updateClientSchema>;
+export type ClientResponse = z.infer<typeof clientResponseSchema>;
+
+export type CreateWorker = z.infer<typeof createWorkerSchema>;
+export type UpdateWorker = z.infer<typeof updateWorkerSchema>;
+export type WorkerResponse = z.infer<typeof workerResponseSchema>;
+
+export type CreateStage = z.infer<typeof createStageSchema>;
+export type UpdateStage = z.infer<typeof updateStageSchema>;
+export type StageResponse = z.infer<typeof stageResponseSchema>;
+
+export type CreateRequirement = z.infer<typeof createRequirementSchema>;
+export type UpdateRequirement = z.infer<typeof updateRequirementSchema>;
+export type RequirementResponse = z.infer<typeof requirementResponseSchema>;
+
+export type SuccessResponse = z.infer<typeof successResponseSchema>;
+export type ErrorResponse = z.infer<typeof errorResponseSchema>;
+export type Pagination = z.infer<typeof paginationSchema>;

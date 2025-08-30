@@ -61,22 +61,31 @@ export interface IStorage {
   getClientProfileByOwnerId(ownerId: string): Promise<ClientProfile | undefined>;
   createClientProfile(profile: InsertClientProfile): Promise<ClientProfile>;
   updateClientProfile(id: string, updates: Partial<InsertClientProfile>): Promise<ClientProfile>;
+  deleteClientProfile(id: string): Promise<boolean>;
   getAllClientProfiles(): Promise<ClientProfile[]>;
   
   // Worker operations
   getWorker(id: string): Promise<Worker | undefined>;
   getWorkersByClientId(clientId: string): Promise<Worker[]>;
+  getAllWorkers(): Promise<Worker[]>;
   createWorker(worker: InsertWorker): Promise<Worker>;
   updateWorker(id: string, updates: Partial<InsertWorker>): Promise<Worker>;
+  deleteWorker(id: string): Promise<boolean>;
   
   // Stage operations
   getAllStages(): Promise<Stage[]>;
   getStage(id: string): Promise<Stage | undefined>;
+  createStage(stage: any): Promise<Stage>;
+  updateStage(id: string, updates: any): Promise<Stage | undefined>;
+  deleteStage(id: string): Promise<boolean>;
   
   // Requirement operations
   getRequirement(id: string): Promise<Requirement | undefined>;
   getRequirementsByStage(stageId: string): Promise<Requirement[]>;
+  getAllRequirements(): Promise<Requirement[]>;
   createRequirement(requirement: InsertRequirement): Promise<Requirement>;
+  updateRequirement(id: string, updates: any): Promise<Requirement | undefined>;
+  deleteRequirement(id: string): Promise<boolean>;
   
   // Assignment operations
   getAssignment(id: string): Promise<Assignment | undefined>;
@@ -222,10 +231,17 @@ export class DatabaseStorage implements IStorage {
   async updateClientProfile(id: string, updates: Partial<InsertClientProfile>): Promise<ClientProfile> {
     const [updated] = await db
       .update(clientProfiles)
-      .set(updates)
+      .set({ ...updates, updatedAt: new Date() })
       .where(eq(clientProfiles.id, id))
       .returning();
     return updated;
+  }
+
+  async deleteClientProfile(id: string): Promise<boolean> {
+    const result = await db
+      .delete(clientProfiles)
+      .where(eq(clientProfiles.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 
   async getAllClientProfiles(): Promise<ClientProfile[]> {
@@ -250,10 +266,21 @@ export class DatabaseStorage implements IStorage {
   async updateWorker(id: string, updates: Partial<InsertWorker>): Promise<Worker> {
     const [updated] = await db
       .update(workers)
-      .set(updates)
+      .set({ ...updates, updatedAt: new Date() })
       .where(eq(workers.id, id))
       .returning();
     return updated;
+  }
+
+  async getAllWorkers(): Promise<Worker[]> {
+    return await db.select().from(workers).orderBy(workers.fullName);
+  }
+
+  async deleteWorker(id: string): Promise<boolean> {
+    const result = await db
+      .delete(workers)
+      .where(eq(workers.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Stage operations
@@ -266,6 +293,27 @@ export class DatabaseStorage implements IStorage {
     return stage;
   }
 
+  async createStage(stageData: any): Promise<Stage> {
+    const [newStage] = await db.insert(stages).values(stageData).returning();
+    return newStage;
+  }
+
+  async updateStage(id: string, updates: any): Promise<Stage | undefined> {
+    const [updated] = await db
+      .update(stages)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(stages.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteStage(id: string): Promise<boolean> {
+    const result = await db
+      .delete(stages)
+      .where(eq(stages.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
   // Requirement operations
   async getRequirement(id: string): Promise<Requirement | undefined> {
     const [requirement] = await db.select().from(requirements).where(eq(requirements.id, id));
@@ -276,9 +324,29 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(requirements).where(eq(requirements.stageId, stageId));
   }
 
+  async getAllRequirements(): Promise<Requirement[]> {
+    return await db.select().from(requirements).orderBy(requirements.title);
+  }
+
   async createRequirement(requirement: InsertRequirement): Promise<Requirement> {
     const [newRequirement] = await db.insert(requirements).values(requirement).returning();
     return newRequirement;
+  }
+
+  async updateRequirement(id: string, updates: any): Promise<Requirement | undefined> {
+    const [updated] = await db
+      .update(requirements)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(requirements.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteRequirement(id: string): Promise<boolean> {
+    const result = await db
+      .delete(requirements)
+      .where(eq(requirements.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Assignment operations

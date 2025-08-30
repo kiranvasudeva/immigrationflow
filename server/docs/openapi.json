@@ -1,0 +1,1321 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Patra API",
+    "description": "Romanian Immigration Workflow Management System API",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Patra Support",
+      "url": "https://patra.ro"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "API Server"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Error message"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "Client": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "companyName": {
+            "type": "string",
+            "example": "Tech Solutions SRL"
+          },
+          "contactName": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "john@techsolutions.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+40123456789"
+          },
+          "address": {
+            "type": "string",
+            "example": "Str. Victoriei nr. 10, Bucharest"
+          },
+          "cui": {
+            "type": "string",
+            "example": "RO12345678"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ACTIVE", "INACTIVE", "SUSPENDED"],
+            "example": "ACTIVE"
+          },
+          "ownerUserId": {
+            "type": "string",
+            "example": "user123"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateClientRequest": {
+        "type": "object",
+        "required": ["companyName", "contactName", "email"],
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "example": "Tech Solutions SRL"
+          },
+          "contactName": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "john@techsolutions.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+40123456789"
+          },
+          "address": {
+            "type": "string",
+            "example": "Str. Victoriei nr. 10, Bucharest"
+          },
+          "cui": {
+            "type": "string",
+            "example": "RO12345678"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ACTIVE", "INACTIVE", "SUSPENDED"],
+            "default": "ACTIVE"
+          }
+        }
+      },
+      "UpdateClientRequest": {
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "example": "Tech Solutions SRL"
+          },
+          "contactName": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "john@techsolutions.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+40123456789"
+          },
+          "address": {
+            "type": "string",
+            "example": "Str. Victoriei nr. 10, Bucharest"
+          },
+          "cui": {
+            "type": "string",
+            "example": "RO12345678"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ACTIVE", "INACTIVE", "SUSPENDED"]
+          }
+        }
+      },
+      "Worker": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Maria Popescu"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "maria@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+40123456789"
+          },
+          "nationality": {
+            "type": "string",
+            "example": "Filipino"
+          },
+          "passportNumber": {
+            "type": "string",
+            "example": "P1234567"
+          },
+          "clientProfileId": {
+            "type": "string",
+            "example": "client123"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ACTIVE", "INACTIVE", "COMPLETED"],
+            "example": "ACTIVE"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateWorkerRequest": {
+        "type": "object",
+        "required": ["fullName", "email", "clientProfileId"],
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "example": "Maria Popescu"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "maria@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+40123456789"
+          },
+          "nationality": {
+            "type": "string",
+            "example": "Filipino"
+          },
+          "passportNumber": {
+            "type": "string",
+            "example": "P1234567"
+          },
+          "clientProfileId": {
+            "type": "string",
+            "example": "client123"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ACTIVE", "INACTIVE", "COMPLETED"],
+            "default": "ACTIVE"
+          }
+        }
+      },
+      "UpdateWorkerRequest": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "example": "Maria Popescu"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "maria@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+40123456789"
+          },
+          "nationality": {
+            "type": "string",
+            "example": "Filipino"
+          },
+          "passportNumber": {
+            "type": "string",
+            "example": "P1234567"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ACTIVE", "INACTIVE", "COMPLETED"]
+          }
+        }
+      },
+      "Stage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "title": {
+            "type": "string",
+            "example": "AJOFM Application"
+          },
+          "description": {
+            "type": "string",
+            "example": "Romanian Employment Agency labor market test"
+          },
+          "order": {
+            "type": "integer",
+            "example": 1
+          },
+          "isRequired": {
+            "type": "boolean",
+            "example": true
+          },
+          "estimatedDays": {
+            "type": "integer",
+            "example": 30
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateStageRequest": {
+        "type": "object",
+        "required": ["title", "order"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "AJOFM Application"
+          },
+          "description": {
+            "type": "string",
+            "example": "Romanian Employment Agency labor market test"
+          },
+          "order": {
+            "type": "integer",
+            "example": 1
+          },
+          "isRequired": {
+            "type": "boolean",
+            "default": true
+          },
+          "estimatedDays": {
+            "type": "integer",
+            "example": 30
+          }
+        }
+      },
+      "UpdateStageRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "AJOFM Application"
+          },
+          "description": {
+            "type": "string",
+            "example": "Romanian Employment Agency labor market test"
+          },
+          "order": {
+            "type": "integer",
+            "example": 1
+          },
+          "isRequired": {
+            "type": "boolean"
+          },
+          "estimatedDays": {
+            "type": "integer",
+            "example": 30
+          }
+        }
+      },
+      "Requirement": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "title": {
+            "type": "string",
+            "example": "Employment Contract"
+          },
+          "description": {
+            "type": "string",
+            "example": "Signed employment contract in Romanian"
+          },
+          "stageId": {
+            "type": "string",
+            "example": "stage123"
+          },
+          "isRequired": {
+            "type": "boolean",
+            "example": true
+          },
+          "documentType": {
+            "type": "string",
+            "example": "CONTRACT"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateRequirementRequest": {
+        "type": "object",
+        "required": ["title", "stageId"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Employment Contract"
+          },
+          "description": {
+            "type": "string",
+            "example": "Signed employment contract in Romanian"
+          },
+          "stageId": {
+            "type": "string",
+            "example": "stage123"
+          },
+          "isRequired": {
+            "type": "boolean",
+            "default": true
+          },
+          "documentType": {
+            "type": "string",
+            "example": "CONTRACT"
+          }
+        }
+      },
+      "UpdateRequirementRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Employment Contract"
+          },
+          "description": {
+            "type": "string",
+            "example": "Signed employment contract in Romanian"
+          },
+          "stageId": {
+            "type": "string",
+            "example": "stage123"
+          },
+          "isRequired": {
+            "type": "boolean"
+          },
+          "documentType": {
+            "type": "string",
+            "example": "CONTRACT"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "sessionAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "connect.sid"
+      }
+    }
+  },
+  "security": [
+    {
+      "sessionAuth": []
+    }
+  ],
+  "paths": {
+    "/clients": {
+      "get": {
+        "summary": "List all clients",
+        "description": "Retrieve a list of all clients with proper RBAC filtering",
+        "tags": ["Clients"],
+        "responses": {
+          "200": {
+            "description": "List of clients",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Client"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new client",
+        "description": "Create a new client profile",
+        "tags": ["Clients"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClientRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Client created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Client"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clients/{id}": {
+      "get": {
+        "summary": "Get client by ID",
+        "description": "Retrieve a specific client by ID",
+        "tags": ["Clients"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Client"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update client",
+        "description": "Update an existing client",
+        "tags": ["Clients"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateClientRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Client updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Client"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete client",
+        "description": "Delete a client (Admin/Owner only)",
+        "tags": ["Clients"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Client deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workers": {
+      "get": {
+        "summary": "List all workers",
+        "description": "Retrieve a list of all workers with proper RBAC filtering",
+        "tags": ["Workers"],
+        "responses": {
+          "200": {
+            "description": "List of workers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Worker"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new worker",
+        "description": "Create a new worker profile",
+        "tags": ["Workers"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Worker created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Worker"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workers/{id}": {
+      "get": {
+        "summary": "Get worker by ID",
+        "description": "Retrieve a specific worker by ID",
+        "tags": ["Workers"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Worker details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Worker"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Worker not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update worker",
+        "description": "Update an existing worker",
+        "tags": ["Workers"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Worker updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Worker"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Worker not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete worker",
+        "description": "Delete a worker (Admin/Owner only)",
+        "tags": ["Workers"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Worker deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Worker deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Worker not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stages": {
+      "get": {
+        "summary": "List all stages",
+        "description": "Retrieve a list of all workflow stages",
+        "tags": ["Stages"],
+        "responses": {
+          "200": {
+            "description": "List of stages",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Stage"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new stage",
+        "description": "Create a new workflow stage (Admin only)",
+        "tags": ["Stages"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Stage created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stages/{id}": {
+      "get": {
+        "summary": "Get stage by ID",
+        "description": "Retrieve a specific stage by ID",
+        "tags": ["Stages"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stage details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Stage not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update stage",
+        "description": "Update an existing stage (Admin only)",
+        "tags": ["Stages"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stage updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Stage not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete stage",
+        "description": "Delete a stage (Admin only)",
+        "tags": ["Stages"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stage deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Stage deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Stage not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requirements": {
+      "get": {
+        "summary": "List all requirements",
+        "description": "Retrieve a list of all requirements, optionally filtered by stage",
+        "tags": ["Requirements"],
+        "parameters": [
+          {
+            "name": "stageId",
+            "in": "query",
+            "description": "Filter requirements by stage ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of requirements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Requirement"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new requirement",
+        "description": "Create a new stage requirement",
+        "tags": ["Requirements"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRequirementRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Requirement created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Requirement"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requirements/{id}": {
+      "get": {
+        "summary": "Get requirement by ID",
+        "description": "Retrieve a specific requirement by ID",
+        "tags": ["Requirements"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requirement details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Requirement"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Requirement not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update requirement",
+        "description": "Update an existing requirement",
+        "tags": ["Requirements"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRequirementRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Requirement updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Requirement"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Requirement not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete requirement",
+        "description": "Delete a requirement",
+        "tags": ["Requirements"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requirement deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Requirement deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Requirement not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
