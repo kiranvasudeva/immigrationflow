@@ -33,6 +33,9 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
   // Photo capture states
   const [photoStream, setPhotoStream] = useState<MediaStream | null>(null);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
+  const [selectedCameraId, setSelectedCameraId] = useState<string>('');
+  const [hasCameraAccess, setHasCameraAccess] = useState<boolean | null>(null);
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
   
   // Scanner interface states
@@ -55,6 +58,35 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
       videoRef.current.srcObject = photoStream;
     }
   }, [photoStream]);
+
+  // Check for available cameras when photo mode is selected
+  const checkCameraAvailability = async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        setHasCameraAccess(false);
+        return;
+      }
+
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cameras = devices.filter(device => device.kind === 'videoinput');
+      
+      setAvailableCameras(cameras);
+      setHasCameraAccess(cameras.length > 0);
+      
+      if (cameras.length > 0 && !selectedCameraId) {
+        // Prefer back camera for documents
+        const backCamera = cameras.find(camera => 
+          camera.label.toLowerCase().includes('back') || 
+          camera.label.toLowerCase().includes('rear') ||
+          camera.label.toLowerCase().includes('environment')
+        );
+        setSelectedCameraId(backCamera?.deviceId || cameras[0].deviceId);
+      }
+    } catch (error) {
+      console.error('Error checking camera availability:', error);
+      setHasCameraAccess(false);
+    }
+  };
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -103,38 +135,25 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
     setScanMode(mode);
     
     if (mode === 'photo') {
-      startPhotoCapture();
+      checkCameraAvailability();
     }
   };
 
   const startPhotoCapture = async () => {
     try {
-      // Check if getUserMedia is supported
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Camera not supported in this browser');
+      if (!selectedCameraId) {
+        throw new Error('No camera selected');
       }
 
-      // First try with rear camera (better for documents)
-      let stream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: 'environment',
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          } 
-        });
-      } catch (err) {
-        // Fallback to any available camera
-        console.log('Rear camera not available, trying front camera...');
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          } 
-        });
-      }
-      
+      const constraints = {
+        video: {
+          deviceId: { exact: selectedCameraId },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       setPhotoStream(stream);
       
       // Set video source immediately
@@ -817,20 +836,69 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
 
               {!photoStream && !capturedPhoto && (
                 <div className="text-center space-y-4">
-                  <p className="text-sm text-gray-600">Use your camera to capture documents</p>
-                  <div className="space-y-2">
-                    <Button
-                      type="button"
-                      onClick={startPhotoCapture}
-                      className="w-full bg-purple-600 hover:bg-purple-700"
-                    >
-                      <Camera className="h-4 w-4 mr-2" />
-                      Start Camera
-                    </Button>
-                    <p className="text-xs text-gray-500">
-                      Alternative: Use File Upload mode to upload photos taken with your phone's camera app
-                    </p>
-                  </div>
+                  {hasCameraAccess === null && (
+                    <div>
+                      <p className="text-sm text-gray-600">Checking for camera...</p>
+                      <Button
+                        type="button"
+                        onClick={checkCameraAvailability}
+                        className="w-full bg-purple-600 hover:bg-purple-700 mt-2"
+                      >
+                        <Camera className="h-4 w-4 mr-2" />
+                        Check Camera
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {hasCameraAccess === false && (
+                    <div className="space-y-3">
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div className="flex items-center space-x-2">
+                          <Camera className="h-5 w-5 text-yellow-600" />
+                          <div className="text-sm text-yellow-800">
+                            <div className="font-medium">No Camera Found</div>
+                            <div>You need a phone/tablet/laptop with a camera to use this feature</div>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Alternative: Use File Upload mode to upload photos taken with your phone's camera app
+                      </p>
+                    </div>
+                  )}
+                  
+                  {hasCameraAccess === true && availableCameras.length > 0 && (
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-600">Use your camera to capture documents</p>
+                      
+                      {availableCameras.length > 1 && (
+                        <div>
+                          <Label className="text-sm text-gray-600">Select Camera</Label>
+                          <select 
+                            className="w-full p-2 border rounded text-sm mt-1"
+                            value={selectedCameraId}
+                            onChange={(e) => setSelectedCameraId(e.target.value)}
+                          >
+                            {availableCameras.map((camera) => (
+                              <option key={camera.deviceId} value={camera.deviceId}>
+                                {camera.label || `Camera ${camera.deviceId.slice(0, 8)}`}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      
+                      <Button
+                        type="button"
+                        onClick={startPhotoCapture}
+                        disabled={!selectedCameraId}
+                        className="w-full bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Camera className="h-4 w-4 mr-2" />
+                        Start Camera
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -850,23 +918,46 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
                     </div>
                   </div>
                   
-                  <div className="flex space-x-3">
-                    <Button
-                      type="button"
-                      onClick={captureDocumentPhoto}
-                      className="flex-1 bg-purple-600 hover:bg-purple-700"
-                      data-testid="button-capture-photo"
-                    >
-                      <Camera className="h-4 w-4 mr-2" />
-                      Capture Document
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={stopPhotoCapture}
-                      variant="outline"
-                    >
-                      Cancel
-                    </Button>
+                  <div className="space-y-3">
+                    {availableCameras.length > 1 && (
+                      <div>
+                        <Label className="text-sm text-gray-600">Switch Camera</Label>
+                        <select 
+                          className="w-full p-2 border rounded text-sm mt-1"
+                          value={selectedCameraId}
+                          onChange={(e) => {
+                            stopPhotoCapture();
+                            setSelectedCameraId(e.target.value);
+                            setTimeout(() => startPhotoCapture(), 100);
+                          }}
+                        >
+                          {availableCameras.map((camera) => (
+                            <option key={camera.deviceId} value={camera.deviceId}>
+                              {camera.label || `Camera ${camera.deviceId.slice(0, 8)}`}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    
+                    <div className="flex space-x-3">
+                      <Button
+                        type="button"
+                        onClick={captureDocumentPhoto}
+                        className="flex-1 bg-purple-600 hover:bg-purple-700"
+                        data-testid="button-capture-photo"
+                      >
+                        <Camera className="h-4 w-4 mr-2" />
+                        Capture Document
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={stopPhotoCapture}
+                        variant="outline"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
