@@ -19,6 +19,7 @@ import DocumentsPage from "@/pages/documents";
 import DeadlinesPage from "@/pages/deadlines";
 import ProfilePage from "@/pages/profile";
 import ClientProfile from "@/pages/client-profile";
+import WorkerProfile from "@/pages/worker-profile";
 import SettingsPage from "@/pages/settings";
 import { User } from "@shared/schema";
 
@@ -82,6 +83,7 @@ function Router() {
           <Route path="/clients" component={() => <AdminDashboard />} />
           <Route path="/clients/:id" component={ClientProfile} />
           <Route path="/workers" component={() => <AdminDashboard />} />
+          <Route path="/workers/:id" component={WorkerProfile} />
           <Route path="/requirements" component={() => <AdminDashboard />} />
           <Route path="/reminders" component={() => <AdminDashboard />} />
           <Route path="/audit" component={() => <AdminDashboard />} />

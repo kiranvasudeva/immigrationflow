@@ -513,7 +513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET /api/workers/:id - Get specific worker
+  // GET /api/workers/:id - Get specific worker with assignments and documents
   app.get('/api/workers/:id',
     devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])),
     requireOwnership('worker'),
@@ -521,7 +521,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: any, res) => {
     try {
       const { id } = req.params;
-      const worker = await storage.getWorker(id);
+      const worker = await storage.getWorkerWithDetails(id);
       
       if (!worker) {
         return res.status(404).json({ success: false, message: "Worker not found" });

@@ -66,6 +66,7 @@ export interface IStorage {
   
   // Worker operations
   getWorker(id: string): Promise<Worker | undefined>;
+  getWorkerWithDetails(id: string): Promise<any>;
   getWorkersByClientId(clientId: string): Promise<Worker[]>;
   getAllWorkers(): Promise<Worker[]>;
   createWorker(worker: InsertWorker): Promise<Worker>;
@@ -252,6 +253,74 @@ export class DatabaseStorage implements IStorage {
   async getWorker(id: string): Promise<Worker | undefined> {
     const [worker] = await db.select().from(workers).where(eq(workers.id, id));
     return worker;
+  }
+
+  async getWorkerWithDetails(id: string): Promise<any> {
+    // Get the worker basic info
+    const [worker] = await db.select().from(workers).where(eq(workers.id, id));
+    if (!worker) return undefined;
+
+    // Get the client profile info
+    const [clientProfile] = await db
+      .select({
+        id: clientProfiles.id,
+        legalName: clientProfiles.legalName
+      })
+      .from(clientProfiles)
+      .where(eq(clientProfiles.id, worker.clientProfileId));
+
+    // Get assignments with requirements and stages
+    const assignmentsData = await db
+      .select({
+        assignment: assignments,
+        requirement: requirements,
+        stage: stages
+      })
+      .from(assignments)
+      .leftJoin(requirements, eq(assignments.requirementId, requirements.id))
+      .leftJoin(stages, eq(requirements.stageId, stages.id))
+      .where(eq(assignments.workerId, id));
+
+    // Get document files for each assignment
+    const assignmentIds = assignmentsData.map(a => a.assignment.id);
+    const documents = assignmentIds.length > 0 
+      ? await db.select().from(documentFiles).where(
+          assignmentIds.map(id => eq(documentFiles.assignmentId, id)).reduce((acc, curr) => or(acc, curr))
+        )
+      : [];
+
+    // Group documents by assignment ID
+    const documentsByAssignment = documents.reduce((acc, doc) => {
+      if (!acc[doc.assignmentId]) acc[doc.assignmentId] = [];
+      acc[doc.assignmentId].push(doc);
+      return acc;
+    }, {} as Record<string, typeof documents>);
+
+    // Combine assignments with their documents
+    const assignments = assignmentsData.map(({ assignment, requirement, stage }) => ({
+      id: assignment.id,
+      requirement: {
+        id: requirement?.id,
+        title: requirement?.title,
+        description: requirement?.description,
+        stage: {
+          key: stage?.key,
+          title: stage?.title,
+          order: stage?.order
+        }
+      },
+      status: assignment.status,
+      documentFiles: documentsByAssignment[assignment.id] || [],
+      submittedAt: assignment.submittedAt,
+      approvedAt: assignment.approvedAt,
+      rejectedReason: assignment.rejectedReason
+    }));
+
+    return {
+      ...worker,
+      clientProfile,
+      assignments
+    };
   }
 
   async getWorkersByClientId(clientId: string): Promise<Worker[]> {
