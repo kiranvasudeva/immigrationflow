@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -26,6 +26,10 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
   const [isScanning, setIsScanning] = useState(false);
   const [scannedText, setScannedText] = useState('');
   const [notes, setNotes] = useState('');
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -39,10 +43,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
         title: "Success",
         description: "Document uploaded successfully",
       });
-      setIsOpen(false);
-      setFiles(null);
-      setScannedText('');
-      setNotes('');
+      resetForm();
       onUploadComplete?.();
       queryClient.invalidateQueries({ queryKey: ['/api/assignments', assignmentId, 'documents'] });
     },
@@ -55,8 +56,81 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
     }
   });
 
+  const resetForm = () => {
+    setIsOpen(false);
+    setFiles(null);
+    setScannedText('');
+    setNotes('');
+    setScanMode('upload');
+    stopCamera();
+  };
+
+  const handleModeChange = (mode: 'upload' | 'scan' | 'photo') => {
+    stopCamera(); // Stop camera when switching modes
+    setFiles(null); // Clear selected files
+    setScannedText(''); // Clear any scanned text
+    setScanMode(mode);
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFiles(event.target.files);
+  };
+
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } // Use rear camera on mobile
+      });
+      setStream(mediaStream);
+      setIsCapturing(true);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Could not access camera. Please check permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setIsCapturing(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      
+      if (ctx) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            setFiles(dataTransfer.files);
+            stopCamera();
+            
+            toast({
+              title: "Success",
+              description: "Photo captured successfully",
+            });
+          }
+        }, 'image/jpeg', 0.8);
+      }
+    }
   };
 
   const handleScanDocument = async () => {
@@ -181,8 +255,9 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
               <Button
                 type="button"
                 variant={scanMode === 'upload' ? 'default' : 'outline'}
-                onClick={() => setScanMode('upload')}
+                onClick={() => handleModeChange('upload')}
                 className="flex-1"
+                data-testid="button-mode-upload"
               >
                 <File className="h-4 w-4 mr-2" />
                 File Upload
@@ -190,8 +265,9 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
               <Button
                 type="button"
                 variant={scanMode === 'scan' ? 'default' : 'outline'}
-                onClick={() => setScanMode('scan')}
+                onClick={() => handleModeChange('scan')}
                 className="flex-1"
+                data-testid="button-mode-scan"
               >
                 <Scan className="h-4 w-4 mr-2" />
                 Scan & Convert
@@ -199,8 +275,9 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
               <Button
                 type="button"
                 variant={scanMode === 'photo' ? 'default' : 'outline'}
-                onClick={() => setScanMode('photo')}
+                onClick={() => handleModeChange('photo')}
                 className="flex-1"
+                data-testid="button-mode-photo"
               >
                 <Camera className="h-4 w-4 mr-2" />
                 Photo Capture
@@ -208,21 +285,104 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
             </div>
           </div>
 
-          {/* File Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="files">Select Files</Label>
-            <Input
-              id="files"
-              type="file"
-              multiple
-              accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.txt"
-              onChange={handleFileChange}
-              data-testid="input-document-files"
-            />
-            <p className="text-sm text-gray-500">
-              Supported formats: PDF, Images (JPG, PNG, GIF), Documents (DOC, DOCX), Text files
-            </p>
-          </div>
+          {/* File Selection - Only show for upload mode */}
+          {scanMode === 'upload' && (
+            <div className="space-y-2">
+              <Label htmlFor="files">Select Files</Label>
+              <Input
+                id="files"
+                type="file"
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.txt"
+                onChange={handleFileChange}
+                data-testid="input-document-files"
+              />
+              <p className="text-sm text-gray-500">
+                Supported formats: PDF, Images (JPG, PNG, GIF), Documents (DOC, DOCX), Text files
+              </p>
+            </div>
+          )}
+
+          {/* Scan Mode - File Selection */}
+          {scanMode === 'scan' && (
+            <div className="space-y-2">
+              <Label htmlFor="scan-files">Select Document to Scan</Label>
+              <Input
+                id="scan-files"
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.gif"
+                onChange={handleFileChange}
+                data-testid="input-scan-files"
+              />
+              <p className="text-sm text-gray-500">
+                Select an image or PDF file to extract text with OCR
+              </p>
+            </div>
+          )}
+
+          {/* Photo Capture Mode */}
+          {scanMode === 'photo' && (
+            <div className="space-y-4">
+              {!isCapturing ? (
+                <div className="text-center">
+                  <Button
+                    type="button"
+                    onClick={startCamera}
+                    className="w-full"
+                    data-testid="button-start-camera"
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Start Camera
+                  </Button>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Click to start camera and capture document photos
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="relative bg-black rounded-lg overflow-hidden">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      className="w-full h-64 object-cover"
+                    />
+                    <canvas ref={canvasRef} className="hidden" />
+                  </div>
+                  
+                  <div className="flex space-x-3">
+                    <Button
+                      type="button"
+                      onClick={capturePhoto}
+                      className="flex-1"
+                      data-testid="button-capture-photo"
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      Capture Photo
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={stopCamera}
+                      data-testid="button-stop-camera"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                  
+                  <p className="text-sm text-gray-500 text-center">
+                    Position document within the camera view and click capture
+                  </p>
+                </div>
+              )}
+              
+              {files && files.length > 0 && (
+                <div className="text-sm text-green-600">
+                  ✓ Photo captured: {files[0].name}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Document Kind */}
           <div className="space-y-2">
@@ -316,7 +476,8 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
             <Button
               type="button"
               variant="outline"
-              onClick={() => setIsOpen(false)}
+              onClick={resetForm}
+              data-testid="button-cancel"
             >
               Cancel
             </Button>
