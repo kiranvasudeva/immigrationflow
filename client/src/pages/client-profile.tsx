@@ -11,9 +11,50 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Building, Mail, Phone, MapPin, CreditCard, Edit, Save, X, User, Plus, Calendar, Globe, CheckCircle, Clock, AlertTriangle, FileText, Upload, Download, Eye, Progress } from "lucide-react";
+import { ArrowLeft, Building, Mail, Phone, MapPin, CreditCard, Edit, Save, X, User, Plus, Calendar, Globe, CheckCircle, Clock, AlertTriangle, FileText, Upload, Download, Eye } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useTranslation } from "@/contexts/LanguageContext";
+
+interface WorkerAssignment {
+  id: string;
+  requirement: {
+    id: string;
+    title: string;
+    description: string;
+    stage: {
+      key: string;
+      title: string;
+      order: number;
+    };
+  };
+  status: string;
+  documentFiles: {
+    id: string;
+    fileName: string;
+    kind: string;
+    createdAt: string;
+  }[];
+  submittedAt?: string;
+  approvedAt?: string;
+  rejectedReason?: string;
+}
+
+interface SelectedWorkerData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  dob: string;
+  nationality: string;
+  passportNumber: string;
+  passportExpiry: string;
+  clientProfile: {
+    id: string;
+    legalName: string;
+  };
+  assignments: WorkerAssignment[];
+}
 
 export default function ClientProfile() {
   const { toast } = useToast();
@@ -68,7 +109,7 @@ export default function ClientProfile() {
   });
 
   // Fetch selected worker details with workflow
-  const { data: selectedWorker, isLoading: selectedWorkerLoading } = useQuery({
+  const { data: selectedWorker, isLoading: selectedWorkerLoading } = useQuery<SelectedWorkerData>({
     queryKey: ['/api/workers', selectedWorkerId],
     enabled: !!selectedWorkerId && isAuthenticated,
   });
