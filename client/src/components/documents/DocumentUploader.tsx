@@ -120,6 +120,9 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
     setNotes('');
     setScanMode('upload');
     setScannerStatus('idle');
+    setHasCameraAccess(null);
+    setAvailableCameras([]);
+    setSelectedCameraId('');
     stopCamera();
     stopPhotoCapture();
   };
@@ -141,13 +144,20 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
 
   const startPhotoCapture = async () => {
     try {
-      if (!selectedCameraId) {
-        throw new Error('No camera selected');
+      // If no camera selected, pick the first available one
+      let cameraId = selectedCameraId;
+      if (!cameraId && availableCameras.length > 0) {
+        cameraId = availableCameras[0].deviceId;
+        setSelectedCameraId(cameraId);
+      }
+      
+      if (!cameraId) {
+        throw new Error('No camera available');
       }
 
       const constraints = {
         video: {
-          deviceId: { exact: selectedCameraId },
+          deviceId: { exact: cameraId },
           width: { ideal: 1920 },
           height: { ideal: 1080 }
         }
@@ -891,7 +901,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
                       <Button
                         type="button"
                         onClick={startPhotoCapture}
-                        disabled={!selectedCameraId}
+                        disabled={availableCameras.length === 0}
                         className="w-full bg-purple-600 hover:bg-purple-700"
                       >
                         <Camera className="h-4 w-4 mr-2" />
