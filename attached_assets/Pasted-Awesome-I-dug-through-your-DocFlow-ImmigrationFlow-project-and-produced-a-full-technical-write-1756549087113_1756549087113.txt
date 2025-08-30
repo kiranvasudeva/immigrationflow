@@ -1,0 +1,129 @@
+Awesome — I dug through your **DocFlow/ImmigrationFlow** project and produced a full technical write-up, plus a concrete list of gaps and ready-to-paste Replit prompts (sequenced) to finish it.
+
+### ✅ What I did now
+
+* Opened and inspected the full repo (client, server, shared, tests, config).
+* Mapped the stack, routes, data model, workers, i18n, env, and docker-compose.
+* Wrote a comprehensive technical spec & gaps list.
+* Prepared **chunked, actionable Replit prompts** to complete the app end-to-end (i18n hardening, RBAC, CRUD + OpenAPI, uploads security, email reminders, Dockerfile, monitoring, docs).
+
+**Download your tech doc:**
+[Download TECH\_DOC.md](sandbox:/mnt/data/DocFlow/DocFlow/TECH_DOC.md)
+
+If you want, I can also export this as a PDF on the spot.
+
+---
+
+## TL;DR of the findings
+
+* **Stack**: React + Vite + Tailwind + TanStack Query; Express + Drizzle (Postgres) + Passport (Replit OIDC) + BullMQ (Redis) + S3/MinIO.
+* **Features present**: multi-role scaffolding (ADMIN/OWNER/WORKER/VIEWER), assignment lifecycle enums, S3 presigned uploads, PDF generation service with template keys, reminders worker, i18n (en/ro), rate limits, health checks.
+* **APIs implemented**: `/api/templates`, `/api/documents` (presigned upload/download), `/api/assignments/:id/status`, health endpoints.
+* **i18n**: JSON namespaces exist (`public/locales/en|ro/{common,nav,actions,dashboard}.json`), custom `I18nProvider` present.
+* **What’s missing/weak** (I listed these in detail in the doc):
+
+  * No complete CRUD for **clients/workers/stages/requirements** (+ pagination & validation).
+  * **RBAC & tenant isolation** not enforced everywhere (need `requireRole`, `requireOwnership`).
+  * No **OpenAPI** documentation.
+  * Email provider integration needs production-ready implementation + retries.
+  * **Upload security** (AV scan, MIME/type enforcement, encryption flags) needs to be added.
+  * No **Dockerfile** (compose uses bind mounts).
+  * Monitoring/logs/metrics minimal.
+  * GDPR docs provided but **DPIA/retention/consent** not yet modeled in DB.
+
+---
+
+## Ready-to-paste Replit prompts (sequenced)
+
+You can paste these one by one into Replit AI. They’re tailored to your codebase’s structure and filenames.
+
+### Prompt A — Harden i18n end-to-end
+
+“Scan all `client/src/**/*` for `t('…')` and build an **i18n key extractor** that updates `public/locales/en|ro/*.json` with missing keys and English defaults.
+
+* Add `scripts/i18n-extract.ts` (Node script), and `npm run i18n:sync`.
+* In `client/src/contexts/I18nProvider.tsx` and `client/src/i18n.ts`: set `fallbackLng: 'en'`, default namespaces `['common','nav','actions','dashboard']`.
+* Make a wrapper so UI **never displays raw keys** (fallback to English if missing).
+* Create a simple `/admin/translations` page to diff and edit missing keys.
+* Wire a precommit hook to run `npm run i18n:sync`.”
+
+### Prompt B — RBAC & tenant guards
+
+“Create `server/middleware/rbac.ts` with:
+
+* `requireRole(...roles)` and
+* `requireOwnership(resourceType)` for company/worker scoping.
+  Apply to **all** routes in `server/routes` so that ADMIN can see all, OWNER limited to their client(s), WORKER only their own assignments/documents.
+  Add negative tests in `tests/api.rbac.test.ts`.”
+
+### Prompt C — CRUD + OpenAPI
+
+“Add REST CRUD for **clients, workers, stages, requirements**:
+
+* Routes: `/api/clients`, `/api/workers`, `/api/stages`, `/api/requirements`.
+* Use **Zod** schemas for validation (request/response).
+* Install `swagger-ui-express` and `zod-to-openapi`, generate an **OpenAPI** doc and serve it at `/docs`.
+* Update `package.json` with `npm run docs:build`.”
+
+### Prompt D — Emails & reminders (production)
+
+“Finish `server/services/emailService.ts` with provider adapters: **SMTP** and **Resend** (switch via env).
+Add HTML/text templates for: upload reminder, status changed, document approved/rejected, stage moved.
+Enhance `server/workers/queue.ts` with retries/backoff and a dead-letter queue.
+Add tests for reminder scheduling and email render.
+Env: `MAIL_PROVIDER`, `MAIL_HOST`, `MAIL_USER`, `MAIL_PASS`, `MAIL_API_KEY`.”
+
+### Prompt E — Upload security & compliance
+
+“Add upload scanning and type enforcement:
+
+* Integrate **ClamAV** container in compose (or a lightweight scanner lib) and scan each file before we persist metadata.
+* Enforce `MAX_FILE_SIZE` and `ALLOWED_FILE_TYPES` from env (already in `.env.example`).
+* Ensure S3 uploads set **SSE** (server-side encryption) and private ACLs; all access via presigned URLs only.
+* Store scan result + SHA256 in `document_files`.
+  Add tests in `tests/upload.security.test.ts`.”
+
+### Prompt F — Production image build
+
+“Create a multi-stage **Dockerfile** that:
+
+* builds the client with `vite build`,
+* bundles the server with `esbuild`,
+* runs in node:20-alpine with `PORT` from env.
+  Update `docker-compose.yml` to use the built image for `app`, add healthchecks and proper env.
+  Document `docker compose up --build` in README.”
+
+### Prompt G — Monitoring & logs
+
+“Add **pino** logger to Express (scrub PII), request/response logging, and error logging.
+Publish **Prometheus metrics** (`/metrics`) with `prom-client` (http requests, queue depth, jobs processed, pdfs generated).
+Graceful shutdown for queues on SIGTERM.”
+
+### Prompt H — Docs & onboarding
+
+“Generate comprehensive docs:
+
+* Expand `README.md` with: setup, env var table, runbook, troubleshooting, security.
+* Create `docs/API.md` (OpenAPI link & examples) and `docs/SECURITY.md` (DPA reference, DPIA checklist, retention, access requests, audit logs).
+* Add `scripts/seed` using existing `server/seedDatabase.ts` and `server/create-sample-data.ts` and document them.”
+
+---
+
+## Extra: project health checklist
+
+* [ ] All API routes have **RBAC + ownership checks**
+* [ ] i18n sync prevents missing keys from showing in UI
+* [ ] OpenAPI at `/docs` (kept up-to-date from Zod)
+* [ ] Uploads scanned, encrypted, type/size enforced
+* [ ] Background jobs have retries + DLQ
+* [ ] **Dockerfile** builds production image; compose uses image
+* [ ] Metrics + structured logs
+* [ ] GDPR docs (DPA/DPIA) completed; consent + retention modeled
+
+---
+
+If you want, I can also:
+
+* generate a **one-click Dockerfile**,
+* output **.env.template** with comments, or
+* write a **seed** that creates a demo Owner + Worker + sample assignments so you can demo in 2 minutes.

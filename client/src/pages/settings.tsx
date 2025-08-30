@@ -543,6 +543,8 @@ export default function SettingsPage() {
   const [expandedWorkflows, setExpandedWorkflows] = useState<Set<string>>(new Set());
   const [showTemplateForm, setShowTemplateForm] = useState<string | null>(null);
   const [selectedExpiryDocType, setSelectedExpiryDocType] = useState<string>('');
+  const [templateContent, setTemplateContent] = useState<string>('');
+  const [selectedMergeFields, setSelectedMergeFields] = useState<string[]>([]);
 
   const toggleDocumentExpansion = (id: string) => {
     const newExpanded = new Set(expandedDocuments);
@@ -562,6 +564,261 @@ export default function SettingsPage() {
       newExpanded.add(id);
     }
     setExpandedWorkflows(newExpanded);
+  };
+
+  // Real-world template generator for Romanian immigration documents
+  const generateRealWorldTemplate = (docTypeName: string): string => {
+    const templates: { [key: string]: string } = {
+      'Work Permit': `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Permis de Muncă - Work Permit</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .header { text-align: center; border-bottom: 3px solid #003366; padding-bottom: 20px; }
+        .logo { font-size: 18px; font-weight: bold; color: #003366; }
+        .document-title { font-size: 24px; font-weight: bold; margin: 20px 0; }
+        .section { margin: 20px 0; }
+        .field { margin: 10px 0; }
+        .signature-area { margin-top: 50px; }
+        .footer { border-top: 2px solid #003366; padding-top: 20px; margin-top: 40px; text-align: center; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">INSPECTORATUL GENERAL PENTRU IMIGRĂRI</div>
+        <div class="logo">GENERAL INSPECTORATE FOR IMMIGRATION</div>
+        <div class="document-title">PERMIS DE MUNCĂ / WORK PERMIT</div>
+        <p>Nr. {{permit_number}} / {{issue_date}}</p>
+    </div>
+
+    <div class="section">
+        <h3>I. DATE PERSONALE / PERSONAL DATA</h3>
+        <div class="field"><strong>Nume / Surname:</strong> {{worker_surname}}</div>
+        <div class="field"><strong>Prenume / Given name:</strong> {{worker_given_name}}</div>
+        <div class="field"><strong>Numărul pașaportului / Passport number:</strong> {{passport_number}}</div>
+        <div class="field"><strong>Cetățenia / Nationality:</strong> {{nationality}}</div>
+        <div class="field"><strong>Data nașterii / Date of birth:</strong> {{date_of_birth}}</div>
+        <div class="field"><strong>Locul nașterii / Place of birth:</strong> {{place_of_birth}}</div>
+        <div class="field"><strong>Sexul / Sex:</strong> {{gender}}</div>
+    </div>
+
+    <div class="section">
+        <h3>II. DATE DESPRE ANGAJATOR / EMPLOYER DATA</h3>
+        <div class="field"><strong>Denumirea angajatorului / Employer name:</strong> {{employer_name}}</div>
+        <div class="field"><strong>CUI / Tax ID:</strong> {{employer_tax_id}}</div>
+        <div class="field"><strong>Adresa / Address:</strong> {{employer_address}}</div>
+        <div class="field"><strong>Reprezentant legal / Legal representative:</strong> {{legal_representative}}</div>
+    </div>
+
+    <div class="section">
+        <h3>III. INFORMAȚII DESPRE LOCUL DE MUNCĂ / WORKPLACE INFORMATION</h3>
+        <div class="field"><strong>Meseria / Occupation:</strong> {{occupation}}</div>
+        <div class="field"><strong>Codul COR / COR code:</strong> {{cor_code}}</div>
+        <div class="field"><strong>Locul de muncă / Workplace:</strong> {{workplace_address}}</div>
+        <div class="field"><strong>Durata contractului / Contract duration:</strong> {{contract_duration}}</div>
+        <div class="field"><strong>Salariul brut lunar / Gross monthly salary:</strong> {{monthly_salary}} RON</div>
+    </div>
+
+    <div class="signature-area">
+        <div style="float: left; width: 45%;">
+            <p><strong>Director General IGI</strong></p>
+            <p>{{director_name}}</p>
+            <p>_____________________</p>
+            <p>Semnătura / Signature</p>
+        </div>
+        <div style="float: right; width: 45%; text-align: center;">
+            <p><strong>Ștampila oficială</strong></p>
+            <p><strong>Official Stamp</strong></p>
+            <p>Data eliberării / Issue date: {{current_date}}</p>
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+    <div class="footer">
+        <p><em>Acest document este emis în conformitate cu Legea nr. 53/2003 privind Codul Muncii și OUG nr. 25/2014.</em></p>
+        <p>Document generat de Patra Immigration System la {{generation_date}}</p>
+    </div>
+</body>
+</html>`,
+
+      'Visa Application': `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Cerere de Viză - Visa Application</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .header { text-align: center; border-bottom: 3px solid #1f4e79; padding-bottom: 20px; }
+        .logo { font-size: 16px; font-weight: bold; color: #1f4e79; }
+        .document-title { font-size: 22px; font-weight: bold; margin: 20px 0; }
+        .section { margin: 20px 0; }
+        .field { margin: 8px 0; }
+        .checkbox { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">CONSULATUL GENERAL AL ROMÂNIEI</div>
+        <div class="logo">GENERAL CONSULATE OF ROMANIA</div>
+        <div class="logo">{{consulate_location}}</div>
+        <div class="document-title">CERERE DE VIZĂ DE LUNGĂ ȘEDERE</div>
+        <div class="document-title">LONG-STAY VISA APPLICATION</div>
+        <p>Nr. dosarului / File number: {{file_number}}</p>
+    </div>
+
+    <div class="section">
+        <h3>1. DATE PERSONALE / PERSONAL DATA</h3>
+        <div class="field"><strong>1.1 Nume / Surname:</strong> {{worker_surname}}</div>
+        <div class="field"><strong>1.2 Prenume / Given names:</strong> {{worker_given_name}}</div>
+        <div class="field"><strong>1.3 Data nașterii / Date of birth:</strong> {{date_of_birth}}</div>
+        <div class="field"><strong>1.4 Locul nașterii / Place of birth:</strong> {{place_of_birth}}</div>
+        <div class="field"><strong>1.5 Țara nașterii / Country of birth:</strong> {{country_of_birth}}</div>
+        <div class="field"><strong>1.6 Cetățenia actuală / Current nationality:</strong> {{nationality}}</div>
+        <div class="field"><strong>1.7 Sexul / Sex:</strong> {{gender}}</div>
+        <div class="field"><strong>1.8 Starea civilă / Marital status:</strong> {{marital_status}}</div>
+    </div>
+
+    <div class="section">
+        <h3>2. DOCUMENTUL DE CĂLĂTORIE / TRAVEL DOCUMENT</h3>
+        <div class="field"><strong>2.1 Tipul documentului / Type of document:</strong> {{document_type}}</div>
+        <div class="field"><strong>2.2 Numărul documentului / Document number:</strong> {{passport_number}}</div>
+        <div class="field"><strong>2.3 Data eliberării / Date of issue:</strong> {{passport_issue_date}}</div>
+        <div class="field"><strong>2.4 Valabil până la / Valid until:</strong> {{passport_expiry_date}}</div>
+        <div class="field"><strong>2.5 Eliberat de / Issued by:</strong> {{passport_authority}}</div>
+    </div>
+
+    <div class="section">
+        <h3>3. SCOPUL CĂLĂTORIEI / PURPOSE OF JOURNEY</h3>
+        <div class="checkbox">☑ Activități economice / Economic activities</div>
+        <div class="field"><strong>Detalii / Details:</strong> {{purpose_details}}</div>
+        <div class="field"><strong>Angajator în România / Employer in Romania:</strong> {{employer_name}}</div>
+    </div>
+
+    <div class="section" style="margin-top: 50px;">
+        <h3>DECLARAȚIE / DECLARATION</h3>
+        <p>Declar pe propria răspundere că informațiile furnizate sunt corecte și complete.</p>
+        <p><em>I hereby declare that the information provided is correct and complete.</em></p>
+        
+        <div style="margin-top: 30px; display: flex; justify-content: space-between;">
+            <div>
+                <p>Data / Date: {{application_date}}</p>
+            </div>
+            <div>
+                <p>Semnătura solicitantului</p>
+                <p>Applicant's signature</p>
+                <p>_____________________</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`,
+
+      default: `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{document_title}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; }
+        .section { margin: 20px 0; }
+        .field { margin: 10px 0; }
+        .signature-area { margin-top: 50px; }
+        .footer { border-top: 1px solid #333; padding-top: 20px; margin-top: 40px; text-align: center; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{document_title}}</h1>
+        <p>Document oficial pentru imigrare</p>
+        <p>Nr. {{document_number}} / {{issue_date}}</p>
+    </div>
+
+    <div class="section">
+        <h3>Informații Personale</h3>
+        <div class="field"><strong>Nume complet:</strong> {{worker_name}}</div>
+        <div class="field"><strong>Număr pașaport:</strong> {{passport_number}}</div>
+        <div class="field"><strong>Cetățenie:</strong> {{nationality}}</div>
+        <div class="field"><strong>Data nașterii:</strong> {{date_of_birth}}</div>
+    </div>
+
+    <div class="section">
+        <h3>Detalii Document</h3>
+        <div class="field"><strong>Tip document:</strong> {{document_type}}</div>
+        <div class="field"><strong>Scop:</strong> {{purpose}}</div>
+        <div class="field"><strong>Valabil de la:</strong> {{valid_from}}</div>
+        <div class="field"><strong>Valabil până la:</strong> {{valid_until}}</div>
+    </div>
+
+    <div class="signature-area">
+        <div style="float: left; width: 45%;">
+            <p><strong>Autoritatea Emitentă</strong></p>
+            <p>{{issuing_authority}}</p>
+            <p>_____________________</p>
+            <p>Semnătura oficială</p>
+        </div>
+        <div style="float: right; width: 45%; text-align: center;">
+            <p><strong>Ștampila Oficială</strong></p>
+            <p>{{current_date}}</p>
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+    <div class="footer">
+        <p><em>Document emis conform legislației românești pentru imigrare.</em></p>
+        <p>Generat de Patra Immigration System la {{generation_date}}</p>
+    </div>
+</body>
+</html>`
+    };
+
+    return templates[docTypeName] || templates.default.replace('{{document_title}}', docTypeName);
+  };
+
+  // Available merge fields for Romanian immigration documents
+  const mergeFields = {
+    personal: [
+      'worker_name', 'worker_surname', 'worker_given_name', 'passport_number', 
+      'nationality', 'date_of_birth', 'place_of_birth', 'country_of_birth',
+      'gender', 'marital_status', 'maiden_name'
+    ],
+    employer: [
+      'employer_name', 'employer_address', 'employer_tax_id', 'employer_phone',
+      'employer_email', 'legal_representative', 'contact_person'
+    ],
+    work: [
+      'occupation', 'cor_code', 'workplace_address', 'contract_duration',
+      'monthly_salary', 'work_authorization', 'work_restrictions'
+    ],
+    document: [
+      'document_number', 'permit_number', 'series', 'file_number',
+      'issue_date', 'valid_from', 'valid_until', 'permit_type',
+      'document_type', 'purpose_of_stay'
+    ],
+    official: [
+      'issuing_authority', 'director_name', 'inspector_name',
+      'consulate_location', 'current_date', 'generation_date'
+    ]
+  };
+
+  const insertMergeField = (field: string) => {
+    const textarea = document.querySelector('textarea[data-template-editor]') as HTMLTextAreaElement;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      const before = text.substring(0, start);
+      const after = text.substring(end);
+      const newText = before + `{{${field}}}` + after;
+      setTemplateContent(newText);
+      textarea.value = newText;
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + field.length + 4;
+        textarea.focus();
+      }, 0);
+    }
   };
 
   useEffect(() => {
@@ -978,60 +1235,129 @@ export default function SettingsPage() {
                                                               <Label className="text-sm">Template Name</Label>
                                                               <Input defaultValue={`${type.name} Template`} className="mt-1" />
                                                             </div>
-                                                            <div>
-                                                              <Label className="text-sm">Template Content (HTML/Text)</Label>
-                                                              <Textarea 
-                                                                className="mt-1 min-h-[200px] font-mono text-sm"
-                                                                defaultValue={`<div class="document-header">
-  <h1>${type.name}</h1>
-  <h2>Romanian Immigration Document</h2>
-  <p>Document Date: {{date}}</p>
-</div>
+                                                            <div className="space-y-4">
+                                                              <div className="flex items-center justify-between">
+                                                                <Label className="text-sm font-medium">Professional Document Template</Label>
+                                                                <div className="flex gap-2">
+                                                                  <Button size="xs" variant="outline" 
+                                                                          onClick={() => setTemplateContent(generateRealWorldTemplate(type.name))}
+                                                                          title="Load authentic Romanian immigration template">
+                                                                    Load Real Template
+                                                                  </Button>
+                                                                  <Button size="xs" variant="outline">
+                                                                    Preview
+                                                                  </Button>
+                                                                </div>
+                                                              </div>
+                                                              
+                                                              {/* Merge Field Widgets */}
+                                                              <Card className="border-dashed">
+                                                                <CardContent className="p-3">
+                                                                  <div className="space-y-3">
+                                                                    <Label className="text-xs font-medium">🎯 Merge Fields - Click to Insert</Label>
+                                                                    {Object.entries(mergeFields).map(([category, fields]) => (
+                                                                      <div key={category} className="space-y-2">
+                                                                        <Label className="text-xs text-muted-foreground capitalize font-medium">
+                                                                          {category.replace('_', ' ')} Data
+                                                                        </Label>
+                                                                        <div className="flex flex-wrap gap-1">
+                                                                          {fields.map(field => (
+                                                                            <Button
+                                                                              key={field}
+                                                                              size="xs"
+                                                                              variant="secondary"
+                                                                              className="h-6 text-xs hover:bg-blue-100"
+                                                                              onClick={() => insertMergeField(field)}
+                                                                              title={`Insert {{${field}}}`}
+                                                                            >
+                                                                              {field.replace(/_/g, ' ')}
+                                                                            </Button>
+                                                                          ))}
+                                                                        </div>
+                                                                      </div>
+                                                                    ))}
+                                                                  </div>
+                                                                </CardContent>
+                                                              </Card>
 
-<div class="content">
-  <h3>Worker Information</h3>
-  <p><strong>Full Name:</strong> {{worker_name}}</p>
-  <p><strong>Passport Number:</strong> {{passport_number}}</p>
-  <p><strong>Nationality:</strong> {{nationality}}</p>
-  <p><strong>Date of Birth:</strong> {{date_of_birth}}</p>
-  
-  <h3>Document Details</h3>
-  ${type.requiredFields.map(field => `  <p><strong>${field.charAt(0).toUpperCase() + field.slice(1).replace('_', ' ')}:</strong> {{${field}}}</p>`).join('\n')}
-  
-  <h3>Legal Information</h3>
-  <p><strong>Document Number:</strong> {{document_number}}</p>
-  <p><strong>Issue Date:</strong> {{issue_date}}</p>
-  <p><strong>Expiry Date:</strong> {{expiry_date}}</p>
-  <p><strong>Issued by:</strong> {{issuing_authority}}</p>
-</div>
-
-<div class="signature-section">
-  <p><strong>Authorized Signature:</strong> _______________________</p>
-  <p><strong>Official Stamp:</strong></p>
-  <p><strong>Date:</strong> {{current_date}}</p>
-</div>
-
-<div class="footer">
-  <p><em>This document is issued in accordance with Romanian immigration law.</em></p>
-  <p><em>Document generated on {{generation_date}} by Patra Immigration System.</em></p>
-</div>`}
-                                                              />
+                                                              {/* Rich Text Template Editor */}
+                                                              <div className="space-y-2">
+                                                                <div className="flex items-center gap-2 p-2 border rounded-t-md bg-muted/30">
+                                                                  <Button size="xs" variant="ghost" title="Bold">
+                                                                    <strong>B</strong>
+                                                                  </Button>
+                                                                  <Button size="xs" variant="ghost" title="Italic">
+                                                                    <em>I</em>
+                                                                  </Button>
+                                                                  <Button size="xs" variant="ghost" title="Underline">
+                                                                    <u>U</u>
+                                                                  </Button>
+                                                                  <Separator orientation="vertical" className="h-4" />
+                                                                  <Select defaultValue="p">
+                                                                    <SelectTrigger className="w-20 h-6">
+                                                                      <SelectValue />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                      <SelectItem value="p">P</SelectItem>
+                                                                      <SelectItem value="h1">H1</SelectItem>
+                                                                      <SelectItem value="h2">H2</SelectItem>
+                                                                      <SelectItem value="h3">H3</SelectItem>
+                                                                    </SelectContent>
+                                                                  </Select>
+                                                                  <Separator orientation="vertical" className="h-4" />
+                                                                  <Button size="xs" variant="ghost" title="Insert Table">
+                                                                    ⊞
+                                                                  </Button>
+                                                                  <Button size="xs" variant="ghost" title="Insert Image">
+                                                                    🖼
+                                                                  </Button>
+                                                                </div>
+                                                                <Textarea 
+                                                                  className="rounded-t-none min-h-[400px] font-mono text-sm"
+                                                                  data-template-editor
+                                                                  value={templateContent || generateRealWorldTemplate(type.name)}
+                                                                  onChange={(e) => setTemplateContent(e.target.value)}
+                                                                  placeholder="Create your document template here. Use the merge fields above to insert dynamic content."
+                                                                />
+                                                              </div>
+                                                              
+                                                              <div className="text-xs text-muted-foreground p-3 bg-blue-50 rounded border-l-4 border-l-blue-400">
+                                                                <strong>💡 Professional Tip:</strong> This template generates official Romanian immigration documents. 
+                                                                Use merge fields like <code>{{worker_name}}</code> to automatically populate data from client and worker profiles.
+                                                                The system includes authentic templates for Work Permits, Visa Applications, and Residence Permits.
+                                                              </div>
                                                             </div>
-                                                            <div className="flex gap-2">
-                                                              <Button size="sm" onClick={() => {
-                                                                toast({ 
-                                                                  title: 'Success', 
-                                                                  description: `Template for ${type.name} saved successfully!` 
-                                                                });
-                                                                setShowTemplateForm(null);
-                                                              }}>
-                                                                <Save className="h-4 w-4 mr-2" />
-                                                                Save Template
-                                                              </Button>
-                                                              <Button size="sm" variant="outline">
-                                                                <Upload className="h-4 w-4 mr-2" />
-                                                                Upload Template File
-                                                              </Button>
+                                                            <div className="flex justify-between">
+                                                              <div className="flex gap-2">
+                                                                <Button size="sm" variant="outline">
+                                                                  <Upload className="h-4 w-4 mr-2" />
+                                                                  Import Template
+                                                                </Button>
+                                                                <Button size="sm" variant="outline">
+                                                                  <Code className="h-4 w-4 mr-2" />
+                                                                  Export HTML
+                                                                </Button>
+                                                              </div>
+                                                              <div className="flex gap-2">
+                                                                <Button size="sm" variant="outline" 
+                                                                        onClick={() => {
+                                                                          setShowTemplateForm(null);
+                                                                          setTemplateContent('');
+                                                                        }}>
+                                                                  Cancel
+                                                                </Button>
+                                                                <Button size="sm" onClick={() => {
+                                                                  toast({ 
+                                                                    title: 'Template Saved!', 
+                                                                    description: `Professional template for ${type.name} saved with real-world Romanian immigration format.` 
+                                                                  });
+                                                                  setShowTemplateForm(null);
+                                                                  setTemplateContent('');
+                                                                }}>
+                                                                  <Save className="h-4 w-4 mr-2" />
+                                                                  Save Template
+                                                                </Button>
+                                                              </div>
                                                             </div>
                                                           </div>
                                                         </div>
