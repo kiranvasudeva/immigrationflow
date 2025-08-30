@@ -78,7 +78,7 @@ function Router() {
             }
           }} />
           <Route path="/templates" component={TemplatesPage} />
-          <Route path="/reports" component={() => <AdminDashboard />} />
+          <Route path="/reports" component={AnalyticsPage} />
           <Route path="/clients" component={() => <AdminDashboard />} />
           <Route path="/clients/:id" component={ClientProfile} />
           <Route path="/workers" component={() => <AdminDashboard />} />

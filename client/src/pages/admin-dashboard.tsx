@@ -48,6 +48,23 @@ export default function AdminDashboard() {
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
   const [editingWorker, setEditingWorker] = useState(false);
 
+  // Set active section based on current route
+  useEffect(() => {
+    const routeToSection: Record<string, string> = {
+      '/clients': 'clients',
+      '/workers': 'workers', 
+      '/reports': 'reports',
+      '/requirements': 'requirements',
+      '/reminders': 'reminders',
+      '/audit': 'audit'
+    };
+    
+    const currentSection = routeToSection[location] || 'overview';
+    if (currentSection !== activeSection) {
+      setActiveSection(currentSection);
+    }
+  }, [location]);
+
   // Breadcrumb management
   useEffect(() => {
     const breadcrumbMap: Record<string, { label: string; href: string }> = {
