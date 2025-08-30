@@ -115,6 +115,10 @@ export default function ClientProfile() {
   });
 
   // Debug logging
+  console.log('🔍 Client ID:', clientId);
+  console.log('🔍 Workers Data:', workers);
+  console.log('🔍 Workers Loading:', workersLoading);
+  console.log('🔍 Workers Error:', workersError);
   console.log('🔍 Selected Worker ID:', selectedWorkerId);
   console.log('🔍 Selected Worker Data:', selectedWorker);
   console.log('🔍 Selected Worker Loading:', selectedWorkerLoading);
