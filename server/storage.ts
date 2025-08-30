@@ -285,7 +285,7 @@ export class DatabaseStorage implements IStorage {
     const assignmentIds = assignmentsData.map((a: any) => a.assignment.id);
     const documents = assignmentIds.length > 0 
       ? await db.select().from(documentFiles).where(
-          assignmentIds.map((assignId: string) => eq(documentFiles.assignmentId, assignId)).reduce((acc: any, curr: any) => or(acc, curr))
+          or(...assignmentIds.map((assignId: string) => eq(documentFiles.assignmentId, assignId)))
         )
       : [];
 
@@ -335,14 +335,14 @@ export class DatabaseStorage implements IStorage {
   async updateWorker(id: string, updates: Partial<InsertWorker>): Promise<Worker> {
     const [updated] = await db
       .update(workers)
-      .set({ ...updates, updatedAt: new Date() })
+      .set(updates)
       .where(eq(workers.id, id))
       .returning();
     return updated;
   }
 
   async getAllWorkers(): Promise<Worker[]> {
-    return await db.select().from(workers).orderBy(workers.fullName);
+    return await db.select().from(workers);
   }
 
   async deleteWorker(id: string): Promise<boolean> {
@@ -625,7 +625,7 @@ export class DatabaseStorage implements IStorage {
     return result.map(row => ({
       ...row.assignments,
       requirement: row.requirements!,
-      clientProfile: row.clientProfiles!,
+      clientProfile: row.client_profiles!,
       worker: row.workers || undefined,
       stage: row.stages!,
     }));
