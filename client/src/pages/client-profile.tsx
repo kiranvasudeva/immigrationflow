@@ -504,14 +504,7 @@ export default function ClientProfile() {
                           {workers.map((worker) => (
                             <div 
                               key={worker.id} 
-                              className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer relative"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                console.log('Worker clicked:', worker.id);
-                                setSelectedWorkerId(worker.id);
-                              }}
-                              style={{ cursor: 'pointer', zIndex: 10 }}
+                              className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
                               data-testid={`worker-card-${worker.id}`}
                             >
                               <div className="flex items-center space-x-3">
@@ -537,10 +530,9 @@ export default function ClientProfile() {
                                 <Button 
                                   size="sm" 
                                   variant="outline"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    console.log('View Details clicked for worker:', worker.id);
+                                  onClick={() => {
+                                    console.log('🔥 BUTTON CLICKED - Worker ID:', worker.id);
+                                    alert('Button clicked for: ' + worker.firstName);
                                     setSelectedWorkerId(worker.id);
                                   }}
                                   data-testid={`button-view-worker-${worker.id}`}
