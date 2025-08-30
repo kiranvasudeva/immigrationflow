@@ -105,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // Dashboard statistics - Role-based access
-  app.get('/api/dashboard/stats', devRbacBypass(requireRole(['ADMIN', 'OWNER'])), devAuditBypass, async (req: any, res) => {
+  app.get('/api/dashboard/stats', devRbacBypass(requireRole('ADMIN', 'OWNER')), devAuditBypass, async (req: any, res) => {
     try {
       const stats = await storage.getDashboardStats();
       // Apply tenant filtering for non-admin users
@@ -118,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/dashboard/assignments', devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER'])), devAuditBypass, async (req: any, res) => {
+  app.get('/api/dashboard/assignments', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER')), devAuditBypass, async (req: any, res) => {
     try {
       const assignments = await storage.getAssignmentsWithDetails();
       // Apply tenant filtering for non-admin users
@@ -167,7 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Invitation routes - Only ADMIN and OWNER can invite users
-  app.post('/api/invitations', devRbacBypass(requireRole(['ADMIN', 'OWNER'])), auditMiddleware, async (req: any, res) => {
+  app.post('/api/invitations', devRbacBypass(requireRole('ADMIN', 'OWNER')), auditMiddleware, async (req: any, res) => {
     try {
       const user = req.user.dbUser || await storage.getUserByEmail(req.user.claims?.email || 'admin@dev.local');
 
@@ -197,7 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/invitations', devRbacBypass(requireRole(['ADMIN', 'OWNER'])), auditMiddleware, async (req: any, res) => {
+  app.get('/api/invitations', devRbacBypass(requireRole('ADMIN', 'OWNER')), auditMiddleware, async (req: any, res) => {
     try {
       const user = req.user.dbUser || await storage.getUserByEmail(req.user.claims?.email || 'admin@dev.local');
 
@@ -231,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Client Profile routes - Role-based access
-  app.get('/api/clients', devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])), devAuditBypass, async (req: any, res) => {
+  app.get('/api/clients', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER', 'VIEWER')), devAuditBypass, async (req: any, res) => {
     try {
       const user = req.user.dbUser || await storage.getUserByEmail(req.user.claims?.email || 'admin@dev.local');
       
@@ -283,7 +283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/clients', devRbacBypass(requireRole(['ADMIN'])), devAuditBypass, async (req: any, res) => {
+  app.post('/api/clients', devRbacBypass(requireRole('ADMIN')), devAuditBypass, async (req: any, res) => {
     try {
       const user = req.user.dbUser || await storage.getUserByEmail(req.user.claims?.email || 'admin@dev.local');
 
@@ -467,7 +467,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ========== Workers CRUD API ==========
   
   // GET /api/workers - List all workers with proper RBAC filtering
-  app.get('/api/workers', devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])), devAuditBypass, async (req: any, res) => {
+  app.get('/api/workers', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER', 'VIEWER')), devAuditBypass, async (req: any, res) => {
     try {
       const user = req.user.dbUser || await storage.getUserByEmail(req.user.claims?.email || 'admin@dev.local');
       
@@ -499,7 +499,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/workers - Create new worker
-  app.post('/api/workers', devRbacBypass(requireRole(['ADMIN', 'OWNER'])), devAuditBypass, async (req: any, res) => {
+  app.post('/api/workers', devRbacBypass(requireRole('ADMIN', 'OWNER')), devAuditBypass, async (req: any, res) => {
     try {
       const parsedData = createWorkerSchema.parse(req.body);
       const newWorker = await storage.createWorker(parsedData);
@@ -583,7 +583,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ========== Stages CRUD API ==========
   
   // GET /api/stages - List all stages
-  app.get('/api/stages', devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])), devAuditBypass, async (req: any, res) => {
+  app.get('/api/stages', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER', 'VIEWER')), devAuditBypass, async (req: any, res) => {
     try {
       const stages = await storage.getAllStages();
       res.json(stages);
@@ -594,7 +594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/stages - Create new stage
-  app.post('/api/stages', devRbacBypass(requireRole(['ADMIN'])), devAuditBypass, async (req: any, res) => {
+  app.post('/api/stages', devRbacBypass(requireRole('ADMIN')), devAuditBypass, async (req: any, res) => {
     try {
       const parsedData = createStageSchema.parse(req.body);
       const newStage = await storage.createStage(parsedData);
@@ -609,7 +609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/stages/:id - Get specific stage
-  app.get('/api/stages/:id', devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])), devAuditBypass, async (req: any, res) => {
+  app.get('/api/stages/:id', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER', 'VIEWER')), devAuditBypass, async (req: any, res) => {
     try {
       const { id } = req.params;
       const stage = await storage.getStage(id);
@@ -626,7 +626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PUT /api/stages/:id - Update stage
-  app.put('/api/stages/:id', devRbacBypass(requireRole(['ADMIN'])), devAuditBypass, async (req: any, res) => {
+  app.put('/api/stages/:id', devRbacBypass(requireRole('ADMIN')), devAuditBypass, async (req: any, res) => {
     try {
       const { id } = req.params;
       const parsedData = updateStageSchema.parse(req.body);
@@ -647,7 +647,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/stages/:id - Delete stage
-  app.delete('/api/stages/:id', devRbacBypass(requireRole(['ADMIN'])), devAuditBypass, async (req: any, res) => {
+  app.delete('/api/stages/:id', devRbacBypass(requireRole('ADMIN')), devAuditBypass, async (req: any, res) => {
     try {
       const { id } = req.params;
       
@@ -666,7 +666,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ========== Requirements CRUD API ==========
   
   // GET /api/requirements - List all requirements or filter by stage
-  app.get('/api/requirements', devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])), devAuditBypass, async (req: any, res) => {
+  app.get('/api/requirements', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER', 'VIEWER')), devAuditBypass, async (req: any, res) => {
     try {
       const { stageId } = req.query;
       let requirements;
@@ -685,7 +685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/requirements - Create new requirement
-  app.post('/api/requirements', devRbacBypass(requireRole(['ADMIN', 'OWNER'])), devAuditBypass, async (req: any, res) => {
+  app.post('/api/requirements', devRbacBypass(requireRole('ADMIN', 'OWNER')), devAuditBypass, async (req: any, res) => {
     try {
       const parsedData = createRequirementSchema.parse(req.body);
       const newRequirement = await storage.createRequirement(parsedData);
@@ -700,7 +700,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/requirements/:id - Get specific requirement
-  app.get('/api/requirements/:id', devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])), devAuditBypass, async (req: any, res) => {
+  app.get('/api/requirements/:id', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER', 'VIEWER')), devAuditBypass, async (req: any, res) => {
     try {
       const { id } = req.params;
       const requirement = await storage.getRequirement(id);
@@ -717,7 +717,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PUT /api/requirements/:id - Update requirement
-  app.put('/api/requirements/:id', devRbacBypass(requireRole(['ADMIN', 'OWNER'])), devAuditBypass, async (req: any, res) => {
+  app.put('/api/requirements/:id', devRbacBypass(requireRole('ADMIN', 'OWNER')), devAuditBypass, async (req: any, res) => {
     try {
       const { id } = req.params;
       const parsedData = updateRequirementSchema.parse(req.body);
@@ -738,7 +738,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE /api/requirements/:id - Delete requirement
-  app.delete('/api/requirements/:id', devRbacBypass(requireRole(['ADMIN', 'OWNER'])), devAuditBypass, async (req: any, res) => {
+  app.delete('/api/requirements/:id', devRbacBypass(requireRole('ADMIN', 'OWNER')), devAuditBypass, async (req: any, res) => {
     try {
       const { id } = req.params;
       
@@ -796,7 +796,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Audit logs
-  app.get('/api/audit', isAuthenticated, async (req: any, res) => {
+  app.get('/api/audit', devRbacBypass(requireRole('ADMIN')), devAuditBypass, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -814,7 +814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Document Template routes
-  app.get('/api/templates', isAuthenticated, async (req: any, res) => {
+  app.get('/api/templates', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER', 'VIEWER')), devAuditBypass, async (req: any, res) => {
     try {
       const templates = await storage.getAllDocumentTemplates();
       res.json(templates);
@@ -824,7 +824,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/templates/:id', isAuthenticated, async (req: any, res) => {
+  app.get('/api/templates/:id', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER', 'VIEWER')), devAuditBypass, async (req: any, res) => {
     try {
       const { id } = req.params;
       const template = await storage.getDocumentTemplate(id);
@@ -840,7 +840,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/templates', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  app.post('/api/templates', devRbacBypass(requireRole('ADMIN')), auditMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -878,7 +878,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/templates/:id', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  app.put('/api/templates/:id', devRbacBypass(requireRole('ADMIN')), auditMiddleware, async (req: any, res) => {
     try {
       const { id } = req.params;
       const userId = req.user.claims.sub;
@@ -912,7 +912,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/templates/:id', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  app.delete('/api/templates/:id', devRbacBypass(requireRole('ADMIN')), auditMiddleware, async (req: any, res) => {
     try {
       const { id } = req.params;
       const userId = req.user.claims.sub;
@@ -942,7 +942,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/translations', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  app.post('/api/translations', devRbacBypass(requireRole('ADMIN')), auditMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -961,7 +961,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Payment routes
-  app.get('/api/clients/:clientId/payments', isAuthenticated, async (req: any, res) => {
+  app.get('/api/clients/:clientId/payments', devRbacBypass(requireRoleAndOwnership(['ADMIN', 'OWNER'], 'client')), devAuditBypass, async (req: any, res) => {
     try {
       const { clientId } = req.params;
       const userId = req.user.claims.sub;
@@ -984,7 +984,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/payments', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  app.post('/api/payments', devRbacBypass(requireRole('ADMIN', 'OWNER')), auditMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -1003,7 +1003,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Workflow automation routes
-  app.get('/api/workflow-rules', isAuthenticated, async (req: any, res) => {
+  app.get('/api/workflow-rules', devRbacBypass(requireRole('ADMIN')), devAuditBypass, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -1020,7 +1020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/workflow-rules', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  app.post('/api/workflow-rules', devRbacBypass(requireRole('ADMIN')), auditMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -1043,7 +1043,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // OCR endpoint for document processing
-  app.post('/api/documents/:documentId/ocr', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  app.post('/api/documents/:documentId/ocr', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER')), auditMiddleware, async (req: any, res) => {
     try {
       const { documentId } = req.params;
       const { imagePath, documentType } = req.body;
@@ -1079,7 +1079,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analytics routes
-  app.get('/api/analytics/events', isAuthenticated, async (req: any, res) => {
+  app.get('/api/analytics/events', devRbacBypass(requireRole('ADMIN')), devAuditBypass, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
