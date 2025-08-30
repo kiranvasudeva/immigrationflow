@@ -20,6 +20,62 @@ import { useTranslation } from "@/contexts/LanguageContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { NavigationBreadcrumb } from "@/components/layout/NavigationBreadcrumb";
 
+// Component to display client-specific workers
+function ClientWorkersDisplay({ clientId }: { clientId: string }) {
+  const { data: workers, isLoading } = useQuery({
+    queryKey: ['/api/clients', clientId, 'workers'],
+    queryFn: async () => {
+      const response = await fetch(`/api/clients/${clientId}/workers`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch workers');
+      }
+      return response.json();
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!workers || workers.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <i className="fas fa-users text-gray-400 text-3xl mb-4"></i>
+        <p>No workers found for this client.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {workers.map((worker: any, index: number) => (
+        <div
+          key={worker.id || index}
+          className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+        >
+          <div className="flex items-center space-x-4">
+            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+              <i className="fas fa-user text-green-600"></i>
+            </div>
+            <div>
+              <p className="font-medium">{worker.firstName} {worker.lastName}</p>
+              <p className="text-sm text-gray-600">{worker.nationality} • {worker.email}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-medium">{worker.status || 'Active'}</p>
+            <p className="text-xs text-gray-500">ID: {worker.passportNumber || 'N/A'}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -47,6 +103,7 @@ export default function AdminDashboard() {
   const [showNewClientForm, setShowNewClientForm] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
   const [editingWorker, setEditingWorker] = useState(false);
+  const [showClientWorkers, setShowClientWorkers] = useState(false);
 
   // Set active section based on current route
   useEffect(() => {
@@ -1024,7 +1081,10 @@ export default function AdminDashboard() {
                       <div className="flex items-center justify-between">
                         <Button
                           variant="ghost"
-                          onClick={() => setSelectedClient(null)}
+                          onClick={() => {
+                            setSelectedClient(null);
+                            setShowClientWorkers(false);
+                          }}
                           className="text-primary hover:text-primary/80"
                         >
                           <i className="fas fa-arrow-left mr-2"></i>
@@ -1128,12 +1188,11 @@ export default function AdminDashboard() {
                             variant="outline" 
                             size="sm"
                             onClick={() => {
-                              setActiveSection('workers');
-                              setLocation('/workers');
+                              setShowClientWorkers(!showClientWorkers);
                             }}
                           >
                             <i className="fas fa-users mr-2"></i>
-                            View Workers ({selectedClient.activeWorkers || 0})
+                            {showClientWorkers ? 'Hide' : 'View'} Workers ({selectedClient.activeWorkers || 0})
                           </Button>
                           <Button 
                             variant="outline" 
@@ -1158,6 +1217,14 @@ export default function AdminDashboard() {
                           </Button>
                         </div>
                       </div>
+                      
+                      {/* Client Workers Section */}
+                      {showClientWorkers && selectedClient && (
+                        <div className="border-t pt-6">
+                          <h4 className="font-semibold text-gray-900 mb-4">Workers for {selectedClient.legalName}</h4>
+                          <ClientWorkersDisplay clientId={selectedClient.id} />
+                        </div>
+                      )}
                     </div>
                   )}
 
