@@ -779,6 +779,13 @@ export default function ClientProfile() {
                                 Immigration Workflow Status
                               </h3>
                               
+                              {/* Debug info */}
+                              <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
+                                Debug: Has assignments: {selectedWorker.assignments ? 'Yes' : 'No'}
+                                {selectedWorker.assignments && ` (${selectedWorker.assignments.length} items)`}
+                                {selectedWorkerLoading && ' - Loading...'}
+                              </div>
+                              
                               {selectedWorker.assignments && selectedWorker.assignments.length > 0 ? (
                                 <div className="space-y-4">
                                   {/* Group assignments by stage */}
