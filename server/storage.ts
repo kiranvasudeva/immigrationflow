@@ -157,6 +157,13 @@ export interface IStorage {
     worker?: Worker;
     stage: Stage;
   }>>;
+  
+  // RBAC helper methods
+  getWorkerAssignments(workerId: string): Promise<Assignment[]>;
+  getWorkerProfile(workerId: string): Promise<Worker | undefined>;
+  getClientsByOwner(ownerId: string): Promise<ClientProfile[]>;
+  getDocument(documentId: string): Promise<DocumentFile | undefined>;
+  getTemplate(templateId: string): Promise<DocumentTemplate | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -683,6 +690,30 @@ export class DatabaseStorage implements IStorage {
       .from(invitations)
       .where(eq(invitations.invitedByUserId, userId))
       .orderBy(desc(invitations.createdAt));
+  }
+  
+  // RBAC helper methods
+  async getWorkerAssignments(workerId: string): Promise<Assignment[]> {
+    return await db.select().from(assignments).where(eq(assignments.workerId, workerId));
+  }
+
+  async getWorkerProfile(workerId: string): Promise<Worker | undefined> {
+    const [worker] = await db.select().from(workers).where(eq(workers.id, workerId));
+    return worker;
+  }
+
+  async getClientsByOwner(ownerId: string): Promise<ClientProfile[]> {
+    return await db.select().from(clientProfiles).where(eq(clientProfiles.ownerUserId, ownerId));
+  }
+
+  async getDocument(documentId: string): Promise<DocumentFile | undefined> {
+    const [doc] = await db.select().from(documentFiles).where(eq(documentFiles.id, documentId));
+    return doc;
+  }
+
+  async getTemplate(templateId: string): Promise<DocumentTemplate | undefined> {
+    const [template] = await db.select().from(documentTemplates).where(eq(documentTemplates.id, templateId));
+    return template;
   }
 }
 

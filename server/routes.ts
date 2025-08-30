@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { auditMiddleware } from "./middleware/auth";
+import { requireRole, requireOwnership, requireRoleAndOwnership, applyTenantFilter, devRbacBypass } from "./middleware/rbac";
 import { governmentApiService } from "./services/government-api";
 import { ocrService } from "./services/ocr-service";
 import { workflowEngine } from "./services/workflow-engine";
@@ -64,21 +65,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return auditMiddleware(req, res, next);
   };
 
-  // Dashboard statistics
-  app.get('/api/dashboard/stats', devAuthBypass, devAuditBypass, async (req: any, res) => {
+  // Dashboard statistics - Role-based access
+  app.get('/api/dashboard/stats', devRbacBypass(requireRole(['ADMIN', 'OWNER'])), devAuditBypass, async (req: any, res) => {
     try {
       const stats = await storage.getDashboardStats();
-      res.json(stats);
+      // Apply tenant filtering for non-admin users
+      const filteredStats = process.env.NODE_ENV === 'development' ? stats : 
+        await applyTenantFilter(stats, req.user.dbUser.role, req.user.dbUser.id);
+      res.json(filteredStats);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
       res.status(500).json({ message: "Failed to fetch dashboard statistics" });
     }
   });
 
-  app.get('/api/dashboard/assignments', devAuthBypass, devAuditBypass, async (req: any, res) => {
+  app.get('/api/dashboard/assignments', devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER'])), devAuditBypass, async (req: any, res) => {
     try {
       const assignments = await storage.getAssignmentsWithDetails();
-      res.json(assignments);
+      // Apply tenant filtering for non-admin users
+      const filteredAssignments = process.env.NODE_ENV === 'development' ? assignments :
+        await applyTenantFilter(assignments, req.user.dbUser.role, req.user.dbUser.id);
+      res.json(filteredAssignments);
     } catch (error) {
       console.error("Error fetching assignments with details:", error);
       res.status(500).json({ message: "Failed to fetch assignments" });
@@ -120,15 +127,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Invitation routes
-  app.post('/api/invitations', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  // Invitation routes - Only ADMIN and OWNER can invite users
+  app.post('/api/invitations', devRbacBypass(requireRole(['ADMIN', 'OWNER'])), auditMiddleware, async (req: any, res) => {
     try {
-      const userEmail = req.user.claims.email;
-      const user = await storage.getUserByEmail(userEmail);
-      
-      if (user?.role !== 'ADMIN' && user?.role !== 'OWNER') {
-        return res.status(403).json({ message: "Unauthorized" });
-      }
+      const user = req.user.dbUser || await storage.getUserByEmail(req.user.claims?.email || 'admin@dev.local');
 
       const token = nanoid(32);
       const expiresAt = new Date();
@@ -156,14 +158,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/invitations', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  app.get('/api/invitations', devRbacBypass(requireRole(['ADMIN', 'OWNER'])), auditMiddleware, async (req: any, res) => {
     try {
-      const userEmail = req.user.claims.email;
-      const user = await storage.getUserByEmail(userEmail);
-      
-      if (user?.role !== 'ADMIN' && user?.role !== 'OWNER') {
-        return res.status(403).json({ message: "Unauthorized" });
-      }
+      const user = req.user.dbUser || await storage.getUserByEmail(req.user.claims?.email || 'admin@dev.local');
 
       const invitations = await storage.getInvitationsByUser(user.id);
       res.json(invitations);
@@ -194,14 +191,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Client Profile routes
-  app.get('/api/clients', devAuthBypass, devAuditBypass, async (req: any, res) => {
+  // Client Profile routes - Role-based access
+  app.get('/api/clients', devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])), devAuditBypass, async (req: any, res) => {
     try {
-      const userEmail = req.user.claims?.email || 'admin@dev.local';
-      const user = await storage.getUserByEmail(userEmail);
+      const user = req.user.dbUser || await storage.getUserByEmail(req.user.claims?.email || 'admin@dev.local');
       
+      let clients;
       if (user?.role === 'ADMIN') {
-        const clients = await storage.getAllClientProfiles();
+        clients = await storage.getAllClientProfiles();
         
         // Add worker count to each client
         const clientsWithWorkerCount = await Promise.all(
@@ -216,34 +213,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         res.json(clientsWithWorkerCount);
       } else if (user?.role === 'OWNER') {
-        const client = await storage.getClientProfileByOwnerId(user.id);
-        if (client) {
+        // Owners see only their own clients
+        clients = await storage.getClientsByOwner(user.id);
+      } else if (user?.role === 'WORKER') {
+        // Workers see clients from their assignments
+        const assignments = await storage.getWorkerAssignments(user.id);
+        const clientIds = [...new Set(assignments.map(a => a.clientProfileId))];
+        clients = await Promise.all(clientIds.map(id => storage.getClientProfile(id)));
+        clients = clients.filter(Boolean); // Remove nulls
+      } else {
+        // VIEWER role - no client access
+        clients = [];
+      }
+      
+      // Add worker count to each client
+      const clientsWithWorkerCount = await Promise.all(
+        clients.map(async (client) => {
           const workers = await storage.getWorkersByClientId(client.id);
-          const clientWithWorkerCount = {
+          return {
             ...client,
             activeWorkers: workers.length
           };
-          res.json([clientWithWorkerCount]);
-        } else {
-          res.json([]);
-        }
-      } else {
-        res.status(403).json({ message: "Unauthorized" });
-      }
+        })
+      );
+      
+      res.json(clientsWithWorkerCount);
     } catch (error) {
       console.error("Error fetching clients:", error);
       res.status(500).json({ message: "Failed to fetch clients" });
     }
   });
 
-  app.post('/api/clients', devAuthBypass, devAuditBypass, async (req: any, res) => {
+  app.post('/api/clients', devRbacBypass(requireRole(['ADMIN'])), devAuditBypass, async (req: any, res) => {
     try {
-      const userEmail = req.user.claims?.email || 'admin@dev.local';
-      const user = await storage.getUserByEmail(userEmail);
-      
-      if (user?.role !== 'ADMIN') {
-        return res.status(403).json({ message: "Only admins can create clients" });
-      }
+      const user = req.user.dbUser || await storage.getUserByEmail(req.user.claims?.email || 'admin@dev.local');
 
       const parsedData = insertClientProfileSchema.parse({
         ...req.body,
@@ -261,44 +264,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/clients/:id', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  app.get('/api/clients/:id', 
+    devRbacBypass(requireRole(['ADMIN', 'OWNER', 'WORKER', 'VIEWER'])), 
+    requireOwnership('client'),
+    auditMiddleware, 
+    async (req: any, res) => {
     try {
       const { id } = req.params;
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
       
       const client = await storage.getClientProfile(id);
       if (!client) {
         return res.status(404).json({ message: "Client not found" });
       }
 
-      // Check authorization
-      if (user?.role === 'ADMIN' || client.ownerUserId === userId) {
-        res.json(client);
-      } else {
-        res.status(403).json({ message: "Unauthorized" });
-      }
+      res.json(client);
     } catch (error) {
       console.error("Error fetching client:", error);
       res.status(500).json({ message: "Failed to fetch client" });
     }
   });
 
-  app.put('/api/clients/:id', isAuthenticated, auditMiddleware, async (req: any, res) => {
+  app.put('/api/clients/:id',
+    devRbacBypass(requireRole(['ADMIN', 'OWNER'])),
+    requireOwnership('client'),
+    auditMiddleware,
+    async (req: any, res) => {
     try {
       const { id } = req.params;
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      const client = await storage.getClientProfile(id);
-      if (!client) {
-        return res.status(404).json({ message: "Client not found" });
-      }
-
-      // Check authorization
-      if (user?.role !== 'ADMIN' && client.ownerUserId !== userId) {
-        return res.status(403).json({ message: "Unauthorized" });
-      }
 
       const parsedData = insertClientProfileSchema.omit({ id: true, ownerUserId: true }).parse(req.body);
       
