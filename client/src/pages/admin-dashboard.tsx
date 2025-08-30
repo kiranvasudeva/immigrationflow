@@ -844,7 +844,7 @@ export default function AdminDashboard() {
   });
 
   // Fetch workers for selected client
-  const { data: directWorkers = [] } = useQuery({
+  const { data: directWorkers = [] } = useQuery<any[]>({
     queryKey: ["/api/clients", selectedClient?.id, "workers"],
     enabled: isAuthenticated && !isLoading && !!selectedClient?.id,
   });
@@ -2233,6 +2233,9 @@ export default function AdminDashboard() {
                   </Card>
                 </div>
               )}
+
+              {/* Client Workers Section - Mobile */}
+              {activeSection === "clients" && selectedClient && !selectedWorker && (
                     <Card>
                       <CardHeader>
                         <div className="flex items-center justify-between">
@@ -2372,7 +2375,10 @@ export default function AdminDashboard() {
                         })()}
                       </CardContent>
                     </Card>
-                  ) : (
+              )}
+
+              {/* Selected Worker Details Section - Mobile */}
+              {activeSection === "clients" && selectedClient && selectedWorker && (
                     // Step 3: Show detailed workflow for selected worker
                     <Card>
                       <CardHeader>
@@ -2538,8 +2544,6 @@ export default function AdminDashboard() {
                         </div>
                       </CardContent>
                     </Card>
-                  )}
-                </div>
               )}
 
               {/* Reports Section */}
