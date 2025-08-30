@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Building, Mail, Phone, MapPin, CreditCard, Edit, Save, X, User, Plus } from "lucide-react";
+import { ArrowLeft, Building, Mail, Phone, MapPin, CreditCard, Edit, Save, X, User, Plus, Calendar, Globe, CheckCircle, Clock, AlertTriangle, FileText, Upload, Download, Eye, Progress } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useTranslation } from "@/contexts/LanguageContext";
 
@@ -22,6 +22,8 @@ export default function ClientProfile() {
   const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null);
+  const [isEditingWorker, setIsEditingWorker] = useState(false);
   
   // Extract client ID from URL
   const clientId = location.split('/clients/')[1];
@@ -63,6 +65,12 @@ export default function ClientProfile() {
       }
       return failureCount < 3;
     }
+  });
+
+  // Fetch selected worker details with workflow
+  const { data: selectedWorker, isLoading: selectedWorkerLoading } = useQuery({
+    queryKey: ['/api/workers', selectedWorkerId],
+    enabled: !!selectedWorkerId && isAuthenticated,
   });
 
 
@@ -450,7 +458,7 @@ export default function ClientProfile() {
                             <div 
                               key={worker.id} 
                               className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                              onClick={() => setLocation(`/workers/${worker.id}`)}
+                              onClick={() => setSelectedWorkerId(worker.id)}
                               data-testid={`worker-card-${worker.id}`}
                             >
                               <div className="flex items-center space-x-3">
@@ -527,6 +535,329 @@ export default function ClientProfile() {
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Selected Worker Details Section */}
+                  {selectedWorkerId && selectedWorker && (
+                    <Card className="lg:col-span-2">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                        <div className="flex items-center space-x-3">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => setSelectedWorkerId(null)}
+                            data-testid="button-close-worker-details"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                          <div>
+                            <CardTitle className="text-xl">
+                              {selectedWorker.firstName} {selectedWorker.lastName}
+                            </CardTitle>
+                            <p className="text-sm text-gray-600">
+                              Worker Details & Immigration Workflow
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {!isEditingWorker ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setIsEditingWorker(true)}
+                              data-testid="button-edit-worker"
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Worker
+                            </Button>
+                          ) : (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsEditingWorker(false)}
+                                data-testid="button-cancel-worker-edit"
+                              >
+                                <X className="h-4 w-4 mr-2" />
+                                Cancel
+                              </Button>
+                              <Button
+                                size="sm"
+                                data-testid="button-save-worker"
+                              >
+                                <Save className="h-4 w-4 mr-2" />
+                                Save Changes
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        {selectedWorkerLoading ? (
+                          <div className="flex justify-center py-8">
+                            <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+                          </div>
+                        ) : (
+                          <>
+                            {/* Personal Information */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                                  Personal Information
+                                </h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                      First Name
+                                    </label>
+                                    {isEditingWorker ? (
+                                      <Input
+                                        value={selectedWorker.firstName}
+                                        data-testid="input-worker-first-name"
+                                      />
+                                    ) : (
+                                      <p className="text-gray-900" data-testid="text-worker-first-name">
+                                        {selectedWorker.firstName}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                      Last Name
+                                    </label>
+                                    {isEditingWorker ? (
+                                      <Input
+                                        value={selectedWorker.lastName}
+                                        data-testid="input-worker-last-name"
+                                      />
+                                    ) : (
+                                      <p className="text-gray-900" data-testid="text-worker-last-name">
+                                        {selectedWorker.lastName}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Nationality
+                                  </label>
+                                  {isEditingWorker ? (
+                                    <Input
+                                      value={selectedWorker.nationality}
+                                      data-testid="input-worker-nationality"
+                                    />
+                                  ) : (
+                                    <div className="flex items-center space-x-2">
+                                      <Globe className="h-4 w-4 text-gray-500" />
+                                      <p className="text-gray-900" data-testid="text-worker-nationality">
+                                        {selectedWorker.nationality}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Date of Birth
+                                  </label>
+                                  <div className="flex items-center space-x-2">
+                                    <Calendar className="h-4 w-4 text-gray-500" />
+                                    <p className="text-gray-900" data-testid="text-worker-dob">
+                                      {new Date(selectedWorker.dob).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                                  Contact & Document Info
+                                </h3>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Email
+                                  </label>
+                                  {isEditingWorker ? (
+                                    <Input
+                                      value={selectedWorker.email}
+                                      data-testid="input-worker-email"
+                                    />
+                                  ) : (
+                                    <div className="flex items-center space-x-2">
+                                      <Mail className="h-4 w-4 text-gray-500" />
+                                      <p className="text-gray-900" data-testid="text-worker-email">
+                                        {selectedWorker.email}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Phone
+                                  </label>
+                                  {isEditingWorker ? (
+                                    <Input
+                                      value={selectedWorker.phone}
+                                      data-testid="input-worker-phone"
+                                    />
+                                  ) : (
+                                    <div className="flex items-center space-x-2">
+                                      <Phone className="h-4 w-4 text-gray-500" />
+                                      <p className="text-gray-900" data-testid="text-worker-phone">
+                                        {selectedWorker.phone}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Passport Number
+                                  </label>
+                                  <div className="flex items-center space-x-2">
+                                    <CreditCard className="h-4 w-4 text-gray-500" />
+                                    <Badge variant="outline" data-testid="badge-worker-passport">
+                                      {selectedWorker.passportNumber}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Passport Expires
+                                  </label>
+                                  <div className="flex items-center space-x-2">
+                                    <Calendar className="h-4 w-4 text-gray-500" />
+                                    <p className="text-gray-900" data-testid="text-worker-passport-expiry">
+                                      {new Date(selectedWorker.passportExpiry).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Immigration Workflow */}
+                            <div className="space-y-4">
+                              <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                                Immigration Workflow Status
+                              </h3>
+                              
+                              {selectedWorker.assignments && selectedWorker.assignments.length > 0 ? (
+                                <div className="space-y-4">
+                                  {/* Group assignments by stage */}
+                                  {Object.entries(
+                                    selectedWorker.assignments.reduce((acc, assignment) => {
+                                      const stageKey = assignment.requirement.stage.key;
+                                      if (!acc[stageKey]) {
+                                        acc[stageKey] = {
+                                          stage: assignment.requirement.stage,
+                                          assignments: []
+                                        };
+                                      }
+                                      acc[stageKey].assignments.push(assignment);
+                                      return acc;
+                                    }, {} as Record<string, {stage: any, assignments: any[]}>)
+                                  )
+                                  .sort(([,a], [,b]) => a.stage.order - b.stage.order)
+                                  .map(([stageKey, {stage, assignments}]) => (
+                                    <Card key={stageKey} className="border-l-4 border-l-blue-500">
+                                      <CardHeader className="pb-3">
+                                        <CardTitle className="flex items-center justify-between text-base">
+                                          <span className="flex items-center space-x-2">
+                                            <FileText className="h-5 w-5 text-blue-600" />
+                                            <span>{stage.title}</span>
+                                            <Badge variant="outline" className="ml-2">
+                                              Stage {stage.order}
+                                            </Badge>
+                                          </span>
+                                          <div className="text-sm text-gray-600">
+                                            {assignments.length} requirement{assignments.length !== 1 ? 's' : ''}
+                                          </div>
+                                        </CardTitle>
+                                      </CardHeader>
+                                      <CardContent className="space-y-3">
+                                        {assignments.map((assignment) => (
+                                          <div 
+                                            key={assignment.id} 
+                                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                                            data-testid={`assignment-${assignment.id}`}
+                                          >
+                                            <div className="flex-1">
+                                              <h4 className="font-medium text-gray-900">
+                                                {assignment.requirement.title}
+                                              </h4>
+                                              <p className="text-sm text-gray-600 mt-1">
+                                                {assignment.requirement.description}
+                                              </p>
+                                              <div className="flex items-center space-x-4 mt-2">
+                                                <div className="flex items-center space-x-2">
+                                                  {assignment.status === 'APPROVED' && (
+                                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                                  )}
+                                                  {assignment.status === 'SUBMITTED_BY_USER' && (
+                                                    <Clock className="h-4 w-4 text-yellow-600" />
+                                                  )}
+                                                  {assignment.status === 'AWAITING_UPLOAD' && (
+                                                    <Upload className="h-4 w-4 text-blue-600" />
+                                                  )}
+                                                  {assignment.status === 'NOT_STARTED' && (
+                                                    <AlertTriangle className="h-4 w-4 text-gray-400" />
+                                                  )}
+                                                  {assignment.status === 'RECEIVED_BY_ADMIN' && (
+                                                    <Eye className="h-4 w-4 text-purple-600" />
+                                                  )}
+                                                  <Badge 
+                                                    variant={
+                                                      assignment.status === 'APPROVED' ? 'default' : 
+                                                      assignment.status === 'SUBMITTED_BY_USER' ? 'secondary' :
+                                                      assignment.status === 'AWAITING_UPLOAD' ? 'outline' :
+                                                      assignment.status === 'RECEIVED_BY_ADMIN' ? 'secondary' :
+                                                      'outline'
+                                                    }
+                                                    className="text-xs"
+                                                    data-testid={`status-${assignment.id}`}
+                                                  >
+                                                    {assignment.status.replace(/_/g, ' ')}
+                                                  </Badge>
+                                                </div>
+                                                
+                                                {assignment.documentFiles && assignment.documentFiles.length > 0 && (
+                                                  <div className="flex items-center space-x-1 text-sm text-gray-600">
+                                                    <FileText className="h-4 w-4" />
+                                                    <span>{assignment.documentFiles.length} file{assignment.documentFiles.length !== 1 ? 's' : ''}</span>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+                                            
+                                            <div className="flex space-x-2">
+                                              {assignment.status === 'AWAITING_UPLOAD' && (
+                                                <Button size="sm" variant="outline" data-testid={`button-upload-${assignment.id}`}>
+                                                  <Upload className="h-4 w-4 mr-1" />
+                                                  Upload
+                                                </Button>
+                                              )}
+                                              {assignment.documentFiles && assignment.documentFiles.length > 0 && (
+                                                <Button size="sm" variant="outline" data-testid={`button-view-docs-${assignment.id}`}>
+                                                  <Eye className="h-4 w-4 mr-1" />
+                                                  View Docs
+                                                </Button>
+                                              )}
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </CardContent>
+                                    </Card>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-center py-8">
+                                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                                  <p className="text-gray-600">No workflow assignments found for this worker</p>
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               )}
             </div>
