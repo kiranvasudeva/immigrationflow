@@ -80,6 +80,9 @@ export default function AdminDashboard() {
 
     if (activeSection === 'overview') {
       setBreadcrumbs([]);
+    } else if (activeSection === 'clients' && !selectedClient) {
+      // Don't show breadcrumbs for main clients list
+      setBreadcrumbs([]);
     } else if (selectedClient && (activeSection === 'clients' || activeSection === 'workers')) {
       const baseBreadcrumb = breadcrumbMap[activeSection];
       setBreadcrumbs([
@@ -1011,6 +1014,129 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <Card data-testid="card-clients">
                 <CardContent className="p-6">
+                  {/* Selected Client Details */}
+                  {selectedClient && (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <Button
+                          variant="ghost"
+                          onClick={() => setSelectedClient(null)}
+                          className="text-primary hover:text-primary/80"
+                        >
+                          <i className="fas fa-arrow-left mr-2"></i>
+                          Back to Clients
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setEditingClient(!editingClient)}
+                        >
+                          <i className={`fas ${editingClient ? 'fa-save' : 'fa-edit'} mr-2`}></i>
+                          {editingClient ? 'Save' : 'Edit'}
+                        </Button>
+                      </div>
+                      
+                      <div className="bg-blue-50 rounded-lg p-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center">
+                              <i className="fas fa-building text-white text-xl"></i>
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900">{selectedClient.legalName}</h3>
+                              <p className="text-gray-600">CUI: {selectedClient.cui}</p>
+                              <div className="flex flex-wrap items-center mt-2 gap-x-4 gap-y-1 text-sm">
+                                <span className="text-gray-600">
+                                  <i className="fas fa-map-marker-alt mr-1"></i>
+                                  {selectedClient.legalAddress || 'Address not provided'}
+                                </span>
+                                <span className="text-gray-600">
+                                  <i className="fas fa-phone mr-1"></i>
+                                  {selectedClient.phoneNumber || 'Phone not provided'}
+                                </span>
+                                <span className="text-gray-600">
+                                  <i className="fas fa-envelope mr-1"></i>
+                                  {selectedClient.contactEmail || 'Email not provided'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="bg-white rounded-lg px-4 py-2 text-center">
+                              <p className="text-2xl font-bold text-primary">{selectedClient.activeWorkers || 0}</p>
+                              <p className="text-xs text-gray-600">Active Workers</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Client Details Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-gray-900">Company Information</h4>
+                          <div className="space-y-3 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Registration Number:</span>
+                              <span className="font-medium">{selectedClient.registrationNumber || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">CAEN Code:</span>
+                              <span className="font-medium">{selectedClient.caen || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Bank IBAN:</span>
+                              <span className="font-medium">{selectedClient.bankIban || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Status:</span>
+                              <span className={`font-medium ${selectedClient.status === 'active' ? 'text-green-600' : 'text-gray-600'}`}>
+                                {selectedClient.status || 'Active'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-gray-900">Contact Information</h4>
+                          <div className="space-y-3 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Administrator:</span>
+                              <span className="font-medium">{selectedClient.adminName || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Created:</span>
+                              <span className="font-medium">
+                                {selectedClient.createdAt ? new Date(selectedClient.createdAt).toLocaleDateString() : 'N/A'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Workers:</span>
+                              <span className="font-medium">{selectedClient.activeWorkers || 0} active</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Quick Actions */}
+                      <div className="border-t pt-6">
+                        <h4 className="font-semibold text-gray-900 mb-4">Quick Actions</h4>
+                        <div className="flex flex-wrap gap-3">
+                          <Button variant="outline" size="sm">
+                            <i className="fas fa-users mr-2"></i>
+                            View Workers ({selectedClient.activeWorkers || 0})
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <i className="fas fa-file-alt mr-2"></i>
+                            Documents
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <i className="fas fa-chart-line mr-2"></i>
+                            Reports
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Client List View */}
                   {!selectedClient && !showNewClientForm && (
                     <div className="space-y-4">
