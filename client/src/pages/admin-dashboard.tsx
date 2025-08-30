@@ -435,9 +435,9 @@ export default function AdminDashboard() {
                 )}
 
                 {/* Clients List */}
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                   {filteredClients.length === 0 ? (
-                    <Card>
+                    <Card className="lg:col-span-2 xl:col-span-3">
                       <CardContent className="py-8 text-center">
                         <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No clients found</h3>
@@ -448,7 +448,7 @@ export default function AdminDashboard() {
                     </Card>
                   ) : (
                     filteredClients.map((client: any) => (
-                      <Card key={client.id} className="hover:shadow-md transition-shadow">
+                      <Card key={client.id} className="hover:shadow-md transition-shadow h-fit">
                         <CardHeader>
                           <div className="flex items-center justify-between">
                             <div className="space-y-1">
