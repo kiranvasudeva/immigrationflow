@@ -245,68 +245,10 @@ export default function AdminDashboard() {
             </div>
           </div>
           
-          {/* Navigation Tabs */}
-          <div className="flex space-x-1 border-b border-gray-200">
-            <button
-              onClick={() => setActiveSection('overview')}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
-                activeSection === 'overview'
-                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-              data-testid="tab-overview"
-            >
-              Overview
-            </button>
-            <button
-              onClick={() => setActiveSection('workflows')}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
-                activeSection === 'workflows'
-                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-              data-testid="tab-workflows"
-            >
-              Workflow Templates
-            </button>
-            <button
-              onClick={() => setActiveSection('clients')}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
-                activeSection === 'clients'
-                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-              data-testid="tab-clients"
-            >
-              Clients
-            </button>
-            <button
-              onClick={() => setActiveSection('workers')}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
-                activeSection === 'workers'
-                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-              data-testid="tab-workers"
-            >
-              Workers
-            </button>
-            <button
-              onClick={() => setActiveSection('activity')}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
-                activeSection === 'activity'
-                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-              data-testid="tab-activity"
-            >
-              Activity
-            </button>
-          </div>
         </div>
 
-        {/* Dashboard Statistics - Only show on overview */}
-        {activeSection === 'overview' && stats && (
+        {/* Dashboard Statistics */}
+        {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <Card>
               <CardHeader className="pb-2">
