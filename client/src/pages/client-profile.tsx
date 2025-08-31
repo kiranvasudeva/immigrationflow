@@ -114,6 +114,12 @@ export default function ClientProfile() {
     enabled: !!selectedWorkerId && isAuthenticated,
   });
 
+  // Fetch workflow data for selected worker
+  const { data: workerWorkflowData, isLoading: workflowLoading } = useQuery<any>({
+    queryKey: ['/api/workflow/worker', selectedWorkerId],
+    enabled: !!selectedWorkerId && isAuthenticated,
+  });
+
   // Debug logging
   console.log('🔍 Client ID:', clientId);
   console.log('🔍 Workers Data:', workers);
@@ -802,115 +808,115 @@ export default function ClientProfile() {
                               
                               {/* Debug info */}
                               <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
-                                Debug: Has assignments: {selectedWorker.assignments ? 'Yes' : 'No'}
-                                {selectedWorker.assignments && ` (${selectedWorker.assignments.length} items)`}
-                                {selectedWorkerLoading && ' - Loading...'}
+                                Debug: Workflow data: {workerWorkflowData ? 'Yes' : 'No'}
+                                {workerWorkflowData && ` (${workerWorkflowData.stages?.length || 0} stages)`}
+                                {workflowLoading && ' - Loading workflow...'}
                               </div>
                               
-                              {selectedWorker.assignments && selectedWorker.assignments.length > 0 ? (
+                              {workflowLoading ? (
+                                <div className="flex items-center justify-center p-8">
+                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                  <span className="ml-2 text-gray-600">Loading workflow data...</span>
+                                </div>
+                              ) : workerWorkflowData && workerWorkflowData.stages && workerWorkflowData.stages.length > 0 ? (
                                 <div className="space-y-4">
-                                  {/* Group assignments by stage */}
-                                  {Object.entries(
-                                    selectedWorker.assignments.reduce((acc, assignment) => {
-                                      const stageKey = assignment.requirement.stage.key;
-                                      if (!acc[stageKey]) {
-                                        acc[stageKey] = {
-                                          stage: assignment.requirement.stage,
-                                          assignments: []
-                                        };
-                                      }
-                                      acc[stageKey].assignments.push(assignment);
-                                      return acc;
-                                    }, {} as Record<string, {stage: any, assignments: any[]}>)
-                                  )
-                                  .sort(([,a], [,b]) => a.stage.order - b.stage.order)
-                                  .map(([stageKey, {stage, assignments}]) => (
-                                    <Card key={stageKey} className="border-l-4 border-l-blue-500">
+                                  {/* Display workflow stages from settings */}
+                                  {workerWorkflowData.stages.map((stage: any, index: number) => (
+                                    <Card key={stage.id} className="border-l-4 border-l-blue-500">
                                       <CardHeader className="pb-3">
                                         <CardTitle className="flex items-center justify-between text-base">
                                           <span className="flex items-center space-x-2">
                                             <FileText className="h-5 w-5 text-blue-600" />
-                                            <span>{stage.title}</span>
+                                            <span>{stage.name}</span>
                                             <Badge variant="outline" className="ml-2">
-                                              Stage {stage.order}
+                                              Stage {index + 1}
+                                            </Badge>
+                                            <Badge 
+                                              variant={stage.status === 'in-progress' ? 'default' : 'secondary'}
+                                              className="ml-2"
+                                            >
+                                              {stage.status || 'pending'}
                                             </Badge>
                                           </span>
                                           <div className="text-sm text-gray-600">
-                                            {assignments.length} requirement{assignments.length !== 1 ? 's' : ''}
+                                            {stage.documentRequirements?.length || 0} requirement{(stage.documentRequirements?.length || 0) !== 1 ? 's' : ''}
                                           </div>
                                         </CardTitle>
+                                        <p className="text-sm text-gray-600 mt-1">{stage.description}</p>
                                       </CardHeader>
                                       <CardContent className="space-y-3">
-                                        {assignments.map((assignment) => (
-                                          <div 
-                                            key={assignment.id} 
-                                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                                            data-testid={`assignment-${assignment.id}`}
-                                          >
+                                        {stage.documentRequirements && stage.documentRequirements.length > 0 ? (
+                                          stage.documentRequirements.map((doc: any) => (
+                                            <div 
+                                              key={doc.id} 
+                                              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                                              data-testid={`document-${doc.id}`}
+                                            >
                                             <div className="flex-1">
                                               <h4 className="font-medium text-gray-900">
-                                                {assignment.requirement.title}
+                                                {doc.title}
                                               </h4>
                                               <p className="text-sm text-gray-600 mt-1">
-                                                {assignment.requirement.description}
+                                                {doc.description}
                                               </p>
                                               <div className="flex items-center space-x-4 mt-2">
                                                 <div className="flex items-center space-x-2">
-                                                  {assignment.status === 'APPROVED' && (
+                                                  {doc.status === 'completed' && (
                                                     <CheckCircle className="h-4 w-4 text-green-600" />
                                                   )}
-                                                  {assignment.status === 'SUBMITTED_BY_USER' && (
+                                                  {doc.status === 'in-review' && (
                                                     <Clock className="h-4 w-4 text-yellow-600" />
                                                   )}
-                                                  {assignment.status === 'AWAITING_UPLOAD' && (
+                                                  {doc.status === 'pending' && (
                                                     <Upload className="h-4 w-4 text-blue-600" />
                                                   )}
-                                                  {assignment.status === 'NOT_STARTED' && (
+                                                  {doc.status === 'not-started' && (
                                                     <AlertTriangle className="h-4 w-4 text-gray-400" />
-                                                  )}
-                                                  {assignment.status === 'RECEIVED_BY_ADMIN' && (
-                                                    <Eye className="h-4 w-4 text-purple-600" />
                                                   )}
                                                   <Badge 
                                                     variant={
-                                                      assignment.status === 'APPROVED' ? 'default' : 
-                                                      assignment.status === 'SUBMITTED_BY_USER' ? 'secondary' :
-                                                      assignment.status === 'AWAITING_UPLOAD' ? 'outline' :
-                                                      assignment.status === 'RECEIVED_BY_ADMIN' ? 'secondary' :
+                                                      doc.status === 'completed' ? 'default' : 
+                                                      doc.status === 'in-review' ? 'secondary' :
+                                                      doc.status === 'pending' ? 'outline' :
                                                       'outline'
                                                     }
                                                     className="text-xs"
-                                                    data-testid={`status-${assignment.id}`}
+                                                    data-testid={`status-${doc.id}`}
                                                   >
-                                                    {assignment.status.replace(/_/g, ' ')}
+                                                    {doc.status || 'not-started'}
                                                   </Badge>
                                                 </div>
                                                 
-                                                {assignment.documentFiles && assignment.documentFiles.length > 0 && (
+                                                {doc.uploadedFiles && doc.uploadedFiles.length > 0 && (
                                                   <div className="flex items-center space-x-1 text-sm text-gray-600">
                                                     <FileText className="h-4 w-4" />
-                                                    <span>{assignment.documentFiles.length} file{assignment.documentFiles.length !== 1 ? 's' : ''}</span>
+                                                    <span>{doc.uploadedFiles.length} file{doc.uploadedFiles.length !== 1 ? 's' : ''}</span>
                                                   </div>
                                                 )}
                                               </div>
                                             </div>
                                             
                                             <div className="flex space-x-2">
-                                              {assignment.status === 'AWAITING_UPLOAD' && (
-                                                <Button size="sm" variant="outline" data-testid={`button-upload-${assignment.id}`}>
+                                              {doc.status === 'pending' && (
+                                                <Button size="sm" variant="outline" data-testid={`button-upload-${doc.id}`}>
                                                   <Upload className="h-4 w-4 mr-1" />
                                                   Upload
                                                 </Button>
                                               )}
-                                              {assignment.documentFiles && assignment.documentFiles.length > 0 && (
-                                                <Button size="sm" variant="outline" data-testid={`button-view-docs-${assignment.id}`}>
+                                              {doc.uploadedFiles && doc.uploadedFiles.length > 0 && (
+                                                <Button size="sm" variant="outline" data-testid={`button-view-docs-${doc.id}`}>
                                                   <Eye className="h-4 w-4 mr-1" />
                                                   View Docs
                                                 </Button>
                                               )}
                                             </div>
                                           </div>
-                                        ))}
+                                          ))
+                                        ) : (
+                                          <div className="text-center py-4 text-gray-500">
+                                            No document requirements for this stage
+                                          </div>
+                                        )}
                                       </CardContent>
                                     </Card>
                                   ))}
@@ -918,7 +924,7 @@ export default function ClientProfile() {
                               ) : (
                                 <div className="text-center py-8">
                                   <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                                  <p className="text-gray-600">No workflow assignments found for this worker</p>
+                                  <p className="text-gray-600">No workflow data found for this worker</p>
                                 </div>
                               )}
                             </div>
