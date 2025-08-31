@@ -214,7 +214,7 @@ export default function WorkerProfile() {
       progress: stage.status === 'completed' ? 100 : stage.status === 'in-progress' ? 50 : 0,
       completed: stage.status === 'completed' ? 1 : 0,
       total: 1,
-      status: stage.status
+      status: stage.status === 'pending' ? 'not-started' : stage.status
     }));
 
     const overallProgress = stages.length > 0 ? 
@@ -537,8 +537,11 @@ export default function WorkerProfile() {
                           {/* Workflow Title */}
                           <div className="border-b border-gray-200 pb-4">
                             <h3 className="text-lg font-semibold text-gray-900" data-testid="workflow-title">
-                              {workerWorkflowData.workflowTitle || 'Immigration Workflow'}
+                              {workerWorkflowData.name || 'No Workflow Assigned'}
                             </h3>
+                            {workerWorkflowData.description && (
+                              <p className="text-sm text-gray-600 mt-1">{workerWorkflowData.description}</p>
+                            )}
                             <p className="text-sm text-gray-600 mt-1">
                               Progress: {Math.round((stages.filter((s: any) => s.status === 'completed').length / stages.length) * 100) || 0}% complete
                             </p>

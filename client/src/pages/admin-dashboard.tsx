@@ -921,7 +921,7 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker }: {
             {/* Worker Workflow Details */}
             {selectedWorker?.id === worker.id && (
               <div className="mt-4 pt-4 border-t border-gray-100">
-                <h5 className="font-medium text-gray-900 mb-3">Immigration Workflow Status</h5>
+                <h5 className="font-medium text-gray-900 mb-3">Workflow Status</h5>
                 
                 {workerAssignments.length > 0 ? (
                   <div className="space-y-3">
