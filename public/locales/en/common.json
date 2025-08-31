@@ -33,6 +33,7 @@
   "warning": "Warning",
   "info": "Information",
   "totalClients": "Total Clients",
+  "assignWorkflowsToWorkers": "Assign workflows to workers and track their progress through the Romanian immigration process",
   "activeWorkers": "Active Workers",
   "pendingActions": "Pending Actions",
   "completedMonth": "Completed This Month",

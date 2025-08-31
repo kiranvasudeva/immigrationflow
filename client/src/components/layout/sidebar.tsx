@@ -68,6 +68,7 @@ export default function Sidebar({ userRole, onSectionChange, currentSection }: S
         return [
           ...commonItems,
           { icon: 'fas fa-building', label: 'Clients & Workers', href: '/clients', sectionKey: 'clients', active: isActive('/clients', 'clients') },
+          { icon: 'fas fa-project-diagram', label: 'Workflow Assignments', href: '/workflow-assignments', sectionKey: 'workflow', active: isActive('/workflow-assignments', 'workflow') },
           { icon: 'fas fa-file-text', label: 'Templates', href: '/templates', sectionKey: 'documents', active: isActive('/templates', 'documents') },
           { icon: 'fas fa-chart-line', label: 'Reports', href: '/reports', sectionKey: 'reports', active: isActive('/reports', 'reports') },
           { icon: 'fas fa-clipboard-list', label: 'Requirements', href: '/requirements', sectionKey: 'requirements', active: isActive('/requirements', 'requirements') },

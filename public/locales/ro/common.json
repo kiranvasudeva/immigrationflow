@@ -33,6 +33,7 @@
   "warning": "Avertisment",
   "info": "Informație",
   "totalClients": "Total Clienți",
+  "assignWorkflowsToWorkers": "Atribuie fluxuri de lucru lucrătorilor și urmărește progresul lor prin procesul de imigrare românesc",
   "activeWorkers": "Lucrători Activi",
   "pendingActions": "Acțiuni în Așteptare",
   "completedMonth": "Completate Luna Aceasta",

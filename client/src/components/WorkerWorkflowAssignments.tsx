@@ -307,11 +307,6 @@ export default function WorkerWorkflowAssignments() {
                       <div>
                         <h4 className="font-semibold">{`${worker.firstName} ${worker.lastName}`}</h4>
                         <p className="text-sm text-gray-600">{worker.email || 'No email'}</p>
-                        {worker.position && (
-                          <Badge variant="outline" className="mt-1">
-                            {worker.position}
-                          </Badge>
-                        )}
                       </div>
                       <Badge variant="secondary">
                         {worker.assignedWorkflowIds?.length || 0} active workflows

@@ -30,6 +30,7 @@ import RemindersPage from "@/pages/reminders";
 import PaymentsPage from "@/pages/payments";
 import WorkersPage from "@/pages/workers";
 import ClientsPage from "@/pages/clients";
+import WorkflowAssignmentsPage from "@/pages/workflow-assignments";
 import { User } from "@shared/schema";
 
 function Router() {
@@ -84,6 +85,7 @@ function Router() {
                 <Route path="/clients/:id" component={ClientProfile} />
                 <Route path="/workers" component={WorkersPage} />
                 <Route path="/workers/:id" component={WorkerProfile} />
+                <Route path="/workflow-assignments" component={WorkflowAssignmentsPage} />
                 <Route path="/requirements" component={RequirementsPage} />
                 <Route path="/reminders" component={RemindersPage} />
                 <Route path="/audit" component={AuditLogsPage} />
