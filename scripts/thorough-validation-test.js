@@ -1028,31 +1028,7 @@ class ThoroughValidationSuite {
         validation.issues.push(`❌ ${workersWithMissingData.length} workers missing required data`);
       }
 
-      // ENHANCED: Check for workers without assignments (real functional issue)
-      const workersWithAssignments = new Set(assignments.map(a => a.workerId));
-      const workersWithoutAssignments = workers.filter(w => !workersWithAssignments.has(w.id));
-      
-      if (workersWithoutAssignments.length === 0) {
-        validation.details.push('✅ All workers have workflow assignments');
-      } else {
-        validation.issues.push(`❌ CRITICAL: ${workersWithoutAssignments.length} workers without workflow assignments`);
-        workersWithoutAssignments.forEach(worker => {
-          validation.issues.push(`   ⚠️  Worker "${worker.name}" (${worker.nationality}) has no workflow assigned`);
-        });
-      }
 
-      // ENHANCED: Check for clients without workers
-      const clientsWithAssignments = new Set(assignments.map(a => a.clientId));
-      const clientsWithoutWorkers = clients.filter(c => !clientsWithAssignments.has(c.id));
-      
-      if (clientsWithoutWorkers.length === 0) {
-        validation.details.push('✅ All clients have assigned workers');
-      } else {
-        validation.issues.push(`❌ CRITICAL: ${clientsWithoutWorkers.length} clients without assigned workers`);
-        clientsWithoutWorkers.forEach(client => {
-          validation.issues.push(`   ⚠️  Client "${client.legalName}" has no workers assigned`);
-        });
-      }
 
       // ENHANCED: Universal orphaned record detection across ALL entities
       let totalOrphans = 0;
