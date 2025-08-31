@@ -689,6 +689,7 @@ export default function AdminDashboard() {
                               selectedWorker={selectedWorker}
                               setSelectedWorker={setSelectedWorker}
                               isAuthenticated={isAuthenticated}
+                              user={user}
                             />
                           )}
                         </CardContent>
@@ -752,11 +753,12 @@ export default function AdminDashboard() {
 }
 
 // Component for displaying workers for a specific client
-function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker, isAuthenticated }: { 
+function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker, isAuthenticated, user }: { 
   clientId: string; 
   selectedWorker: any; 
   setSelectedWorker: (worker: any) => void; 
   isAuthenticated: boolean;
+  user: any;
 }) {
   const [workerSearchTerm, setWorkerSearchTerm] = useState("");
 

@@ -450,6 +450,7 @@ export default function ClientsPage() {
                       selectedWorker={selectedWorker}
                       setSelectedWorker={setSelectedWorker}
                       isAuthenticated={isAuthenticated}
+                      user={user}
                     />
                   )}
                 </CardContent>
@@ -578,11 +579,12 @@ export default function ClientsPage() {
 }
 
 // Component for displaying workers for a specific client (copied from Dashboard)
-function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker, isAuthenticated }: { 
+function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker, isAuthenticated, user }: { 
   clientId: string; 
   selectedWorker: any; 
   setSelectedWorker: (worker: any) => void; 
   isAuthenticated: boolean;
+  user: any;
 }) {
   const [workerSearchTerm, setWorkerSearchTerm] = useState("");
 
