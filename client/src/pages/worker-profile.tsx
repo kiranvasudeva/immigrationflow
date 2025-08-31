@@ -120,6 +120,12 @@ export default function WorkerProfile() {
     }
   });
 
+  // Fetch workflow data for this worker
+  const { data: workerWorkflowData, isLoading: workflowLoading } = useQuery<any>({
+    queryKey: ['/api/workflow/worker', workerId],
+    enabled: !!workerId && isAuthenticated,
+  });
+
   // Update worker mutation
   const updateWorkerMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -196,40 +202,22 @@ export default function WorkerProfile() {
     setIsEditing(false);
   };
 
-  // Calculate workflow progress
+  // Calculate workflow progress from real workflow data
   const getWorkflowProgress = () => {
-    if (!worker?.assignments) return { overall: 0, stages: [] };
+    if (!workerWorkflowData?.stages) return { overall: 0, stages: [] };
     
-    const stageData = {
-      'AJOFM': { completed: 0, total: 0, title: 'AJOFM', order: 1 },
-      'IGI_WORK_PERMIT': { completed: 0, total: 0, title: 'Work Permit', order: 2 },
-      'CONSULATE_VISA': { completed: 0, total: 0, title: 'Visa D/AM', order: 3 },
-      'IGI_RESIDENCE': { completed: 0, total: 0, title: 'Residence Permit', order: 4 }
-    };
-
-    worker.assignments.forEach(assignment => {
-      const stageKey = assignment.requirement.stage.key;
-      if (stageData[stageKey]) {
-        stageData[stageKey].total++;
-        if (['ACCEPTED', 'SUBMITTED_TO_INSTITUTION_DIGITAL', 'SUBMITTED_TO_INSTITUTION_COURIER'].includes(assignment.status)) {
-          stageData[stageKey].completed++;
-        }
-      }
-    });
-
-    const stages = Object.entries(stageData).map(([key, data]) => ({
-      key,
-      title: data.title,
-      order: data.order,
-      progress: data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0,
-      completed: data.completed,
-      total: data.total,
-      status: data.completed === data.total && data.total > 0 ? 'completed' : 
-              data.completed > 0 ? 'current' : 'pending'
-    })).sort((a, b) => a.order - b.order);
+    const stages = workerWorkflowData.stages.map((stage: any, index: number) => ({
+      key: stage.id,
+      title: stage.name,
+      order: index + 1,
+      progress: stage.status === 'completed' ? 100 : stage.status === 'in-progress' ? 50 : 0,
+      completed: stage.status === 'completed' ? 1 : 0,
+      total: 1,
+      status: stage.status
+    }));
 
     const overallProgress = stages.length > 0 ? 
-      Math.round(stages.reduce((acc, stage) => acc + stage.progress, 0) / stages.length) : 0;
+      Math.round(stages.reduce((acc: number, stage: any) => acc + stage.progress, 0) / stages.length) : 0;
 
     return { overall: overallProgress, stages };
   };
@@ -254,7 +242,7 @@ export default function WorkerProfile() {
     }
   };
 
-  if (isLoading || !isAuthenticated) {
+  if (workerLoading || workflowLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -585,91 +573,79 @@ export default function WorkerProfile() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {worker?.assignments && worker.assignments.length > 0 ? (
-                        <div className="space-y-4">
-                          {stages.map(stage => {
-                            const stageAssignments = worker.assignments.filter(
-                              assignment => assignment.requirement.stage.key === stage.key
-                            );
-                            
-                            if (stageAssignments.length === 0) return null;
+                      {workerWorkflowData ? (
+                        <div className="space-y-6">
+                          {/* Workflow Title */}
+                          <div className="border-b border-gray-200 pb-4">
+                            <h3 className="text-lg font-semibold text-gray-900" data-testid="workflow-title">
+                              {workerWorkflowData.workflowTitle || 'Immigration Workflow'}
+                            </h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Progress: {Math.round((stages.filter((s: any) => s.status === 'completed').length / stages.length) * 100) || 0}% complete
+                            </p>
+                          </div>
 
-                            return (
+                          {/* Workflow Stages */}
+                          <div className="space-y-4">
+                            {stages.map((stage: any) => (
                               <div key={stage.key} className="border rounded-lg p-4">
                                 <div className="flex items-center justify-between mb-4">
-                                  <h3 className="font-medium text-gray-900">{stage.title}</h3>
-                                  <Badge variant="outline">{stageAssignments.length} requirements</Badge>
+                                  <h3 className="font-medium text-gray-900" data-testid={`stage-title-${stage.key}`}>
+                                    {stage.title}
+                                  </h3>
+                                  <Badge 
+                                    variant={stage.status === 'completed' ? 'default' : stage.status === 'in-progress' ? 'secondary' : 'outline'}
+                                    data-testid={`stage-status-${stage.key}`}
+                                  >
+                                    {stage.status === 'completed' ? 'COMPLETED' : 
+                                     stage.status === 'in-progress' ? 'IN PROGRESS' : 'NOT STARTED'}
+                                  </Badge>
                                 </div>
                                 
-                                <div className="space-y-3">
-                                  {stageAssignments.map(assignment => (
-                                    <div key={assignment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                      <div className="flex-1">
-                                        <div className="flex items-center space-x-3">
-                                          <div>
-                                            <h4 className="font-medium text-gray-900" data-testid={`requirement-title-${assignment.id}`}>
-                                              {assignment.requirement.title}
-                                            </h4>
-                                            <p className="text-sm text-gray-600">{assignment.requirement.description}</p>
-                                            {assignment.documentFiles.length > 0 && (
-                                              <div className="flex items-center space-x-2 mt-2">
-                                                <FileText className="h-4 w-4 text-gray-400" />
-                                                <span className="text-sm text-gray-500">
-                                                  {assignment.documentFiles.length} document{assignment.documentFiles.length !== 1 ? 's' : ''} uploaded
-                                                </span>
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                      
-                                      <div className="flex items-center space-x-3">
-                                        {getStatusBadge(assignment.status)}
-                                        <div className="flex space-x-1">
-                                          <Dialog>
-                                            <DialogTrigger asChild>
-                                              <Button 
-                                                variant="ghost" 
-                                                size="sm" 
-                                                data-testid={`button-view-requirement-${assignment.id}`}
-                                                onClick={() => setSelectedAssignmentId(assignment.id)}
-                                              >
-                                                <Eye className="h-4 w-4" />
-                                              </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="max-w-4xl max-h-[80vh]">
-                                              <DialogHeader>
-                                                <DialogTitle>{assignment.requirement.title} - Documents</DialogTitle>
-                                              </DialogHeader>
-                                              <div className="overflow-y-auto">
-                                                <DocumentViewer assignmentId={assignment.id} />
-                                              </div>
-                                            </DialogContent>
-                                          </Dialog>
-                                          {assignment.status === 'AWAITING_UPLOAD' && (
-                                            <Button variant="ghost" size="sm" data-testid={`button-upload-document-${assignment.id}`}>
-                                              <Upload className="h-4 w-4" />
-                                            </Button>
-                                          )}
-                                          {assignment.documentFiles.length > 0 && (
-                                            <Button variant="ghost" size="sm" data-testid={`button-download-document-${assignment.id}`}>
-                                              <Download className="h-4 w-4" />
-                                            </Button>
+                                {/* Stage Document Requirements */}
+                                {workerWorkflowData.stages?.find((s: any) => s.id === stage.key)?.documentRequirements?.length > 0 && (
+                                  <div className="space-y-3">
+                                    <h4 className="text-sm font-medium text-gray-700">Documents</h4>
+                                    {workerWorkflowData.stages.find((s: any) => s.id === stage.key).documentRequirements.map((req: any, idx: number) => (
+                                      <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div className="flex-1">
+                                          <h5 className="font-medium text-gray-900" data-testid={`document-title-${stage.key}-${idx}`}>
+                                            {req.title}
+                                          </h5>
+                                          {req.description && (
+                                            <p className="text-sm text-gray-600">{req.description}</p>
                                           )}
                                         </div>
+                                        <Button variant="outline" size="sm" data-testid={`upload-document-${stage.key}-${idx}`}>
+                                          <Upload className="h-4 w-4 mr-1" />
+                                          Upload Document
+                                        </Button>
                                       </div>
-                                    </div>
-                                  ))}
-                                </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* No Documents Message */}
+                                {(!workerWorkflowData.stages?.find((s: any) => s.id === stage.key)?.documentRequirements || 
+                                  workerWorkflowData.stages.find((s: any) => s.id === stage.key)?.documentRequirements?.length === 0) && (
+                                  <div className="text-center py-4">
+                                    <p className="text-sm text-gray-500">No documents have been uploaded for this workflow stage yet.</p>
+                                  </div>
+                                )}
                               </div>
-                            );
-                          })}
+                            ))}
+                          </div>
+                        </div>
+                      ) : workflowLoading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                          <p className="text-sm text-gray-500">Loading workflow data...</p>
                         </div>
                       ) : (
                         <div className="text-center py-8">
-                          <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                          <p className="text-gray-600 mb-4">No requirements assigned yet</p>
-                          <p className="text-sm text-gray-500">Requirements will appear here once the immigration process begins</p>
+                          <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">No Workflow Assigned</h3>
+                          <p className="text-sm text-gray-500">This worker has not been assigned to any workflow yet</p>
                         </div>
                       )}
                     </CardContent>
