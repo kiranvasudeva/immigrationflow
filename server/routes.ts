@@ -95,6 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (process.env.NODE_ENV === 'development') {
       // Mock authenticated user in development
       req.user = { 
+        id: 'dev-admin-1',
         claims: { email: 'admin@dev.local' },
         isAuthenticated: () => true
       };
@@ -1594,7 +1595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
-  app.get('/api/workflow/worker/:workerId', isAuthenticated, async (req: any, res) => {
+  app.get('/api/workflow/worker/:workerId', devAuthBypass, async (req: any, res) => {
     try {
       const { workerId } = req.params;
       const userId = req.user.id;
@@ -1701,7 +1702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update workflow step status - with sequencing validation
-  app.put('/api/workflow/worker/:workerId/step/:stepId/status', isAuthenticated, async (req: any, res) => {
+  app.put('/api/workflow/worker/:workerId/step/:stepId/status', devAuthBypass, async (req: any, res) => {
     try {
       const { workerId, stepId } = req.params;
       const { status, notes, assignedToEmail } = req.body;
@@ -1724,7 +1725,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Workflow Step Document Management Endpoints
   
   // Get documents for a workflow step progress
-  app.get('/api/workers/:workerId/step-progress/:stepProgressId/documents', isAuthenticated, async (req: any, res) => {
+  app.get('/api/workers/:workerId/step-progress/:stepProgressId/documents', devAuthBypass, async (req: any, res) => {
     try {
       const { workerId, stepProgressId } = req.params;
       const userId = req.user.id;
@@ -1744,7 +1745,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload document for workflow step
-  app.post('/api/workers/:workerId/step-progress/:stepProgressId/documents', isAuthenticated, async (req: any, res) => {
+  app.post('/api/workers/:workerId/step-progress/:stepProgressId/documents', devAuthBypass, async (req: any, res) => {
     try {
       const { workerId, stepProgressId } = req.params;
       const { s3Key, fileName, mimeType, fileSize, fileHash, kind = 'USER_UPLOAD', notes } = req.body;
