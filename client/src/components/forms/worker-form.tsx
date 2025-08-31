@@ -213,11 +213,31 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
                 control={form.control}
                 name="assignedWorkflowIds"
                 render={({ field }) => {
-                  const [workflows] = useState([
-                    { id: 'work-permit-initial', name: 'Initial Work Permit Application', description: 'Complete Romanian work permit application process' },
-                    { id: 'residence-permit-temp', name: 'Temporary Residence Permit', description: 'Romanian temporary residence permit application' },
-                    { id: 'work-permit-renewal', name: 'Work Permit Renewal', description: 'Renewal process for existing work permits' },
-                  ]);
+                  const [workflows, setWorkflows] = useState([]);
+
+                  useEffect(() => {
+                    // Fetch workflows from API endpoint
+                    fetch('/api/workflow/templates')
+                      .then(res => res.json())
+                      .then(data => {
+                        // Transform workflow data if needed
+                        const workflowOptions = data.map((workflow: any) => ({
+                          id: workflow.id,
+                          name: workflow.name,
+                          description: workflow.description || ''
+                        }));
+                        setWorkflows(workflowOptions);
+                      })
+                      .catch(err => {
+                        console.error('Failed to fetch workflows:', err);
+                        // Fallback to default workflows if API fails
+                        setWorkflows([
+                          { id: 'work-permit-initial', name: 'Initial Work Permit Application', description: 'Complete Romanian work permit application process' },
+                          { id: 'residence-permit-temp', name: 'Temporary Residence Permit', description: 'Romanian temporary residence permit application' },
+                          { id: 'work-permit-renewal', name: 'Work Permit Renewal', description: 'Renewal process for existing work permits' },
+                        ]);
+                      });
+                  }, []);
                   
                   return (
                     <FormItem>

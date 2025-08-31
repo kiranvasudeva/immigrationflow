@@ -353,6 +353,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2028-03-15'),
         email: 'alessandro.rodriguez@gmail.com',
         phone: '+40721123456',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[0]?.id,
@@ -364,6 +365,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2027-07-22'),
         email: 'maria.gonzalez@gmail.com',
         phone: '+40722234567',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[0]?.id,
@@ -375,6 +377,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2029-11-08'),
         email: 'kumar.patel@gmail.com',
         phone: '+40723345678',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       
       // Workers for GlobalTech Industries
@@ -388,6 +391,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2028-05-12'),
         email: 'pierre.dubois@gmail.com',
         phone: '+40724456789',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[1]?.id,
@@ -399,6 +403,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2026-09-30'),
         email: 'sofia.ivanova@gmail.com',
         phone: '+40725567890',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[1]?.id,
@@ -410,6 +415,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2027-02-14'),
         email: 'ahmed.hassan@gmail.com',
         phone: '+40726678901',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       
       // Workers for Innovation Labs
@@ -423,6 +429,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2029-12-03'),
         email: 'joao.silva@gmail.com',
         phone: '+40727789012',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[2]?.id,
@@ -434,6 +441,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2028-06-18'),
         email: 'yuki.tanaka@gmail.com',
         phone: '+40728890123',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[2]?.id,
@@ -445,6 +453,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2026-04-25'),
         email: 'elena.petrov@gmail.com',
         phone: '+40729901234',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       
       // Workers for Digital Marketing Pro
@@ -458,6 +467,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2027-08-07'),
         email: 'luca.ferrari@gmail.com',
         phone: '+40720012345',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[3]?.id,
@@ -469,6 +479,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2028-10-15'),
         email: 'anna.muller@gmail.com',
         phone: '+40721123450',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[3]?.id,
@@ -480,6 +491,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2029-01-20'),
         email: 'chen.wei@gmail.com',
         phone: '+40722234501',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
 
       // Workers for CloudSoft Development
@@ -493,6 +505,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2028-03-12'),
         email: 'mikhail.volkov@gmail.com',
         phone: '+40723345602',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[4]?.id,
@@ -504,6 +517,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2027-09-28'),
         email: 'isabella.santos@gmail.com',
         phone: '+40724456703',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[4]?.id,
@@ -515,6 +529,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2029-01-15'),
         email: 'raj.sharma@gmail.com',
         phone: '+40725567804',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
 
       // Workers for DataFlow Analytics
@@ -528,6 +543,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2028-11-22'),
         email: 'erik.larsson@gmail.com',
         phone: '+40726678905',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[5]?.id,
@@ -539,6 +555,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2027-07-08'),
         email: 'fatima.alzahra@gmail.com',
         phone: '+40727789006',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[5]?.id,
@@ -550,6 +567,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2029-05-14'),
         email: 'oliver.thompson@gmail.com',
         phone: '+40728890107',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
 
       // Workers for NextGen Solutions
@@ -563,6 +581,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2028-12-05'),
         email: 'diego.martinez@gmail.com',
         phone: '+40729901208',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[6]?.id,
@@ -574,6 +593,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2027-04-18'),
         email: 'nadia.kovalenko@gmail.com',
         phone: '+40720012309',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
 
       // Workers for Innovative Systems
@@ -587,6 +607,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2026-08-30'),
         email: 'marco.rossi@gmail.com',
         phone: '+40721123410',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[7]?.id,
@@ -598,6 +619,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2028-02-11'),
         email: 'svetlana.nikolova@gmail.com',
         phone: '+40722234511',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
       {
         clientProfileId: createdClients[7]?.id,
@@ -609,6 +631,7 @@ async function seedDatabase() {
         passportExpiry: new Date('2029-06-03'),
         email: 'hassan.mahmoud@gmail.com',
         phone: '+40723345612',
+        assignedWorkflowIds: ['work-permit-initial'],
       },
     ];
 
