@@ -424,7 +424,8 @@ export default function WorkerWorkflowDashboard({ workerId }: Props) {
                                     <div className="mt-6">
                                       <DocumentStatusTracker 
                                         assignmentId={`${workerId}-${step.id}`} 
-                                        workflowStepId={step.id}
+                                        workflowStepProgressId={step.id}
+                                        workerId={workerId}
                                         isReadOnly={false}
                                       />
                                     </div>

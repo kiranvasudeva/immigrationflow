@@ -38,6 +38,7 @@ import {
 import { DocumentUploader } from "@/components/documents/DocumentUploader";
 import { DocumentViewer } from "@/components/documents/DocumentViewer";
 import WorkerWorkflowAssignments from "@/components/WorkerWorkflowAssignments";
+import { WorkerWorkflowDisplay } from '@/components/shared/WorkerWorkflowDisplay';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, ResponsiveContainer } from 'recharts';
 
 export default function AdminDashboard() {
@@ -88,7 +89,6 @@ export default function AdminDashboard() {
     passportExpiry: '',
     email: '',
     phone: '',
-    assignedWorkflowIds: [] as string[]
   });
 
   const [newClientForm, setNewClientForm] = useState({
@@ -882,72 +882,12 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker, isA
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <h5 className="font-medium text-gray-900 mb-3">Workflow Status</h5>
                 
-                {workflowLoading ? (
-                  <div className="flex items-center justify-center p-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    <span className="ml-2 text-gray-600">Loading workflow data...</span>
-                  </div>
-                ) : selectedWorkerWorkflowData && (selectedWorkerWorkflowData as any)?.stages && (selectedWorkerWorkflowData as any)?.stages?.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="border-b border-gray-200 pb-3">
-                      <h4 className="font-semibold text-gray-900">{(selectedWorkerWorkflowData as any)?.name}</h4>
-                      {(selectedWorkerWorkflowData as any)?.description && (
-                        <p className="text-sm text-gray-600 mt-1">{(selectedWorkerWorkflowData as any)?.description}</p>
-                      )}
-                    </div>
-                    {/* Display workflow stages from settings */}
-                    {((selectedWorkerWorkflowData as any)?.stages || []).map((stage: any, index: number) => (
-                      <div key={stage.id} className="bg-white border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Stage {index + 1}</span>
-                            <div className="font-medium text-sm">{stage.name}</div>
-                          </div>
-                          <Badge variant={stage.status === 'completed' ? 'default' : stage.status === 'in-progress' ? 'secondary' : 'outline'}>
-                            {stage.status || 'pending'}
-                          </Badge>
-                        </div>
-                        
-                        <div className="text-xs text-gray-600 mb-3">
-                          {stage.description}
-                        </div>
-
-                        <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
-                          <span>👤 Responsible: {stage.responsibleParty}</span>
-                          {stage.estimatedDays && <span>📅 Est. {stage.estimatedDays} days</span>}
-                        </div>
-
-                        {/* Document Requirements */}
-                        {stage.documentRequirements && stage.documentRequirements.length > 0 && (
-                          <div className="space-y-2">
-                            <h6 className="text-sm font-medium text-gray-700">Required Documents:</h6>
-                            {stage.documentRequirements.map((doc: any, idx: number) => (
-                              <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                <div className="flex-1">
-                                  <div className="font-medium text-xs">{doc.title}</div>
-                                  <div className="text-xs text-gray-600">{doc.description}</div>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <Badge variant="outline" className="text-xs">{doc.responsibleParty}</Badge>
-                                    {doc.required && <Badge variant="secondary" className="text-xs">Required</Badge>}
-                                  </div>
-                                </div>
-                                <Button variant="outline" size="sm" className="text-xs">
-                                  <Upload className="h-3 w-3 mr-1" />
-                                  Upload
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 text-gray-500">
-                    <FileText className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                    <p className="text-sm">No workflow assigned to this worker</p>
-                  </div>
-                )}
+                <WorkerWorkflowDisplay 
+                  workerId={selectedWorker.id}
+                  workflowData={selectedWorkerWorkflowData}
+                  isLoading={workflowLoading}
+                  isAuthenticated={isAuthenticated}
+                />
               </div>
             )}
           </div>

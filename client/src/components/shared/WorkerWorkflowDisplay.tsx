@@ -14,7 +14,8 @@ import {
   Calendar,
   User,
   Download,
-  ListChecks
+  ListChecks,
+  Camera
 } from 'lucide-react';
 import { DocumentUploader } from '@/components/documents/DocumentUploader';
 import DocumentStatusTracker from '@/components/DocumentStatusTracker';
@@ -101,13 +102,89 @@ export function WorkerWorkflowDisplay({
     });
   };
 
-  const handleVerifyDocuments = (stageId: string) => {
+  // Handle document verification
+  const handleVerifyDocuments = async (stepId: string) => {
     updateStepStatusMutation.mutate({
-      stepId: stageId,
-      status: 'completed',
+      stepId,
+      status: 'verified',
       notes: 'Documents verified by admin'
     });
   };
+
+  // Render stage-specific actions based on stage type and requirements
+  const renderStageActions = (stage: any) => {
+    const stageType = stage.stageType || 'document_collection';
+    const hasDocuments = stage.documentRequirements && stage.documentRequirements.length > 0;
+    
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Document Upload Actions */}
+        {hasDocuments && (
+          <>
+            <DocumentUploader 
+              workflowStepProgressId={`step-${stage.id}`}
+              workerId={workerId}
+              onUploadComplete={() => {
+                queryClient.invalidateQueries({ queryKey: ['/api/workflow/worker', workerId] });
+              }}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {/* TODO: Implement photo capture */}}
+              data-testid={`button-photo-capture-${stage.id}`}
+            >
+              <Camera className="h-3 w-3 mr-1" />
+              Photo + OCR
+            </Button>
+          </>
+        )}
+
+        {/* Verification Actions */}
+        {(stageType === 'verification' || stageType === 'review' || hasDocuments) && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleVerifyDocuments(stage.id)}
+            disabled={updateStepStatusMutation.isPending}
+            data-testid={`button-verify-${stage.id}`}
+          >
+            <ListChecks className="h-3 w-3 mr-1" />
+            Verify & Approve
+          </Button>
+        )}
+
+        {/* Administrative Actions */}
+        {(stageType === 'administrative' || stageType === 'submission') && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleMarkComplete(stage.id)}
+            disabled={updateStepStatusMutation.isPending}
+            data-testid={`button-process-${stage.id}`}
+          >
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            Process & Submit
+          </Button>
+        )}
+
+        {/* General completion for other stage types */}
+        {!hasDocuments && stageType !== 'verification' && stageType !== 'review' && stageType !== 'administrative' && stageType !== 'submission' && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleMarkComplete(stage.id)}
+            disabled={updateStepStatusMutation.isPending}
+            data-testid={`button-complete-${stage.id}`}
+          >
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            Mark Complete
+          </Button>
+        )}
+      </div>
+    );
+  };
+
 
   if (isLoading) {
     return (
@@ -215,39 +292,18 @@ export function WorkerWorkflowDisplay({
                 {/* Document Status Tracker */}
                 <div className="mt-4">
                   <DocumentStatusTracker 
-                    workflowStepId={stage.id}
+                    workflowStepProgressId={stage.id}
+                    workerId={workerId}
                     isReadOnly={false}
                   />
                 </div>
               </div>
             )}
 
-            {/* Admin Controls */}
+            {/* Stage-Specific Admin Controls */}
             {isAuthenticated && (stage.status === 'available' || stage.status === 'in-progress') && (
-              <div className="flex items-center gap-2 mt-4 pt-3 border-t">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleMarkComplete(stage.id)}
-                  disabled={updateStepStatusMutation.isPending}
-                  data-testid={`button-complete-${stage.id}`}
-                >
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                  Mark Complete
-                </Button>
-                
-                {stage.documentRequirements && stage.documentRequirements.length > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleVerifyDocuments(stage.id)}
-                    disabled={updateStepStatusMutation.isPending}
-                    data-testid={`button-verify-${stage.id}`}
-                  >
-                    <ListChecks className="h-3 w-3 mr-1" />
-                    Verify Documents
-                  </Button>
-                )}
+              <div className="space-y-2 mt-4 pt-3 border-t">
+                {renderStageActions(stage)}
               </div>
             )}
           </CardContent>
