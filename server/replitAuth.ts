@@ -106,7 +106,7 @@ export async function setupAuth(app: Express) {
     if (req?.session?.invitationToken) {
       delete req.session.invitationToken;
     }
-    verified(null, user);
+    verified(null, user as any);
   };
 
   for (const domain of process.env
