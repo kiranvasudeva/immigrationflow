@@ -15,21 +15,21 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Building2, Plus, Search, Filter, Edit2, Eye, MapPin, Calendar, Users, Phone, Mail, ChevronDown, ChevronRight, FileText, Clock } from 'lucide-react';
 import { Link } from 'wouter';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Progress } from '@/components/ui/progress';
 
 interface Client {
   id: string;
-  companyName: string;
-  contactPersonName: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  fiscalCode?: string;
+  legalName: string;
+  adminName: string;
+  contactEmail: string;
+  phoneNumber?: string;
+  legalAddress?: string;
+  cui?: string;
   registrationNumber?: string;
-  industry?: string;
-  status: string;
-  ownerId: string;
+  bankIban?: string;
+  caen?: string;
+  ownerUserId: string;
   createdAt: string;
-  updatedAt: string;
 }
 
 interface Worker {
@@ -47,6 +47,170 @@ interface Worker {
   updatedAt: string;
 }
 
+interface WorkflowProgressData {
+  workflow: {
+    id: string;
+    name: string;
+    description: string;
+  };
+  progress: {
+    id: string;
+    status: string;
+    currentStepId?: string;
+  };
+  steps: Array<{
+    id: string;
+    name: string;
+    description: string;
+    assignedRole: string;
+    progress: {
+      status: string;
+    };
+  }>;
+}
+
+function WorkersForClient({ clientId }: { clientId: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const { data: workers = [], isLoading: workersLoading } = useQuery<Worker[]>({
+    queryKey: ['/api/clients', clientId, 'workers'],
+    enabled: !!clientId,
+  });
+  
+  if (workersLoading) {
+    return (
+      <div className="mt-4">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!workers.length) {
+    return (
+      <div className="mt-4 pt-4 border-t">
+        <div className="flex items-center gap-2 text-gray-500">
+          <Users className="h-4 w-4" />
+          <span className="text-sm">No workers assigned to this client</span>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="mt-4 pt-4 border-t">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger className="flex items-center gap-2 w-full text-left hover:bg-gray-50 p-2 rounded-md transition-colors">
+          {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          <Users className="h-4 w-4 text-blue-500" />
+          <span className="font-medium">Workers ({workers.length})</span>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2">
+          <div className="space-y-3">
+            {workers.map((worker) => (
+              <WorkerCard key={worker.id} worker={worker} />
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+}
+
+function WorkerCard({ worker }: { worker: Worker }) {
+  const [showWorkflow, setShowWorkflow] = useState(false);
+  
+  const { data: workflowData = [], isLoading: workflowLoading } = useQuery<WorkflowProgressData[]>({
+    queryKey: ['/api/workers', worker.id, 'workflow-progress'],
+    enabled: !!worker.id && showWorkflow,
+  });
+  
+  const calculateOverallProgress = (workflows: WorkflowProgressData[]) => {
+    if (!workflows.length) return 0;
+    const totalSteps = workflows.reduce((acc, workflow) => acc + workflow.steps.length, 0);
+    const completedSteps = workflows.reduce((acc, workflow) => 
+      acc + workflow.steps.filter(step => step.progress.status === 'COMPLETED').length, 0);
+    return totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+  };
+  
+  const overallProgress = calculateOverallProgress(workflowData);
+  
+  return (
+    <div className="border rounded-lg p-3 bg-gray-50">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div>
+            <h4 className="font-medium text-sm">{worker.firstName} {worker.lastName}</h4>
+            <p className="text-xs text-gray-600">{worker.nationality || 'N/A'} • {worker.email}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant={worker.status === 'ACTIVE' ? 'default' : 'secondary'} className="text-xs">
+            {worker.status}
+          </Badge>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowWorkflow(!showWorkflow)}
+            className="h-6 px-2"
+            data-testid={`button-toggle-workflow-${worker.id}`}
+          >
+            {showWorkflow ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+            Workflows
+          </Button>
+        </div>
+      </div>
+      
+      {showWorkflow && (
+        <div className="mt-3 pt-3 border-t">
+          {workflowLoading ? (
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            </div>
+          ) : workflowData.length === 0 ? (
+            <div className="text-center py-4">
+              <FileText className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+              <p className="text-sm text-gray-600">No workflows assigned to this worker</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Overall Progress</span>
+                <span className="text-sm font-bold text-blue-600">{overallProgress}%</span>
+              </div>
+              <Progress value={overallProgress} className="w-full h-2" />
+              
+              <div className="space-y-2">
+                {workflowData.map((workflowItem) => {
+                  const workflowProgress = workflowItem.steps.length > 0 
+                    ? Math.round((workflowItem.steps.filter(step => step.progress.status === 'COMPLETED').length / workflowItem.steps.length) * 100) 
+                    : 0;
+                  
+                  return (
+                    <div key={workflowItem.workflow.id} className="flex items-center justify-between p-2 bg-white rounded border">
+                      <div className="flex-1 min-w-0">
+                        <h5 className="text-sm font-medium truncate">{workflowItem.workflow.name}</h5>
+                        <p className="text-xs text-gray-600 truncate">{workflowItem.workflow.description}</p>
+                      </div>
+                      <div className="flex items-center gap-2 ml-2">
+                        <Progress value={workflowProgress} className="w-16 h-1" />
+                        <span className="text-xs font-medium text-blue-600 min-w-[2rem]">{workflowProgress}%</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 export default function ClientsPage() {
   const { toast } = useToast();
@@ -54,7 +218,6 @@ export default function ClientsPage() {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedIndustry, setSelectedIndustry] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newClient, setNewClient] = useState({
     companyName: '',
@@ -143,15 +306,12 @@ export default function ClientsPage() {
   // Filter clients based on search criteria
   const filteredClients = (clients as Client[]).filter((client: Client) => {
     const matchesSearch = !searchTerm || 
-      client.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.contactPersonName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.fiscalCode?.toLowerCase().includes(searchTerm.toLowerCase());
+      client.legalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.adminName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.contactEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.cui?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = selectedStatus === 'all' || client.status === selectedStatus;
-    const matchesIndustry = selectedIndustry === 'all' || client.industry === selectedIndustry;
-    
-    return matchesSearch && matchesStatus && matchesIndustry;
+    return matchesSearch;
   });
 
   const getStatusBadge = (status: string) => {
@@ -326,24 +486,6 @@ export default function ClientsPage() {
                 </Select>
               </div>
               
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Industry</label>
-                <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All industries" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Industries</SelectItem>
-                    <SelectItem value="Technology">Technology</SelectItem>
-                    <SelectItem value="Manufacturing">Manufacturing</SelectItem>
-                    <SelectItem value="Construction">Construction</SelectItem>
-                    <SelectItem value="Healthcare">Healthcare</SelectItem>
-                    <SelectItem value="Agriculture">Agriculture</SelectItem>
-                    <SelectItem value="Hospitality">Hospitality</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -367,7 +509,7 @@ export default function ClientsPage() {
                 <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No clients found</h3>
                 <p className="text-gray-600 mb-4">
-                  {searchTerm || selectedStatus !== 'all' || selectedIndustry !== 'all' 
+                  {searchTerm || selectedStatus !== 'all'
                     ? 'Try adjusting your filters to see more results.' 
                     : 'No clients have been registered yet. Add client companies to start managing their immigration workflows.'}
                 </p>
@@ -385,9 +527,9 @@ export default function ClientsPage() {
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div className="space-y-1 min-w-0 flex-1 mr-4">
-                          <CardTitle className="text-lg truncate" title={client.companyName}>{client.companyName}</CardTitle>
-                          <CardDescription className="truncate" title={`Contact: ${client.contactPersonName} | Email: ${client.email}`}>
-                            Contact: {client.contactPersonName} | Email: {client.email}
+                          <CardTitle className="text-lg truncate" title={client.legalName}>{client.legalName}</CardTitle>
+                          <CardDescription className="truncate" title={`CUI: ${client.cui} | Registration: ${client.registrationNumber}`}>
+                            CUI: {client.cui} | Registration: {client.registrationNumber}
                           </CardDescription>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -418,30 +560,33 @@ export default function ClientsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 text-sm">
                         <div className="space-y-1 min-w-0">
                           <span className="font-medium text-gray-600 block">Contact:</span>
-                          <p className="truncate text-gray-800" title={client.email}>{client.email}</p>
-                          <p className="truncate text-gray-800" title={client.phone}>{client.phone || 'N/A'}</p>
+                          <p className="truncate text-gray-800" title={client.contactEmail}>{client.contactEmail}</p>
+                          <p className="truncate text-gray-800" title={client.phoneNumber}>{client.phoneNumber || 'N/A'}</p>
                         </div>
                         <div className="space-y-1 min-w-0">
-                          <span className="font-medium text-gray-600 block">Contact Person:</span>
-                          <p className="truncate text-gray-800" title={client.contactPersonName}>{client.contactPersonName}</p>
-                        </div>
-                        <div className="space-y-1 min-w-0">
-                          <span className="font-medium text-gray-600 block">Fiscal Code:</span>
-                          <p className="truncate text-gray-800" title={client.fiscalCode}>{client.fiscalCode || 'N/A'}</p>
+                          <span className="font-medium text-gray-600 block">Administrator:</span>
+                          <p className="truncate text-gray-800" title={client.adminName}>{client.adminName}</p>
                         </div>
                         <div className="space-y-1 min-w-0">
                           <span className="font-medium text-gray-600 block">Registration:</span>
                           <p className="truncate text-gray-800" title={client.registrationNumber}>{client.registrationNumber || 'N/A'}</p>
                         </div>
                         <div className="space-y-1 min-w-0">
-                          <span className="font-medium text-gray-600 block">Industry:</span>
-                          <p className="truncate text-gray-800" title={client.industry}>{client.industry || 'N/A'}</p>
+                          <span className="font-medium text-gray-600 block">CAEN Code:</span>
+                          <p className="truncate text-gray-800" title={client.caen}>{client.caen || 'N/A'}</p>
+                        </div>
+                        <div className="space-y-1 min-w-0">
+                          <span className="font-medium text-gray-600 block">Bank IBAN:</span>
+                          <p className="truncate text-gray-800" title={client.bankIban}>{client.bankIban || 'N/A'}</p>
                         </div>
                         <div className="space-y-1 min-w-0 md:col-span-2 lg:col-span-3 2xl:col-span-1">
-                          <span className="font-medium text-gray-600 block">Address:</span>
-                          <p className="truncate text-gray-800" title={client.address}>{client.address || 'N/A'}</p>
+                          <span className="font-medium text-gray-600 block">Legal Address:</span>
+                          <p className="truncate text-gray-800" title={client.legalAddress}>{client.legalAddress || 'N/A'}</p>
                         </div>
                       </div>
+                      
+                      {/* Workers for this client */}
+                      <WorkersForClient clientId={client.id} />
                     </CardContent>
                   </Card>
                 ))}

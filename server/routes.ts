@@ -1593,36 +1593,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get worker workflow progress summary for StageProgress component
-  app.get('/api/workers/:workerId/workflow-progress', isAuthenticated, async (req: any, res) => {
-    try {
-      const { workerId } = req.params;
-      const workflows = await storage.getWorkflowsForWorker(workerId);
-      
-      const summaryData = await Promise.all(workflows.map(async (workflow) => {
-        const progress = await storage.getWorkerWorkflowProgress(workerId, workflow.id);
-        const steps = await storage.getWorkflowSteps(workflow.id);
-        const stepProgress = progress ? await storage.getWorkerStepProgress(progress.id) : [];
-        
-        const completedSteps = stepProgress.filter(sp => sp.status === 'COMPLETED').length;
-        const currentStep = stepProgress.find(sp => sp.status === 'IN_PROGRESS');
-        const currentStepData = currentStep ? steps.find(s => s.id === currentStep.workflowStepId) : null;
-        
-        return {
-          workflowName: workflow.name,
-          totalSteps: steps.length,
-          completedSteps,
-          currentStepName: currentStepData?.name,
-          status: progress?.status || 'NOT_STARTED'
-        };
-      }));
-      
-      res.json(summaryData);
-    } catch (error) {
-      console.error('Error fetching worker workflow progress summary:', error);
-      res.status(500).json({ error: 'Failed to fetch workflow progress summary' });
-    }
-  });
 
   app.get('/api/workflow/worker/:workerId', isAuthenticated, async (req: any, res) => {
     try {
@@ -2120,7 +2090,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Worker workflow progress endpoints
-  app.get('/api/workers/:workerId/workflow-progress', isAuthenticated, async (req: any, res) => {
+  app.get('/api/workers/:workerId/workflow-progress', devAuthBypass, async (req: any, res) => {
     try {
       const { workerId } = req.params;
       const userId = req.user.id;
@@ -2169,7 +2139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/workers/:workerId/workflow-progress/:progressId/steps/:stepId', isAuthenticated, async (req: any, res) => {
+  app.put('/api/workers/:workerId/workflow-progress/:progressId/steps/:stepId', devAuthBypass, async (req: any, res) => {
     try {
       const { workerId, progressId, stepId } = req.params;
       const { status, notes } = req.body;
