@@ -1,0 +1,120 @@
+Manage Workflow Stages
+Workflow Stages
+Add Stage
+Initial Document Collection
+Collect passport, diplomas, employment contract, and personal documents from worker
+
+Role: WORKER
+Duration: 3 days
+Documents: 3
+Checklist: 0
+
+
+Document Review & Verification
+Internal review and verification of submitted documents
+
+Role: OWNER
+Duration: 2 days
+Documents: 1
+Checklist: 0
+
+
+Employer Declaration Preparation
+Preparation and submission of employer-specific documentation
+
+Role: OWNER
+Duration: 3 days
+Documents: 1
+Checklist: 0
+
+
+AJOFM Application Submission
+Application to Romanian National Employment Agency for labor market testing
+
+Role: OWNER
+Duration: 5 days
+Documents: 1
+Checklist: 0
+
+
+AJOFM Processing & Advertisement
+Official processing and advertisement of the job position by AJOFM
+
+Role: OWNER
+Duration: 30 days
+Documents: 1
+Checklist: 0
+
+
+AJOFM Approval Certificate
+Issuance of the AJOFM approval certificate
+
+Role: OWNER
+Duration: 7 days
+Documents: 1
+Checklist: 0
+
+
+IGI Work Permit Preparation
+Preparation of the work permit application package for Immigration Office
+
+Role: OWNER
+Duration: 5 days
+Documents: 2
+Checklist: 0
+
+
+IGI Work Permit Submission
+Submission of the work permit application to Romanian Immigration Office
+
+Role: OWNER
+Duration: 3 days
+Documents: 1
+Checklist: 0
+
+
+IGI Work Permit Processing
+IGI reviews the application and may request additional documents
+
+Role: OWNER
+Duration: 21 days
+Documents: 1
+Checklist: 0
+
+
+Work Permit Issuance
+Issuance of the work permit by Romanian Immigration Office
+
+Role: OWNER
+Duration: 7 days
+Documents: 1
+Checklist: 0
+
+
+Consulate Application Preparation
+Preparation of documents for Romanian consulate visa application
+
+Role: WORKER
+Duration: 10 days
+Documents: 2
+Checklist: 0
+
+
+Consulate Visa Application
+Submission of visa application at Romanian consulate in worker home country
+
+Role: WORKER
+Duration: 14 days
+Documents: 1
+Checklist: 0
+
+
+Visa Issuance & Travel
+Visa is issued by consulate, allowing worker to travel to Romania
+
+Role: WORKER
+Duration: 21 days
+Documents: 1
+Checklist: 0
+
+

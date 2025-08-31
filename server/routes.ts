@@ -1968,7 +1968,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/workflow-templates', devAuthBypass, async (req: any, res) => {
     try {
       const templates = await storage.getAllWorkflowTemplates();
-      res.json(templates);
+      
+      // Add step count and basic step info to each template
+      const templatesWithSteps = await Promise.all(templates.map(async (template) => {
+        const steps = await storage.getWorkflowSteps(template.id);
+        return {
+          ...template,
+          steps: steps // Include the steps so the frontend can count them and display basic info
+        };
+      }));
+      
+      res.json(templatesWithSteps);
     } catch (error) {
       console.error('Error fetching workflow templates:', error);
       res.status(500).json({ message: "Failed to fetch workflow templates" });
