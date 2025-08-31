@@ -7,6 +7,10 @@ import { nanoid } from 'nanoid';
 import { sql } from 'drizzle-orm';
 
 export async function seedDatabase() {
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🚫 Seed database disabled in production mode');
+    return { message: 'Seeding disabled in production' };
+  }
   console.log('🌱 Starting database seeding with test data...');
   
   try {

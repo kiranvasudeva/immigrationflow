@@ -1882,39 +1882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: 'work-permit-initial',
           name: 'Initial Work Permit Application',
           description: 'Complete Romanian work permit application process from AJOFM labor market test through IGI permit issuance',
-          stages: [
-            {
-              id: 'doc-collection',
-              name: 'Initial Document Collection',
-              description: 'Collect passport, diplomas, employment contract, and personal documents from worker',
-              status: 'in-progress',
-              estimatedDays: 3,
-              documentRequirements: [
-                {
-                  id: 'passport-copy',
-                  title: 'Passport Copy',
-                  description: 'High-quality scan of passport bio page (color, readable, unedited)',
-                  isRequired: true,
-          assignedRole: 'OWNER' as const,
-                  status: 'pending'
-                },
-                {
-                  id: 'diploma-copy',
-                  title: 'University Diploma',
-                  description: 'Original university diploma or degree certificate',
-                  isRequired: true,
-          assignedRole: 'OWNER' as const,
-                  status: 'pending'
-                },
-                {
-                  id: 'employment-contract',
-                  title: 'Signed Employment Contract',
-                  description: 'Signed employment contract with Romanian employer',
-                  isRequired: true,
-          assignedRole: 'OWNER' as const,
-                  status: 'pending'
-                }
-              ]
+          stages: ROMANIAN_WORK_PERMIT_WORKFLOW.map(mapWorkflowStepToAPI)
             },
             {
               id: 'ajofm-submission',
@@ -1956,49 +1924,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: 'residence-permit-temp',
           name: 'Temporary Residence Permit',
           description: 'Romanian temporary residence permit application process',
-          stages: [
-            {
-              id: 'residence-docs',
-              name: 'Residence Document Preparation',
-              description: 'Prepare documents for temporary residence permit application',
-              status: 'pending',
-              estimatedDays: 5,
-              documentRequirements: [
-                {
-                  id: 'accommodation-proof',
-                  title: 'Proof of Accommodation',
-                  description: 'Rental contract or property ownership documents',
-                  isRequired: true,
-          assignedRole: 'OWNER' as const,
-                  status: 'pending'
-                }
-              ]
-            }
-          ]
+          stages: ROMANIAN_WORK_PERMIT_WORKFLOW.map(mapWorkflowStepToAPI)
         },
         {
           id: 'work-permit-renewal',
           name: 'Work Permit Renewal',
           description: 'Renewal process for existing work permits and residence cards',
-          stages: [
-            {
-              id: 'renewal-prep',
-              name: 'Renewal Document Preparation',
-              description: 'Prepare documents for work permit renewal',
-              status: 'pending',
-              estimatedDays: 5,
-              documentRequirements: [
-                {
-                  id: 'current-permit',
-                  title: 'Current Work Permit',
-                  description: 'Copy of existing work permit to be renewed',
-                  isRequired: true,
-          assignedRole: 'OWNER' as const,
-                  status: 'pending'
-                }
-              ]
-            }
-          ]
+          stages: ROMANIAN_WORK_PERMIT_WORKFLOW.map(mapWorkflowStepToAPI)
         }
       ];
       
@@ -2829,6 +2761,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get('/api/workflow-templates/:templateId/workers', isAuthenticated, requireAdmin, async (req: any, res) => {
+  // Configuration-driven workflow data (replaces mock data)
+  app.get('/api/workers/:workerId/workflow-data', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER', 'VIEWER')), async (req: any, res) => {
+    try {
+      const { workerId } = req.params;
+      
+      // Get worker's assigned workflows from database
+      const worker = await storage.getWorkerById(workerId);
+      if (!worker) {
+        return res.status(404).json({ error: 'Worker not found' });
+      }
+      
+      // Map assigned workflow IDs to configuration data
+      const workflowData = worker.assignedWorkflowIds?.map(workflowId => {
+        const configWorkflow = ROMANIAN_WORK_PERMIT_WORKFLOW.find(w => w.id === workflowId);
+        return configWorkflow ? mapWorkflowStepToAPI(configWorkflow) : null;
+      }).filter(Boolean) || [];
+      
+      // Return ONLY configuration-driven data
+      res.json({
+        workerId,
+        workerName: `${worker.firstName} ${worker.lastName}`,
+        workflows: workflowData,
+        lastUpdated: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('Error fetching workflow data:', error);
+      res.status(500).json({ error: 'Failed to fetch workflow data' });
+    }
+  });
     try {
       const { templateId } = req.params;
       const workers = await storage.getWorkersForWorkflow(templateId);
