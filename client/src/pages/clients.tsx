@@ -12,7 +12,12 @@ import {
   Eye, 
   Edit,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Users,
+  UserCheck,
+  X,
+  FileText,
+  Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,9 +49,9 @@ export default function ClientsPage() {
   const { t } = useTranslation();
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [showNewClientForm, setShowNewClientForm] = useState(false);
-  const [editingClient, setEditingClient] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [showClientWorkers, setShowClientWorkers] = useState(false);
+  const [editingClient, setEditingClient] = useState<string | null>(null);
+  const [showClientWorkers, setShowClientWorkers] = useState<Record<string, boolean>>({});
+  const [selectedWorker, setSelectedWorker] = useState<any>(null);
   const [newClientForm, setNewClientForm] = useState({
     legalName: '',
     cui: '',
@@ -372,20 +377,21 @@ export default function ClientsPage() {
                         variant="outline" 
                         size="sm"
                         onClick={() => {
-                          setSelectedClient(client);
-                          setShowClientWorkers(true);
+                          setShowClientWorkers(prev => ({
+                            ...prev,
+                            [client.id]: !prev[client.id]
+                          }));
                         }}
                         data-testid={`button-view-workers-${client.id}`}
                       >
                         <Eye className="h-4 w-4 mr-1" />
-                        View Workers
+                        {showClientWorkers[client.id] ? 'Hide Workers' : 'View Workers'}
                       </Button>
                       {user?.role === 'ADMIN' && (
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => {
-                            setSelectedClient(client);
                             setEditClientForm({
                               legalName: client.legalName,
                               registrationNumber: client.registrationNumber,
@@ -397,7 +403,7 @@ export default function ClientsPage() {
                               bankIban: client.bankIban,
                               caen: client.caen
                             });
-                            setEditingClient(true);
+                            setEditingClient(client.id);
                           }}
                           data-testid={`button-edit-client-${client.id}`}
                         >
@@ -436,46 +442,33 @@ export default function ClientsPage() {
                       <p className="truncate text-gray-800" title={client.legalAddress}>{client.legalAddress}</p>
                     </div>
                   </div>
+
+                  {/* Inline Worker Display */}
+                  {showClientWorkers[client.id] && (
+                    <ClientWorkersDisplay 
+                      clientId={client.id}
+                      selectedWorker={selectedWorker}
+                      setSelectedWorker={setSelectedWorker}
+                      isAuthenticated={isAuthenticated}
+                    />
+                  )}
                 </CardContent>
               </Card>
             ))
           )}
         </div>
 
-        {/* Client Workers Modal/Section */}
-        {showClientWorkers && selectedClient && (
-          <Card className="border-2 border-blue-200 bg-blue-50">
-            <CardHeader>
-              <CardTitle className="text-lg text-blue-800 flex items-center justify-between">
-                Workers for: {selectedClient.legalName}
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    setShowClientWorkers(false);
-                    setSelectedClient(null);
-                  }}
-                >
-                  Close
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <WorkerList workers={[]} />
-            </CardContent>
-          </Card>
-        )}
 
         {/* Edit Client Form */}
-        {editingClient && selectedClient && (
+        {editingClient && (
           <Card className="border-2 border-blue-200 bg-blue-50">
             <CardHeader>
-              <CardTitle className="text-lg text-blue-800">Edit Client: {selectedClient.legalName}</CardTitle>
+              <CardTitle className="text-lg text-blue-800">Edit Client</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={(e) => {
                 e.preventDefault();
-                updateClientMutation.mutate({ id: selectedClient.id, data: editClientForm });
+                updateClientMutation.mutate({ id: editingClient, data: editClientForm });
               }} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -566,8 +559,7 @@ export default function ClientsPage() {
                     type="button" 
                     variant="outline" 
                     onClick={() => {
-                      setEditingClient(false);
-                      setSelectedClient(null);
+                      setEditingClient(null);
                     }}
                   >
                     Cancel
@@ -581,6 +573,207 @@ export default function ClientsPage() {
           </Card>
         )}
       </main>
+    </div>
+  );
+}
+
+// Component for displaying workers for a specific client (copied from Dashboard)
+function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker, isAuthenticated }: { 
+  clientId: string; 
+  selectedWorker: any; 
+  setSelectedWorker: (worker: any) => void; 
+  isAuthenticated: boolean;
+}) {
+  const [workerSearchTerm, setWorkerSearchTerm] = useState("");
+
+  const { data: workers = [], isLoading } = useQuery({
+    queryKey: ['/api/clients', clientId, 'workers'],
+  });
+
+  // Fetch worker workflow data for selected worker
+  const { data: selectedWorkerWorkflowData, isLoading: workflowLoading } = useQuery({
+    queryKey: ['/api/workflow/worker', selectedWorker?.id],
+    enabled: !!selectedWorker?.id && isAuthenticated,
+  });
+
+  // Filter workers based on search term
+  const filteredWorkers = (workers as any[]).filter((worker: any) => {
+    const matchesSearch = !workerSearchTerm || 
+      worker.firstName.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
+      worker.lastName.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
+      worker.nationality.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
+      worker.passportNumber.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
+      (worker.email && worker.email.toLowerCase().includes(workerSearchTerm.toLowerCase()));
+    
+    return matchesSearch;
+  });
+
+  if (isLoading) {
+    return (
+      <div className="mt-6 pt-6 border-t border-gray-100">
+        <div className="flex items-center justify-center py-4">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <span className="ml-2 text-sm text-gray-600">Loading workers...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if ((workers as any[]).length === 0) {
+    return (
+      <div className="mt-6 pt-6 border-t border-gray-100">
+        <div className="text-center py-6">
+          <UserCheck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Workers</h3>
+          <p className="text-gray-600">No workers have been assigned to this client yet.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-6 pt-6 border-t border-gray-100">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="font-semibold text-gray-900">Workers ({(workers as any[]).length})</h4>
+      </div>
+
+      {/* Worker Search Filter */}
+      <div className="mb-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search workers..."
+            value={workerSearchTerm}
+            onChange={(e) => setWorkerSearchTerm(e.target.value)}
+            className="pl-10"
+            data-testid="input-search-workers"
+          />
+        </div>
+      </div>
+      
+      <div className="space-y-3">
+        {filteredWorkers.length === 0 ? (
+          <div className="text-center py-4">
+            <UserCheck className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-gray-600 text-sm">
+              {workerSearchTerm ? 'No workers match your search criteria.' : 'No workers found.'}
+            </p>
+          </div>
+        ) : (
+          filteredWorkers.map((worker: any) => (
+          <div key={worker.id} className="border rounded-lg p-4 hover:bg-gray-50">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="font-medium">
+                  {worker.firstName} {worker.lastName}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {worker.nationality} • Passport: {worker.passportNumber}
+                </div>
+                {worker.email && (
+                  <div className="text-sm text-gray-600">{worker.email}</div>
+                )}
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedWorker(selectedWorker?.id === worker.id ? null : worker)}
+                  data-testid={`button-view-workflow-${worker.id}`}
+                >
+                  {selectedWorker?.id === worker.id ? (
+                    <>
+                      <X className="h-4 w-4 mr-1" />
+                      Hide
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="h-4 w-4 mr-1" />
+                      View Workflow
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Worker Workflow Details */}
+            {selectedWorker?.id === worker.id && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <h5 className="font-medium text-gray-900 mb-3">Workflow Status</h5>
+                
+                {workflowLoading ? (
+                  <div className="flex items-center justify-center p-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="ml-2 text-gray-600">Loading workflow data...</span>
+                  </div>
+                ) : selectedWorkerWorkflowData && (selectedWorkerWorkflowData as any)?.stages && (selectedWorkerWorkflowData as any)?.stages?.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="border-b border-gray-200 pb-3">
+                      <h4 className="font-semibold text-gray-900">{(selectedWorkerWorkflowData as any)?.name}</h4>
+                      {(selectedWorkerWorkflowData as any)?.description && (
+                        <p className="text-sm text-gray-600 mt-1">{(selectedWorkerWorkflowData as any)?.description}</p>
+                      )}
+                    </div>
+                    {/* Display workflow stages from settings */}
+                    {((selectedWorkerWorkflowData as any)?.stages || []).map((stage: any, index: number) => (
+                      <div key={stage.id} className="bg-white border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Stage {index + 1}</span>
+                            <div className="font-medium text-sm">{stage.name}</div>
+                          </div>
+                          <Badge variant={stage.status === 'completed' ? 'default' : stage.status === 'in-progress' ? 'secondary' : 'outline'}>
+                            {stage.status || 'pending'}
+                          </Badge>
+                        </div>
+                        
+                        <div className="text-xs text-gray-600 mb-3">
+                          {stage.description}
+                        </div>
+
+                        <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+                          <span>👤 Responsible: {stage.responsibleParty}</span>
+                          {stage.estimatedDays && <span>📅 Est. {stage.estimatedDays} days</span>}
+                        </div>
+
+                        {/* Document Requirements */}
+                        {stage.documentRequirements && stage.documentRequirements.length > 0 && (
+                          <div className="space-y-2">
+                            <h6 className="text-sm font-medium text-gray-700">Required Documents:</h6>
+                            {stage.documentRequirements.map((doc: any, idx: number) => (
+                              <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                <div className="flex-1">
+                                  <div className="font-medium text-xs">{doc.title}</div>
+                                  <div className="text-xs text-gray-600">{doc.description}</div>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="outline" className="text-xs">{doc.responsibleParty}</Badge>
+                                    {doc.required && <Badge variant="secondary" className="text-xs">Required</Badge>}
+                                  </div>
+                                </div>
+                                <Button variant="outline" size="sm" className="text-xs">
+                                  <Upload className="h-3 w-3 mr-1" />
+                                  Upload
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    <FileText className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm">No workflow assigned to this worker</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))
+        )}
+      </div>
     </div>
   );
 }
