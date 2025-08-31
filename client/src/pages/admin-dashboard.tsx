@@ -815,6 +815,12 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker, isA
     enabled: !!selectedWorker
   });
 
+  // Fetch worker workflow data for selected worker
+  const { data: selectedWorkerWorkflowData, isLoading: workflowLoading } = useQuery({
+    queryKey: ['/api/workflow/worker', selectedWorker?.id],
+    enabled: !!selectedWorker?.id && isAuthenticated,
+  });
+
   // Filter workers based on search term
   const filteredWorkers = workers.filter((worker: any) => {
     const matchesSearch = !workerSearchTerm || 
