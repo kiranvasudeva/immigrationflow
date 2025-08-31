@@ -426,7 +426,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
   const checkCameraAvailability = async () => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-        console.log('MediaDevices API not supported');
+        // MediaDevices API not supported
         setHasCameraAccess(false);
         return;
       }
@@ -435,7 +435,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         stream.getTracks().forEach(track => track.stop()); // Stop the test stream
-        console.log('Camera permission granted');
+        // Camera permission granted
       } catch (permError) {
         console.error('Camera permission denied:', permError);
         setHasCameraAccess(false);
@@ -450,7 +450,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
       const devices = await navigator.mediaDevices.enumerateDevices();
       const cameras = devices.filter(device => device.kind === 'videoinput');
       
-      console.log('Available cameras:', cameras);
+      // Available cameras found
       
       setAvailableCameras(cameras);
       setHasCameraAccess(cameras.length > 0);

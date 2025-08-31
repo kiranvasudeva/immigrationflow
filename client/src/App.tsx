@@ -39,8 +39,6 @@ function Router() {
     );
   }
 
-  // Debug logging (remove in production)
-  // console.log('Router - isAuthenticated:', isAuthenticated, 'user:', user);
 
   return (
     <div>

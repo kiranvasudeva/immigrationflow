@@ -9,7 +9,7 @@ import WorkerList from "@/components/workers/worker-list";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { useTranslation } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/contexts/I18nProvider";
 
 export default function ClientDashboard() {
   const { toast } = useToast();

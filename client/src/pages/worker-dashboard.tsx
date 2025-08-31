@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { useTranslation } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/contexts/I18nProvider";
 
 export default function WorkerDashboard() {
   const { toast } = useToast();

@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Building, Mail, Phone, MapPin, CreditCard, Edit, Save, X, User, Plus, Calendar, Globe, CheckCircle, Clock, AlertTriangle, FileText, Upload, Download, Eye } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { useTranslation } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/contexts/I18nProvider";
 
 interface WorkerAssignment {
   id: string;
@@ -532,8 +532,6 @@ export default function ClientProfile() {
                                   size="sm" 
                                   variant="outline"
                                   onClick={() => {
-                                    console.log('🔥 BUTTON CLICKED - Worker ID:', worker.id);
-                                    alert('Button clicked for: ' + worker.firstName);
                                     setSelectedWorkerId(worker.id);
                                   }}
                                   data-testid={`button-view-worker-${worker.id}`}

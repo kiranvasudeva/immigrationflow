@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useLocation } from "wouter";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { useTranslation } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/contexts/I18nProvider";
 import { Menu } from "lucide-react";
 
 interface SidebarProps {

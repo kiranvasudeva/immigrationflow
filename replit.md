@@ -2,6 +2,16 @@
 
 ImmigrationFlow is a comprehensive SaaS platform for managing Romanian immigration workflows, including work permits, visa applications, and residence permits. The system handles the complete Romanian immigration process from AJOFM labor market tests through IGI work permits, consulate visa applications, to final residence permits. It features multi-role access control (Admin, Client Owner, Worker, Viewer), document management with PDF generation, automated reminders, audit logging, and a kanban-style workflow interface.
 
+# Recent Changes
+
+## August 31, 2025: Comprehensive Codebase Cleanup
+- **Migration Complete**: Successfully migrated from mock data to real workflow data from settings across all components
+- **Internationalization Consolidation**: Removed client/src/i18n.js and consolidated to single TypeScript-based I18nProvider
+- **Component Unification**: Merged 3 separate language selector components into unified LanguageSelector.tsx
+- **Import Standardization**: Updated all translation imports to use consistent @/contexts/I18nProvider
+- **Code Quality**: Removed backup files, moved development scripts to scripts/ folder, cleaned console.log statements
+- **Architecture Improvement**: Eliminated circular dependencies and standardized import paths throughout codebase
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.

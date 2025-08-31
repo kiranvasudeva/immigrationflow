@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useTranslation } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/contexts/I18nProvider';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';

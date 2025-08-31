@@ -31,7 +31,7 @@ import {
   Eye
 } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { useTranslation } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/contexts/I18nProvider";
 import { DocumentViewer } from "@/components/documents/DocumentViewer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 

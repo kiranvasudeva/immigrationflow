@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useTranslation } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/contexts/I18nProvider';
 
 export function useRoleBasedLanguage() {
   const { user, isLoading: isAuthLoading } = useAuth();

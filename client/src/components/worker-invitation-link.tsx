@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Copy, Send, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { useTranslation } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/contexts/I18nProvider';
 
 interface WorkerInvitationLinkProps {
   workerId?: string;
