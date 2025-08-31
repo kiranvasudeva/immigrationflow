@@ -38,8 +38,21 @@ export default function WorkerDashboard() {
     );
   }
 
-  if (!isAuthenticated || user?.role !== 'WORKER') {
+  if (!isAuthenticated) {
     return null;
+  }
+
+  // Debug: Allow viewing for all roles for now
+  if (user?.role !== 'WORKER' && user?.role !== 'ADMIN') {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Access Restricted</h2>
+          <p>Worker dashboard is only accessible to workers. Your role: {user?.role || 'Unknown'}</p>
+          <p className="text-sm text-gray-500 mt-2">User ID: {user?.id}</p>
+        </div>
+      </div>
+    );
   }
 
   // Real workflow data state
@@ -53,6 +66,61 @@ export default function WorkerDashboard() {
       
       try {
         setIsLoadingWorkflow(true);
+        
+        // For admin users in dev, simulate workflow data
+        if (user.role === 'ADMIN' && user.id === 'dev-admin-1') {
+          // Simulate workflow data for demo purposes
+          const mockWorkflowData = {
+            id: 'work-permit-initial',
+            name: 'Initial Work Permit Application',
+            description: 'Complete Romanian work permit application process (Demo Data)',
+            stages: [
+              {
+                id: 'doc-collection',
+                name: 'Initial Document Collection',
+                description: 'Collect passport, diplomas, employment contract, and personal documents from worker',
+                status: 'in-progress',
+                estimatedDays: 3,
+                documentRequirements: [
+                  {
+                    id: 'passport-copy',
+                    title: 'Passport Copy',
+                    description: 'High-quality scan of passport bio page (color, readable, unedited)',
+                    required: true,
+                    status: 'pending'
+                  },
+                  {
+                    id: 'diploma-copy',
+                    title: 'University Diploma',
+                    description: 'Original university diploma or degree certificate',
+                    required: true,
+                    status: 'pending'
+                  }
+                ]
+              },
+              {
+                id: 'ajofm-submission',
+                name: 'AJOFM Labor Market Test',
+                description: 'Submit job posting to AJOFM for labor market testing',
+                status: 'pending',
+                estimatedDays: 7,
+                documentRequirements: [
+                  {
+                    id: 'job-posting',
+                    title: 'Job Posting Document',
+                    description: 'Detailed job description for AJOFM submission',
+                    required: true,
+                    status: 'pending'
+                  }
+                ]
+              }
+            ]
+          };
+          setWorkflowData(mockWorkflowData);
+          setIsLoadingWorkflow(false);
+          return;
+        }
+        
         const response = await fetch(`/api/workflow/worker/${user.id}`);
         
         if (response.ok) {
@@ -118,6 +186,15 @@ export default function WorkerDashboard() {
         />
 
         <div className="p-8">
+          {/* Admin Demo Notice */}
+          {user?.role === 'ADMIN' && user?.id === 'dev-admin-1' && (
+            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                🔍 <strong>Admin Preview:</strong> This shows how the worker dashboard displays workflow data from Settings. This is demo data for demonstration.
+              </p>
+            </div>
+          )}
+
           {/* Progress Overview */}
           <StageProgress />
 

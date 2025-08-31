@@ -1159,7 +1159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/workflow/worker/:workerId', isAuthenticated, async (req: any, res) => {
     try {
       const { workerId } = req.params;
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       // Get worker to check authorization and workflows
       const worker = await storage.getWorker(workerId);
