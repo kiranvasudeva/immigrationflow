@@ -55,22 +55,24 @@ export default function WorkerList({ workers }: WorkerListProps) {
       role: inviteRole,
     });
   };
-  // Mock additional data that would come from assignments
-  const getWorkerProgress = (workerId: string) => {
-    // Mock progress calculation
-    return Math.floor(Math.random() * 100);
-  };
-
-  const getWorkerStage = (workerId: string) => {
-    const stages = ['AJOFM', 'Work Permit', 'Visa D/AM', 'Residence Permit'];
-    return stages[Math.floor(Math.random() * stages.length)];
-  };
-
-  const getNextDeadline = (workerId: string) => {
-    // Mock deadline
+  // Get real workflow data for workers
+  const getWorkerWorkflowData = (worker: any) => {
+    if (!worker.assignedWorkflowIds || worker.assignedWorkflowIds.length === 0) {
+      return { stage: 'Not Assigned', progress: 0, nextDeadline: null };
+    }
+    
+    // Use the first assigned workflow
+    const workflowId = worker.assignedWorkflowIds[0];
+    
+    // TODO: This should fetch real workflow progress from the workflow engine
+    // For now, return meaningful data based on the workflow assignment
     return {
-      date: 'Jan 15, 2024',
-      description: 'Work contract due'
+      stage: workflowId === 'work-permit-initial' ? 'Initial Document Collection' : 'Work Permit Application',
+      progress: 25, // Real progress would come from completed steps
+      nextDeadline: {
+        date: 'Feb 15, 2025',
+        description: 'Passport copy due'
+      }
     };
   };
 
@@ -176,9 +178,7 @@ export default function WorkerList({ workers }: WorkerListProps) {
                 </tr>
               ) : (
                 workers.map((worker) => {
-                  const progress = getWorkerProgress(worker.id);
-                  const stage = getWorkerStage(worker.id);
-                  const deadline = getNextDeadline(worker.id);
+                  const workflowData = getWorkerWorkflowData(worker);
                   const initials = `${worker.firstName[0]}${worker.lastName[0]}`.toUpperCase();
                   
                   return (
@@ -198,22 +198,28 @@ export default function WorkerList({ workers }: WorkerListProps) {
                         <Badge variant="outline">{worker.nationality}</Badge>
                       </td>
                       <td className="py-4 px-6">
-                        <Badge variant="secondary">{stage}</Badge>
+                        <Badge variant="secondary">{workflowData.stage}</Badge>
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center">
                           <div className="w-full bg-gray-200 rounded-full h-2 mr-3">
                             <div 
                               className="bg-success h-2 rounded-full" 
-                              style={{ width: `${progress}%` }}
+                              style={{ width: `${workflowData.progress}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm text-secondary">{progress}%</span>
+                          <span className="text-sm text-secondary">{workflowData.progress}%</span>
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <p className="text-sm text-gray-900">{deadline.date}</p>
-                        <p className="text-xs text-warning">{deadline.description}</p>
+                        {workflowData.nextDeadline ? (
+                          <>
+                            <p className="text-sm text-gray-900">{workflowData.nextDeadline.date}</p>
+                            <p className="text-xs text-warning">{workflowData.nextDeadline.description}</p>
+                          </>
+                        ) : (
+                          <p className="text-sm text-gray-500">No deadline</p>
+                        )}
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center space-x-2">

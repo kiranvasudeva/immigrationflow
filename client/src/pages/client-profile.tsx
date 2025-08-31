@@ -120,17 +120,6 @@ export default function ClientProfile() {
     enabled: !!selectedWorkerId && isAuthenticated,
   });
 
-  // Debug logging
-  console.log('🔍 Client ID:', clientId);
-  console.log('🔍 Workers Data:', workers);
-  console.log('🔍 Workers Loading:', workersLoading);
-  console.log('🔍 Workers Error:', workersError);
-  console.log('🔍 Selected Worker ID:', selectedWorkerId);
-  console.log('🔍 Selected Worker Data:', selectedWorker);
-  console.log('🔍 Selected Worker Loading:', selectedWorkerLoading);
-  console.log('🔍 Selected Worker Error:', selectedWorkerError);
-  console.log('🔍 Worker Workflow Data:', workerWorkflowData);
-  console.log('🔍 Workflow Loading:', workflowLoading);
 
 
 
@@ -817,12 +806,6 @@ export default function ClientProfile() {
                                 Immigration Workflow Status
                               </h3>
                               
-                              {/* Debug info */}
-                              <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
-                                Debug: Workflow data: {workerWorkflowData ? 'Yes' : 'No'}
-                                {workerWorkflowData && ` (${workerWorkflowData.stages?.length || 0} stages)`}
-                                {workflowLoading && ' - Loading workflow...'}
-                              </div>
                               
                               {workflowLoading ? (
                                 <div className="flex items-center justify-center p-8">
