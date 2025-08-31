@@ -32,7 +32,8 @@ import {
   Search,
   Filter,
   Upload,
-  Download
+  Download,
+  BarChart3
 } from "lucide-react";
 import { DocumentUploader } from "@/components/documents/DocumentUploader";
 import { DocumentViewer } from "@/components/documents/DocumentViewer";
@@ -294,29 +295,22 @@ export default function AdminDashboard() {
         )}
 
         {/* Workflow Analytics Section */}
-        {activeSection === 'workflows' && (
-          <div className="w-full space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                  Workflow Template Management & Analytics
-                </CardTitle>
-                <CardDescription>
-                  Manage workflow templates and view assignment statistics
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <WorkerWorkflowAssignments />
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        <div className="w-full space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Workflow Analytics
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">Workflow performance metrics and analytics will be displayed here.</p>
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Main Content */}
-        {activeSection === 'clients' ? (
-          // Full width layout for clients section
-          <div className="w-full">
+        {/* Clients Management Section */}
+        <div className="w-full">
             <Collapsible open={clientsOpen} onOpenChange={setClientsOpen}>
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="w-full justify-between p-0 h-auto">
@@ -681,59 +675,53 @@ export default function AdminDashboard() {
               </CollapsibleContent>
             </Collapsible>
           </div>
-        ) : (
-          // Grid layout for other sections (overview)
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Workflow Activity Panel - Only show on dashboard overview */}
-            {activeSection === 'overview' && (
-            <div className="lg:col-span-2 space-y-6">
-            <Collapsible open={workflowOpen} onOpenChange={setWorkflowOpen}>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between p-0 h-auto">
-                  <div className="flex items-center space-x-3">
-                    <FileText className="h-6 w-6 text-green-600" />
-                    <h2 className="text-xl font-semibold text-gray-900">Workflow Activity</h2>
-                  </div>
-                  {workflowOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-                </Button>
-              </CollapsibleTrigger>
-              
-              <CollapsibleContent className="space-y-4 mt-6">
-                {assignments.slice(0, 5).map((assignment: any) => (
-                  <Card key={assignment.id} className="p-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm">{assignment.requirement?.title}</span>
-                        <Badge variant={
-                          assignment.status === 'COMPLETED' ? 'default' :
-                          assignment.status === 'IN_PROGRESS' ? 'secondary' : 'outline'
-                        }>
-                          {assignment.status}
-                        </Badge>
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        {assignment.clientProfile?.legalName}
-                        {assignment.worker && ` • ${assignment.worker.firstName} ${assignment.worker.lastName}`}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {assignment.stage?.title}
-                      </div>
+
+        {/* Workflow Activity Panel */}
+        <div className="w-full space-y-6">
+          <Collapsible open={workflowOpen} onOpenChange={setWorkflowOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+                <div className="flex items-center space-x-3">
+                  <FileText className="h-6 w-6 text-green-600" />
+                  <h2 className="text-xl font-semibold text-gray-900">Workflow Activity</h2>
+                </div>
+                {workflowOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+              </Button>
+            </CollapsibleTrigger>
+            
+            <CollapsibleContent className="space-y-4 mt-6">
+              {assignments.slice(0, 5).map((assignment: any) => (
+                <Card key={assignment.id} className="p-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm">{assignment.requirement?.title}</span>
+                      <Badge variant={
+                        assignment.status === 'COMPLETED' ? 'default' :
+                        assignment.status === 'IN_PROGRESS' ? 'secondary' : 'outline'
+                      }>
+                        {assignment.status}
+                      </Badge>
                     </div>
-                  </Card>
-                ))}
-                
-                {assignments.length === 0 && (
-                  <Card className="p-6 text-center">
-                    <Clock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600 text-sm">No recent workflow activity</p>
-                  </Card>
-                )}
-              </CollapsibleContent>
-            </Collapsible>
-            </div>
-            )}
-          </div>
-        )}
+                    <div className="text-xs text-gray-600">
+                      {assignment.clientProfile?.legalName}
+                      {assignment.worker && ` • ${assignment.worker.firstName} ${assignment.worker.lastName}`}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {assignment.stage?.title}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+              
+              {assignments.length === 0 && (
+                <Card className="p-6 text-center">
+                  <Clock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-600 text-sm">No recent workflow activity</p>
+                </Card>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
       </div>
     </div>
   );
