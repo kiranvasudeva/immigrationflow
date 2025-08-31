@@ -12,9 +12,7 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/layout/sidebar";
-import AdminDashboard from "@/pages/admin-dashboard";
-import ClientDashboard from "@/pages/client-dashboard";
-import WorkerDashboard from "@/pages/worker-dashboard";
+import RoleBasedDashboard from "@/components/RoleBasedDashboard";
 import TemplatesPage from "@/pages/templates";
 import AnalyticsPage from "@/pages/analytics";
 import DocumentsPage from "@/pages/documents";
@@ -53,112 +51,20 @@ function Router() {
             <AppSidebar userRole={user?.role || 'VIEWER'} />
             <SidebarInset>
               <Switch>
-                <Route path="/" component={() => {
-                  switch (user?.role) {
-                    case 'ADMIN':
-                      return <AdminDashboard />;
-                    case 'OWNER':
-                      return <ClientDashboard />;
-                    case 'WORKER':
-                      return <WorkerDashboard />;
-                    case 'VIEWER':
-                      return <AdminDashboard />;
-                    default:
-                      return <ClientDashboard />;
-                  }
-                }} />
-                <Route path="/dashboard" component={() => {
-                  switch (user?.role) {
-                    case 'ADMIN':
-                      return <AdminDashboard />;
-                    case 'OWNER':
-                      return <ClientDashboard />;
-                    case 'WORKER':
-                      return <WorkerDashboard />;
-                    case 'VIEWER':
-                      return <AdminDashboard />;
-                    default:
-                      return <ClientDashboard />;
-                  }
-                }} />
+                <Route path="/" component={RoleBasedDashboard} />
+                <Route path="/dashboard" component={RoleBasedDashboard} />
                 <Route path="/templates" component={TemplatesPage} />
                 <Route path="/reports" component={AnalyticsPage} />
-                <Route path="/clients" component={() => {
-                  switch (user?.role) {
-                    case 'ADMIN':
-                      return <AdminDashboard />;
-                    case 'OWNER':
-                      return <ClientDashboard />;
-                    case 'WORKER':
-                      return <WorkerDashboard />;
-                    default:
-                      return <ClientDashboard />;
-                  }
-                }} />
+                <Route path="/clients" component={RoleBasedDashboard} />
                 <Route path="/clients/:id" component={ClientProfile} />
-                <Route path="/workers" component={() => {
-                  switch (user?.role) {
-                    case 'ADMIN':
-                      return <AdminDashboard />;
-                    case 'OWNER':
-                      return <ClientDashboard />;
-                    case 'WORKER':
-                      return <WorkerDashboard />;
-                    default:
-                      return <ClientDashboard />;
-                  }
-                }} />
+                <Route path="/workers" component={RoleBasedDashboard} />
                 <Route path="/workers/:id" component={WorkerProfile} />
-                <Route path="/requirements" component={() => {
-                  switch (user?.role) {
-                    case 'ADMIN':
-                      return <AdminDashboard />;
-                    case 'OWNER':
-                      return <ClientDashboard />;
-                    case 'WORKER':
-                      return <WorkerDashboard />;
-                    default:
-                      return <ClientDashboard />;
-                  }
-                }} />
-                <Route path="/reminders" component={() => {
-                  switch (user?.role) {
-                    case 'ADMIN':
-                      return <AdminDashboard />;
-                    case 'OWNER':
-                      return <ClientDashboard />;
-                    case 'WORKER':
-                      return <WorkerDashboard />;
-                    default:
-                      return <ClientDashboard />;
-                  }
-                }} />
-                <Route path="/audit" component={() => {
-                  switch (user?.role) {
-                    case 'ADMIN':
-                      return <AdminDashboard />;
-                    case 'OWNER':
-                      return <ClientDashboard />;
-                    case 'WORKER':
-                      return <WorkerDashboard />;
-                    default:
-                      return <ClientDashboard />;
-                  }
-                }} />
+                <Route path="/requirements" component={RoleBasedDashboard} />
+                <Route path="/reminders" component={RoleBasedDashboard} />
+                <Route path="/audit" component={RoleBasedDashboard} />
                 <Route path="/profile" component={ProfilePage} />
                 <Route path="/documents" component={DocumentsPage} />
-                <Route path="/payments" component={() => {
-                  switch (user?.role) {
-                    case 'ADMIN':
-                      return <AdminDashboard />;
-                    case 'OWNER':
-                      return <ClientDashboard />;
-                    case 'WORKER':
-                      return <WorkerDashboard />;
-                    default:
-                      return <ClientDashboard />;
-                  }
-                }} />
+                <Route path="/payments" component={RoleBasedDashboard} />
                 <Route path="/deadlines" component={DeadlinesPage} />
                 <Route path="/settings" component={SettingsPage} />
                 <Route component={NotFound} />
