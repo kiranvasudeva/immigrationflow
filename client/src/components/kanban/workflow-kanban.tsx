@@ -47,55 +47,38 @@ export default function WorkflowKanban({ assignments = [] }: WorkflowKanbanProps
     'ACCEPTED': { title: "Approved", color: "green", type: "success" }
   };
 
-  // Create columns with real data
+  // Create columns with standardized database statuses
   const columns = [
     {
-      title: "Awaiting Client",
-      color: "orange",
-      items: [...(groupedAssignments['AWAITING_UPLOAD'] || [])].map(assignment => ({
+      title: "Pending",
+      color: "gray",
+      items: [...(groupedAssignments['PENDING'] || [])].map(assignment => ({
         id: assignment.id,
         client: assignment.clientProfile.companyName,
         worker: `${assignment.worker?.firstName || 'N/A'} ${assignment.worker?.lastName || ''} - ${assignment.requirement.title}`,
-        dueInfo: "Awaiting upload",
+        dueInfo: "Awaiting action",
         type: "warning"
       }))
     },
     {
-      title: "Awaiting Admin",
+      title: "In Progress",
       color: "blue", 
-      items: [
-        ...(groupedAssignments['SUBMITTED_BY_USER'] || []),
-        ...(groupedAssignments['RECEIVED_BY_ADMIN'] || [])
-      ].map(assignment => ({
+      items: [...(groupedAssignments['IN_PROGRESS'] || [])].map(assignment => ({
         id: assignment.id,
         client: assignment.clientProfile.companyName,
         worker: `${assignment.worker?.firstName || 'N/A'} ${assignment.worker?.lastName || ''} - ${assignment.requirement.title}`,
-        dueInfo: assignment.status === 'RECEIVED_BY_ADMIN' ? "Ready to submit" : "Document received",
-        type: assignment.status === 'RECEIVED_BY_ADMIN' ? "success" : "info"
-      }))
-    },
-    {
-      title: "Submitted",
-      color: "purple",
-      items: [
-        ...(groupedAssignments['SUBMITTED_TO_INSTITUTION_DIGITAL'] || []),
-        ...(groupedAssignments['SUBMITTED_TO_INSTITUTION_COURIER'] || [])
-      ].map(assignment => ({
-        id: assignment.id,
-        client: assignment.clientProfile.companyName,
-        worker: `${assignment.worker?.firstName || 'N/A'} ${assignment.worker?.lastName || ''} - ${assignment.requirement.title}`,
-        dueInfo: "Submitted to institution",
+        dueInfo: "Currently processing",
         type: "info"
       }))
     },
     {
-      title: "Approved", 
+      title: "Completed",
       color: "green",
-      items: [...(groupedAssignments['ACCEPTED'] || [])].map(assignment => ({
+      items: [...(groupedAssignments['COMPLETED'] || [])].map(assignment => ({
         id: assignment.id,
         client: assignment.clientProfile.companyName,
         worker: `${assignment.worker?.firstName || 'N/A'} ${assignment.worker?.lastName || ''} - ${assignment.requirement.title}`,
-        dueInfo: "Approved",
+        dueInfo: "Completed",
         type: "success"
       }))
     },
@@ -114,6 +97,7 @@ export default function WorkflowKanban({ assignments = [] }: WorkflowKanbanProps
 
   const getColorClasses = (color: string) => {
     const colorMap = {
+      gray: "bg-gray-100 text-gray-800 border-gray-200",
       orange: "bg-orange-100 text-orange-800 border-orange-200",
       blue: "bg-blue-100 text-blue-800 border-blue-200",
       purple: "bg-purple-100 text-purple-800 border-purple-200",
@@ -125,6 +109,7 @@ export default function WorkflowKanban({ assignments = [] }: WorkflowKanbanProps
 
   const getItemClasses = (color: string) => {
     const colorMap = {
+      gray: "bg-gray-50 border-gray-200",
       orange: "bg-orange-50 border-orange-200",
       blue: "bg-blue-50 border-blue-200", 
       purple: "bg-purple-50 border-purple-200",

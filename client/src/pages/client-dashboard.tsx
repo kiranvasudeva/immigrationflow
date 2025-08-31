@@ -57,10 +57,10 @@ export default function ClientDashboard() {
     return null;
   }
 
-  const mockStats = {
-    totalWorkers: workers.length || 0,
-    pendingActions: 0, // Would be calculated from assignments
-    completed: 0, // Would be calculated from assignments
+  const realStats = {
+    totalWorkers: workers?.length || 0,
+    pendingActions: 0, // TODO: Calculate from assignments when assignments API is available
+    completed: 0, // TODO: Calculate from assignments when assignments API is available
   };
 
   return (
@@ -89,7 +89,7 @@ export default function ClientDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-secondary">{t('dashboard.stats.totalWorkers') || 'Total Workers'}</p>
-                    <p className="text-3xl font-bold text-gray-900">{mockStats.totalWorkers}</p>
+                    <p className="text-3xl font-bold text-gray-900">{realStats.totalWorkers}</p>
                   </div>
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                     <i className="fas fa-users text-primary text-xl"></i>
@@ -103,7 +103,7 @@ export default function ClientDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-secondary">{t('dashboard.stats.pendingActions') || 'Pending Actions'}</p>
-                    <p className="text-3xl font-bold text-gray-900">{mockStats.pendingActions}</p>
+                    <p className="text-3xl font-bold text-gray-900">{realStats.pendingActions}</p>
                   </div>
                   <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                     <i className="fas fa-clock text-warning text-xl"></i>
@@ -117,7 +117,7 @@ export default function ClientDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-secondary">{t('dashboard.stats.completed') || 'Completed'}</p>
-                    <p className="text-3xl font-bold text-gray-900">{mockStats.completed}</p>
+                    <p className="text-3xl font-bold text-gray-900">{realStats.completed}</p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                     <i className="fas fa-check-circle text-success text-xl"></i>

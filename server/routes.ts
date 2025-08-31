@@ -1452,60 +1452,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // In production, implement proper authorization
       }
 
-      // Return workflow data for this worker - using the same hardcoded workflows from settings
-      // In a full implementation, this would get the actual workflow definitions from database
+      // Get real workflow assignments from database for this worker
+      const assignments = await storage.getAssignmentsByWorker(workerId);
+      
+      if (!assignments || assignments.length === 0) {
+        return res.json({ 
+          id: null,
+          name: 'No Active Workflow',
+          description: 'No workflow assignments found for this worker. Please contact your administrator.',
+          stages: []
+        });
+      }
+
+      // Group assignments by workflow template and build stages
+      const workflowGroups = assignments.reduce((acc: any, assignment) => {
+        const templateId = assignment.workflow?.id || 'default';
+        if (!acc[templateId]) {
+          acc[templateId] = {
+            workflow: assignment.workflow,
+            assignments: []
+          };
+        }
+        acc[templateId].assignments.push(assignment);
+        return acc;
+      }, {});
+
+      // For now, return the first workflow (in production, handle multiple workflows)
+      const firstWorkflow = Object.values(workflowGroups)[0] as any;
+      if (!firstWorkflow) {
+        return res.json({ 
+          id: null,
+          name: 'No Active Workflow',
+          description: 'No workflow found for this worker.',
+          stages: []
+        });
+      }
+
       const workflowData = {
-        id: 'work-permit-initial',
-        name: 'Initial Work Permit Application',
-        description: 'Complete Romanian work permit application process from AJOFM labor market test through IGI permit issuance',
-        stages: [
-          {
-            id: 'doc-collection',
-            name: 'Initial Document Collection',
-            description: 'Collect passport, diplomas, employment contract, and personal documents from worker',
-            status: 'in-progress',
-            estimatedDays: 3,
-            documentRequirements: [
-              {
-                id: 'passport-copy',
-                title: 'Passport Copy',
-                description: 'High-quality scan of passport bio page (color, readable, unedited)',
-                required: true,
-                status: 'pending'
-              },
-              {
-                id: 'diploma-copy',
-                title: 'University Diploma',
-                description: 'Original university diploma or degree certificate',
-                required: true,
-                status: 'pending'
-              },
-              {
-                id: 'employment-contract',
-                title: 'Signed Employment Contract',
-                description: 'Signed employment contract with Romanian employer',
-                required: true,
-                status: 'pending'
-              }
-            ]
-          },
-          {
-            id: 'doc-review',
-            name: 'Document Review & Verification',
-            description: 'Admin reviews submitted documents for completeness and authenticity',
-            status: 'pending',
-            estimatedDays: 2,
-            documentRequirements: []
-          },
-          {
-            id: 'ajofm-submission',
-            name: 'AJOFM Labor Market Test',
-            description: 'Submit application to Romanian National Agency for Employment (AJOFM)',
-            status: 'pending',
-            estimatedDays: 14,
-            documentRequirements: []
-          }
-        ]
+        id: firstWorkflow.workflow?.id || 'unknown',
+        name: firstWorkflow.workflow?.name || 'Workflow',
+        description: firstWorkflow.workflow?.description || 'Worker workflow progress',
+        stages: firstWorkflow.assignments.map((assignment: any) => ({
+          id: assignment.id,
+          name: assignment.requirement?.title || 'Task',
+          description: assignment.requirement?.description || 'Complete this task',
+          status: assignment.status?.toLowerCase() || 'pending',
+          estimatedDays: assignment.requirement?.estimatedDays || 7,
+          documentRequirements: assignment.requirement?.documents?.map((doc: any) => ({
+            id: doc.id,
+            title: doc.title,
+            description: doc.description,
+            required: doc.required || false,
+            status: doc.status?.toLowerCase() || 'pending'
+          })) || []
+        }))
       };
 
       res.json(workflowData);
