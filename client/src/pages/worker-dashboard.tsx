@@ -67,56 +67,31 @@ export default function WorkerDashboard() {
       try {
         setIsLoadingWorkflow(true);
         
-        // For admin users in dev, simulate workflow data
+        // For admin users in dev, fetch actual workflow templates from settings
         if (user.role === 'ADMIN' && user.id === 'dev-admin-1') {
-          // Simulate workflow data for demo purposes
-          const mockWorkflowData = {
-            id: 'work-permit-initial',
-            name: 'Initial Work Permit Application',
-            description: 'Complete Romanian work permit application process (Demo Data)',
-            stages: [
-              {
-                id: 'doc-collection',
-                name: 'Initial Document Collection',
-                description: 'Collect passport, diplomas, employment contract, and personal documents from worker',
-                status: 'in-progress',
-                estimatedDays: 3,
-                documentRequirements: [
-                  {
-                    id: 'passport-copy',
-                    title: 'Passport Copy',
-                    description: 'High-quality scan of passport bio page (color, readable, unedited)',
-                    required: true,
-                    status: 'pending'
-                  },
-                  {
-                    id: 'diploma-copy',
-                    title: 'University Diploma',
-                    description: 'Original university diploma or degree certificate',
-                    required: true,
-                    status: 'pending'
-                  }
-                ]
-              },
-              {
-                id: 'ajofm-submission',
-                name: 'AJOFM Labor Market Test',
-                description: 'Submit job posting to AJOFM for labor market testing',
-                status: 'pending',
-                estimatedDays: 7,
-                documentRequirements: [
-                  {
-                    id: 'job-posting',
-                    title: 'Job Posting Document',
-                    description: 'Detailed job description for AJOFM submission',
-                    required: true,
-                    status: 'pending'
-                  }
-                ]
+          try {
+            const templatesResponse = await fetch('/api/workflow/templates');
+            if (templatesResponse.ok) {
+              const templates = await templatesResponse.json();
+              if (templates.length > 0) {
+                // Use the first workflow template as demo data
+                const firstWorkflow = templates[0];
+                const workflowData = {
+                  id: firstWorkflow.id,
+                  name: firstWorkflow.name + ' (Admin Demo)',
+                  description: firstWorkflow.description,
+                  stages: firstWorkflow.stages || []
+                };
+                setWorkflowData(workflowData);
+                setIsLoadingWorkflow(false);
+                return;
               }
-            ]
-          };
-          setWorkflowData(mockWorkflowData);
+            }
+          } catch (error) {
+            console.error('Error fetching workflow templates for admin demo:', error);
+          }
+          // Fallback to empty data for admin if templates fetch fails
+          setWorkflowData(null);
           setIsLoadingWorkflow(false);
           return;
         }

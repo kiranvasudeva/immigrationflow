@@ -1111,28 +1111,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Workflow engine routes
   app.get('/api/workflow/templates', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       // Allow all authenticated users to view workflow definitions for worker form
       // (removed admin-only restriction)
 
-      // Return hardcoded workflow definitions from settings instead of automation rules
+      // Return complete workflow definitions with stages and document requirements from settings
       const workflowDefinitions = [
         {
           id: 'work-permit-initial',
           name: 'Initial Work Permit Application',
-          description: 'Complete Romanian work permit application process from AJOFM labor market test through IGI permit issuance'
+          description: 'Complete Romanian work permit application process from AJOFM labor market test through IGI permit issuance',
+          stages: [
+            {
+              id: 'doc-collection',
+              name: 'Initial Document Collection',
+              description: 'Collect passport, diplomas, employment contract, and personal documents from worker',
+              status: 'in-progress',
+              estimatedDays: 3,
+              documentRequirements: [
+                {
+                  id: 'passport-copy',
+                  title: 'Passport Copy',
+                  description: 'High-quality scan of passport bio page (color, readable, unedited)',
+                  required: true,
+                  status: 'pending'
+                },
+                {
+                  id: 'diploma-copy',
+                  title: 'University Diploma',
+                  description: 'Original university diploma or degree certificate',
+                  required: true,
+                  status: 'pending'
+                },
+                {
+                  id: 'employment-contract',
+                  title: 'Signed Employment Contract',
+                  description: 'Signed employment contract with Romanian employer',
+                  required: true,
+                  status: 'pending'
+                }
+              ]
+            },
+            {
+              id: 'ajofm-submission',
+              name: 'AJOFM Labor Market Test',
+              description: 'Submit job posting to AJOFM for labor market testing',
+              status: 'pending',
+              estimatedDays: 7,
+              documentRequirements: [
+                {
+                  id: 'job-posting',
+                  title: 'Job Posting Document',
+                  description: 'Detailed job description for AJOFM submission',
+                  required: true,
+                  status: 'pending'
+                }
+              ]
+            },
+            {
+              id: 'igi-application',
+              name: 'IGI Work Permit Application',
+              description: 'Submit complete work permit application to Romanian Immigration Office',
+              status: 'pending',
+              estimatedDays: 14,
+              documentRequirements: [
+                {
+                  id: 'medical-certificate',
+                  title: 'Medical Certificate',
+                  description: 'Health certificate from approved Romanian medical provider',
+                  required: true,
+                  status: 'pending'
+                }
+              ]
+            }
+          ]
         },
         {
           id: 'residence-permit-temp',
           name: 'Temporary Residence Permit',
-          description: 'Romanian temporary residence permit application process'
+          description: 'Romanian temporary residence permit application process',
+          stages: [
+            {
+              id: 'residence-docs',
+              name: 'Residence Document Preparation',
+              description: 'Prepare documents for temporary residence permit application',
+              status: 'pending',
+              estimatedDays: 5,
+              documentRequirements: [
+                {
+                  id: 'accommodation-proof',
+                  title: 'Proof of Accommodation',
+                  description: 'Rental contract or property ownership documents',
+                  required: true,
+                  status: 'pending'
+                }
+              ]
+            }
+          ]
         },
         {
           id: 'work-permit-renewal',
           name: 'Work Permit Renewal',
-          description: 'Renewal process for existing work permits and residence cards'
+          description: 'Renewal process for existing work permits and residence cards',
+          stages: [
+            {
+              id: 'renewal-prep',
+              name: 'Renewal Document Preparation',
+              description: 'Prepare documents for work permit renewal',
+              status: 'pending',
+              estimatedDays: 5,
+              documentRequirements: [
+                {
+                  id: 'current-permit',
+                  title: 'Current Work Permit',
+                  description: 'Copy of existing work permit to be renewed',
+                  required: true,
+                  status: 'pending'
+                }
+              ]
+            }
+          ]
         }
       ];
       
