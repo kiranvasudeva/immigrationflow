@@ -887,6 +887,7 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker, isA
                   workflowData={selectedWorkerWorkflowData}
                   isLoading={workflowLoading}
                   isAuthenticated={isAuthenticated}
+                  userRole={user?.role}
                 />
               </div>
             )}

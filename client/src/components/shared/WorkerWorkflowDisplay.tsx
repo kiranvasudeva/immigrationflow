@@ -25,17 +25,22 @@ interface WorkerWorkflowDisplayProps {
   workflowData: any;
   isLoading: boolean;
   isAuthenticated: boolean;
+  userRole?: string;
 }
 
 export function WorkerWorkflowDisplay({ 
   workerId, 
   workflowData, 
   isLoading, 
-  isAuthenticated 
+  isAuthenticated,
+  userRole 
 }: WorkerWorkflowDisplayProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [uploadingStages, setUploadingStages] = useState<Set<string>>(new Set());
+  
+  // Check if user is admin - admins have full access to all actions
+  const isAdmin = userRole === 'ADMIN';
 
   // Status update mutation for workflow stages
   const updateStepStatusMutation = useMutation({
@@ -145,8 +150,12 @@ export function WorkerWorkflowDisplay({
   };
 
   // Document Collection Interface - Individual cards for each required document
-  const renderDocumentCollectionInterface = (stage: any, documents: any[]) => (
-    <div className="space-y-4">
+  const renderDocumentCollectionInterface = (stage: any, documents: any[]) => {
+    // Admins can always perform all document management actions
+    const canManageDocuments = isAdmin || isAuthenticated;
+    
+    return (
+      <div className="space-y-4">
       <h6 className="text-sm font-semibold text-gray-700 mb-3">Required Documents</h6>
       {documents.length === 0 ? (
         <div className="text-sm text-gray-500 italic">No specific documents required for this stage</div>
@@ -205,8 +214,9 @@ export function WorkerWorkflowDisplay({
           ))}
         </div>
       )}
-    </div>
-  );
+      </div>
+    );
+  };
 
   // Document Review Interface - Checklist with verification controls  
   const renderDocumentReviewInterface = (stage: any, documents: any[]) => (
