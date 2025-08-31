@@ -54,6 +54,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ message: 'Server is working' });
   });
 
+  // User authentication status endpoint
+  app.get('/api/auth/user', async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+
+      const userClaims = (req.user as any).claims;
+      if (!userClaims?.email) {
+        return res.status(401).json({ message: 'Invalid user session' });
+      }
+
+      // Get user from database
+      const user = await storage.getUserByEmail(userClaims.email);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error('Error getting user:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Workflow templates route (fixed)
   app.get('/api/workflow/templates', isAuthenticated, async (req: any, res) => {
     try {
