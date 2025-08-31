@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
@@ -42,62 +42,70 @@ export default function WorkerDashboard() {
     return null;
   }
 
-  // Mock data - would come from API based on worker's assignments
-  const mockUrgentActions = [
-    {
-      id: "1",
-      title: "Upload Work Contract",
-      description: "Required for IGI work permit application",
-      dueDate: "2024-01-15",
-      status: "urgent"
-    },
-    {
-      id: "2", 
-      title: "Criminal Background Check",
-      description: "FBI background check with apostille",
-      dueDate: "2024-01-10",
-      status: "overdue"
-    }
-  ];
+  // Real workflow data state
+  const [workflowData, setWorkflowData] = useState(null);
+  const [isLoadingWorkflow, setIsLoadingWorkflow] = useState(true);
 
-  const mockNextSteps = [
-    {
-      id: "1",
-      title: "Medical Certificate",
-      description: "Schedule appointment with approved doctor",
-      dueDate: "2024-01-20"
-    },
-    {
-      id: "2",
-      title: "Passport Photos", 
-      description: "6 passport photos, recent, white background",
-      dueDate: "2024-01-25"
-    }
-  ];
+  // Fetch workflow data for this worker
+  useEffect(() => {
+    const fetchWorkflowData = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setIsLoadingWorkflow(true);
+        const response = await fetch(`/api/workflow/worker/${user.id}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          setWorkflowData(data);
+        } else {
+          console.error('Failed to fetch workflow data:', response.statusText);
+          // Fall back to empty data
+          setWorkflowData(null);
+        }
+      } catch (error) {
+        console.error('Error fetching workflow data:', error);
+        setWorkflowData(null);
+      } finally {
+        setIsLoadingWorkflow(false);
+      }
+    };
 
-  const mockDocuments = [
-    {
-      id: "1",
-      name: "Diploma (Apostilled)",
-      stage: "AJOFM",
-      status: "SUBMITTED",
-      dueDate: "2023-12-20"
-    },
-    {
-      id: "2",
-      name: "Work Contract",
-      stage: "Work Permit", 
-      status: "AWAITING_UPLOAD",
-      dueDate: "2024-01-15"
-    },
-    {
-      id: "3",
-      name: "Criminal Background Check",
-      stage: "Work Permit",
-      status: "OVERDUE", 
-      dueDate: "2024-01-10"
-    }
-  ];
+    fetchWorkflowData();
+  }, [user?.id]);
+
+  // Generate urgent actions and next steps from workflow data
+  const urgentActions = workflowData?.stages?.filter(stage => stage.status === 'in-progress')
+    .flatMap(stage => 
+      stage.documentRequirements?.filter(doc => doc.required && doc.status === 'pending')
+        .map(doc => ({
+          id: doc.id,
+          title: doc.title,
+          description: doc.description,
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
+          status: "urgent"
+        })) || []
+    ) || [];
+
+  const nextSteps = workflowData?.stages?.filter(stage => stage.status === 'pending')
+    .slice(0, 3) // Show next 3 upcoming stages
+    .map(stage => ({
+      id: stage.id,
+      title: stage.name,
+      description: stage.description,
+      dueDate: new Date(Date.now() + (stage.estimatedDays || 7) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    })) || [];
+
+  // Generate document list from workflow data
+  const documents = workflowData?.stages?.flatMap(stage => 
+    stage.documentRequirements?.map(doc => ({
+      id: doc.id,
+      name: doc.title,
+      stage: stage.name,
+      status: doc.status?.toUpperCase() || 'PENDING',
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 7 days from now
+    })) || []
+  ) || [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -125,7 +133,18 @@ export default function WorkerDashboard() {
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-4">
-                  {mockUrgentActions.map((action) => (
+                  {isLoadingWorkflow ? (
+                    <div className="flex items-center justify-center p-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                      <span className="ml-2 text-gray-600">Loading workflow data...</span>
+                    </div>
+                  ) : urgentActions.length === 0 ? (
+                    <div className="text-center p-4 text-gray-500">
+                      <p>No urgent actions at this time.</p>
+                      <p className="text-sm">Great work! Keep up the progress.</p>
+                    </div>
+                  ) : (
+                    urgentActions.map((action) => (
                     <div 
                       key={action.id}
                       className={`flex items-start p-4 rounded-lg border ${
@@ -160,7 +179,8 @@ export default function WorkerDashboard() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -175,7 +195,7 @@ export default function WorkerDashboard() {
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-4">
-                  {mockNextSteps.map((step, index) => (
+                  {nextSteps.map((step, index) => (
                     <div 
                       key={step.id}
                       className="flex items-start p-4 bg-blue-50 border border-blue-200 rounded-lg"
@@ -217,7 +237,7 @@ export default function WorkerDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {mockDocuments.map((doc) => (
+                    {documents.map((doc) => (
                       <tr key={doc.id} className="hover:bg-gray-50" data-testid={`document-row-${doc.id}`}>
                         <td className="py-4 px-6">
                           <div className="flex items-center">

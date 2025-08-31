@@ -1156,6 +1156,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/workflow/worker/:workerId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { workerId } = req.params;
+      const userId = req.user.claims.sub;
+      
+      // Get worker to check authorization and workflows
+      const worker = await storage.getWorker(workerId);
+      if (!worker) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+
+      // Check authorization - worker can view their own data, admin can view all
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'ADMIN' && worker.userId !== userId) {
+        const client = await storage.getClientProfile(worker.clientProfileId);
+        if (client?.ownerUserId !== userId) {
+          return res.status(403).json({ message: "Unauthorized" });
+        }
+      }
+
+      // Return workflow data for this worker - using the same hardcoded workflows from settings
+      // In a full implementation, this would get the actual workflow definitions from database
+      const workflowData = {
+        id: 'work-permit-initial',
+        name: 'Initial Work Permit Application',
+        description: 'Complete Romanian work permit application process from AJOFM labor market test through IGI permit issuance',
+        stages: [
+          {
+            id: 'doc-collection',
+            name: 'Initial Document Collection',
+            description: 'Collect passport, diplomas, employment contract, and personal documents from worker',
+            status: 'in-progress',
+            estimatedDays: 3,
+            documentRequirements: [
+              {
+                id: 'passport-copy',
+                title: 'Passport Copy',
+                description: 'High-quality scan of passport bio page (color, readable, unedited)',
+                required: true,
+                status: 'pending'
+              },
+              {
+                id: 'diploma-copy',
+                title: 'University Diploma',
+                description: 'Original university diploma or degree certificate',
+                required: true,
+                status: 'pending'
+              },
+              {
+                id: 'employment-contract',
+                title: 'Signed Employment Contract',
+                description: 'Signed employment contract with Romanian employer',
+                required: true,
+                status: 'pending'
+              }
+            ]
+          },
+          {
+            id: 'doc-review',
+            name: 'Document Review & Verification',
+            description: 'Admin reviews submitted documents for completeness and authenticity',
+            status: 'pending',
+            estimatedDays: 2,
+            documentRequirements: []
+          },
+          {
+            id: 'ajofm-submission',
+            name: 'AJOFM Labor Market Test',
+            description: 'Submit application to Romanian National Agency for Employment (AJOFM)',
+            status: 'pending',
+            estimatedDays: 14,
+            documentRequirements: []
+          }
+        ]
+      };
+
+      res.json(workflowData);
+    } catch (error) {
+      console.error('Error fetching worker workflow:', error);
+      res.status(500).json({ message: "Failed to fetch worker workflow" });
+    }
+  });
+
   // Government API Integration routes
   app.get('/api/government/igi/status/:applicationId', isAuthenticated, async (req: any, res) => {
     try {
