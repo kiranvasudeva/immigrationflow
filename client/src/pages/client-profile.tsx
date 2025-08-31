@@ -129,6 +129,8 @@ export default function ClientProfile() {
   console.log('🔍 Selected Worker Data:', selectedWorker);
   console.log('🔍 Selected Worker Loading:', selectedWorkerLoading);
   console.log('🔍 Selected Worker Error:', selectedWorkerError);
+  console.log('🔍 Worker Workflow Data:', workerWorkflowData);
+  console.log('🔍 Workflow Loading:', workflowLoading);
 
 
 
