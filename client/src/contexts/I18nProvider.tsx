@@ -1,6 +1,7 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useTranslation as useI18nextTranslation } from 'react-i18next';
 import '../i18n';
+import { clientErrorReporter } from '../lib/clientErrorReporter';
 
 interface I18nContextType {
   t: (key: string, options?: any) => string;
@@ -23,7 +24,7 @@ export function I18nProvider({ children }: I18nProviderProps) {
     { code: 'ro', name: 'Română' }
   ];
 
-  // Enhanced translation function with automatic fallback
+  // Enhanced translation function with comprehensive monitoring
   const t = (key: string, options?: any): string => {
     try {
       // Handle namespace-based keys (namespace.key) 
@@ -55,13 +56,24 @@ export function I18nProvider({ children }: I18nProviderProps) {
         });
         const fallbackString = typeof fallback === 'string' ? fallback : String(fallback);
         if (fallbackString !== translationKey) {
+          // Log successful fallback
+          clientErrorReporter.logTranslation(key, i18n.language, fallbackString, true);
           return fallbackString;
+        } else {
+          // Log translation not found
+          clientErrorReporter.logTranslation(key, i18n.language, translationString, false, 'Translation not found in any language');
         }
+      } else {
+        // Log successful translation
+        clientErrorReporter.logTranslation(key, i18n.language, translationString, false);
       }
       
       return translationString;
     } catch (error) {
-      console.warn(`Translation error for key "${key}":`, error);
+      const err = error as Error;
+      clientErrorReporter.logTranslation(key, i18n.language, key, false, err.message);
+      clientErrorReporter.logError(err, 'Translation Error', { key, language: i18n.language });
+      
       // Return a meaningful fallback instead of the key
       const parts = key.split('.');
       return parts[parts.length - 1];

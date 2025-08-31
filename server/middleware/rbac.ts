@@ -253,7 +253,7 @@ async function checkDocumentAccess(userId: string, documentId: string, role: Use
   if (!document) return false;
   
   // Check access through assignment
-  return checkAssignmentAccess(userId, document.assignmentId, role);
+  return checkAssignmentAccess(userId, document.assignmentId || '', role);
 }
 
 async function checkTemplateAccess(userId: string, templateId: string, role: UserRole): Promise<boolean> {

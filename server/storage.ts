@@ -123,6 +123,7 @@ export interface IStorage {
   
   // Assignment operations
   getAssignment(id: string): Promise<Assignment | undefined>;
+  getAllAssignments(): Promise<Assignment[]>;
   getAssignmentsByClient(clientId: string): Promise<Assignment[]>;
   getAssignmentsByWorker(workerId: string): Promise<Assignment[]>;
   getAssignmentsByStatus(status: string): Promise<Assignment[]>;
@@ -533,6 +534,10 @@ export class DatabaseStorage implements IStorage {
   async getAssignment(id: string): Promise<Assignment | undefined> {
     const [assignment] = await db.select().from(assignments).where(eq(assignments.id, id));
     return assignment;
+  }
+
+  async getAllAssignments(): Promise<Assignment[]> {
+    return await db.select().from(assignments).orderBy(assignments.createdAt);
   }
 
   async getAssignmentsByClient(clientId: string): Promise<Assignment[]> {
