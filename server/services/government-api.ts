@@ -1,7 +1,9 @@
 import { z } from 'zod';
+import { Storage } from '../storage.js';
 
-// Romanian government API integration service
-// This is a simulation of real API integration with IGI, AJOFM, and consulate systems
+// Government status tracking service
+// Manages government application statuses that are manually updated by users in the system
+// No external API connections - all data is entered by admins, clients, and workers
 
 // API Response schemas
 const IgiStatusResponseSchema = z.object({
@@ -44,87 +46,105 @@ export type IgiStatusResponse = z.infer<typeof IgiStatusResponseSchema>;
 export type AjofmStatusResponse = z.infer<typeof AjofmStatusResponseSchema>;
 export type ConsulateStatusResponse = z.infer<typeof ConsulateStatusResponseSchema>;
 
-export class GovernmentApiService {
-  private baseUrl: string;
-  private apiKey: string;
+export class GovernmentStatusService {
+  private storage: Storage;
 
-  constructor() {
-    this.baseUrl = process.env.GOVERNMENT_API_BASE_URL || 'https://api.simulation.gov.ro';
-    this.apiKey = process.env.GOVERNMENT_API_KEY || 'simulation_key';
+  constructor(storage: Storage) {
+    this.storage = storage;
   }
 
-  // IGI (Romanian Immigration Office) API integration
-  async getIgiStatus(applicationId: string): Promise<IgiStatusResponse> {
+  // IGI (Romanian Immigration Office) status from internal data
+  async getIgiStatus(workerId: string): Promise<IgiStatusResponse | null> {
     try {
-      // Simulate API call with realistic response
-      await this.delay(1000 + Math.random() * 2000); // Simulate network delay
+      // Get worker's workflow progress for IGI-related steps
+      const workerProgress = await this.storage.getWorkerWorkflowProgress(workerId);
+      const igiStep = workerProgress.find(p => p.stepId.includes('igi') || p.stepId.includes('work-permit'));
+      
+      if (!igiStep) {
+        return null;
+      }
 
-      // Simulate different statuses based on application ID pattern
-      const mockResponse: IgiStatusResponse = {
-        applicationId,
-        status: this.simulateIgiStatus(applicationId),
-        lastUpdated: new Date().toISOString(),
-        nextSteps: this.getIgiNextSteps(applicationId),
-        estimatedCompletion: this.getEstimatedCompletion(),
-        documents: this.simulateDocumentStatus()
+      const response: IgiStatusResponse = {
+        applicationId: igiStep.stepId,
+        status: this.mapStepStatusToIgiStatus(igiStep.status),
+        lastUpdated: igiStep.updatedAt.toISOString(),
+        nextSteps: this.getNextStepsForStatus(igiStep.status),
+        estimatedCompletion: igiStep.dueDate?.toISOString(),
+        documents: igiStep.documents?.map(doc => ({
+          name: doc.name,
+          status: this.mapDocumentStatus(doc.status),
+          notes: doc.notes
+        })) || []
       };
 
-      return IgiStatusResponseSchema.parse(mockResponse);
+      return IgiStatusResponseSchema.parse(response);
     } catch (error) {
       console.error('Error fetching IGI status:', error);
       throw new Error('Failed to fetch IGI application status');
     }
   }
 
-  // AJOFM (Romanian Employment Agency) API integration
-  async getAjofmStatus(applicationId: string): Promise<AjofmStatusResponse> {
+  // AJOFM (Romanian Employment Agency) status from internal data
+  async getAjofmStatus(workerId: string): Promise<AjofmStatusResponse | null> {
     try {
-      await this.delay(800 + Math.random() * 1500);
+      // Get worker's workflow progress for AJOFM-related steps
+      const workerProgress = await this.storage.getWorkerWorkflowProgress(workerId);
+      const ajofmStep = workerProgress.find(p => p.stepId.includes('ajofm') || p.stepId.includes('labor-market'));
+      
+      if (!ajofmStep) {
+        return null;
+      }
 
-      const mockResponse: AjofmStatusResponse = {
-        applicationId,
-        laborMarketTestStatus: this.simulateAjofmStatus(applicationId),
-        testResults: this.simulateLaborMarketTest(applicationId),
-        approvalNumber: this.simulateAjofmStatus(applicationId) === 'APPROVED' ? `AJOFM-${applicationId.slice(-6)}` : undefined,
-        validUntil: this.simulateAjofmStatus(applicationId) === 'APPROVED' ? 
-          new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : undefined
+      const response: AjofmStatusResponse = {
+        applicationId: ajofmStep.stepId,
+        laborMarketTestStatus: this.mapStepStatusToAjofmStatus(ajofmStep.status),
+        testResults: ajofmStep.metadata ? {
+          availableRomanians: ajofmStep.metadata.availableRomanians || 0,
+          positionsOffered: ajofmStep.metadata.positionsOffered || 1,
+          testDuration: ajofmStep.metadata.testDuration || '30 days',
+          completedAt: ajofmStep.status === 'COMPLETED' ? ajofmStep.updatedAt.toISOString() : undefined
+        } : undefined,
+        approvalNumber: ajofmStep.status === 'COMPLETED' ? ajofmStep.metadata?.approvalNumber : undefined,
+        validUntil: ajofmStep.status === 'COMPLETED' ? ajofmStep.metadata?.validUntil : undefined
       };
 
-      return AjofmStatusResponseSchema.parse(mockResponse);
+      return AjofmStatusResponseSchema.parse(response);
     } catch (error) {
       console.error('Error fetching AJOFM status:', error);
       throw new Error('Failed to fetch AJOFM application status');
     }
   }
 
-  // Romanian Consulate API integration
-  async getConsulateStatus(applicationId: string, consulateCode: string): Promise<ConsulateStatusResponse> {
+  // Romanian Consulate status from internal data
+  async getConsulateStatus(workerId: string, consulateCode: string): Promise<ConsulateStatusResponse | null> {
     try {
-      await this.delay(600 + Math.random() * 1200);
+      // Get worker's workflow progress for consulate-related steps
+      const workerProgress = await this.storage.getWorkerWorkflowProgress(workerId);
+      const consulateStep = workerProgress.find(p => p.stepId.includes('consulate') || p.stepId.includes('visa'));
+      
+      if (!consulateStep) {
+        return null;
+      }
 
-      const mockResponse: ConsulateStatusResponse = {
-        applicationId,
-        appointmentDate: this.simulateAppointmentDate(),
-        status: this.simulateConsulateStatus(applicationId),
-        visaStatus: this.simulateVisaStatus(applicationId),
-        visaNumber: this.simulateVisaStatus(applicationId) === 'ISSUED' ? `ROU${applicationId.slice(-8)}` : undefined,
-        pickupDate: this.simulatePickupDate(),
+      const response: ConsulateStatusResponse = {
+        applicationId: consulateStep.stepId,
+        appointmentDate: consulateStep.metadata?.appointmentDate,
+        status: this.mapStepStatusToConsulateStatus(consulateStep.status),
+        visaStatus: consulateStep.metadata?.visaStatus,
+        visaNumber: consulateStep.metadata?.visaNumber,
+        pickupDate: consulateStep.metadata?.pickupDate,
         consulate: this.getConsulateName(consulateCode)
       };
 
-      return ConsulateStatusResponseSchema.parse(mockResponse);
+      return ConsulateStatusResponseSchema.parse(response);
     } catch (error) {
       console.error('Error fetching Consulate status:', error);
       throw new Error('Failed to fetch Consulate application status');
     }
   }
 
-  // Combined status check for all systems
-  async getComprehensiveStatus(workerId: string, applicationIds: {
-    igi?: string;
-    ajofm?: string;
-    consulate?: { id: string; code: string };
-  }) {
+  // Combined status check for all systems based on internal data
+  async getComprehensiveStatus(workerId: string, consulateCode?: string) {
     const results: {
       igi?: IgiStatusResponse;
       ajofm?: AjofmStatusResponse;
@@ -132,34 +152,14 @@ export class GovernmentApiService {
     } = {};
 
     try {
-      const promises = [];
+      // Get all statuses for the worker
+      const igiStatus = await this.getIgiStatus(workerId);
+      const ajofmStatus = await this.getAjofmStatus(workerId);
+      const consulateStatus = consulateCode ? await this.getConsulateStatus(workerId, consulateCode) : null;
 
-      if (applicationIds.igi) {
-        promises.push(
-          this.getIgiStatus(applicationIds.igi).then(status => ({ type: 'igi', status }))
-        );
-      }
-
-      if (applicationIds.ajofm) {
-        promises.push(
-          this.getAjofmStatus(applicationIds.ajofm).then(status => ({ type: 'ajofm', status }))
-        );
-      }
-
-      if (applicationIds.consulate) {
-        promises.push(
-          this.getConsulateStatus(applicationIds.consulate.id, applicationIds.consulate.code)
-            .then(status => ({ type: 'consulate', status }))
-        );
-      }
-
-      const responses = await Promise.all(promises);
-      
-      responses.forEach(response => {
-        if (response.type === 'igi') results.igi = response.status as IgiStatusResponse;
-        if (response.type === 'ajofm') results.ajofm = response.status as AjofmStatusResponse;
-        if (response.type === 'consulate') results.consulate = response.status as ConsulateStatusResponse;
-      });
+      if (igiStatus) results.igi = igiStatus;
+      if (ajofmStatus) results.ajofm = ajofmStatus;
+      if (consulateStatus) results.consulate = consulateStatus;
 
       return results;
     } catch (error) {
@@ -168,85 +168,59 @@ export class GovernmentApiService {
     }
   }
 
-  // Helper methods for simulation
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  // Helper methods for mapping internal data to government status formats
+  private mapStepStatusToIgiStatus(status: string): IgiStatusResponse['status'] {
+    switch (status) {
+      case 'NOT_STARTED': return 'SUBMITTED';
+      case 'IN_PROGRESS': return 'IN_REVIEW';
+      case 'COMPLETED': return 'APPROVED';
+      case 'REJECTED': return 'REJECTED';
+      default: return 'SUBMITTED';
+    }
   }
 
-  private simulateIgiStatus(applicationId: string): IgiStatusResponse['status'] {
-    const hash = this.hashCode(applicationId);
-    const statuses: IgiStatusResponse['status'][] = ['SUBMITTED', 'IN_REVIEW', 'APPROVED', 'REJECTED', 'EXPIRED'];
-    return statuses[Math.abs(hash) % statuses.length];
+  private mapStepStatusToAjofmStatus(status: string): AjofmStatusResponse['laborMarketTestStatus'] {
+    switch (status) {
+      case 'NOT_STARTED': return 'PENDING';
+      case 'IN_PROGRESS': return 'IN_PROGRESS';
+      case 'COMPLETED': return 'APPROVED';
+      case 'REJECTED': return 'REJECTED';
+      default: return 'PENDING';
+    }
   }
 
-  private simulateAjofmStatus(applicationId: string): AjofmStatusResponse['laborMarketTestStatus'] {
-    const hash = this.hashCode(applicationId);
-    const statuses: AjofmStatusResponse['laborMarketTestStatus'][] = ['PENDING', 'IN_PROGRESS', 'APPROVED', 'REJECTED'];
-    return statuses[Math.abs(hash) % statuses.length];
+  private mapStepStatusToConsulateStatus(status: string): ConsulateStatusResponse['status'] {
+    switch (status) {
+      case 'NOT_STARTED': return 'SCHEDULED';
+      case 'IN_PROGRESS': return 'SCHEDULED';
+      case 'COMPLETED': return 'COMPLETED';
+      case 'REJECTED': return 'CANCELLED';
+      default: return 'SCHEDULED';
+    }
   }
 
-  private simulateConsulateStatus(applicationId: string): ConsulateStatusResponse['status'] {
-    const hash = this.hashCode(applicationId);
-    const statuses: ConsulateStatusResponse['status'][] = ['SCHEDULED', 'COMPLETED', 'CANCELLED', 'RESCHEDULED'];
-    return statuses[Math.abs(hash) % statuses.length];
+  private mapDocumentStatus(status: string): 'RECEIVED' | 'VERIFIED' | 'MISSING' | 'REJECTED' {
+    switch (status) {
+      case 'UPLOADED': return 'RECEIVED';
+      case 'APPROVED': return 'VERIFIED';
+      case 'REJECTED': return 'REJECTED';
+      default: return 'MISSING';
+    }
   }
 
-  private simulateVisaStatus(applicationId: string): ConsulateStatusResponse['visaStatus'] {
-    const hash = this.hashCode(applicationId);
-    const statuses: ConsulateStatusResponse['visaStatus'][] = ['PENDING', 'ISSUED', 'DENIED'];
-    return statuses[Math.abs(hash) % statuses.length];
-  }
-
-  private simulateLaborMarketTest(applicationId: string) {
-    if (this.simulateAjofmStatus(applicationId) === 'PENDING') return undefined;
-    
-    return {
-      availableRomanians: Math.floor(Math.random() * 10),
-      positionsOffered: Math.floor(Math.random() * 5) + 1,
-      testDuration: '30 days',
-      completedAt: this.simulateAjofmStatus(applicationId) === 'APPROVED' || this.simulateAjofmStatus(applicationId) === 'REJECTED' ? 
-        new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString() : undefined
-    };
-  }
-
-  private simulateDocumentStatus() {
-    const documents = [
-      'Passport Copy',
-      'Employment Contract',
-      'Academic Qualifications',
-      'Medical Certificate',
-      'Criminal Record Certificate'
-    ];
-    
-    return documents.map(name => ({
-      name,
-      status: (['RECEIVED', 'VERIFIED', 'MISSING', 'REJECTED'] as const)[Math.floor(Math.random() * 4)],
-      notes: Math.random() > 0.7 ? 'Document requires additional verification' : undefined
-    }));
-  }
-
-  private getIgiNextSteps(applicationId: string): string[] {
-    const status = this.simulateIgiStatus(applicationId);
-    const steps: Record<IgiStatusResponse['status'], string[]> = {
-      'SUBMITTED': ['Wait for initial review', 'Prepare for interview if requested'],
-      'IN_REVIEW': ['Provide additional documents if requested', 'Check status weekly'],
-      'APPROVED': ['Collect work permit', 'Register with local authorities'],
-      'REJECTED': ['Review rejection reasons', 'Prepare appeal if applicable'],
-      'EXPIRED': ['Submit new application', 'Update all documents']
-    };
-    return steps[status] || [];
-  }
-
-  private simulateAppointmentDate(): string {
-    return new Date(Date.now() + Math.random() * 60 * 24 * 60 * 60 * 1000).toISOString();
-  }
-
-  private simulatePickupDate(): string {
-    return new Date(Date.now() + Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString();
-  }
-
-  private getEstimatedCompletion(): string {
-    return new Date(Date.now() + (30 + Math.random() * 90) * 24 * 60 * 60 * 1000).toISOString();
+  private getNextStepsForStatus(status: string): string[] {
+    switch (status) {
+      case 'NOT_STARTED':
+        return ['Submit required documents', 'Complete application form'];
+      case 'IN_PROGRESS':
+        return ['Monitor application status', 'Respond to any requests'];
+      case 'COMPLETED':
+        return ['Collect documents', 'Proceed to next step'];
+      case 'REJECTED':
+        return ['Review rejection reasons', 'Resubmit application'];
+      default:
+        return [];
+    }
   }
 
   private getConsulateName(code: string): string {
@@ -260,16 +234,9 @@ export class GovernmentApiService {
     };
     return consulates[code] || 'Romanian Consulate';
   }
-
-  private hashCode(str: string): number {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash;
-  }
 }
 
-export const governmentApiService = new GovernmentApiService();
+// Export factory function for dependency injection
+export function createGovernmentStatusService(storage: Storage) {
+  return new GovernmentStatusService(storage);
+}

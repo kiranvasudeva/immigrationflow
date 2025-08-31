@@ -10,7 +10,7 @@ import { requireRole, requireOwnership, requireRoleAndOwnership, applyTenantFilt
 
 // Simple admin middleware using requireRole
 const requireAdmin = requireRole('ADMIN');
-import { governmentApiService } from "./services/government-api";
+import { createGovernmentStatusService } from "./services/government-api";
 import { ocrService } from "./services/ocr-service";
 import { workflowEngine } from "./services/workflow-engine";
 import { SecureUploadService } from "./services/secureUploadService";
@@ -45,6 +45,9 @@ import {
 import { seedDatabase } from "./seedDatabase";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Create government status service instance
+  const governmentStatusService = createGovernmentStatusService(storage);
+  
   // OpenAPI Documentation endpoint
   try {
     const openApiSpec = JSON.parse(
@@ -1541,7 +1544,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/government/igi/status/:applicationId', isAuthenticated, async (req: any, res) => {
     try {
       const { applicationId } = req.params;
-      const status = await governmentApiService.getIgiStatus(applicationId);
+      const status = await governmentStatusService.getIgiStatus(applicationId);
       res.json(status);
     } catch (error) {
       console.error('Error fetching IGI status:', error);
@@ -1552,7 +1555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/government/ajofm/status/:applicationId', isAuthenticated, async (req: any, res) => {
     try {
       const { applicationId } = req.params;
-      const status = await governmentApiService.getAjofmStatus(applicationId);
+      const status = await governmentStatusService.getAjofmStatus(applicationId);
       res.json(status);
     } catch (error) {
       console.error('Error fetching AJOFM status:', error);
@@ -1563,7 +1566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/government/consulate/status/:applicationId/:consulateCode', isAuthenticated, async (req: any, res) => {
     try {
       const { applicationId, consulateCode } = req.params;
-      const status = await governmentApiService.getConsulateStatus(applicationId, consulateCode);
+      const status = await governmentStatusService.getConsulateStatus(applicationId, consulateCode);
       res.json(status);
     } catch (error) {
       console.error('Error fetching Consulate status:', error);
@@ -1583,7 +1586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         applicationIds.consulate = { id: consulateId as string, code: consulateCode as string };
       }
 
-      const comprehensiveStatus = await governmentApiService.getComprehensiveStatus(workerId, applicationIds);
+      const comprehensiveStatus = await governmentStatusService.getComprehensiveStatus(workerId, applicationIds.consulate?.code);
       res.json(comprehensiveStatus);
     } catch (error) {
       console.error('Error fetching comprehensive status:', error);
