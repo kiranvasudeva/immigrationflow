@@ -1674,6 +1674,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             name: step.name,
             description: step.description,
             status: stageStatus,
+            stageType: step.stepType, // Pass through the step type for stage-specific UI
             estimatedDays: step.estimatedDays,
             responsibleParty: step.assignedRole,
             documentRequirements: requirements.map(req => ({
@@ -1710,8 +1711,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get worker and validate workflow
       const worker = await storage.getWorker(workerId);
-      if (!worker || !worker.assignedWorkflowIds || worker.assignedWorkflowIds.length === 0) {
-        return res.status(404).json({ message: "Worker or workflow not found" });
+      if (!worker) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+
+      // Get assigned workflows for this worker
+      const assignedWorkflows = await storage.getWorkflowsForWorker(workerId);
+      if (!assignedWorkflows || assignedWorkflows.length === 0) {
+        return res.status(404).json({ message: "No workflow assigned to this worker" });
       }
 
       // Basic validation for now - can be enhanced with proper workflow step tracking

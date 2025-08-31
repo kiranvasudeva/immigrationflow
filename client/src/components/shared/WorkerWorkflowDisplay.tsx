@@ -113,28 +113,33 @@ export function WorkerWorkflowDisplay({
 
   // Render stage-specific UI based on stage type and requirements
   const renderStageInterface = (stage: any) => {
-    const stageType = stage.stageType || 'document_collection';
+    const stageType = stage.stageType; // Now comes from database enum
     const documents = stage.documentRequirements || [];
     
     switch (stageType) {
-      case 'document_collection':
-      case 'initial_documents':
+      case 'DOCUMENT_COLLECTION':
         return renderDocumentCollectionInterface(stage, documents);
       
-      case 'document_review':
-      case 'verification':
-      case 'review':
+      case 'DOCUMENT_REVIEW':
         return renderDocumentReviewInterface(stage, documents);
       
-      case 'submission':
-      case 'administrative':
+      case 'ADMIN_APPROVAL':
+        return renderDocumentReviewInterface(stage, documents); // Admin approval uses review interface
+      
+      case 'INSTITUTIONAL_SUBMISSION':
         return renderSubmissionInterface(stage);
       
-      case 'processing':
-      case 'government_processing':
-        return renderProcessingInterface(stage);
+      case 'FORM_COMPLETION':
+        return renderFormCompletionInterface(stage);
+      
+      case 'PAYMENT':
+        return renderPaymentInterface(stage);
       
       default:
+        // If no specific stageType, determine by document presence and stage name
+        if (documents.length > 0) {
+          return renderDocumentCollectionInterface(stage, documents);
+        }
         return renderGeneralInterface(stage);
     }
   };
@@ -321,6 +326,78 @@ export function WorkerWorkflowDisplay({
           >
             <CheckCircle2 className="h-3 w-3 mr-1" />
             Mark as Received
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Form Completion Interface - For completing administrative forms
+  const renderFormCompletionInterface = (stage: any) => (
+    <div className="space-y-4">
+      <h6 className="text-sm font-semibold text-gray-700">Form Completion</h6>
+      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <FileText className="h-4 w-4 text-purple-600" />
+          <span className="font-medium text-sm text-purple-800">Forms Required</span>
+        </div>
+        <p className="text-xs text-purple-700 mb-3">
+          Complete all required forms and administrative paperwork for this stage.
+        </p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            data-testid={`button-open-forms-${stage.id}`}
+          >
+            <FileText className="h-3 w-3 mr-1" />
+            Open Forms
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleMarkComplete(stage.id)}
+            disabled={updateStepStatusMutation.isPending}
+            data-testid={`button-complete-forms-${stage.id}`}
+          >
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            Mark Complete
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Payment Interface - For handling payment requirements
+  const renderPaymentInterface = (stage: any) => (
+    <div className="space-y-4">
+      <h6 className="text-sm font-semibold text-gray-700">Payment Required</h6>
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Download className="h-4 w-4 text-green-600" />
+          <span className="font-medium text-sm text-green-800">Government Fees</span>
+        </div>
+        <p className="text-xs text-green-700 mb-3">
+          Payment required for government processing fees and administrative costs.
+        </p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            data-testid={`button-process-payment-${stage.id}`}
+          >
+            <Download className="h-3 w-3 mr-1" />
+            Process Payment
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleMarkComplete(stage.id)}
+            disabled={updateStepStatusMutation.isPending}
+            data-testid={`button-confirm-payment-${stage.id}`}
+          >
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            Confirm Paid
           </Button>
         </div>
       </div>
