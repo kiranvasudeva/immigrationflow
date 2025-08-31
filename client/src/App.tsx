@@ -1,9 +1,11 @@
+import React from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/contexts/I18nProvider";
+import { clientLogger } from "@/lib/clientLogger";
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
 import { useAuth } from "@/hooks/useAuth";
 import { DummyDataAlert } from "@/components/dummy-data-alert";
@@ -35,6 +37,15 @@ function Router() {
   
   // Initialize role-based language settings
   useRoleBasedLanguage();
+
+  // Initialize client logging
+  React.useEffect(() => {
+    clientLogger.info('user', 'App initialized', {
+      isAuthenticated,
+      userAgent: navigator.userAgent,
+      timestamp: Date.now()
+    });
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return (

@@ -3,29 +3,24 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import HttpApi from 'i18next-http-backend';
 
-const resources = {
-  en: { translation: {} },
-  ro: { translation: {} },
-  es: { translation: {} },
-  fr: { translation: {} }
-};
-
 i18n
   .use(HttpApi)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    resources,
     fallbackLng: 'en',
-    debug: false,
-
+    debug: true, // Enable debug for better logging
+    
     backend: {
       loadPath: '/locales/{{lng}}/translation.json',
+      requestOptions: {
+        cache: 'no-cache' // Prevent caching issues during development
+      }
     },
 
     detection: {
       order: ['localStorage', 'navigator'],
-      lookupLocalStorage: 'i18nextLng',
+      lookupLocalStorage: 'app-language', // Match what we use in I18nProvider
       caches: ['localStorage'],
     },
 
@@ -36,6 +31,13 @@ i18n
     react: {
       useSuspense: false,
     },
+
+    // Add default namespace
+    defaultNS: 'translation',
+    ns: ['translation'],
+
+    // Wait for resources to load
+    initImmediate: false,
   });
 
 export default i18n;
