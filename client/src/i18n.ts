@@ -12,7 +12,7 @@ i18n
     debug: false, // Disable debug in production
     
     backend: {
-      loadPath: '/locales/{{lng}}/translation.json',
+      loadPath: '/locales/{{lng}}/{{ns}}.json',
       requestOptions: {
         cache: 'no-cache' // Prevent caching issues during development
       }
@@ -32,9 +32,9 @@ i18n
       useSuspense: false,
     },
 
-    // Add default namespace
-    defaultNS: 'translation',
-    ns: ['translation'],
+    // Configure multiple namespaces
+    defaultNS: 'common',
+    ns: ['common', 'nav', 'dashboard', 'actions'],
 
     // Wait for resources to load
     initImmediate: false,

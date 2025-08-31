@@ -29,12 +29,12 @@ export function I18nProvider({ children }: I18nProviderProps) {
     try {
       // Handle namespace-based keys (namespace.key) 
       const parts = key.split('.');
-      let namespace = 'translation';
+      let namespace = 'common'; // Default namespace
       let translationKey = key;
       
-      if (parts.length > 1 && ['common', 'nav', 'actions', 'dashboard', 'landing'].includes(parts[0])) {
-        namespace = 'translation';
-        translationKey = key; // Keep full key for namespace-less approach
+      if (parts.length > 1 && ['common', 'nav', 'actions', 'dashboard'].includes(parts[0])) {
+        namespace = parts[0]; // Use the first part as namespace
+        translationKey = parts.slice(1).join('.'); // Use remaining parts as key
       }
       
       const translation = originalT(translationKey, { 

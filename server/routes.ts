@@ -9,6 +9,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { setupSecurityHeaders, createRateLimiter, validateInput, createEmergencyAdminAccess } from "./middleware/security";
 import { createStructuredLogger, performanceMonitoring, errorTracking, setupHealthChecks } from "./middleware/monitoring";
+import { ROMANIAN_WORK_PERMIT_WORKFLOW, mapWorkflowStepToAPI } from "./config/mapping";
 
 let devAuthBypass: any;
 

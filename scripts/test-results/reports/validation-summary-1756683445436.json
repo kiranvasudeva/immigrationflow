@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-08-31T23:37:25.436Z",
+  "totalTests": 19,
+  "passed": 8,
+  "failed": 8,
+  "warnings": 3,
+  "successRate": 42.1,
+  "criticalIssues": 8,
+  "mockDataViolations": 0,
+  "performanceMetrics": {
+    "averageResponseTime": 122,
+    "slowRequests": [],
+    "fastRequests": [
+      {
+        "name": "Route: Dashboard",
+        "duration": 213
+      },
+      {
+        "name": "Route: Clients",
+        "duration": 73
+      },
+      {
+        "name": "Route: Workers",
+        "duration": 43
+      },
+      {
+        "name": "Route: Assignments",
+        "duration": 61
+      },
+      {
+        "name": "Route: Workflow",
+        "duration": 45
+      },
+      {
+        "name": "Route: Analytics",
+        "duration": 52
+      },
+      {
+        "name": "Route: Settings",
+        "duration": 51
+      },
+      {
+        "name": "API: GET /api/workers",
+        "duration": 122
+      },
+      {
+        "name": "API: GET /api/assignments",
+        "duration": 12
+      },
+      {
+        "name": "API: GET /api/stages",
+        "duration": 123
+      },
+      {
+        "name": "API: GET /api/dashboard/assignments",
+        "duration": 121
+      },
+      {
+        "name": "API: GET /api/workflow",
+        "duration": 10
+      },
+      {
+        "name": "API: GET /api/analytics",
+        "duration": 15
+      },
+      {
+        "name": "API: GET /api/settings",
+        "duration": 21
+      },
+      {
+        "name": "API: GET /health",
+        "duration": 13
+      }
+    ],
+    "totalRequests": 17
+  }
+}
