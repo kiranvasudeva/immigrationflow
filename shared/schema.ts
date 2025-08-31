@@ -48,6 +48,9 @@ export const fieldTypeEnum = pgEnum('field_type', ['TEXT', 'DATE', 'NUMBER', 'CH
 export const languageEnum = pgEnum('language', ['en', 'ro', 'es', 'fr']);
 export const workflowStepTypeEnum = pgEnum('workflow_step_type', ['DOCUMENT_COLLECTION', 'DOCUMENT_REVIEW', 'FORM_COMPLETION', 'ADMIN_APPROVAL', 'INSTITUTIONAL_SUBMISSION', 'PAYMENT']);
 export const stepStatusEnum = pgEnum('step_status', ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'REJECTED', 'SKIPPED']);
+export const workflowStatusEnum = pgEnum('workflow_status', ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'PAUSED', 'CANCELLED']);
+export const checklistTypeEnum = pgEnum('checklist_type', ['VERIFICATION', 'APPROVAL', 'QUALITY_CHECK', 'COMPLIANCE']);
+export const documentStatusEnum = pgEnum('document_status', ['PENDING', 'VERIFIED', 'REJECTED', 'REQUIRES_CHANGES']);
 
 // User table (required for Replit Auth)
 export const users = pgTable("users", {
@@ -148,6 +151,7 @@ export const documentFiles = pgTable("document_files", {
   mimeType: varchar("mime_type", { length: 100 }),
   fileSize: integer("file_size"), // File size in bytes
   fileHash: varchar("file_hash", { length: 64 }), // SHA256 hash
+  status: documentStatusEnum("status").default('PENDING'),
   scanResult: varchar("scan_result", { length: 20 }), // 'CLEAN', 'INFECTED', 'SCAN_FAILED', 'PENDING'
   virusName: varchar("virus_name", { length: 255 }), // Name of virus if infected
   scannedAt: timestamp("scanned_at"), // When file was scanned
@@ -308,6 +312,7 @@ export const checklistItems = pgTable("checklist_items", {
   workflowStepId: uuid("workflow_step_id").notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
+  checklistType: checklistTypeEnum("checklist_type").default('VERIFICATION'),
   isRequired: boolean("is_required").default(true),
   assignedRole: assignedToRoleEnum("assigned_role").notNull(), // Who performs this check
   order: integer("order").notNull(),
@@ -320,7 +325,7 @@ export const workerWorkflowProgress = pgTable("worker_workflow_progress", {
   workerId: uuid("worker_id").notNull(),
   workflowTemplateId: uuid("workflow_template_id").notNull(),
   currentStepId: uuid("current_step_id"),
-  status: stepStatusEnum("status").default('PENDING'),
+  status: workflowStatusEnum("status").default('NOT_STARTED'),
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow(),
