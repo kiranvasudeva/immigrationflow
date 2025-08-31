@@ -34,7 +34,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useTranslation } from "@/contexts/I18nProvider";
 import { DocumentViewer } from "@/components/documents/DocumentViewer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import WorkerWorkflowDashboard from "@/components/WorkerWorkflowDashboard";
+import WorkflowProgressTracker from "@/components/WorkflowProgressTracker";
 
 interface WorkerAssignment {
   id: string;
@@ -349,7 +349,12 @@ export default function WorkerProfile() {
                 <div className="space-y-6">
                   {/* Enhanced Workflow Dashboard */}
                   {workerId && (
-                    <WorkerWorkflowDashboard workerId={workerId} />
+                    <WorkflowProgressTracker 
+                      workerId={workerId}
+                      userRole={user?.role || 'VIEWER'}
+                      showUploadPane={true}
+                      showVerificationToggles={true}
+                    />
                   )}
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
