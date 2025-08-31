@@ -111,79 +111,239 @@ export function WorkerWorkflowDisplay({
     });
   };
 
-  // Render stage-specific actions based on stage type and requirements
-  const renderStageActions = (stage: any) => {
+  // Render stage-specific UI based on stage type and requirements
+  const renderStageInterface = (stage: any) => {
     const stageType = stage.stageType || 'document_collection';
-    const hasDocuments = stage.documentRequirements && stage.documentRequirements.length > 0;
+    const documents = stage.documentRequirements || [];
     
-    return (
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Document Upload Actions */}
-        {hasDocuments && (
-          <>
-            <DocumentUploader 
-              workflowStepProgressId={`step-${stage.id}`}
-              workerId={workerId}
-              onUploadComplete={() => {
-                queryClient.invalidateQueries({ queryKey: ['/api/workflow/worker', workerId] });
-              }}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {/* TODO: Implement photo capture */}}
-              data-testid={`button-photo-capture-${stage.id}`}
-            >
-              <Camera className="h-3 w-3 mr-1" />
-              Photo + OCR
-            </Button>
-          </>
-        )}
-
-        {/* Verification Actions */}
-        {(stageType === 'verification' || stageType === 'review' || hasDocuments) && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleVerifyDocuments(stage.id)}
-            disabled={updateStepStatusMutation.isPending}
-            data-testid={`button-verify-${stage.id}`}
-          >
-            <ListChecks className="h-3 w-3 mr-1" />
-            Verify & Approve
-          </Button>
-        )}
-
-        {/* Administrative Actions */}
-        {(stageType === 'administrative' || stageType === 'submission') && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleMarkComplete(stage.id)}
-            disabled={updateStepStatusMutation.isPending}
-            data-testid={`button-process-${stage.id}`}
-          >
-            <CheckCircle2 className="h-3 w-3 mr-1" />
-            Process & Submit
-          </Button>
-        )}
-
-        {/* General completion for other stage types */}
-        {!hasDocuments && stageType !== 'verification' && stageType !== 'review' && stageType !== 'administrative' && stageType !== 'submission' && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleMarkComplete(stage.id)}
-            disabled={updateStepStatusMutation.isPending}
-            data-testid={`button-complete-${stage.id}`}
-          >
-            <CheckCircle2 className="h-3 w-3 mr-1" />
-            Mark Complete
-          </Button>
-        )}
-      </div>
-    );
+    switch (stageType) {
+      case 'document_collection':
+      case 'initial_documents':
+        return renderDocumentCollectionInterface(stage, documents);
+      
+      case 'document_review':
+      case 'verification':
+      case 'review':
+        return renderDocumentReviewInterface(stage, documents);
+      
+      case 'submission':
+      case 'administrative':
+        return renderSubmissionInterface(stage);
+      
+      case 'processing':
+      case 'government_processing':
+        return renderProcessingInterface(stage);
+      
+      default:
+        return renderGeneralInterface(stage);
+    }
   };
+
+  // Document Collection Interface - Individual cards for each required document
+  const renderDocumentCollectionInterface = (stage: any, documents: any[]) => (
+    <div className="space-y-4">
+      <h6 className="text-sm font-semibold text-gray-700 mb-3">Required Documents</h6>
+      {documents.length === 0 ? (
+        <div className="text-sm text-gray-500 italic">No specific documents required for this stage</div>
+      ) : (
+        <div className="grid gap-3">
+          {documents.map((doc: any, idx: number) => (
+            <Card key={idx} className="border border-gray-200">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="h-4 w-4 text-gray-500" />
+                      <span className="font-medium text-sm">{doc.title}</span>
+                      {doc.required && (
+                        <Badge variant="secondary" className="text-xs">Required</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-600 mb-3">{doc.description}</p>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge variant="outline" className="text-xs">
+                        Responsible: {doc.responsibleParty || stage.responsibleParty}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Upload Actions for this specific document */}
+                <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                  <DocumentUploader 
+                    workflowStepProgressId={`step-${stage.id}-doc-${idx}`}
+                    workerId={workerId}
+                    onUploadComplete={() => {
+                      queryClient.invalidateQueries({ queryKey: ['/api/workflow/worker', workerId] });
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {/* TODO: Implement photo capture */}}
+                    data-testid={`button-photo-${stage.id}-${idx}`}
+                  >
+                    <Camera className="h-3 w-3 mr-1" />
+                    Photo + OCR
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    data-testid={`button-view-${stage.id}-${idx}`}
+                  >
+                    <Eye className="h-3 w-3 mr-1" />
+                    View
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  // Document Review Interface - Checklist with verification controls  
+  const renderDocumentReviewInterface = (stage: any, documents: any[]) => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h6 className="text-sm font-semibold text-gray-700">Document Review Checklist</h6>
+        <Button
+          variant="default"
+          size="sm"
+          onClick={() => handleVerifyDocuments(stage.id)}
+          disabled={updateStepStatusMutation.isPending}
+          data-testid={`button-approve-all-${stage.id}`}
+        >
+          <CheckCircle2 className="h-3 w-3 mr-1" />
+          Approve All Documents
+        </Button>
+      </div>
+      
+      {documents.length === 0 ? (
+        <div className="text-sm text-gray-500 italic">No documents to review</div>
+      ) : (
+        <div className="space-y-2">
+          {documents.map((doc: any, idx: number) => (
+            <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <input 
+                  type="checkbox" 
+                  className="rounded border-gray-300"
+                  data-testid={`checkbox-verify-${stage.id}-${idx}`}
+                />
+                <div>
+                  <div className="font-medium text-sm">{doc.title}</div>
+                  <div className="text-xs text-gray-600">
+                    Check document completeness and accuracy
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" data-testid={`button-view-doc-${stage.id}-${idx}`}>
+                  <Eye className="h-3 w-3" />
+                </Button>
+                <Button variant="outline" size="sm" data-testid={`button-approve-${stage.id}-${idx}`}>
+                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  Approve
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  // Submission Interface - Progress tracking and status updates
+  const renderSubmissionInterface = (stage: any) => (
+    <div className="space-y-4">
+      <h6 className="text-sm font-semibold text-gray-700">Administrative Processing</h6>
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Upload className="h-4 w-4 text-blue-600" />
+          <span className="font-medium text-sm text-blue-800">Ready for Submission</span>
+        </div>
+        <p className="text-xs text-blue-700 mb-3">
+          All required documents have been collected and verified. Ready to submit to authorities.
+        </p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => handleMarkComplete(stage.id)}
+            disabled={updateStepStatusMutation.isPending}
+            data-testid={`button-submit-${stage.id}`}
+          >
+            <Upload className="h-3 w-3 mr-1" />
+            Submit Application
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            data-testid={`button-preview-${stage.id}`}
+          >
+            <Eye className="h-3 w-3 mr-1" />
+            Preview Submission
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Processing Interface - Status tracking for government/external processing
+  const renderProcessingInterface = (stage: any) => (
+    <div className="space-y-4">
+      <h6 className="text-sm font-semibold text-gray-700">Processing Status</h6>
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Clock className="h-4 w-4 text-yellow-600" />
+          <span className="font-medium text-sm text-yellow-800">Under Review</span>
+        </div>
+        <p className="text-xs text-yellow-700 mb-3">
+          Application is being processed by the relevant authorities. Monitor status and respond to any requests.
+        </p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            data-testid={`button-check-status-${stage.id}`}
+          >
+            <Download className="h-3 w-3 mr-1" />
+            Check Status
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleMarkComplete(stage.id)}
+            disabled={updateStepStatusMutation.isPending}
+            data-testid={`button-mark-received-${stage.id}`}
+          >
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            Mark as Received
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // General Interface - Basic completion controls
+  const renderGeneralInterface = (stage: any) => (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleMarkComplete(stage.id)}
+          disabled={updateStepStatusMutation.isPending}
+          data-testid={`button-complete-${stage.id}`}
+        >
+          <CheckCircle2 className="h-3 w-3 mr-1" />
+          Mark Complete
+        </Button>
+      </div>
+    </div>
+  );
 
 
   if (isLoading) {
@@ -253,57 +413,11 @@ export function WorkerWorkflowDisplay({
               )}
             </div>
 
-            {/* Document Requirements */}
-            {stage.documentRequirements && stage.documentRequirements.length > 0 && (
-              <div className="space-y-3 border-t pt-3">
-                <h6 className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Required Documents ({stage.documentRequirements.length})
-                </h6>
-                
-                <div className="space-y-2">
-                  {stage.documentRequirements.map((doc: any, idx: number) => (
-                    <div key={idx} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{doc.title}</div>
-                        <div className="text-xs text-gray-600 mt-1">{doc.description}</div>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="outline" className="text-xs">{doc.responsibleParty || stage.responsibleParty}</Badge>
-                          {doc.required && <Badge variant="secondary" className="text-xs">Required</Badge>}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 ml-3">
-                        <DocumentUploader 
-                          workflowStepProgressId={`step-${stage.id}`}
-                          workerId={workerId}
-                          onUploadComplete={() => {
-                            queryClient.invalidateQueries({ queryKey: ['/api/workflow/worker', workerId] });
-                          }}
-                        />
-                        <Button variant="outline" size="sm" data-testid={`button-view-docs-${doc.id || idx}`}>
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Document Status Tracker */}
-                <div className="mt-4">
-                  <DocumentStatusTracker 
-                    workflowStepProgressId={stage.id}
-                    workerId={workerId}
-                    isReadOnly={false}
-                  />
-                </div>
-              </div>
-            )}
 
             {/* Stage-Specific Admin Controls */}
             {isAuthenticated && (stage.status === 'available' || stage.status === 'in-progress') && (
               <div className="space-y-2 mt-4 pt-3 border-t">
-                {renderStageActions(stage)}
+                {renderStageInterface(stage)}
               </div>
             )}
           </CardContent>
