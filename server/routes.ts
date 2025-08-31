@@ -284,11 +284,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/workflow-templates', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
-      const template = await storage.createWorkflowTemplate(req.body);
+      const userId = req.user.id || req.user.claims?.sub || 'dev-user';
+      
+      // Prepare template data with required fields
+      const templateData = {
+        name: req.body.name,
+        description: req.body.description || '',
+        isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+        order: req.body.order || 1,
+        executionType: req.body.executionType || 'sequential',
+        estimatedDurationDays: req.body.estimatedDurationDays || 30,
+        createdByUserId: userId
+      };
+      
+      console.log('Creating workflow template with data:', templateData);
+      const template = await storage.createWorkflowTemplate(templateData);
       res.status(201).json(template);
     } catch (error) {
       console.error('Error creating workflow template:', error);
-      res.status(500).json({ message: "Failed to create workflow template" });
+      res.status(500).json({ message: "Failed to create workflow template", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
