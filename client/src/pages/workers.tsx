@@ -3,6 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from '@/contexts/I18nProvider';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { queryClient } from '@/lib/queryClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ export default function WorkersPage() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { t } = useTranslation();
+  usePageTitle('nav.workers');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedNationality, setSelectedNationality] = useState('all');

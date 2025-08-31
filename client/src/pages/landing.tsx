@@ -6,11 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "@/contexts/I18nProvider";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { LanguageSelector } from "@/components/LanguageSelector";
 
 export default function Landing() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { setLanguage, t } = useTranslation();
+  
+  // Set page title
+  usePageTitle('landing.title', 'Welcome to ImmigrationFlow');
   
   // Set Romanian as default for landing page
   useEffect(() => {

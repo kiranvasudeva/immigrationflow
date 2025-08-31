@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/contexts/I18nProvider';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useBreadcrumb } from '@/contexts/BreadcrumbContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -145,6 +146,7 @@ interface SubscriptionPlan {
 
 export default function SettingsPage() {
   const { t } = useTranslation();
+  usePageTitle('nav.settings');
   const { setBreadcrumbs } = useBreadcrumb();
   const { toast } = useToast();
   const [location, setLocation] = useLocation();

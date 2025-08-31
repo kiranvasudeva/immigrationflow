@@ -99,6 +99,7 @@
     }
   },
   "dashboard": {
+    "title": "Dashboard",
     "overview": "Overview",
     "statistics": "Statistics",
     "recentActivity": "Recent Activity",
@@ -307,5 +308,16 @@
   },
   "features": "Features",
   "pricing": "Pricing",
-  "support": "Support"
+  "support": "Support",
+  "landing": {
+    "title": "Streamline Romanian Immigration Workflows",
+    "subtitle": "Immigration Workflows",
+    "description": "Complete SaaS platform for managing work permits, visa applications, and residence permits. From AJOFM labor market tests to final IGI approvals.",
+    "login": "Login",
+    "trial": "Start Free Trial",
+    "demo": "Schedule Demo"
+  },
+  "actions": {
+    "signOut": "Sign Out"
+  }
 }

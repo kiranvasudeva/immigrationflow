@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from '@/contexts/I18nProvider';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +16,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 export default function AnalyticsPage() {
   const { t } = useTranslation();
+  usePageTitle('nav.analytics');
   const [selectedPeriod, setSelectedPeriod] = useState('30');
   const [selectedClient, setSelectedClient] = useState('all');
   const { toast } = useToast();

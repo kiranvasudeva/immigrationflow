@@ -99,6 +99,7 @@
     }
   },
   "dashboard": {
+    "title": "Tablou de bord",
     "overview": "Prezentare generală",
     "statistics": "Statistici",
     "recentActivity": "Activitate recentă",
@@ -308,6 +309,14 @@
   "features": "Funcționalități",
   "pricing": "Prețuri",
   "support": "Suport",
+  "landing": {
+    "title": "Simplifică fluxurile de imigrare românești",
+    "subtitle": "Fluxuri de imigrare", 
+    "description": "Platformă SaaS completă pentru gestionarea permiselor de muncă, aplicațiilor de viză și permiselor de ședere. De la testele pieței muncii AJOFM la aprobările finale IGI.",
+    "login": "Autentificare",
+    "trial": "Începe trial gratuit",
+    "demo": "Programează demo"
+  },
   "actions": {
     "signOut": "Deconectare"
   }
