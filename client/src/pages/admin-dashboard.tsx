@@ -850,11 +850,6 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker, isA
     );
   }
 
-  // Fetch worker workflow data for selected worker
-  const { data: selectedWorkerWorkflowData, isLoading: workflowLoading } = useQuery({
-    queryKey: ['/api/workflow/worker', selectedWorker?.id],
-    enabled: !!selectedWorker?.id && isAuthenticated,
-  });
 
   return (
     <div className="mt-6 pt-6 border-t border-gray-100">
