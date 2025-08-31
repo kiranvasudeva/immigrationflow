@@ -607,7 +607,7 @@ export default function ClientProfile() {
                   </Card>
 
                   {/* Selected Worker Details Section */}
-                  {selectedWorkerId && selectedWorker && (
+                  {selectedWorkerId && (
                     <Card className="lg:col-span-2">
                       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                         <div className="flex items-center space-x-3">
@@ -621,7 +621,7 @@ export default function ClientProfile() {
                           </Button>
                           <div>
                             <CardTitle className="text-xl">
-                              {selectedWorker.firstName} {selectedWorker.lastName}
+                              {selectedWorker ? `${selectedWorker.firstName} ${selectedWorker.lastName}` : 'Worker Details'}
                             </CardTitle>
                             <p className="text-sm text-gray-600">
                               Worker Details & Immigration Workflow
@@ -668,7 +668,15 @@ export default function ClientProfile() {
                           </div>
                         ) : (
                           <>
-                            {/* Personal Information */}
+                            {/* Show workflow even if worker data is missing */}
+                            {!selectedWorker && (
+                              <div className="text-center py-4 text-amber-600 bg-amber-50 rounded-lg">
+                                Worker personal data not found, but showing workflow configuration below.
+                              </div>
+                            )}
+                            
+                            {/* Personal Information - only show if worker data exists */}
+                            {selectedWorker && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div className="space-y-4">
                                 <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
@@ -801,6 +809,7 @@ export default function ClientProfile() {
                                 </div>
                               </div>
                             </div>
+                            )}
 
                             {/* Immigration Workflow */}
                             <div className="space-y-4">
