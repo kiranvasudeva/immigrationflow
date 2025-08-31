@@ -200,6 +200,12 @@ export interface IStorage {
     completedThisMonth: number;
     assignmentsByStatus: Record<string, number>;
   }>;
+  getWorkflowProgressStats(): Promise<{
+    totalSteps: number;
+    completedSteps: number;
+    pendingSteps: number;
+    inProgressSteps: number;
+  }>;
   
   // Enhanced assignment queries for kanban
   getAssignmentsWithDetails(): Promise<Array<Assignment & {
@@ -773,6 +779,36 @@ export class DatabaseStorage implements IStorage {
     await db.delete(workers).where(sql`${workers.firstName} LIKE 'Test %'`);
     await db.delete(clientProfiles).where(sql`${clientProfiles.legalName} LIKE 'Test %'`);
     await db.delete(users).where(sql`${users.firstName} LIKE 'Test %'`);
+  }
+  
+  // Get workflow progress statistics
+  async getWorkflowProgressStats(): Promise<{
+    totalSteps: number;
+    completedSteps: number;
+    pendingSteps: number;
+    inProgressSteps: number;
+  }> {
+    const totalStepsResult = await db.select({ count: count() }).from(workerStepProgress);
+    
+    const stepStatusCounts = await db
+      .select({
+        status: workerStepProgress.status,
+        count: count()
+      })
+      .from(workerStepProgress)
+      .groupBy(workerStepProgress.status);
+    
+    const statusCounts = stepStatusCounts.reduce((acc, row) => {
+      acc[row.status] = row.count;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return {
+      totalSteps: totalStepsResult[0]?.count ?? 0,
+      completedSteps: statusCounts['COMPLETED'] ?? 0,
+      pendingSteps: statusCounts['PENDING'] ?? 0,
+      inProgressSteps: statusCounts['IN_PROGRESS'] ?? 0,
+    };
   }
   
   // Enhanced assignment queries for kanban

@@ -30,6 +30,23 @@ export default function ClientDashboard() {
     enabled: !!clientProfile?.id,
   });
 
+  // Fetch workflow progress for calculating real stats
+  const { data: workflowStats = { pending: 0, completed: 0 } } = useQuery({
+    queryKey: ["/api/dashboard/workflow-stats"],
+    enabled: !!clientProfile?.id,
+    select: (data: any) => {
+      // Calculate stats from workflow data
+      const totalSteps = data?.totalSteps || 0;
+      const completedSteps = data?.completedSteps || 0;
+      const pendingSteps = data?.pendingSteps || 0;
+      
+      return {
+        pending: pendingSteps,
+        completed: Math.round((completedSteps / totalSteps) * 100) || 0
+      };
+    }
+  });
+
   // Redirect if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -59,8 +76,8 @@ export default function ClientDashboard() {
 
   const realStats = {
     totalWorkers: workers?.length || 0,
-    pendingActions: 0, // TODO: Calculate from assignments when assignments API is available
-    completed: 0, // TODO: Calculate from assignments when assignments API is available
+    pendingActions: workflowStats.pending,
+    completed: workflowStats.completed,
   };
 
   return (

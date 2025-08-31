@@ -116,10 +116,7 @@ export default function WorkflowProgressTracker({
       status: string;
       notes?: string;
     }) => {
-      return apiRequest(`/api/workers/${workerId}/workflow-progress/${progressId}/steps/${stepId}`, {
-        method: 'PUT',
-        body: { status, notes }
-      });
+      return apiRequest('PUT', `/api/workers/${workerId}/workflow-progress/${progressId}/steps/${stepId}`, { status, notes });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/workers', workerId, 'workflow-progress'] });
@@ -146,10 +143,7 @@ export default function WorkflowProgressTracker({
       isCompleted: boolean;
       notes?: string;
     }) => {
-      return apiRequest(`/api/workers/${workerId}/workflow-progress/${progressId}/steps/${stepId}/checklist/${itemId}`, {
-        method: 'POST',
-        body: { isCompleted, notes }
-      });
+      return apiRequest('POST', `/api/workers/${workerId}/workflow-progress/${progressId}/steps/${stepId}/checklist/${itemId}`, { isCompleted, notes });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/workers', workerId, 'workflow-progress'] });
