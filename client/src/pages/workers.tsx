@@ -102,6 +102,7 @@ export default function WorkersPage() {
   };
 
   const getInitials = (firstName: string, lastName: string) => {
+    if (!firstName || !lastName) return 'WR';
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 

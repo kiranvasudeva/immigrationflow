@@ -153,6 +153,7 @@ export default function ClientsPage() {
   };
 
   const getInitials = (companyName: string) => {
+    if (!companyName) return 'CL';
     return companyName.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2);
   };
 
