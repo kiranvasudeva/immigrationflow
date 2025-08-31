@@ -13,7 +13,10 @@
     "requirements": "Cerințe",
     "reminders": "Mementouri",
     "payments": "Plăți",
-    "logout": "Deconectare"
+    "logout": "Deconectare",
+    "features": "Funcționalități",
+    "pricing": "Prețuri",
+    "support": "Suport"
   },
   "common": {
     "save": "Salvează",
@@ -57,9 +60,20 @@
     "type": "Tip",
     "category": "Categorie"
   },
-  "features": "Funcționalități",
-  "pricing": "Prețuri",
-  "support": "Suport",
+  "modal": {
+    "login": {
+      "title": "Bine ați venit la ImmigrationFlow",
+      "subtitle": "Alegeți nivelul de acces pentru a continua",
+      "adminTitle": "Portal de administrare",
+      "adminDesc": "Acces complet pentru gestionarea clienților, angajaților și setărilor sistemului",
+      "adminButton": "Autentificare admin",
+      "workerTitle": "Portal angajați",
+      "workerDesc": "Accesați documentele personale și starea fluxului de lucru",
+      "invitationText": "Aveți un link de invitație? Introduceți-l mai jos pentru a accesa profilul",
+      "supportText": "Aveți nevoie de ajutor?",
+      "supportLink": "Contactați suportul"
+    }
+  },
   "landing": {
     "login": "Autentificare",
     "title": "ImmigrationFlow",
@@ -290,5 +304,8 @@
     "copied": "Copiat în clipboard.",
     "exported": "Exportat cu succes.",
     "imported": "Importat cu succes."
-  }
+  },
+  "features": "Funcționalități",
+  "pricing": "Prețuri",
+  "support": "Suport"
 }

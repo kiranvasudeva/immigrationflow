@@ -13,7 +13,10 @@
     "requirements": "Requirements",
     "reminders": "Reminders",
     "payments": "Payments",
-    "logout": "Logout"
+    "logout": "Logout",
+    "features": "Features",
+    "pricing": "Pricing",
+    "support": "Support"
   },
   "common": {
     "save": "Save",
@@ -57,9 +60,20 @@
     "type": "Type",
     "category": "Category"
   },
-  "features": "Features",
-  "pricing": "Pricing",
-  "support": "Support",
+  "modal": {
+    "login": {
+      "title": "Welcome to ImmigrationFlow",
+      "subtitle": "Choose your access level to continue",
+      "adminTitle": "Administration Portal",
+      "adminDesc": "Full access to manage clients, workers, and system settings",
+      "adminButton": "Admin Login",
+      "workerTitle": "Worker Portal",
+      "workerDesc": "Access your personal documents and workflow status",
+      "invitationText": "Have an invitation link? Enter it below to access your profile",
+      "supportText": "Need help?",
+      "supportLink": "Contact Support"
+    }
+  },
   "landing": {
     "login": "Login",
     "title": "ImmigrationFlow",
@@ -290,5 +304,8 @@
     "copied": "Copied to clipboard.",
     "exported": "Exported successfully.",
     "imported": "Imported successfully."
-  }
+  },
+  "features": "Features",
+  "pricing": "Pricing",
+  "support": "Support"
 }

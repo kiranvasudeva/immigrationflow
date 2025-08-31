@@ -9,7 +9,7 @@ i18n
   .use(initReactI18next)
   .init({
     fallbackLng: 'en',
-    debug: true, // Enable debug for better logging
+    debug: false, // Disable debug in production
     
     backend: {
       loadPath: '/locales/{{lng}}/translation.json',

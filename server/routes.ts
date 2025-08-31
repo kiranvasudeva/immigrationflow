@@ -49,59 +49,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     devAuthBypass = isAuthenticated;
   }
 
-  // Client logging endpoint
-  app.use(express.json({ limit: '10mb' }));
-  
-  // Client logs endpoint
-  app.post('/api/client-logs', (req, res) => {
-    try {
-      const { events } = req.body;
-      
-      if (!events || !Array.isArray(events)) {
-        return res.status(400).json({ error: 'Invalid events array' });
-      }
-
-      // Process each log event
-      events.forEach((event: any) => {
-        const logMessage = `[CLIENT-${event.category?.toUpperCase()}] ${event.message}`;
-        const logData = {
-          ...event.data,
-          timestamp: event.timestamp,
-          userAgent: event.userAgent,
-          url: event.url,
-          ...(event.stack && { stack: event.stack })
-        };
-
-        // Log with appropriate level to console for visibility
-        switch (event.level) {
-          case 'error':
-            console.error(`🔴 ${logMessage}`, logData);
-            break;
-          case 'warn':
-            console.warn(`🟡 ${logMessage}`, logData);
-            break;
-          case 'debug':
-            console.debug(`🔵 ${logMessage}`, logData);
-            break;
-          case 'info':
-          default:
-            console.info(`ℹ️  ${logMessage}`, logData);
-            break;
-        }
-      });
-
-      res.status(200).json({ 
-        received: events.length,
-        message: 'Logs processed successfully' 
-      });
-      
-    } catch (error) {
-      const err = error as Error;
-      console.error('Error processing client logs:', err.message);
-      res.status(500).json({ error: 'Failed to process logs' });
-    }
-  });
-
   // Basic test route
   app.get('/test', (req, res) => {
     res.json({ message: 'Server is working' });
