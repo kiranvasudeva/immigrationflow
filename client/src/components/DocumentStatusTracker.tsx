@@ -34,7 +34,8 @@ import { format } from 'date-fns';
 
 interface DocumentFile {
   id: string;
-  assignmentId: string;
+  assignmentId?: string;
+  workflowStepProgressId?: string;
   fileName: string;
   fileSize: number;
   mimeType: string;
@@ -44,7 +45,7 @@ interface DocumentFile {
   uploadedByUserId: string;
   createdAt: string;
   updatedAt: string;
-  status: 'pending' | 'verified' | 'rejected' | 'requires_changes';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'REQUIRES_CHANGES';
   verificationNotes?: string;
   verifiedBy?: string;
   verifiedAt?: string;
@@ -62,12 +63,13 @@ interface VerificationChecklist {
 }
 
 interface Props {
-  assignmentId: string;
-  workflowStepId?: string;
+  assignmentId?: string;
+  workflowStepProgressId?: string;
+  workerId?: string;
   isReadOnly?: boolean;
 }
 
-export default function DocumentStatusTracker({ assignmentId, workflowStepId, isReadOnly = false }: Props) {
+export default function DocumentStatusTracker({ assignmentId, workflowStepProgressId, workerId, isReadOnly = false }: Props) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -78,9 +80,14 @@ export default function DocumentStatusTracker({ assignmentId, workflowStepId, is
   const [statusNotes, setStatusNotes] = useState('');
   const [isChecklistDialogOpen, setIsChecklistDialogOpen] = useState(false);
 
-  // Fetch documents for assignment
+  // Fetch documents (either for assignment or workflow step progress)
+  const documentsQueryKey = workflowStepProgressId && workerId
+    ? ['/api/workers', workerId, 'step-progress', workflowStepProgressId, 'documents']
+    : ['/api/assignments', assignmentId, 'documents'];
+    
   const { data: documents = [], isLoading: documentsLoading } = useQuery({
-    queryKey: ['/api/assignments', assignmentId, 'documents'],
+    queryKey: documentsQueryKey,
+    enabled: !!(assignmentId || (workflowStepProgressId && workerId)),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -109,7 +116,7 @@ export default function DocumentStatusTracker({ assignmentId, workflowStepId, is
       setNewStatus('');
       setStatusNotes('');
       setSelectedDocument(null);
-      queryClient.invalidateQueries({ queryKey: ['/api/assignments', assignmentId, 'documents'] });
+      queryClient.invalidateQueries({ queryKey: documentsQueryKey });
     },
     onError: () => {
       toast({

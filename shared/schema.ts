@@ -144,7 +144,8 @@ export const assignments = pgTable("assignments", {
 // Document File table
 export const documentFiles = pgTable("document_files", {
   id: uuid("id").primaryKey().defaultRandom(),
-  assignmentId: uuid("assignment_id").notNull(),
+  assignmentId: uuid("assignment_id"), // Made nullable for workflow step support
+  workflowStepProgressId: uuid("workflow_step_progress_id"), // New: for workflow step documents
   kind: documentKindEnum("kind").notNull(),
   s3Key: varchar("s3_key", { length: 500 }).notNull(),
   fileName: varchar("file_name", { length: 255 }).notNull(),
@@ -156,6 +157,7 @@ export const documentFiles = pgTable("document_files", {
   virusName: varchar("virus_name", { length: 255 }), // Name of virus if infected
   scannedAt: timestamp("scanned_at"), // When file was scanned
   uploadedByUserId: varchar("uploaded_by_user_id").notNull(),
+  notes: text("notes"), // Verification notes
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -348,6 +350,19 @@ export const workerStepProgress = pgTable("worker_step_progress", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Workflow Step Document Requirements - Define what documents are needed for each step
+export const workflowStepDocumentRequirements = pgTable("workflow_step_document_requirements", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workflowStepId: uuid("workflow_step_id").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  isRequired: boolean("is_required").default(true),
+  submittedBy: assignedToRoleEnum("submitted_by").notNull(),
+  acceptedFileTypes: text("accepted_file_types").array(),
+  maxFileSize: integer("max_file_size"), // Size in bytes
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Document Submissions - Track document uploads for each requirement
 export const documentSubmissions = pgTable("document_submissions", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -486,6 +501,10 @@ export const documentFilesRelations = relations(documentFiles, ({ one }) => ({
   assignment: one(assignments, {
     fields: [documentFiles.assignmentId],
     references: [assignments.id],
+  }),
+  workflowStepProgress: one(workerStepProgress, {
+    fields: [documentFiles.workflowStepProgressId],
+    references: [workerStepProgress.id],
   }),
   uploadedBy: one(users, {
     fields: [documentFiles.uploadedByUserId],
@@ -637,6 +656,7 @@ export const workerStepProgressRelations = relations(workerStepProgress, ({ one,
   }),
   documentSubmissions: many(documentSubmissions),
   checklistCompletions: many(checklistCompletions),
+  documentFiles: many(documentFiles),
 }));
 
 export const documentSubmissionsRelations = relations(documentSubmissions, ({ one }) => ({
@@ -1128,6 +1148,23 @@ export const documentFieldMappingsRelations = relations(documentFieldMappings, (
   }),
 }));
 
+// Relations for workflow step document requirements
+export const workflowStepDocumentRequirementsRelations = relations(workflowStepDocumentRequirements, ({ one }) => ({
+  workflowStep: one(workflowSteps, {
+    fields: [workflowStepDocumentRequirements.workflowStepId],
+    references: [workflowSteps.id],
+  }),
+}));
+
+
+// Zod schemas for workflow step document requirements
+export const createWorkflowStepDocumentRequirementSchema = createInsertSchema(workflowStepDocumentRequirements).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const updateWorkflowStepDocumentRequirementSchema = createWorkflowStepDocumentRequirementSchema.partial();
+
 // Zod schemas for extracted data
 export const createExtractedDocumentDataSchema = createInsertSchema(extractedDocumentData).omit({
   id: true,
@@ -1143,6 +1180,8 @@ export const createDocumentFieldMappingSchema = createInsertSchema(documentField
 export const updateExtractedDocumentDataSchema = createExtractedDocumentDataSchema.partial();
 
 // Types
+export type WorkflowStepDocumentRequirement = typeof workflowStepDocumentRequirements.$inferSelect;
+export type InsertWorkflowStepDocumentRequirement = z.infer<typeof createWorkflowStepDocumentRequirementSchema>;
 export type ExtractedDocumentData = typeof extractedDocumentData.$inferSelect;
 export type InsertExtractedDocumentData = z.infer<typeof createExtractedDocumentDataSchema>;
 export type DocumentFieldMapping = typeof documentFieldMappings.$inferSelect;

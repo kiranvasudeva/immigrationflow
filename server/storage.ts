@@ -76,6 +76,9 @@ import {
   type InsertExtractedDocumentData,
   type DocumentFieldMapping,
   type InsertDocumentFieldMapping,
+  type WorkflowStepDocumentRequirement,
+  type InsertWorkflowStepDocumentRequirement,
+  workflowStepDocumentRequirements,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, like, desc, asc, count, sql } from "drizzle-orm";
@@ -129,9 +132,16 @@ export interface IStorage {
   // Document File operations
   getDocumentFile(id: string): Promise<DocumentFile | undefined>;
   getDocumentFilesByAssignment(assignmentId: string): Promise<DocumentFile[]>;
+  getDocumentFilesByWorkflowStepProgress(workflowStepProgressId: string): Promise<DocumentFile[]>;
   createDocumentFile(file: Omit<DocumentFile, 'id' | 'createdAt'>): Promise<DocumentFile>;
   updateDocumentFileStatus(documentId: string, status: string, notes?: string): Promise<DocumentFile>;
   deleteDocumentFile(documentId: string): Promise<boolean>;
+  
+  // Workflow Step Document Requirements operations
+  getWorkflowStepDocumentRequirements(workflowStepId: string): Promise<WorkflowStepDocumentRequirement[]>;
+  createWorkflowStepDocumentRequirement(requirement: InsertWorkflowStepDocumentRequirement): Promise<WorkflowStepDocumentRequirement>;
+  updateWorkflowStepDocumentRequirement(id: string, updates: Partial<InsertWorkflowStepDocumentRequirement>): Promise<WorkflowStepDocumentRequirement>;
+  deleteWorkflowStepDocumentRequirement(id: string): Promise<boolean>;
   
   // Extracted Document Data operations
   getExtractedDocumentData(documentFileId: string): Promise<ExtractedDocumentData | undefined>;
@@ -586,6 +596,33 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDocumentFile(documentId: string): Promise<boolean> {
     const result = await db.delete(documentFiles).where(eq(documentFiles.id, documentId));
+    return result.rowCount > 0;
+  }
+
+  async getDocumentFilesByWorkflowStepProgress(workflowStepProgressId: string): Promise<DocumentFile[]> {
+    return await db.select().from(documentFiles).where(eq(documentFiles.workflowStepProgressId, workflowStepProgressId));
+  }
+
+  // Workflow Step Document Requirements operations
+  async getWorkflowStepDocumentRequirements(workflowStepId: string): Promise<WorkflowStepDocumentRequirement[]> {
+    return await db.select().from(workflowStepDocumentRequirements).where(eq(workflowStepDocumentRequirements.workflowStepId, workflowStepId));
+  }
+
+  async createWorkflowStepDocumentRequirement(requirement: InsertWorkflowStepDocumentRequirement): Promise<WorkflowStepDocumentRequirement> {
+    const [newRequirement] = await db.insert(workflowStepDocumentRequirements).values(requirement).returning();
+    return newRequirement;
+  }
+
+  async updateWorkflowStepDocumentRequirement(id: string, updates: Partial<InsertWorkflowStepDocumentRequirement>): Promise<WorkflowStepDocumentRequirement> {
+    const [updated] = await db.update(workflowStepDocumentRequirements)
+      .set(updates)
+      .where(eq(workflowStepDocumentRequirements.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteWorkflowStepDocumentRequirement(id: string): Promise<boolean> {
+    const result = await db.delete(workflowStepDocumentRequirements).where(eq(workflowStepDocumentRequirements.id, id));
     return result.rowCount > 0;
   }
 

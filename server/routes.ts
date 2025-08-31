@@ -1563,17 +1563,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Upload document for workflow step
-  app.post('/api/workflow/worker/:workerId/step/:stepId/document', isAuthenticated, async (req: any, res) => {
+  // Workflow Step Document Management Endpoints
+  
+  // Get documents for a workflow step progress
+  app.get('/api/workers/:workerId/step-progress/:stepProgressId/documents', isAuthenticated, async (req: any, res) => {
     try {
-      const { workerId, stepId } = req.params;
-      const { documentId, documentType, notes } = req.body;
+      const { workerId, stepProgressId } = req.params;
+      const userId = req.user.id;
       
-      // Basic document upload endpoint - can be enhanced with proper storage
-      res.json({ success: true, message: "Document uploaded successfully" });
+      // Check authorization
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'ADMIN' && user?.role !== 'OWNER' && workerId !== userId) {
+        return res.status(403).json({ message: "Unauthorized to view documents" });
+      }
+      
+      const documents = await storage.getDocumentFilesByWorkflowStepProgress(stepProgressId);
+      res.json(documents);
+    } catch (error) {
+      console.error('Error fetching workflow step documents:', error);
+      res.status(500).json({ message: "Failed to fetch documents" });
+    }
+  });
+
+  // Upload document for workflow step
+  app.post('/api/workers/:workerId/step-progress/:stepProgressId/documents', isAuthenticated, async (req: any, res) => {
+    try {
+      const { workerId, stepProgressId } = req.params;
+      const { s3Key, fileName, mimeType, fileSize, fileHash, kind = 'USER_UPLOAD', notes } = req.body;
+      const userId = req.user.id;
+      
+      // Check authorization
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'ADMIN' && user?.role !== 'OWNER' && workerId !== userId) {
+        return res.status(403).json({ message: "Unauthorized to upload documents" });
+      }
+      
+      const document = await storage.createDocumentFile({
+        workflowStepProgressId: stepProgressId,
+        assignmentId: null,
+        kind,
+        s3Key,
+        fileName,
+        mimeType,
+        fileSize,
+        fileHash,
+        uploadedByUserId: userId,
+        notes,
+        status: 'PENDING'
+      });
+      
+      res.json(document);
     } catch (error) {
       console.error('Error uploading workflow document:', error);
       res.status(500).json({ message: "Failed to upload document" });
+    }
+  });
+
+  // Get document requirements for a workflow step
+  app.get('/api/workflow/steps/:stepId/document-requirements', isAuthenticated, async (req: any, res) => {
+    try {
+      const { stepId } = req.params;
+      const requirements = await storage.getWorkflowStepDocumentRequirements(stepId);
+      res.json(requirements);
+    } catch (error) {
+      console.error('Error fetching document requirements:', error);
+      res.status(500).json({ message: "Failed to fetch document requirements" });
+    }
+  });
+
+  // Create document requirement for workflow step (admin only)
+  app.post('/api/workflow/steps/:stepId/document-requirements', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { stepId } = req.params;
+      const { title, description, isRequired, submittedBy, acceptedFileTypes, maxFileSize } = req.body;
+      
+      const requirement = await storage.createWorkflowStepDocumentRequirement({
+        workflowStepId: stepId,
+        title,
+        description,
+        isRequired,
+        submittedBy,
+        acceptedFileTypes,
+        maxFileSize
+      });
+      
+      res.json(requirement);
+    } catch (error) {
+      console.error('Error creating document requirement:', error);
+      res.status(500).json({ message: "Failed to create document requirement" });
+    }
+  });
+
+  // Update document status
+  app.put('/api/documents/:documentId/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const { documentId } = req.params;
+      const { status, notes } = req.body;
+      const userId = req.user.id;
+      
+      // Check authorization - only owners and admins can update document status
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'ADMIN' && user?.role !== 'OWNER') {
+        return res.status(403).json({ message: "Unauthorized to update document status" });
+      }
+      
+      const document = await storage.updateDocumentFileStatus(documentId, status, notes);
+      res.json(document);
+    } catch (error) {
+      console.error('Error updating document status:', error);
+      res.status(500).json({ message: "Failed to update document status" });
     }
   });
 

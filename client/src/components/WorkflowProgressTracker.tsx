@@ -25,6 +25,8 @@ import {
   FileText,
   Calendar
 } from 'lucide-react';
+import { DocumentUploader } from '@/components/documents/DocumentUploader';
+import DocumentStatusTracker from '@/components/DocumentStatusTracker';
 
 interface WorkflowProgressTrackerProps {
   workerId: string;
@@ -389,14 +391,30 @@ export default function WorkflowProgressTracker({
                                     </div>
                                   </div>
                                   {showUploadPane && canModify && doc.submittedBy === (userRole === 'WORKER' ? 'WORKER' : 'OWNER') && (
-                                    <Button size="sm" variant="outline" data-testid={`button-upload-${doc.id}`}>
-                                      <Upload className="h-4 w-4 mr-1" />
-                                      Upload
-                                    </Button>
+                                    <DocumentUploader
+                                      workflowStepProgressId={step.progress.id}
+                                      workerId={workerId}
+                                      onUploadComplete={() => {
+                                        // Refresh workflow progress data
+                                        queryClient.invalidateQueries({ queryKey: ['/api/workers', workerId, 'workflow-progress'] });
+                                      }}
+                                    />
                                   )}
                                 </div>
                               ))}
                             </div>
+                          </div>
+                        )}
+
+                        {/* Document Status Tracker */}
+                        {step.progress.id && (
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Uploaded Documents</Label>
+                            <DocumentStatusTracker
+                              workflowStepProgressId={step.progress.id}
+                              workerId={workerId}
+                              isReadOnly={!canModify}
+                            />
                           </div>
                         )}
 

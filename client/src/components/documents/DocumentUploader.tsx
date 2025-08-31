@@ -13,11 +13,13 @@ import Tesseract from 'tesseract.js';
 import jsPDF from 'jspdf';
 
 interface DocumentUploaderProps {
-  assignmentId: string;
+  assignmentId?: string;
+  workflowStepProgressId?: string;
+  workerId?: string;
   onUploadComplete?: () => void;
 }
 
-export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUploaderProps) {
+export function DocumentUploader({ assignmentId, workflowStepProgressId, workerId, onUploadComplete }: DocumentUploaderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [files, setFiles] = useState<FileList | null>(null);
   const [documentKind, setDocumentKind] = useState<'USER_UPLOAD' | 'ADMIN_RECEIPT' | 'GENERATED_PDF'>('USER_UPLOAD');
@@ -482,7 +484,16 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await apiRequest("POST", `/api/assignments/${assignmentId}/documents`, formData);
+      let response;
+      if (workflowStepProgressId && workerId) {
+        // Upload to workflow step
+        response = await apiRequest("POST", `/api/workers/${workerId}/step-progress/${workflowStepProgressId}/documents`, formData);
+      } else if (assignmentId) {
+        // Upload to assignment (existing functionality)
+        response = await apiRequest("POST", `/api/assignments/${assignmentId}/documents`, formData);
+      } else {
+        throw new Error("Either assignmentId or workflowStepProgressId and workerId must be provided");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -492,7 +503,14 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
       });
       resetForm();
       onUploadComplete?.();
-      queryClient.invalidateQueries({ queryKey: ['/api/assignments', assignmentId, 'documents'] });
+      
+      // Invalidate appropriate queries based on upload type
+      if (workflowStepProgressId && workerId) {
+        queryClient.invalidateQueries({ queryKey: ['/api/workers', workerId, 'step-progress', workflowStepProgressId, 'documents'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/workers', workerId, 'workflow-progress'] });
+      } else if (assignmentId) {
+        queryClient.invalidateQueries({ queryKey: ['/api/assignments', assignmentId, 'documents'] });
+      }
     },
     onError: () => {
       toast({
