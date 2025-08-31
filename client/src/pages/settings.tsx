@@ -42,7 +42,8 @@ import {
   ChevronDown,
   ChevronUp,
   Code,
-  Upload
+  Upload,
+  CheckSquare
 } from 'lucide-react';
 import PatraIcon from '@/components/icons/PatraIcon';
 import WorkerWorkflowAssignments from '@/components/WorkerWorkflowAssignments';
@@ -616,8 +617,8 @@ function WorkflowForm({ workflow, onSubmit, onCancel }: {
   const [formData, setFormData] = useState({
     name: workflow?.name || '',
     description: workflow?.description || '',
-    isActive: workflow?.isActive || true,
-    executionType: workflow?.executionType || 'sequential'
+    isActive: workflow?.isActive ?? true,
+    executionType: (workflow?.executionType || 'sequential') as 'sequential' | 'parallel'
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -652,14 +653,14 @@ function WorkflowForm({ workflow, onSubmit, onCancel }: {
       <div className="flex items-center space-x-2">
         <Switch
           checked={formData.isActive}
-          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
+          onCheckedChange={(checked: boolean) => setFormData(prev => ({ ...prev, isActive: checked }))}
         />
         <Label>Active</Label>
       </div>
       
       <div>
         <Label htmlFor="executionType">Execution Type</Label>
-        <Select value={formData.executionType} onValueChange={(value) => setFormData(prev => ({ ...prev, executionType: value }))}>
+        <Select value={formData.executionType} onValueChange={(value: 'sequential' | 'parallel') => setFormData(prev => ({ ...prev, executionType: value }))}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -687,56 +688,123 @@ function StageManager({ workflowId, onClose }: { workflowId: string | null, onCl
   const [stages, setStages] = useState<WorkflowStage[]>([]);
   const [showAddStage, setShowAddStage] = useState(false);
   const [editingStage, setEditingStage] = useState<WorkflowStage | null>(null);
+  const [managingDocuments, setManagingDocuments] = useState<string | null>(null);
+  const [managingChecklists, setManagingChecklists] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   // Fetch stages for the workflow
   useEffect(() => {
-    const fetchStages = async () => {
-      if (!workflowId) return;
-      
-      try {
-        const response = await fetch(`/api/workflow-templates/${workflowId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setStages(data.steps || []);
-        }
-      } catch (error) {
-        console.error('Error fetching stages:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     fetchStages();
   }, [workflowId]);
 
+  const fetchStages = async () => {
+    if (!workflowId) return;
+    
+    try {
+      const response = await fetch(`/api/workflow-templates/${workflowId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setStages(data.steps || []);
+      }
+    } catch (error) {
+      console.error('Error fetching stages:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load stages. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAddStage = async (stageData: any) => {
     try {
-      // Add the new stage to the workflow template
-      const currentWorkflow = await fetch(`/api/workflow-templates/${workflowId}`).then(r => r.json());
-      const updatedSteps = [...(currentWorkflow.steps || []), {
-        name: stageData.name,
-        description: stageData.description,
-        assignedRole: stageData.assignedRole,
-        estimatedDays: stageData.estimatedDays,
-        order: (currentWorkflow.steps?.length || 0) + 1,
-        documentRequirements: [],
-        checklistItems: []
-      }];
-      
-      await fetch(`/api/workflow-templates/${workflowId}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/workflow-templates/${workflowId}/steps`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ steps: updatedSteps })
+        body: JSON.stringify({
+          ...stageData,
+          order: stages.length + 1,
+          stepType: 'DOCUMENT_COLLECTION',
+          isRequired: true,
+          requiresApproval: false
+        })
       });
       
-      // Refresh stages
-      const refreshResponse = await fetch(`/api/workflow-templates/${workflowId}`);
-      const refreshData = await refreshResponse.json();
-      setStages(refreshData.steps || []);
-      setShowAddStage(false);
+      if (response.ok) {
+        await fetchStages();
+        setShowAddStage(false);
+        toast({
+          title: "Success",
+          description: "Stage added successfully.",
+        });
+      } else {
+        throw new Error('Failed to create stage');
+      }
     } catch (error) {
       console.error('Error adding stage:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add stage. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateStage = async (stageData: any) => {
+    if (!editingStage) return;
+    
+    try {
+      const response = await fetch(`/api/workflow-steps/${editingStage.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(stageData)
+      });
+      
+      if (response.ok) {
+        await fetchStages();
+        setEditingStage(null);
+        toast({
+          title: "Success",
+          description: "Stage updated successfully.",
+        });
+      } else {
+        throw new Error('Failed to update stage');
+      }
+    } catch (error) {
+      console.error('Error updating stage:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update stage. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteStage = async (stageId: string) => {
+    try {
+      const response = await fetch(`/api/workflow-steps/${stageId}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        await fetchStages();
+        toast({
+          title: "Success",
+          description: "Stage deleted successfully.",
+        });
+      } else {
+        throw new Error('Failed to delete stage');
+      }
+    } catch (error) {
+      console.error('Error deleting stage:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to delete stage. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -744,7 +812,7 @@ function StageManager({ workflowId, onClose }: { workflowId: string | null, onCl
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Workflow Stages</h3>
-        <Button onClick={() => setShowAddStage(true)}>
+        <Button onClick={() => setShowAddStage(true)} data-testid="button-add-stage">
           <Plus className="h-4 w-4 mr-2" />
           Add Stage
         </Button>
@@ -761,23 +829,49 @@ function StageManager({ workflowId, onClose }: { workflowId: string | null, onCl
       ) : (
         <div className="space-y-3">
           {stages.map((stage, index) => (
-            <div key={stage.id} className="border rounded-lg p-4">
+            <div key={stage.id} className="border rounded-lg p-4" data-testid={`stage-card-${stage.id}`}>
               <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-medium">{stage.name}</h4>
-                  <p className="text-sm text-gray-600">{stage.description}</p>
+                <div className="flex-1">
+                  <h4 className="font-medium" data-testid={`stage-name-${stage.id}`}>{stage.name}</h4>
+                  <p className="text-sm text-gray-600" data-testid={`stage-description-${stage.id}`}>{stage.description}</p>
                   <div className="flex gap-4 text-xs text-gray-500 mt-2">
-                    <span>Role: {stage.assignedRole}</span>
-                    <span>Duration: {stage.estimatedDays} days</span>
-                    <span>Documents: {stage.documentRequirements?.length || 0}</span>
-                    <span>Checklist: {stage.checklistItems?.length || 0}</span>
+                    <span data-testid={`stage-role-${stage.id}`}>Role: {stage.assignedRole}</span>
+                    <span data-testid={`stage-duration-${stage.id}`}>Duration: {stage.estimatedDays} days</span>
+                    <span data-testid={`stage-docs-${stage.id}`}>Documents: {stage.documentRequirements?.length || 0}</span>
+                    <span data-testid={`stage-checklist-${stage.id}`}>Checklist: {stage.checklistItems?.length || 0}</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => setEditingStage(stage)}>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setManagingDocuments(stage.id)}
+                    data-testid={`button-manage-docs-${stage.id}`}
+                  >
+                    <FileText className="h-3 w-3" />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setManagingChecklists(stage.id)}
+                    data-testid={`button-manage-checklist-${stage.id}`}
+                  >
+                    <CheckSquare className="h-3 w-3" />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setEditingStage(stage)}
+                    data-testid={`button-edit-stage-${stage.id}`}
+                  >
                     <Edit className="h-3 w-3" />
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => console.log('Delete stage', stage.id)}>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => handleDeleteStage(stage.id)}
+                    data-testid={`button-delete-stage-${stage.id}`}
+                  >
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
@@ -795,8 +889,50 @@ function StageManager({ workflowId, onClose }: { workflowId: string | null, onCl
         </div>
       )}
 
+      {/* Edit Stage Form */}
+      {editingStage && (
+        <div className="border rounded-lg p-4 bg-gray-50">
+          <h4 className="font-medium mb-4">Edit Stage</h4>
+          <StageForm 
+            stage={editingStage} 
+            onSubmit={handleUpdateStage} 
+            onCancel={() => setEditingStage(null)} 
+          />
+        </div>
+      )}
+
+      {/* Document Management Modal */}
+      {managingDocuments && (
+        <Dialog open={!!managingDocuments} onOpenChange={() => setManagingDocuments(null)}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Manage Document Requirements</DialogTitle>
+            </DialogHeader>
+            <DocumentRequirementsManager 
+              stepId={managingDocuments} 
+              onClose={() => setManagingDocuments(null)} 
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Checklist Management Modal */}
+      {managingChecklists && (
+        <Dialog open={!!managingChecklists} onOpenChange={() => setManagingChecklists(null)}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Manage Checklist Items</DialogTitle>
+            </DialogHeader>
+            <ChecklistItemsManager 
+              stepId={managingChecklists} 
+              onClose={() => setManagingChecklists(null)} 
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
       <div className="flex justify-end">
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose} data-testid="button-close-stage-manager">Close</Button>
       </div>
     </div>
   );
@@ -846,7 +982,7 @@ function StageForm({ stage, onSubmit, onCancel }: {
       
       <div>
         <Label htmlFor="assignedRole">Assigned Role</Label>
-        <Select value={formData.assignedRole} onValueChange={(value) => setFormData(prev => ({ ...prev, assignedRole: value }))}>
+        <Select value={formData.assignedRole} onValueChange={(value: 'ADMIN' | 'OWNER' | 'WORKER' | 'VIEWER' | 'CLIENT' | 'INSTITUTION') => setFormData(prev => ({ ...prev, assignedRole: value }))}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -878,6 +1014,517 @@ function StageForm({ stage, onSubmit, onCancel }: {
         </Button>
         <Button type="submit">
           {stage ? 'Update' : 'Add'} Stage
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+// Document Requirements Manager Component
+function DocumentRequirementsManager({ stepId, onClose }: { stepId: string, onClose: () => void }) {
+  const [requirements, setRequirements] = useState<any[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingReq, setEditingReq] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchRequirements();
+  }, [stepId]);
+
+  const fetchRequirements = async () => {
+    try {
+      const response = await fetch(`/api/workflow/steps/${stepId}/document-requirements`);
+      if (response.ok) {
+        const data = await response.json();
+        setRequirements(data);
+      }
+    } catch (error) {
+      console.error('Error fetching requirements:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load document requirements.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddRequirement = async (reqData: any) => {
+    try {
+      const response = await fetch(`/api/workflow-steps/${stepId}/document-requirements`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reqData)
+      });
+      
+      if (response.ok) {
+        await fetchRequirements();
+        setShowAddForm(false);
+        toast({
+          title: "Success",
+          description: "Document requirement added successfully.",
+        });
+      }
+    } catch (error) {
+      console.error('Error adding requirement:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add document requirement.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateRequirement = async (reqData: any) => {
+    if (!editingReq) return;
+    
+    try {
+      const response = await fetch(`/api/document-requirements/${editingReq.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reqData)
+      });
+      
+      if (response.ok) {
+        await fetchRequirements();
+        setEditingReq(null);
+        toast({
+          title: "Success",
+          description: "Document requirement updated successfully.",
+        });
+      }
+    } catch (error) {
+      console.error('Error updating requirement:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update document requirement.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteRequirement = async (reqId: string) => {
+    try {
+      const response = await fetch(`/api/document-requirements/${reqId}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        await fetchRequirements();
+        toast({
+          title: "Success",
+          description: "Document requirement deleted successfully.",
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting requirement:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete document requirement.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h4 className="font-medium">Document Requirements</h4>
+        <Button onClick={() => setShowAddForm(true)} size="sm" data-testid="button-add-document-req">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Document
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-4 text-gray-500">Loading...</div>
+      ) : requirements.length === 0 ? (
+        <div className="text-center py-4 text-gray-500">No document requirements defined.</div>
+      ) : (
+        <div className="space-y-2">
+          {requirements.map((req) => (
+            <div key={req.id} className="border rounded p-3" data-testid={`doc-req-${req.id}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h5 className="font-medium" data-testid={`doc-req-title-${req.id}`}>{req.title}</h5>
+                  <p className="text-sm text-gray-600" data-testid={`doc-req-desc-${req.id}`}>{req.description}</p>
+                  <div className="flex gap-2 text-xs text-gray-500 mt-1">
+                    <span data-testid={`doc-req-required-${req.id}`}>
+                      {req.required ? 'Required' : 'Optional'}
+                    </span>
+                    <span data-testid={`doc-req-format-${req.id}`}>
+                      Format: {req.acceptedFormats || 'Any'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="outline" onClick={() => setEditingReq(req)} data-testid={`button-edit-doc-req-${req.id}`}>
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleDeleteRequirement(req.id)} data-testid={`button-delete-doc-req-${req.id}`}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showAddForm && (
+        <div className="border rounded p-4 bg-gray-50">
+          <h5 className="font-medium mb-3">Add Document Requirement</h5>
+          <DocumentRequirementForm onSubmit={handleAddRequirement} onCancel={() => setShowAddForm(false)} />
+        </div>
+      )}
+
+      {editingReq && (
+        <div className="border rounded p-4 bg-gray-50">
+          <h5 className="font-medium mb-3">Edit Document Requirement</h5>
+          <DocumentRequirementForm 
+            requirement={editingReq}
+            onSubmit={handleUpdateRequirement} 
+            onCancel={() => setEditingReq(null)} 
+          />
+        </div>
+      )}
+
+      <div className="flex justify-end">
+        <Button onClick={onClose} data-testid="button-close-doc-manager">Close</Button>
+      </div>
+    </div>
+  );
+}
+
+// Document Requirement Form Component
+function DocumentRequirementForm({ requirement, onSubmit, onCancel }: { 
+  requirement?: any, 
+  onSubmit: (data: any) => void, 
+  onCancel: () => void 
+}) {
+  const [formData, setFormData] = useState({
+    title: requirement?.title || '',
+    description: requirement?.description || '',
+    required: requirement?.required ?? true,
+    acceptedFormats: requirement?.acceptedFormats || '',
+    order: requirement?.order || 1
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div>
+        <Label htmlFor="docTitle">Title</Label>
+        <Input
+          id="docTitle"
+          value={formData.title}
+          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+          placeholder="Document title"
+          required
+          data-testid="input-doc-title"
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="docDescription">Description</Label>
+        <Textarea
+          id="docDescription"
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="Document description"
+          rows={2}
+          data-testid="input-doc-description"
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="docFormats">Accepted Formats</Label>
+        <Input
+          id="docFormats"
+          value={formData.acceptedFormats}
+          onChange={(e) => setFormData(prev => ({ ...prev, acceptedFormats: e.target.value }))}
+          placeholder="e.g., PDF, JPG, PNG"
+          data-testid="input-doc-formats"
+        />
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={formData.required}
+          onCheckedChange={(checked: boolean) => setFormData(prev => ({ ...prev, required: checked }))}
+          data-testid="switch-doc-required"
+        />
+        <Label>Required</Label>
+      </div>
+      
+      <div className="flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel} data-testid="button-cancel-doc">
+          Cancel
+        </Button>
+        <Button type="submit" data-testid="button-save-doc">
+          {requirement ? 'Update' : 'Add'} Document
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+// Checklist Items Manager Component
+function ChecklistItemsManager({ stepId, onClose }: { stepId: string, onClose: () => void }) {
+  const [items, setItems] = useState<any[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchItems();
+  }, [stepId]);
+
+  const fetchItems = async () => {
+    try {
+      const response = await fetch(`/api/workflow/steps/${stepId}/checklist-items`);
+      if (response.ok) {
+        const data = await response.json();
+        setItems(data);
+      }
+    } catch (error) {
+      console.error('Error fetching checklist items:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load checklist items.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddItem = async (itemData: any) => {
+    try {
+      const response = await fetch(`/api/workflow-steps/${stepId}/checklist-items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(itemData)
+      });
+      
+      if (response.ok) {
+        await fetchItems();
+        setShowAddForm(false);
+        toast({
+          title: "Success",
+          description: "Checklist item added successfully.",
+        });
+      }
+    } catch (error) {
+      console.error('Error adding checklist item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add checklist item.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateItem = async (itemData: any) => {
+    if (!editingItem) return;
+    
+    try {
+      const response = await fetch(`/api/checklist-items/${editingItem.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(itemData)
+      });
+      
+      if (response.ok) {
+        await fetchItems();
+        setEditingItem(null);
+        toast({
+          title: "Success",
+          description: "Checklist item updated successfully.",
+        });
+      }
+    } catch (error) {
+      console.error('Error updating checklist item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update checklist item.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteItem = async (itemId: string) => {
+    try {
+      const response = await fetch(`/api/checklist-items/${itemId}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        await fetchItems();
+        toast({
+          title: "Success",
+          description: "Checklist item deleted successfully.",
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting checklist item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete checklist item.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h4 className="font-medium">Checklist Items</h4>
+        <Button onClick={() => setShowAddForm(true)} size="sm" data-testid="button-add-checklist-item">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Item
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-4 text-gray-500">Loading...</div>
+      ) : items.length === 0 ? (
+        <div className="text-center py-4 text-gray-500">No checklist items defined.</div>
+      ) : (
+        <div className="space-y-2">
+          {items.map((item) => (
+            <div key={item.id} className="border rounded p-3" data-testid={`checklist-item-${item.id}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h5 className="font-medium" data-testid={`checklist-title-${item.id}`}>{item.title}</h5>
+                  <p className="text-sm text-gray-600" data-testid={`checklist-desc-${item.id}`}>{item.description}</p>
+                  <div className="flex gap-2 text-xs text-gray-500 mt-1">
+                    <span data-testid={`checklist-required-${item.id}`}>
+                      {item.required ? 'Required' : 'Optional'}
+                    </span>
+                    <span data-testid={`checklist-order-${item.id}`}>
+                      Order: {item.order}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="outline" onClick={() => setEditingItem(item)} data-testid={`button-edit-checklist-${item.id}`}>
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleDeleteItem(item.id)} data-testid={`button-delete-checklist-${item.id}`}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showAddForm && (
+        <div className="border rounded p-4 bg-gray-50">
+          <h5 className="font-medium mb-3">Add Checklist Item</h5>
+          <ChecklistItemForm onSubmit={handleAddItem} onCancel={() => setShowAddForm(false)} />
+        </div>
+      )}
+
+      {editingItem && (
+        <div className="border rounded p-4 bg-gray-50">
+          <h5 className="font-medium mb-3">Edit Checklist Item</h5>
+          <ChecklistItemForm 
+            item={editingItem}
+            onSubmit={handleUpdateItem} 
+            onCancel={() => setEditingItem(null)} 
+          />
+        </div>
+      )}
+
+      <div className="flex justify-end">
+        <Button onClick={onClose} data-testid="button-close-checklist-manager">Close</Button>
+      </div>
+    </div>
+  );
+}
+
+// Checklist Item Form Component
+function ChecklistItemForm({ item, onSubmit, onCancel }: { 
+  item?: any, 
+  onSubmit: (data: any) => void, 
+  onCancel: () => void 
+}) {
+  const [formData, setFormData] = useState({
+    title: item?.title || '',
+    description: item?.description || '',
+    required: item?.required ?? true,
+    order: item?.order || 1
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div>
+        <Label htmlFor="checklistTitle">Title</Label>
+        <Input
+          id="checklistTitle"
+          value={formData.title}
+          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+          placeholder="Checklist item title"
+          required
+          data-testid="input-checklist-title"
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="checklistDescription">Description</Label>
+        <Textarea
+          id="checklistDescription"
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="Checklist item description"
+          rows={2}
+          data-testid="input-checklist-description"
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="checklistOrder">Order</Label>
+        <Input
+          id="checklistOrder"
+          type="number"
+          min="1"
+          value={formData.order}
+          onChange={(e) => setFormData(prev => ({ ...prev, order: parseInt(e.target.value) || 1 }))}
+          placeholder="Display order"
+          data-testid="input-checklist-order"
+        />
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={formData.required}
+          onCheckedChange={(checked: boolean) => setFormData(prev => ({ ...prev, required: checked }))}
+          data-testid="switch-checklist-required"
+        />
+        <Label>Required</Label>
+      </div>
+      
+      <div className="flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel} data-testid="button-cancel-checklist">
+          Cancel
+        </Button>
+        <Button type="submit" data-testid="button-save-checklist">
+          {item ? 'Update' : 'Add'} Item
         </Button>
       </div>
     </form>

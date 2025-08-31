@@ -2180,6 +2180,147 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Individual Workflow Step Management
+  app.post('/api/workflow-templates/:templateId/steps', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { templateId } = req.params;
+      const stepData = req.body;
+      
+      const step = await storage.createWorkflowStep({
+        workflowTemplateId: templateId,
+        ...stepData
+      });
+      
+      res.status(201).json(step);
+    } catch (error) {
+      console.error('Error creating workflow step:', error);
+      res.status(500).json({ message: "Failed to create workflow step" });
+    }
+  });
+
+  app.put('/api/workflow-steps/:stepId', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { stepId } = req.params;
+      const updates = req.body;
+      
+      const step = await storage.updateWorkflowStep(stepId, updates);
+      res.json(step);
+    } catch (error) {
+      console.error('Error updating workflow step:', error);
+      res.status(500).json({ message: "Failed to update workflow step" });
+    }
+  });
+
+  app.delete('/api/workflow-steps/:stepId', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { stepId } = req.params;
+      const success = await storage.deleteWorkflowStep(stepId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Workflow step not found" });
+      }
+      
+      res.json({ success: true, message: "Workflow step deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting workflow step:', error);
+      res.status(500).json({ message: "Failed to delete workflow step" });
+    }
+  });
+
+  // Document Requirements Management
+  app.post('/api/workflow-steps/:stepId/document-requirements', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { stepId } = req.params;
+      const reqData = req.body;
+      
+      const requirement = await storage.createDocumentRequirement({
+        workflowStepId: stepId,
+        ...reqData
+      });
+      
+      res.status(201).json(requirement);
+    } catch (error) {
+      console.error('Error creating document requirement:', error);
+      res.status(500).json({ message: "Failed to create document requirement" });
+    }
+  });
+
+  app.put('/api/document-requirements/:reqId', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { reqId } = req.params;
+      const updates = req.body;
+      
+      const requirement = await storage.updateDocumentRequirement(reqId, updates);
+      res.json(requirement);
+    } catch (error) {
+      console.error('Error updating document requirement:', error);
+      res.status(500).json({ message: "Failed to update document requirement" });
+    }
+  });
+
+  app.delete('/api/document-requirements/:reqId', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { reqId } = req.params;
+      const success = await storage.deleteDocumentRequirement(reqId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Document requirement not found" });
+      }
+      
+      res.json({ success: true, message: "Document requirement deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting document requirement:', error);
+      res.status(500).json({ message: "Failed to delete document requirement" });
+    }
+  });
+
+  // Checklist Items Management
+  app.post('/api/workflow-steps/:stepId/checklist-items', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { stepId } = req.params;
+      const itemData = req.body;
+      
+      const item = await storage.createChecklistItem({
+        workflowStepId: stepId,
+        ...itemData
+      });
+      
+      res.status(201).json(item);
+    } catch (error) {
+      console.error('Error creating checklist item:', error);
+      res.status(500).json({ message: "Failed to create checklist item" });
+    }
+  });
+
+  app.put('/api/checklist-items/:itemId', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { itemId } = req.params;
+      const updates = req.body;
+      
+      const item = await storage.updateChecklistItem(itemId, updates);
+      res.json(item);
+    } catch (error) {
+      console.error('Error updating checklist item:', error);
+      res.status(500).json({ message: "Failed to update checklist item" });
+    }
+  });
+
+  app.delete('/api/checklist-items/:itemId', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { itemId } = req.params;
+      const success = await storage.deleteChecklistItem(itemId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Checklist item not found" });
+      }
+      
+      res.json({ success: true, message: "Checklist item deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting checklist item:', error);
+      res.status(500).json({ message: "Failed to delete checklist item" });
+    }
+  });
+
   // Worker-Workflow Linking API Endpoints
   app.post('/api/workers/:workerId/workflows/:templateId/link', devAuthBypass, async (req: any, res) => {
     try {
