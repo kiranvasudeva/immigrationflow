@@ -1206,7 +1206,12 @@ export class DatabaseStorage implements IStorage {
 
   async createWorkflowStep(step: InsertWorkflowStep): Promise<WorkflowStep> {
     const result = await db.insert(workflowSteps).values(step).returning();
-    return result[0];
+    const createdStep = result[0];
+    
+    // Automatically create default document requirements based on step type
+    await this.createDefaultDocumentRequirements(createdStep.id, createdStep.stepType);
+    
+    return createdStep;
   }
 
   async updateWorkflowStep(id: string, updates: Partial<InsertWorkflowStep>): Promise<WorkflowStep> {
@@ -1237,6 +1242,86 @@ export class DatabaseStorage implements IStorage {
   async deleteDocumentRequirement(id: string): Promise<boolean> {
     const result = await db.delete(documentRequirements).where(eq(documentRequirements.id, id));
     return result.rowCount > 0;
+  }
+
+  // Helper method to create default document requirements based on step type
+  private async createDefaultDocumentRequirements(stepId: string, stepType: string): Promise<void> {
+    const defaultRequirements = this.getDefaultDocumentRequirementsByStepType(stepType);
+    
+    for (const requirement of defaultRequirements) {
+      await this.createDocumentRequirement({
+        workflowStepId: stepId,
+        ...requirement
+      });
+    }
+  }
+
+  // Define default document requirements for each step type
+  private getDefaultDocumentRequirementsByStepType(stepType: string): Array<Omit<InsertDocumentRequirement, 'workflowStepId'>> {
+    switch (stepType) {
+      case 'DOCUMENT_COLLECTION':
+        return [
+          {
+            title: 'Required Documents',
+            description: 'Collection of all required documents for this stage',
+            isRequired: true,
+            submittedBy: 'WORKER',
+            acceptedFileTypes: ['pdf', 'jpg', 'png'],
+            order: 1
+          }
+        ];
+      
+      case 'DOCUMENT_REVIEW':
+        return [
+          {
+            title: 'Document Verification Checklist',
+            description: 'Complete verification of all submitted documents for completeness and accuracy',
+            isRequired: true,
+            submittedBy: 'OWNER',
+            acceptedFileTypes: ['pdf'],
+            order: 1
+          }
+        ];
+      
+      case 'FORM_COMPLETION':
+        return [
+          {
+            title: 'Completed Application Forms',
+            description: 'All required forms completed and ready for submission',
+            isRequired: true,
+            submittedBy: 'OWNER',
+            acceptedFileTypes: ['pdf'],
+            order: 1
+          }
+        ];
+      
+      case 'INSTITUTIONAL_SUBMISSION':
+        return [
+          {
+            title: 'Submission Confirmation Receipt',
+            description: 'Official receipt or confirmation of submission to the relevant institution',
+            isRequired: true,
+            submittedBy: 'OWNER',
+            acceptedFileTypes: ['pdf', 'jpg', 'png'],
+            order: 1
+          }
+        ];
+      
+      case 'ADMIN_APPROVAL':
+        return [
+          {
+            title: 'Official Approval Document',
+            description: 'Official approval, certificate, or permit issued by the relevant authority',
+            isRequired: true,
+            submittedBy: 'OWNER',
+            acceptedFileTypes: ['pdf'],
+            order: 1
+          }
+        ];
+      
+      default:
+        return [];
+    }
   }
 
   // Checklist Items operations
