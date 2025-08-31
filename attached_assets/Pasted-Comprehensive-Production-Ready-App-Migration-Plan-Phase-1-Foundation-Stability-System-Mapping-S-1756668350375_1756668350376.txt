@@ -1,0 +1,141 @@
+Comprehensive Production-Ready App Migration Plan
+Phase 1: Foundation Stability & System Mapping
+Step 1: Complete System Dependency Mapping
+Auto-scan all files to create comprehensive dependency map
+Map API endpoints → frontend components → backend methods → database tables
+Map environment variables → database connections → storage methods
+Map role permissions → access controls → feature availability
+Generate atomic update configuration for all identified dependencies
+Step 2: API Endpoint Standardization
+Choose single URL pattern convention (workflow/steps OR workflow-steps)
+Update all endpoint definitions atomically across backend routes
+Update all frontend API calls simultaneously using dependency map
+Ensure consistent parameter naming (:stepId vs :id vs :workflowId)
+Validate all endpoints respond correctly after changes
+Step 3: Storage Method Unification
+Standardize to single naming convention for all storage methods
+Replace getWorkflowStepDocumentRequirements with getDocumentRequirements
+Replace createWorkflowStepDocumentRequirement with createDocumentRequirement
+Update all method calls atomically across routes and components
+Ensure seeding function uses same methods as API endpoints
+Step 4: Database Schema Alignment
+Verify all storage methods read/write to same database tables
+Ensure foreign key relationships maintained correctly
+Update environment variable mappings for any table name changes
+Validate data migration paths preserve existing data
+Test database connectivity with new configuration
+Step 5: Data Structure Consistency
+Enforce identical data structures across all system layers
+Ensure API responses match frontend component expectations
+Validate worker workflow view gets same data as settings manager
+Standardize field names, types, and object structures
+Create validation schemas for all data interfaces
+Phase 2: Production Readiness & Security
+Step 6: Environment Configuration Management
+Replace all hardcoded values with environment variables
+Create production-specific configuration mappings
+Implement environment variable validation on startup
+Remove NODE_ENV=development dependencies
+Add database connection pooling and retry logic
+Step 7: Authentication & Authorization Hardening
+Create emergency admin account with expiration
+Generate system bypass tokens for automated processes
+Implement proper session security (secure cookies, HTTPS-only)
+Add rate limiting and input validation
+Create authentication-free health check endpoints
+Step 8: Role-Based Access Control Migration
+Extract all hardcoded role checks from codebase
+Create database tables for roles, permissions, role_permissions
+Migrate existing permissions to database atomically
+Implement granular document and workflow permissions
+Validate no users lose previously available access
+Step 9: Security Headers & Input Validation
+Configure production CORS policies for specific domains
+Add security headers (HSTS, CSP, X-Frame-Options)
+Implement comprehensive input sanitization
+Add data type checking and format validation
+Remove development-only security bypasses
+Step 10: Error Handling & Monitoring
+Replace development error messages with user-friendly ones
+Implement structured logging without sensitive data
+Add error tracking and performance monitoring
+Create graceful degradation for service failures
+Ensure no stack traces exposed to end users
+Phase 3: Data Integrity & Immigration System
+Step 11: Mock Data Elimination
+Remove all hardcoded arrays, sample data, placeholder values
+Replace with database queries or configuration-driven data
+Clean up commented-out mock data and development shortcuts
+Ensure all user data comes from real database operations
+Validate data flows end-to-end without mock dependencies
+Step 12: Dynamic Immigration Document System
+Create database-driven document templates for all immigration types
+Implement template versioning for changing requirements
+Add document requirement categories and inheritance
+Create configurable country-specific immigration processes
+Enable multilingual document templates and requirements
+Step 13: Audit Trail & Compliance
+Log all document access, modifications, status changes
+Implement immutable audit logs for regulatory compliance
+Add document retention policies based on legal requirements
+Create compliance reporting for immigration authorities
+Track user actions across all workflow stages
+Step 14: Cross-Component Data Flow Validation
+Verify data structures consistent between all components
+Check foreign key relationships maintained across operations
+Ensure data transformations preserve referential integrity
+Validate settings changes flow to worker workflows correctly
+Test document requirements appear consistently across views
+Phase 4: Continuous Development Protection
+Step 15: API Versioning & Contract Testing
+Implement API versioning to prevent breaking changes
+Create backward compatibility layers for updates
+Add automated API contract testing
+Implement feature flags for gradual rollouts
+Monitor API usage patterns and deprecation timelines
+Step 16: Database Schema Management
+Create automated migration system with rollback capabilities
+Implement schema validation tests to prevent breaking changes
+Add data migration scripts for production updates
+Create test database setup with migration capabilities
+Monitor schema changes impact on existing functionality
+Step 17: Comprehensive Testing Framework
+Implement integration tests for all critical workflows
+Add end-to-end testing for complete user journeys
+Create performance regression testing
+Test database migrations against production-like data
+Validate Romanian workflow documents and checklists work correctly
+Step 18: Configuration Management & Resilience
+Centralize all business logic in database configuration
+Create admin interface for configuration management
+Add circuit breakers for external service dependencies
+Implement automatic retry logic with exponential backoff
+Create health check endpoints for all critical services
+Step 19: Deployment Safety & Monitoring
+Implement blue-green deployment strategy
+Add automated rollback triggers for failed deployments
+Create deployment validation and smoke tests
+Monitor system health continuously
+Set up alerts for performance degradation or errors
+Step 20: Final Integration Validation
+Run complete end-to-end system testing
+Validate Romanian work permit workflow with real documents
+Test all user roles can access appropriate features
+Verify document upload, review, and approval workflows
+Confirm settings changes immediately reflect in worker views
+Ensure no hardcoded data or mock values remain
+Automated Safeguards Throughout Process
+Pre-execution: System backup, dependency mapping, environment validation
+During execution: Real-time monitoring, error rate tracking, automatic rollback triggers
+Post-execution: Comprehensive validation, performance testing, security scanning
+Continuous: Health monitoring, audit logging, compliance tracking
+
+Success Criteria:
+
+Zero hardcoded or mock data
+All Romanian immigration documents properly seeded and accessible
+Settings manager and worker workflow show identical document data
+All user roles function correctly with appropriate permissions
+System handles continuous development without breaking functionality
+Complete audit trail for compliance and troubleshooting
+This comprehensive plan ensures your immigration workflow management system becomes production-ready with full data integrity, proper security, and robust change management capabilities.
