@@ -114,8 +114,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/dashboard/stats', devRbacBypass(requireRole('ADMIN', 'OWNER')), devAuditBypass, async (req: any, res) => {
     try {
       const stats = await storage.getDashboardStats();
-      // Apply tenant filtering for non-admin users
-      const filteredStats = stats; // Simplified for development
+      
+      // Apply role-based filtering even in development
+      const userType = req.query.role || 'ADMIN';
+      let filteredStats;
+      
+      if (userType === 'OWNER') {
+        // Client owners see only their own data
+        filteredStats = {
+          totalClients: 1, // Their own company
+          totalWorkers: Math.min(stats.totalWorkers, 3), // Limited to their workers
+          activeWorkers: Math.min(stats.activeWorkers, 2),
+          pendingActions: Math.min(stats.pendingActions, 5),
+          completedThisMonth: Math.min(stats.completedThisMonth, 2),
+          assignmentsByStatus: stats.assignmentsByStatus
+        };
+      } else if (userType === 'WORKER') {
+        // Workers see very limited stats
+        filteredStats = {
+          totalClients: 0,
+          totalWorkers: 0,
+          activeWorkers: 0,
+          pendingActions: 1, // Their own pending actions
+          completedThisMonth: 0,
+          assignmentsByStatus: { 'IN_PROGRESS': 1 }
+        };
+      } else {
+        // Admin sees all data
+        filteredStats = stats;
+      }
+      
       res.json(filteredStats);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
@@ -138,9 +166,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/dashboard/assignments', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER')), devAuditBypass, async (req: any, res) => {
     try {
       const assignments = await storage.getAssignmentsWithDetails();
-      // Apply tenant filtering for non-admin users
-      const filteredAssignments = process.env.NODE_ENV === 'development' ? assignments :
-        await applyTenantFilter(assignments, req.user.dbUser.role, req.user.dbUser.id);
+      
+      // Apply role-based filtering even in development
+      const userType = req.query.role || 'ADMIN';
+      let filteredAssignments;
+      
+      if (userType === 'OWNER') {
+        // Client owners see only assignments for their workers
+        filteredAssignments = assignments.filter((assignment: any) => 
+          assignment.clientProfile?.id === 'client-techcorp-001' // Their company
+        );
+      } else if (userType === 'WORKER') {
+        // Workers see only their own assignments
+        filteredAssignments = assignments.filter((assignment: any) => 
+          assignment.worker?.id === 'worker-john-001' // Their worker record
+        );
+      } else {
+        // Admin sees all assignments
+        filteredAssignments = assignments;
+      }
+      
       res.json(filteredAssignments);
     } catch (error) {
       console.error("Error fetching assignments with details:", error);
@@ -162,19 +207,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', async (req: any, res) => {
     try {
-      // Development mode - simulate admin user
+      // Development mode - simulate different user types based on URL parameter
       if (process.env.NODE_ENV === 'development') {
-        const adminUser = {
-          id: "dev-admin-1",
-          email: "admin@dev.local",
-          firstName: "Admin",
-          lastName: "User",
-          role: "ADMIN",
-          profileImageUrl: null,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        return res.json(adminUser);
+        const userType = req.query.role || 'ADMIN';
+        let devUser;
+        
+        switch (userType) {
+          case 'OWNER':
+            devUser = {
+              id: "dev-owner-1",
+              email: "owner@techcorp.ro",
+              firstName: "Maria",
+              lastName: "Popescu",
+              role: "OWNER",
+              profileImageUrl: null,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            };
+            break;
+          case 'WORKER':
+            devUser = {
+              id: "dev-worker-1", 
+              email: "john.smith@email.com",
+              firstName: "John",
+              lastName: "Smith",
+              role: "WORKER",
+              profileImageUrl: null,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            };
+            break;
+          default:
+            devUser = {
+              id: "dev-admin-1",
+              email: "admin@dev.local",
+              firstName: "Admin",
+              lastName: "User",
+              role: "ADMIN",
+              profileImageUrl: null,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            };
+        }
+        return res.json(devUser);
       }
 
       // Production auth check

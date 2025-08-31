@@ -29,7 +29,18 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    let url = queryKey.join("/") as string;
+    
+    // Add role parameter in development mode for proper data filtering
+    if (import.meta.env.DEV && typeof window !== 'undefined') {
+      const roleParam = new URLSearchParams(window.location.search).get('role');
+      if (roleParam && (url.includes('/api/dashboard/') || url.includes('/api/clients') || url.includes('/api/auth/user'))) {
+        const separator = url.includes('?') ? '&' : '?';
+        url += `${separator}role=${roleParam}`;
+      }
+    }
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
 

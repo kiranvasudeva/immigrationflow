@@ -7,6 +7,7 @@ import { I18nProvider } from "@/contexts/I18nProvider";
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
 import { useAuth } from "@/hooks/useAuth";
 import { DummyDataAlert } from "@/components/dummy-data-alert";
+import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { useRoleBasedLanguage } from "@/hooks/useRoleBasedLanguage";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
@@ -40,6 +41,9 @@ function Router() {
 
   return (
     <div>
+      {/* Development role switcher */}
+      <RoleSwitcher />
+      
       {/* Show dummy data alert for authenticated users */}
       {isAuthenticated && <DummyDataAlert />}
       
