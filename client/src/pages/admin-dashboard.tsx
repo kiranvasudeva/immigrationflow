@@ -245,7 +245,6 @@ export default function AdminDashboard() {
               <p className="text-gray-600 mt-2">Manage clients, workers, and immigration workflows</p>
             </div>
           </div>
-          
         </div>
 
         {/* Dashboard Statistics */}
@@ -304,7 +303,32 @@ export default function AdminDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">Workflow performance metrics and analytics will be displayed here.</p>
+              {assignments && assignments.length > 0 ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">{(assignments as any[]).length}</div>
+                      <div className="text-sm text-gray-600">Total Assignments</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {(assignments as any[]).filter((a: any) => a.status === 'ACCEPTED').length}
+                      </div>
+                      <div className="text-sm text-gray-600">Completed</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {(assignments as any[]).filter((a: any) => 
+                          ['AWAITING_UPLOAD', 'SUBMITTED_BY_USER', 'RECEIVED_BY_ADMIN'].includes(a.status)
+                        ).length}
+                      </div>
+                      <div className="text-sm text-gray-600">In Progress</div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-600">No workflow data available yet. Create some assignments to see analytics.</p>
+              )}
             </CardContent>
           </Card>
         </div>

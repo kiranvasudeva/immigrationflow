@@ -87,7 +87,7 @@ export default function AnalyticsPage() {
   }, []);
 
   // Stage progression data
-  const stageData = assignments.reduce((acc: any[], assignment: any) => {
+  const stageData = (assignments as any[]).reduce((acc: any[], assignment: any) => {
     const stageName = assignment.stage?.name || 'Unknown';
     const existing = acc.find(item => item.stage === stageName);
     if (existing) {
@@ -183,7 +183,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold" data-testid="stat-total-clients">
-              {stats?.totalClients || 0}
+              {(stats as any)?.totalClients || 0}
             </div>
             <p className="text-xs text-muted-foreground">
               +2 from last month
@@ -198,7 +198,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold" data-testid="stat-active-workers">
-              {stats?.activeWorkers || 0}
+              {(stats as any)?.activeWorkers || 0}
             </div>
             <p className="text-xs text-muted-foreground">
               Currently in process
@@ -213,7 +213,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold" data-testid="stat-pending-actions">
-              {stats?.pendingActions || 0}
+              {(stats as any)?.pendingActions || 0}
             </div>
             <p className="text-xs text-muted-foreground">
               Require attention
@@ -228,7 +228,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold" data-testid="stat-completed-month">
-              {stats?.completedThisMonth || 0}
+              {(stats as any)?.completedThisMonth || 0}
             </div>
             <p className="text-xs text-muted-foreground">
               +18% from last month
@@ -294,7 +294,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={monthlyData}>
+              <LineChart data={monthlyData as any[]}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />

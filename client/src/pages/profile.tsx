@@ -77,18 +77,18 @@ export default function ProfilePage() {
     }
   };
 
-  // Mock additional profile data
+  // Use real user data
   const profileData = {
-    firstName: user?.firstName || 'John',
-    lastName: user?.lastName || 'Smith',
-    email: user?.email || 'john.smith@example.com',
-    phone: '+1 (555) 123-4567',
-    nationality: 'United States',
-    dateOfBirth: '1990-05-15',
-    address: '123 Main Street, New York, NY 10001',
-    emergencyContact: 'Jane Smith - +1 (555) 987-6543',
-    workPermitStatus: 'In Progress',
-    visaStatus: 'Pending Application'
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    phone: '',
+    nationality: '',
+    dateOfBirth: '',
+    address: '',
+    emergencyContact: '',
+    workPermitStatus: '',
+    visaStatus: ''
   };
 
   return (

@@ -22,6 +22,12 @@ import ProfilePage from "@/pages/profile";
 import ClientProfile from "@/pages/client-profile";
 import WorkerProfile from "@/pages/worker-profile";
 import SettingsPage from "@/pages/settings";
+import AuditLogsPage from "@/pages/audit-logs";
+import RequirementsPage from "@/pages/requirements";
+import RemindersPage from "@/pages/reminders";
+import PaymentsPage from "@/pages/payments";
+import WorkersPage from "@/pages/workers";
+import ClientsPage from "@/pages/clients";
 import { User } from "@shared/schema";
 
 function Router() {
@@ -59,16 +65,16 @@ function Router() {
                 <Route path="/dashboard" component={RoleBasedDashboard} />
                 <Route path="/templates" component={TemplatesPage} />
                 <Route path="/reports" component={AnalyticsPage} />
-                <Route path="/clients" component={RoleBasedDashboard} />
+                <Route path="/clients" component={ClientsPage} />
                 <Route path="/clients/:id" component={ClientProfile} />
-                <Route path="/workers" component={RoleBasedDashboard} />
+                <Route path="/workers" component={WorkersPage} />
                 <Route path="/workers/:id" component={WorkerProfile} />
-                <Route path="/requirements" component={RoleBasedDashboard} />
-                <Route path="/reminders" component={RoleBasedDashboard} />
-                <Route path="/audit" component={RoleBasedDashboard} />
+                <Route path="/requirements" component={RequirementsPage} />
+                <Route path="/reminders" component={RemindersPage} />
+                <Route path="/audit" component={AuditLogsPage} />
                 <Route path="/profile" component={ProfilePage} />
                 <Route path="/documents" component={DocumentsPage} />
-                <Route path="/payments" component={RoleBasedDashboard} />
+                <Route path="/payments" component={PaymentsPage} />
                 <Route path="/deadlines" component={DeadlinesPage} />
                 <Route path="/settings" component={SettingsPage} />
                 <Route component={NotFound} />

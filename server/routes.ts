@@ -127,6 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           activeWorkers: Math.min(stats.activeWorkers, 2),
           pendingActions: Math.min(stats.pendingActions, 5),
           completedThisMonth: Math.min(stats.completedThisMonth, 2),
+          totalWorkflowTemplates: stats.totalWorkflowTemplates,
           assignmentsByStatus: stats.assignmentsByStatus
         };
       } else if (userType === 'WORKER') {
@@ -137,6 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           activeWorkers: 0,
           pendingActions: 1, // Their own pending actions
           completedThisMonth: 0,
+          totalWorkflowTemplates: 0,
           assignmentsByStatus: { 'IN_PROGRESS': 1 }
         };
       } else {

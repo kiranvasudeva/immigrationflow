@@ -208,6 +208,7 @@ export interface IStorage {
     activeWorkers: number;
     pendingActions: number;
     completedThisMonth: number;
+    totalWorkflowTemplates: number;
     assignmentsByStatus: Record<string, number>;
   }>;
   getWorkflowProgressStats(): Promise<{
@@ -734,6 +735,7 @@ export class DatabaseStorage implements IStorage {
     activeWorkers: number;
     pendingActions: number;
     completedThisMonth: number;
+    totalWorkflowTemplates: number;
     assignmentsByStatus: Record<string, number>;
   }> {
     // Get total clients
@@ -798,12 +800,16 @@ export class DatabaseStorage implements IStorage {
       return acc;
     }, {} as Record<string, number>);
     
+    // Get total workflow templates
+    const totalWorkflowTemplatesResult = await db.select({ count: count() }).from(workflowTemplates);
+    
     return {
       totalClients: totalClients[0]?.count ?? 0,
       totalWorkers: totalWorkers[0]?.count ?? 0,
       activeWorkers: activeWorkersResult.length,
       pendingActions: pendingActionsResult[0]?.count ?? 0,
       completedThisMonth: completedThisMonthResult[0]?.count ?? 0,
+      totalWorkflowTemplates: totalWorkflowTemplatesResult[0]?.count ?? 0,
       assignmentsByStatus,
     };
   }
