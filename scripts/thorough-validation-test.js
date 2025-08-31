@@ -924,22 +924,13 @@ class ThoroughValidationSuite {
     console.log('  🔍 Comprehensive Data Integrity Validation...');
     
     try {
-      // ENHANCED: Get ALL application data dynamically
+      // ENHANCED: Get ALL application data dynamically using REAL API endpoints
       const dataEndpoints = [
-        { name: 'clients', path: '/api/clients', key: 'id', required: ['legalName', 'email'] },
-        { name: 'workers', path: '/api/workers', key: 'id', required: ['name', 'nationality'], parent: 'clientProfileId' },
-        { name: 'assignments', path: '/api/assignments', key: 'id', required: ['status'], references: ['clientProfileId', 'workerId', 'requirementId'] },
-        { name: 'stages', path: '/api/stages', key: 'id', required: ['title', 'key'] },
-        { name: 'requirements', path: '/api/requirements', key: 'id', required: ['title'], references: ['stageId'] },
-        { name: 'documentFiles', path: '/api/documents', key: 'id', required: ['fileName'], references: ['assignmentId'] },
-        { name: 'workflowTemplates', path: '/api/workflow-templates', key: 'id', required: ['name'] },
-        { name: 'workflowSteps', path: '/api/workflow-steps', key: 'id', required: ['name'], references: ['templateId'] },
-        { name: 'payments', path: '/api/payments', key: 'id', required: ['amount'], references: ['assignmentId'] },
-        { name: 'reminderRules', path: '/api/reminders', key: 'id', required: ['frequency'] },
-        { name: 'auditLogs', path: '/api/audit-logs', key: 'id', required: ['action'] },
-        { name: 'documentTemplates', path: '/api/document-templates', key: 'id', required: ['name'] },
-        { name: 'invitations', path: '/api/invitations', key: 'id', required: ['email'] },
-        { name: 'translations', path: '/api/translations', key: 'id', required: ['key', 'value'] }
+        { name: 'clients', path: '/api/clients', key: 'id', required: ['legalName', 'contactEmail'], nameField: 'legalName' },
+        { name: 'workers', path: '/api/workers', key: 'id', required: ['firstName', 'lastName', 'nationality'], parent: 'clientProfileId', nameField: ['firstName', 'lastName'] },
+        { name: 'assignments', path: '/api/dashboard/assignments', key: 'id', required: ['status'], references: ['clientProfileId', 'workerId'] },
+        { name: 'stages', path: '/api/stages', key: 'id', required: ['title', 'key'], nameField: 'title' },
+        { name: 'workflowTemplates', path: '/api/workflow/templates', key: 'id', required: ['name'], nameField: 'name' }
       ];
 
       // Fetch all available data
@@ -960,6 +951,17 @@ class ThoroughValidationSuite {
         } catch (error) {
           unavailableEndpoints.push(endpoint.name);
         }
+      }
+
+      // Helper function to get record name for display
+      function getRecordName(record, config) {
+        if (config.nameField) {
+          if (Array.isArray(config.nameField)) {
+            return config.nameField.map(field => record[field]).filter(Boolean).join(' ');
+          }
+          return record[config.nameField] || record[config.key];
+        }
+        return record.name || record.title || record[config.key];
       }
 
       // Extract actual data from successful endpoints
@@ -1070,9 +1072,12 @@ class ThoroughValidationSuite {
             validation.issues.push(`❌ ${entityName.toUpperCase()}: ${recordsWithMissingFields.length} records missing required fields`);
             recordsWithMissingFields.forEach(record => {
               const missingFields = config.required.filter(field => !record[field] || record[field] === '');
-              validation.issues.push(`   ⚠️  ${entityName} ID ${record[config.key]}: missing ${missingFields.join(', ')}`);
+              const recordName = getRecordName(record, config);
+              validation.issues.push(`   ⚠️  ${entityName} "${recordName}": missing ${missingFields.join(', ')}`);
             });
             totalIntegrityIssues += recordsWithMissingFields.length;
+          } else {
+            validation.details.push(`✅ All ${records.length} ${entityName} records have required fields`);
           }
         }
 
@@ -1115,14 +1120,17 @@ class ThoroughValidationSuite {
       // ENHANCED: Cross-entity relationship validation
       const crossEntityIssues = [];
 
-      // Workers without any assignments
+      // Workers without any assignments (FIXED field mapping)
       const workersWithAssignments = new Set(assignments.map(a => a.workerId).filter(Boolean));
       const workersWithoutWork = workers.filter(w => !workersWithAssignments.has(w.id));
       if (workersWithoutWork.length > 0) {
         crossEntityIssues.push(`❌ CRITICAL: ${workersWithoutWork.length} workers without any workflow assignments`);
         workersWithoutWork.forEach(worker => {
-          crossEntityIssues.push(`   ⚠️  Worker "${worker.name}" (${worker.nationality}) has no assignments`);
+          const workerName = `${worker.firstName} ${worker.lastName}`;
+          crossEntityIssues.push(`   ⚠️  Worker "${workerName}" (${worker.nationality}) has no assignments`);
         });
+      } else {
+        validation.details.push(`✅ All ${workers.length} workers have workflow assignments`);
       }
 
       // Clients without workers
@@ -1133,6 +1141,8 @@ class ThoroughValidationSuite {
         clientsWithoutWorkers.forEach(client => {
           crossEntityIssues.push(`   ⚠️  Client "${client.legalName}" has no workers assigned`);
         });
+      } else {
+        validation.details.push(`✅ All ${clients.length} clients have assigned workers`);
       }
 
       // Assignments without workers when they should have them
@@ -1180,7 +1190,7 @@ class ThoroughValidationSuite {
       if (totalIssues === 0) {
         validation.details.push(`✅ COMPREHENSIVE INTEGRITY CHECK: All ${Object.keys(allData).length} entity types validated successfully`);
       } else {
-        validation.issues.push(`❌ INTEGRITY SUMMARY: ${totalIssues} total issues (${totalOrphans} orphans, ${totalMissingReferences} broken refs, ${totalIntegrityIssues} missing fields)`);
+        validation.issues.push(`❌ INTEGRITY SUMMARY: ${totalIssues} total issues (${totalOrphans} orphans, ${totalMissingReferences} broken refs, ${totalIntegrityIssues} missing fields, ${crossEntityIssues.length} relationship issues)`);
       }
       
       // Sample real data validation
