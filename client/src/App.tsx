@@ -83,16 +83,82 @@ function Router() {
                 }} />
                 <Route path="/templates" component={TemplatesPage} />
                 <Route path="/reports" component={AnalyticsPage} />
-                <Route path="/clients" component={() => <AdminDashboard />} />
+                <Route path="/clients" component={() => {
+                  switch (user?.role) {
+                    case 'ADMIN':
+                      return <AdminDashboard />;
+                    case 'OWNER':
+                      return <ClientDashboard />;
+                    case 'WORKER':
+                      return <WorkerDashboard />;
+                    default:
+                      return <ClientDashboard />;
+                  }
+                }} />
                 <Route path="/clients/:id" component={ClientProfile} />
-                <Route path="/workers" component={() => <AdminDashboard />} />
+                <Route path="/workers" component={() => {
+                  switch (user?.role) {
+                    case 'ADMIN':
+                      return <AdminDashboard />;
+                    case 'OWNER':
+                      return <ClientDashboard />;
+                    case 'WORKER':
+                      return <WorkerDashboard />;
+                    default:
+                      return <ClientDashboard />;
+                  }
+                }} />
                 <Route path="/workers/:id" component={WorkerProfile} />
-                <Route path="/requirements" component={() => <AdminDashboard />} />
-                <Route path="/reminders" component={() => <AdminDashboard />} />
-                <Route path="/audit" component={() => <AdminDashboard />} />
+                <Route path="/requirements" component={() => {
+                  switch (user?.role) {
+                    case 'ADMIN':
+                      return <AdminDashboard />;
+                    case 'OWNER':
+                      return <ClientDashboard />;
+                    case 'WORKER':
+                      return <WorkerDashboard />;
+                    default:
+                      return <ClientDashboard />;
+                  }
+                }} />
+                <Route path="/reminders" component={() => {
+                  switch (user?.role) {
+                    case 'ADMIN':
+                      return <AdminDashboard />;
+                    case 'OWNER':
+                      return <ClientDashboard />;
+                    case 'WORKER':
+                      return <WorkerDashboard />;
+                    default:
+                      return <ClientDashboard />;
+                  }
+                }} />
+                <Route path="/audit" component={() => {
+                  switch (user?.role) {
+                    case 'ADMIN':
+                      return <AdminDashboard />;
+                    case 'OWNER':
+                      return <ClientDashboard />;
+                    case 'WORKER':
+                      return <WorkerDashboard />;
+                    default:
+                      return <ClientDashboard />;
+                  }
+                }} />
                 <Route path="/profile" component={ProfilePage} />
                 <Route path="/documents" component={DocumentsPage} />
-                <Route path="/payments" component={() => <ClientDashboard />} />
+                <Route path="/payments" component={() => {
+                  switch (user?.role) {
+                    case 'ADMIN':
+                      return <AdminDashboard />;
+                    case 'OWNER':
+                      return <ClientDashboard />;
+                    case 'WORKER':
+                      return <WorkerDashboard />;
+                    default:
+                      return <ClientDashboard />;
+                  }
+                }} />
                 <Route path="/deadlines" component={DeadlinesPage} />
                 <Route path="/settings" component={SettingsPage} />
                 <Route component={NotFound} />
