@@ -323,6 +323,35 @@ export default function WorkflowProgressTracker({
                           <User className="h-3 w-3 mr-1" />
                           {step.assignedRole}
                         </Badge>
+                        
+                        {/* Quick action buttons in collapsed view */}
+                        {canUserModifyStep(step) && (
+                          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                            {step.progress.status === 'PENDING' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 px-2 text-xs"
+                                onClick={() => handleStepStatusUpdate(workflowItem.progress.id, step.id, 'IN_PROGRESS')}
+                                data-testid={`button-quick-start-${step.id}`}
+                              >
+                                <Play className="h-3 w-3 mr-1" />
+                                Start
+                              </Button>
+                            )}
+                            {step.progress.status === 'IN_PROGRESS' && (
+                              <Button
+                                size="sm"
+                                className="h-6 px-2 text-xs"
+                                onClick={() => handleStepStatusUpdate(workflowItem.progress.id, step.id, 'COMPLETED')}
+                                data-testid={`button-quick-complete-${step.id}`}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Complete
+                              </Button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
 
