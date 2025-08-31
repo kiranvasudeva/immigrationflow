@@ -1262,7 +1262,7 @@ export class DatabaseStorage implements IStorage {
   // Worker Workflow Progress operations
   async getWorkerWorkflowProgress(workerId: string, templateId: string): Promise<WorkerWorkflowProgress | undefined> {
     const [progress] = await db.select().from(workerWorkflowProgress)
-      .where(and(eq(workerWorkflowProgress.workerId, workerId), eq(workerWorkflowProgress.templateId, templateId)));
+      .where(and(eq(workerWorkflowProgress.workerId, workerId), eq(workerWorkflowProgress.workflowTemplateId, templateId)));
     return progress;
   }
 
@@ -1277,7 +1277,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getWorkerStepProgress(progressId: string): Promise<WorkerStepProgress[]> {
-    return await db.select().from(workerStepProgress).where(eq(workerStepProgress.progressId, progressId));
+    return await db.select().from(workerStepProgress).where(eq(workerStepProgress.workerWorkflowProgressId, progressId));
   }
 
   async createWorkerStepProgress(progress: InsertWorkerStepProgress): Promise<WorkerStepProgress> {
@@ -1371,7 +1371,7 @@ export class DatabaseStorage implements IStorage {
   async getWorkflowsForWorker(workerId: string): Promise<WorkflowTemplate[]> {
     const result = await db.select({ template: workflowTemplates })
       .from(workerWorkflowProgress)
-      .innerJoin(workflowTemplates, eq(workerWorkflowProgress.templateId, workflowTemplates.id))
+      .innerJoin(workflowTemplates, eq(workerWorkflowProgress.workflowTemplateId, workflowTemplates.id))
       .where(eq(workerWorkflowProgress.workerId, workerId));
     
     return result.map(r => r.template);

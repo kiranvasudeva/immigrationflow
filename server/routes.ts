@@ -1599,7 +1599,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { workerId } = req.params;
       const userId = req.user.id;
       
-      // Get worker to check authorization and assigned workflows
+      // Get worker to check authorization
       const worker = await storage.getWorker(workerId);
       if (!worker) {
         return res.status(404).json({ message: "Worker not found" });
@@ -1612,44 +1612,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // In production, implement proper authorization
       }
 
-      // Get workflow definitions from settings with stages and document requirements
-      const workflowTemplates = await storage.getAllWorkflowTemplates();
-      const workflowDefinitions = await Promise.all(
-        workflowTemplates.map(async (template) => {
-          const steps = await storage.getWorkflowSteps(template.id);
-          const stepsWithRequirements = await Promise.all(
-            steps.map(async (step) => {
-              const requirements = await storage.getDocumentRequirements(step.id);
-              return {
-                id: step.id,
-                name: step.name,
-                description: step.description,
-                status: 'pending', // Default status
-                estimatedDays: step.estimatedDays,
-                responsibleParty: step.assignedRole,
-                documentRequirements: requirements.map(req => ({
-                  id: req.id,
-                  title: req.title,
-                  description: req.description,
-                  required: req.isRequired,
-                  status: 'pending', // Default status
-                  responsibleParty: req.submittedBy
-                }))
-              };
-            })
-          );
-          
-          return {
-            id: template.id,
-            name: template.name,
-            description: template.description,
-            stages: stepsWithRequirements
-          };
-        })
-      );
-
-      // Check worker's assigned workflow IDs and return the matching workflow
-      if (!worker.assignedWorkflowIds || worker.assignedWorkflowIds.length === 0) {
+      // Get all workflows assigned to this worker through workerWorkflowProgress table
+      const assignedWorkflows = await storage.getWorkflowsForWorker(workerId);
+      
+      if (!assignedWorkflows || assignedWorkflows.length === 0) {
         return res.json({ 
           id: null,
           name: 'No Active Workflow',
@@ -1659,20 +1625,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get the first assigned workflow (primary workflow)
-      const primaryWorkflowId = worker.assignedWorkflowIds[0];
-      const workflowTemplate = workflowDefinitions.find(w => w.id === primaryWorkflowId);
+      const primaryWorkflow = assignedWorkflows[0];
       
-      if (!workflowTemplate) {
-        return res.json({ 
-          id: null,
-          name: 'Workflow Not Found',
-          description: `Workflow template '${primaryWorkflowId}' not found in settings.`,
-          stages: []
-        });
+      // Get workflow progress for this worker and template
+      const workflowProgress = await storage.getWorkerWorkflowProgress(workerId, primaryWorkflow.id);
+      
+      // Get workflow steps and build stages with real progress data
+      const steps = await storage.getWorkflowSteps(primaryWorkflow.id);
+      
+      // Get step progress data if workflow has been started
+      let stepProgressMap = new Map();
+      if (workflowProgress) {
+        const stepProgressList = await storage.getWorkerStepProgress(workflowProgress.id);
+        stepProgressMap = new Map(stepProgressList.map(sp => [sp.workflowStepId, sp]));
       }
+      
+      // Build stages with real status based on progress data
+      const stagesWithProgress = await Promise.all(
+        steps.map(async (step, index) => {
+          const stepProgress = stepProgressMap.get(step.id);
+          const requirements = await storage.getDocumentRequirements(step.id);
+          
+          // Determine stage status based on actual progress
+          let stageStatus = 'pending';
+          if (stepProgress) {
+            stageStatus = stepProgress.status;
+          } else if (workflowProgress) {
+            // If workflow is started but this step has no progress, check if previous steps are complete
+            const previousSteps = steps.slice(0, index);
+            const allPreviousComplete = previousSteps.every(prevStep => {
+              const prevProgress = stepProgressMap.get(prevStep.id);
+              return prevProgress && prevProgress.status === 'COMPLETED';
+            });
+            
+            // Current step can only be "available" if all previous steps are complete
+            if (allPreviousComplete && workflowProgress.currentStepId === step.id) {
+              stageStatus = 'in_progress';
+            } else if (allPreviousComplete) {
+              stageStatus = 'available';
+            } else {
+              stageStatus = 'locked'; // Cannot proceed until previous steps are complete
+            }
+          }
+          
+          return {
+            id: step.id,
+            name: step.name,
+            description: step.description,
+            status: stageStatus,
+            estimatedDays: step.estimatedDays,
+            responsibleParty: step.assignedRole,
+            documentRequirements: requirements.map(req => ({
+              id: req.id,
+              title: req.title,
+              description: req.description,
+              required: req.isRequired,
+              status: 'pending', // TODO: Get actual document status from document uploads
+              responsibleParty: req.submittedBy
+            }))
+          };
+        })
+      );
 
-      // Return the workflow with proper stage sequencing
-      res.json(workflowTemplate);
+      // Return the workflow with real progress data
+      res.json({
+        id: primaryWorkflow.id,
+        name: primaryWorkflow.name,
+        description: primaryWorkflow.description,
+        stages: stagesWithProgress
+      });
     } catch (error) {
       console.error('Error fetching worker workflow:', error);
       res.status(500).json({ message: "Failed to fetch worker workflow" });
