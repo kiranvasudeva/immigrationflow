@@ -47,8 +47,8 @@ import { seedDatabase } from "./seedDatabase";
 // Romanian Work Permit Workflow Seeding Function
 async function seedRomanianWorkPermitWorkflow() {
   // Get the Romanian Work Permit workflow template
-  const templates = await storage.getWorkflowTemplates();
-  const romanianTemplate = templates.find(t => t.name === 'Romanian Work Permit Process');
+  const templates = await storage.getWorkflowTemplate();
+  const romanianTemplate = Array.isArray(templates) ? templates.find((t: any) => t.name === 'Romanian Work Permit Process') : null;
   
   if (!romanianTemplate) {
     throw new Error('Romanian Work Permit Process template not found');
@@ -63,7 +63,7 @@ async function seedRomanianWorkPermitWorkflow() {
           title: 'Cerere AJOFM pentru avizarea postului de muncă',
           description: 'Official application form for labor market testing submitted to AJOFM',
           isRequired: true,
-          submittedBy: 'ADMIN',
+          submittedBy: 'OWNER',
           acceptedFileTypes: ['application/pdf', 'application/msword'],
           maxFileSize: 10485760
         },
@@ -71,7 +71,7 @@ async function seedRomanianWorkPermitWorkflow() {
           title: 'Contract individual de muncă',
           description: 'Employment contract in Romanian language, signed by employer',
           isRequired: true,
-          submittedBy: 'ADMIN',
+          submittedBy: 'OWNER',
           acceptedFileTypes: ['application/pdf'],
           maxFileSize: 5242880
         },
@@ -79,7 +79,7 @@ async function seedRomanianWorkPermitWorkflow() {
           title: 'Certificat de înregistrare ONRC',
           description: 'Company registration certificate from National Trade Registry Office',
           isRequired: true,
-          submittedBy: 'ADMIN',
+          submittedBy: 'OWNER',
           acceptedFileTypes: ['application/pdf'],
           maxFileSize: 5242880
         },
@@ -87,7 +87,7 @@ async function seedRomanianWorkPermitWorkflow() {
           title: 'Fișa postului de muncă',
           description: 'Detailed job description with responsibilities, qualifications, and salary',
           isRequired: true,
-          submittedBy: 'ADMIN',
+          submittedBy: 'OWNER',
           acceptedFileTypes: ['application/pdf', 'application/msword'],
           maxFileSize: 5242880
         }
@@ -96,25 +96,29 @@ async function seedRomanianWorkPermitWorkflow() {
         {
           title: 'Verify company has valid business registration',
           description: 'Check that the employer has active business registration and tax compliance',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 1
         },
         {
           title: 'Confirm job posting requirements met',
           description: 'Verify job was posted for 30+ days in Romania before applying for foreign worker',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 2
         },
         {
           title: 'Validate salary meets minimum requirements',
           description: 'Ensure offered salary is at least Romanian minimum wage or industry standard',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 3
         },
         {
           title: 'Check CAEN code matches business activity',
           description: 'Verify company CAEN code aligns with the job being offered',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 4
         }
       ]
@@ -126,7 +130,7 @@ async function seedRomanianWorkPermitWorkflow() {
           title: 'Cerere pentru autorizație de muncă',
           description: 'Official work permit application form (IGI form)',
           isRequired: true,
-          submittedBy: 'ADMIN',
+          submittedBy: 'OWNER',
           acceptedFileTypes: ['application/pdf'],
           maxFileSize: 10485760
         },
@@ -134,7 +138,7 @@ async function seedRomanianWorkPermitWorkflow() {
           title: 'Avizul AJOFM',
           description: 'Labor market test approval from AJOFM (obtained from previous stage)',
           isRequired: true,
-          submittedBy: 'ADMIN',
+          submittedBy: 'OWNER',
           acceptedFileTypes: ['application/pdf'],
           maxFileSize: 5242880
         },
@@ -167,25 +171,29 @@ async function seedRomanianWorkPermitWorkflow() {
         {
           title: 'Verify all apostille stamps are valid',
           description: 'Check that apostille or legalization stamps on foreign documents are authentic',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 1
         },
         {
           title: 'Confirm authorized translations are recent',
           description: 'Ensure all document translations are done by certified Romanian translators',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 2
         },
         {
           title: 'Validate medical certificates are current',
           description: 'Check that medical certificates are issued within 3 months of application',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 3
         },
         {
           title: 'Review criminal background check validity',
           description: 'Ensure criminal record is recent (typically within 6 months) and properly legalized',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 4
         }
       ]
@@ -205,7 +213,7 @@ async function seedRomanianWorkPermitWorkflow() {
           title: 'Autorizația de muncă IGI',
           description: 'Work permit issued by IGI (obtained from previous stage)',
           isRequired: true,
-          submittedBy: 'ADMIN',
+          submittedBy: 'OWNER',
           acceptedFileTypes: ['application/pdf'],
           maxFileSize: 5242880
         },
@@ -238,25 +246,29 @@ async function seedRomanianWorkPermitWorkflow() {
         {
           title: 'Verify passport validity and pages',
           description: 'Check passport has at least 6 months validity and 2 empty visa pages',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 1
         },
         {
           title: 'Confirm health insurance coverage',
           description: 'Verify insurance covers full Romanian territory and visa period',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 2
         },
         {
           title: 'Validate biometric photo specifications',
           description: 'Ensure photos meet Romanian consular biometric requirements',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 3
         },
         {
           title: 'Check visa application completeness',
           description: 'Review that all form fields are correctly filled and signed',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 4
         }
       ]
@@ -293,19 +305,22 @@ async function seedRomanianWorkPermitWorkflow() {
         {
           title: 'Confirm legal entry into Romania',
           description: 'Verify worker entered Romania legally with proper visa and border stamps',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 1
         },
         {
           title: 'Validate accommodation documentation',
           description: 'Check that accommodation proof is valid and covers required period',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 2
         },
         {
           title: 'Prepare for residence permit application',
           description: 'Gather information needed for upcoming residence permit application',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 3
         }
       ]
@@ -325,7 +340,7 @@ async function seedRomanianWorkPermitWorkflow() {
           title: 'Contract de muncă înregistrat ITM',
           description: 'Employment contract registered with Labor Inspectorate (ITM)',
           isRequired: true,
-          submittedBy: 'ADMIN',
+          submittedBy: 'OWNER',
           acceptedFileTypes: ['application/pdf'],
           maxFileSize: 5242880
         },
@@ -333,7 +348,7 @@ async function seedRomanianWorkPermitWorkflow() {
           title: 'Adeverință de salariu',
           description: 'Salary certificate or employment verification from employer',
           isRequired: true,
-          submittedBy: 'ADMIN',
+          submittedBy: 'OWNER',
           acceptedFileTypes: ['application/pdf'],
           maxFileSize: 5242880
         },
@@ -350,25 +365,29 @@ async function seedRomanianWorkPermitWorkflow() {
         {
           title: 'Verify employment contract registration',
           description: 'Confirm employment contract is properly registered with ITM',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 1
         },
         {
           title: 'Check residence permit application completeness',
           description: 'Review all required forms and documents for residence permit',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 2
         },
         {
           title: 'Validate accommodation continuity',
           description: 'Ensure accommodation documentation covers extended stay period',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 3
         },
         {
           title: 'Confirm payment of required fees',
           description: 'Verify all government fees for residence permit have been paid',
-          required: true,
+          isRequired: true,
+          assignedRole: 'OWNER',
           order: 4
         }
       ]
@@ -1855,21 +1874,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   id: 'passport-copy',
                   title: 'Passport Copy',
                   description: 'High-quality scan of passport bio page (color, readable, unedited)',
-                  required: true,
+                  isRequired: true,
+          assignedRole: 'OWNER',
                   status: 'pending'
                 },
                 {
                   id: 'diploma-copy',
                   title: 'University Diploma',
                   description: 'Original university diploma or degree certificate',
-                  required: true,
+                  isRequired: true,
+          assignedRole: 'OWNER',
                   status: 'pending'
                 },
                 {
                   id: 'employment-contract',
                   title: 'Signed Employment Contract',
                   description: 'Signed employment contract with Romanian employer',
-                  required: true,
+                  isRequired: true,
+          assignedRole: 'OWNER',
                   status: 'pending'
                 }
               ]
@@ -1885,7 +1907,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   id: 'job-posting',
                   title: 'Job Posting Document',
                   description: 'Detailed job description for AJOFM submission',
-                  required: true,
+                  isRequired: true,
+          assignedRole: 'OWNER',
                   status: 'pending'
                 }
               ]
@@ -1901,7 +1924,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   id: 'medical-certificate',
                   title: 'Medical Certificate',
                   description: 'Health certificate from approved Romanian medical provider',
-                  required: true,
+                  isRequired: true,
+          assignedRole: 'OWNER',
                   status: 'pending'
                 }
               ]
@@ -1924,7 +1948,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   id: 'accommodation-proof',
                   title: 'Proof of Accommodation',
                   description: 'Rental contract or property ownership documents',
-                  required: true,
+                  isRequired: true,
+          assignedRole: 'OWNER',
                   status: 'pending'
                 }
               ]
@@ -1947,7 +1972,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   id: 'current-permit',
                   title: 'Current Work Permit',
                   description: 'Copy of existing work permit to be renewed',
-                  required: true,
+                  isRequired: true,
+          assignedRole: 'OWNER',
                   status: 'pending'
                 }
               ]
@@ -2168,7 +2194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get document requirements for a workflow step
-  app.get('/api/workflow/steps/:stepId/document-requirements', isAuthenticated, async (req: any, res) => {
+  app.get('/api/workflow-steps/:stepId/document-requirements', isAuthenticated, async (req: any, res) => {
     try {
       const { stepId } = req.params;
       const requirements = await storage.getWorkflowStepDocumentRequirements(stepId);
@@ -2179,28 +2205,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create document requirement for workflow step (admin only)
-  app.post('/api/workflow/steps/:stepId/document-requirements', isAuthenticated, requireAdmin, async (req: any, res) => {
-    try {
-      const { stepId } = req.params;
-      const { title, description, isRequired, submittedBy, acceptedFileTypes, maxFileSize } = req.body;
-      
-      const requirement = await storage.createWorkflowStepDocumentRequirement({
-        workflowStepId: stepId,
-        title,
-        description,
-        isRequired,
-        submittedBy,
-        acceptedFileTypes,
-        maxFileSize
-      });
-      
-      res.json(requirement);
-    } catch (error) {
-      console.error('Error creating document requirement:', error);
-      res.status(500).json({ message: "Failed to create document requirement" });
-    }
-  });
 
   // Update document status
   app.put('/api/documents/:documentId/status', isAuthenticated, async (req: any, res) => {
@@ -2615,7 +2619,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { stepId } = req.params;
       const reqData = req.body;
       
-      const requirement = await storage.createDocumentRequirement({
+      const requirement = await storage.createWorkflowStepDocumentRequirement({
         workflowStepId: stepId,
         ...reqData
       });

@@ -1088,7 +1088,7 @@ function DocumentRequirementsManager({ stepId, onClose }: { stepId: string, onCl
 
   const fetchRequirements = async () => {
     try {
-      const response = await fetch(`/api/workflow/steps/${stepId}/document-requirements`);
+      const response = await fetch(`/api/workflow-steps/${stepId}/document-requirements`);
       if (response.ok) {
         const data = await response.json();
         setRequirements(data);
