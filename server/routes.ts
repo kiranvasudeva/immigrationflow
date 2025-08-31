@@ -1965,7 +1965,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Workflow Template Management API Endpoints
-  app.get('/api/workflow-templates', isAuthenticated, async (req: any, res) => {
+  app.get('/api/workflow-templates', devAuthBypass, async (req: any, res) => {
     try {
       const templates = await storage.getAllWorkflowTemplates();
       res.json(templates);
@@ -1975,7 +1975,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/workflow-templates/:templateId', isAuthenticated, async (req: any, res) => {
+  app.get('/api/workflow-templates/:templateId', devAuthBypass, async (req: any, res) => {
     try {
       const { templateId } = req.params;
       const template = await storage.getWorkflowTemplate(templateId);

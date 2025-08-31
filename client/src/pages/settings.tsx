@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/contexts/I18nProvider';
 import { useBreadcrumb } from '@/contexts/BreadcrumbContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -143,6 +145,7 @@ export default function SettingsPage() {
   const { setBreadcrumbs } = useBreadcrumb();
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
+  const { user, isAuthenticated, isLoading } = useAuth();
   
   // Get the tab from URL parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -188,6 +191,11 @@ export default function SettingsPage() {
     }
   ]);
   
+  // Fetch workflow templates from the database
+  const { data: workflowTemplates, isLoading: loadingWorkflows } = useQuery({
+    queryKey: ['/api/workflow-templates'],
+  });
+
   const [workflows, setWorkflows] = useState<Workflow[]>([
     {
       id: 'work-permit-initial',
@@ -935,11 +943,70 @@ export default function SettingsPage() {
     }
   };
 
+  // Authentication and authorization check
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || user?.role !== 'ADMIN')) {
+      toast({
+        title: "Unauthorized",
+        description: "Access denied. Admin privileges required.",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, isLoading, user, toast]);
+
   useEffect(() => {
     setBreadcrumbs([
       { label: 'Settings', href: '/settings' }
     ]);
   }, [setBreadcrumbs]);
+
+  // Transform loaded workflow templates into local workflow format
+  useEffect(() => {
+    if (workflowTemplates && Array.isArray(workflowTemplates)) {
+      const transformedWorkflows = workflowTemplates.map((template: any) => ({
+        id: template.id,
+        name: template.name,
+        description: template.description || '',
+        documentTypeId: template.id,
+        isActive: template.isActive,
+        executionType: 'sequential' as const,
+        stageOrder: template.steps?.map((step: any) => step.id) || [],
+        stages: template.steps?.map((step: any, index: number) => ({
+          id: step.id,
+          name: step.name,
+          description: step.description || '',
+          assignedRole: step.assignedRole || 'WORKER',
+          estimatedDays: step.estimatedDuration || 7,
+          required: true,
+          approvalRequired: false,
+          statusLabel: step.name,
+          responsible: step.assignedRole || 'WORKER',
+          timeframeDays: step.estimatedDuration || 7,
+          documentRequirements: step.documentRequirements?.map((req: any, reqIndex: number) => ({
+            id: req.id || `${step.id}-doc-${reqIndex}`,
+            title: req.title,
+            description: req.description || '',
+            required: req.isRequired !== false,
+            submittedBy: req.submittedBy || 'WORKER',
+            acceptedTypes: req.acceptedFileTypes || ['pdf']
+          })) || [],
+          checklistItems: step.checklistItems?.map((item: any, itemIndex: number) => ({
+            id: item.id || `${step.id}-checklist-${itemIndex}`,
+            title: item.title,
+            description: item.description || '',
+            required: item.isRequired !== false,
+            assignedRole: item.assignedRole || 'ADMIN'
+          })) || []
+        })) || []
+      }));
+      
+      setWorkflows(transformedWorkflows);
+    }
+  }, [workflowTemplates]);
 
   const handleSaveSettings = async (section: string) => {
     try {
