@@ -70,6 +70,25 @@ interface WorkflowStage {
   statusLabel: string;
   responsible: string;
   timeframeDays: number;
+  documentRequirements?: DocumentRequirement[];
+  checklistItems?: ChecklistItem[];
+}
+
+interface DocumentRequirement {
+  id: string;
+  title: string;
+  description: string;
+  required: boolean;
+  submittedBy: 'WORKER' | 'OWNER';
+  acceptedTypes: string[];
+}
+
+interface ChecklistItem {
+  id: string;
+  title: string;
+  description: string;
+  required: boolean;
+  assignedRole: 'WORKER' | 'OWNER';
 }
 
 interface Workflow {
@@ -188,7 +207,49 @@ export default function SettingsPage() {
           approvalRequired: false,
           statusLabel: 'Collecting Documents',
           responsible: 'WORKER',
-          timeframeDays: 3
+          timeframeDays: 3,
+          documentRequirements: [
+            {
+              id: 'passport-copy',
+              title: 'Passport Copy',
+              description: 'High-quality scan of passport bio page (color, readable, unedited)',
+              required: true,
+              submittedBy: 'WORKER',
+              acceptedTypes: ['pdf', 'jpg', 'png']
+            },
+            {
+              id: 'diploma-copy',
+              title: 'University Diploma',
+              description: 'Original university diploma or degree certificate',
+              required: true,
+              submittedBy: 'WORKER',
+              acceptedTypes: ['pdf']
+            },
+            {
+              id: 'employment-contract',
+              title: 'Signed Employment Contract',
+              description: 'Signed employment contract with Romanian employer',
+              required: true,
+              submittedBy: 'OWNER',
+              acceptedTypes: ['pdf']
+            }
+          ],
+          checklistItems: [
+            {
+              id: 'passport-validity',
+              title: 'Verify Passport Validity',
+              description: 'Ensure passport is valid for at least 6 months from application date',
+              required: true,
+              assignedRole: 'OWNER'
+            },
+            {
+              id: 'diploma-authenticity',
+              title: 'Check Diploma Authenticity',
+              description: 'Verify university diploma is authentic and from accredited institution',
+              required: true,
+              assignedRole: 'OWNER'
+            }
+          ]
         },
         {
           id: 'doc-review',
@@ -201,7 +262,48 @@ export default function SettingsPage() {
           approver: 'Legal Team',
           statusLabel: 'Under Review',
           responsible: 'ADMIN',
-          timeframeDays: 2
+          timeframeDays: 2,
+          documentRequirements: [
+            {
+              id: 'translated-diploma',
+              title: 'Certified Translation of Diploma',
+              description: 'Official certified translation of university diploma into Romanian',
+              required: true,
+              submittedBy: 'OWNER',
+              acceptedTypes: ['pdf']
+            },
+            {
+              id: 'apostille-diploma',
+              title: 'Apostilled Diploma',
+              description: 'University diploma with official apostille or consular legalization',
+              required: true,
+              submittedBy: 'OWNER',
+              acceptedTypes: ['pdf']
+            }
+          ],
+          checklistItems: [
+            {
+              id: 'translation-accuracy',
+              title: 'Verify Translation Accuracy',
+              description: 'Ensure certified translation matches original document exactly',
+              required: true,
+              assignedRole: 'OWNER'
+            },
+            {
+              id: 'apostille-validity',
+              title: 'Check Apostille Validity',
+              description: 'Verify apostille is from correct authority and not expired',
+              required: true,
+              assignedRole: 'OWNER'
+            },
+            {
+              id: 'notarization-check',
+              title: 'Verify Notarization',
+              description: 'Ensure all documents are properly notarized where required',
+              required: true,
+              assignedRole: 'OWNER'
+            }
+          ]
         },
         {
           id: 'employer-declaration',
@@ -1263,12 +1365,12 @@ export default function SettingsPage() {
                                                               <div className="flex items-center justify-between">
                                                                 <Label className="text-sm font-medium">Professional Document Template</Label>
                                                                 <div className="flex gap-2">
-                                                                  <Button size="xs" variant="outline" 
+                                                                  <Button size="sm" variant="outline" 
                                                                           onClick={() => setTemplateContent(generateRealWorldTemplate(type.name))}
                                                                           title="Load authentic Romanian immigration template">
                                                                     Load Real Template
                                                                   </Button>
-                                                                  <Button size="xs" variant="outline">
+                                                                  <Button size="sm" variant="outline">
                                                                     Preview
                                                                   </Button>
                                                                 </div>
@@ -1288,7 +1390,7 @@ export default function SettingsPage() {
                                                                           {fields.map(field => (
                                                                             <Button
                                                                               key={field}
-                                                                              size="xs"
+                                                                              size="sm"
                                                                               variant="secondary"
                                                                               className="h-6 text-xs hover:bg-blue-100"
                                                                               onClick={() => insertMergeField(field)}
@@ -1307,13 +1409,13 @@ export default function SettingsPage() {
                                                               {/* Rich Text Template Editor */}
                                                               <div className="space-y-2">
                                                                 <div className="flex items-center gap-2 p-2 border rounded-t-md bg-muted/30">
-                                                                  <Button size="xs" variant="ghost" title="Bold">
+                                                                  <Button size="sm" variant="ghost" title="Bold">
                                                                     <strong>B</strong>
                                                                   </Button>
-                                                                  <Button size="xs" variant="ghost" title="Italic">
+                                                                  <Button size="sm" variant="ghost" title="Italic">
                                                                     <em>I</em>
                                                                   </Button>
-                                                                  <Button size="xs" variant="ghost" title="Underline">
+                                                                  <Button size="sm" variant="ghost" title="Underline">
                                                                     <u>U</u>
                                                                   </Button>
                                                                   <Separator orientation="vertical" className="h-4" />
@@ -1329,10 +1431,10 @@ export default function SettingsPage() {
                                                                     </SelectContent>
                                                                   </Select>
                                                                   <Separator orientation="vertical" className="h-4" />
-                                                                  <Button size="xs" variant="ghost" title="Insert Table">
+                                                                  <Button size="sm" variant="ghost" title="Insert Table">
                                                                     ⊞
                                                                   </Button>
-                                                                  <Button size="xs" variant="ghost" title="Insert Image">
+                                                                  <Button size="sm" variant="ghost" title="Insert Image">
                                                                     🖼
                                                                   </Button>
                                                                 </div>
@@ -1347,7 +1449,7 @@ export default function SettingsPage() {
                                                               
                                                               <div className="text-xs text-muted-foreground p-3 bg-blue-50 rounded border-l-4 border-l-blue-400">
                                                                 <strong>💡 Professional Tip:</strong> This template generates official Romanian immigration documents. 
-                                                                Use merge fields like <code>{{worker_name}}</code> to automatically populate data from client and worker profiles.
+                                                                Use merge fields like <code>{`{{worker_name}}`}</code> to automatically populate data from client and worker profiles.
                                                                 The system includes authentic templates for Work Permits, Visa Applications, and Residence Permits.
                                                               </div>
                                                             </div>
@@ -1782,6 +1884,360 @@ export default function SettingsPage() {
                                           className="resize-none text-xs"
                                           rows={2}
                                         />
+                                      </div>
+
+                                      {/* Document Requirements Section */}
+                                      <div className="border-t pt-4 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                          <Label className="text-sm font-medium flex items-center gap-2">
+                                            <FileText className="h-4 w-4" />
+                                            Document Requirements
+                                          </Label>
+                                          <Button size="sm" variant="outline"
+                                                  onClick={() => {
+                                                    // Add new document requirement
+                                                    const newDoc = {
+                                                      id: `doc-${Date.now()}`,
+                                                      title: '',
+                                                      description: '',
+                                                      required: true,
+                                                      submittedBy: 'WORKER' as const,
+                                                      acceptedTypes: ['pdf']
+                                                    };
+                                                    setWorkflows(wfs => 
+                                                      wfs.map(wf => 
+                                                        wf.id === workflow.id 
+                                                          ? {
+                                                              ...wf, 
+                                                              stages: wf.stages.map(s => 
+                                                                s.id === stage.id 
+                                                                  ? { ...s, documentRequirements: [...(s.documentRequirements || []), newDoc] }
+                                                                  : s
+                                                              )
+                                                            }
+                                                          : wf
+                                                      )
+                                                    );
+                                                  }}>
+                                            <Plus className="h-3 w-3 mr-1" />
+                                            Add Document
+                                          </Button>
+                                        </div>
+                                        
+                                        {(stage.documentRequirements || []).map((doc: any, docIndex: number) => (
+                                          <div key={doc.id} className="bg-blue-50 p-3 rounded border space-y-2">
+                                            <div className="flex items-center gap-2">
+                                              <Input
+                                                value={doc.title}
+                                                onChange={(e) => {
+                                                  setWorkflows(wfs => 
+                                                    wfs.map(wf => 
+                                                      wf.id === workflow.id 
+                                                        ? {
+                                                            ...wf, 
+                                                            stages: wf.stages.map(s => 
+                                                              s.id === stage.id 
+                                                                ? { 
+                                                                    ...s, 
+                                                                    documentRequirements: s.documentRequirements?.map((d: any) => 
+                                                                      d.id === doc.id ? { ...d, title: e.target.value } : d
+                                                                    )
+                                                                  }
+                                                                : s
+                                                            )
+                                                          }
+                                                        : wf
+                                                    )
+                                                  );
+                                                }}
+                                                placeholder="Document name (e.g., Passport Copy)"
+                                                className="flex-1 h-8 text-xs"
+                                              />
+                                              <Select 
+                                                value={doc.submittedBy}
+                                                onValueChange={(value: 'WORKER' | 'OWNER') => {
+                                                  setWorkflows(wfs => 
+                                                    wfs.map(wf => 
+                                                      wf.id === workflow.id 
+                                                        ? {
+                                                            ...wf, 
+                                                            stages: wf.stages.map(s => 
+                                                              s.id === stage.id 
+                                                                ? { 
+                                                                    ...s, 
+                                                                    documentRequirements: s.documentRequirements?.map((d: any) => 
+                                                                      d.id === doc.id ? { ...d, submittedBy: value } : d
+                                                                    )
+                                                                  }
+                                                                : s
+                                                            )
+                                                          }
+                                                        : wf
+                                                    )
+                                                  );
+                                                }}>
+                                                <SelectTrigger className="w-20 h-8">
+                                                  <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  <SelectItem value="WORKER">Worker</SelectItem>
+                                                  <SelectItem value="OWNER">Client</SelectItem>
+                                                </SelectContent>
+                                              </Select>
+                                              <Switch 
+                                                checked={doc.required}
+                                                onCheckedChange={(checked) => {
+                                                  setWorkflows(wfs => 
+                                                    wfs.map(wf => 
+                                                      wf.id === workflow.id 
+                                                        ? {
+                                                            ...wf, 
+                                                            stages: wf.stages.map(s => 
+                                                              s.id === stage.id 
+                                                                ? { 
+                                                                    ...s, 
+                                                                    documentRequirements: s.documentRequirements?.map((d: any) => 
+                                                                      d.id === doc.id ? { ...d, required: checked } : d
+                                                                    )
+                                                                  }
+                                                                : s
+                                                            )
+                                                          }
+                                                        : wf
+                                                    )
+                                                  );
+                                                }}
+                                              />
+                                              <Button variant="ghost" size="sm"
+                                                      onClick={() => {
+                                                        setWorkflows(wfs => 
+                                                          wfs.map(wf => 
+                                                            wf.id === workflow.id 
+                                                              ? {
+                                                                  ...wf, 
+                                                                  stages: wf.stages.map(s => 
+                                                                    s.id === stage.id 
+                                                                      ? { 
+                                                                          ...s, 
+                                                                          documentRequirements: s.documentRequirements?.filter((d: any) => d.id !== doc.id)
+                                                                        }
+                                                                      : s
+                                                                  )
+                                                                }
+                                                              : wf
+                                                          )
+                                                        );
+                                                      }}>
+                                                <Trash2 className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                            
+                                            <Textarea
+                                              value={doc.description}
+                                              onChange={(e) => {
+                                                setWorkflows(wfs => 
+                                                  wfs.map(wf => 
+                                                    wf.id === workflow.id 
+                                                      ? {
+                                                          ...wf, 
+                                                          stages: wf.stages.map(s => 
+                                                            s.id === stage.id 
+                                                              ? { 
+                                                                  ...s, 
+                                                                  documentRequirements: s.documentRequirements?.map((d: any) => 
+                                                                    d.id === doc.id ? { ...d, description: e.target.value } : d
+                                                                  )
+                                                                }
+                                                              : s
+                                                          )
+                                                        }
+                                                      : wf
+                                                  )
+                                                );
+                                              }}
+                                              placeholder="Document description and requirements..."
+                                              className="resize-none text-xs"
+                                              rows={2}
+                                            />
+                                          </div>
+                                        ))}
+                                      </div>
+
+                                      {/* Admin Checklist Section */}
+                                      <div className="border-t pt-4 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                          <Label className="text-sm font-medium flex items-center gap-2">
+                                            <CheckCircle2 className="h-4 w-4" />
+                                            Admin Review Checklist
+                                          </Label>
+                                          <Button size="sm" variant="outline"
+                                                  onClick={() => {
+                                                    // Add new checklist item
+                                                    const newItem = {
+                                                      id: `check-${Date.now()}`,
+                                                      title: '',
+                                                      description: '',
+                                                      required: true,
+                                                      assignedRole: 'OWNER' as const
+                                                    };
+                                                    setWorkflows(wfs => 
+                                                      wfs.map(wf => 
+                                                        wf.id === workflow.id 
+                                                          ? {
+                                                              ...wf, 
+                                                              stages: wf.stages.map(s => 
+                                                                s.id === stage.id 
+                                                                  ? { ...s, checklistItems: [...(s.checklistItems || []), newItem] }
+                                                                  : s
+                                                              )
+                                                            }
+                                                          : wf
+                                                      )
+                                                    );
+                                                  }}>
+                                            <Plus className="h-3 w-3 mr-1" />
+                                            Add Check
+                                          </Button>
+                                        </div>
+                                        
+                                        {(stage.checklistItems || []).map((item: any, itemIndex: number) => (
+                                          <div key={item.id} className="bg-green-50 p-3 rounded border space-y-2">
+                                            <div className="flex items-center gap-2">
+                                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                              <Input
+                                                value={item.title}
+                                                onChange={(e) => {
+                                                  setWorkflows(wfs => 
+                                                    wfs.map(wf => 
+                                                      wf.id === workflow.id 
+                                                        ? {
+                                                            ...wf, 
+                                                            stages: wf.stages.map(s => 
+                                                              s.id === stage.id 
+                                                                ? { 
+                                                                    ...s, 
+                                                                    checklistItems: s.checklistItems?.map((c: any) => 
+                                                                      c.id === item.id ? { ...c, title: e.target.value } : c
+                                                                    )
+                                                                  }
+                                                                : s
+                                                            )
+                                                          }
+                                                        : wf
+                                                    )
+                                                  );
+                                                }}
+                                                placeholder="Verification task (e.g., Check document authenticity)"
+                                                className="flex-1 h-8 text-xs"
+                                              />
+                                              <Select 
+                                                value={item.assignedRole}
+                                                onValueChange={(value: 'WORKER' | 'OWNER') => {
+                                                  setWorkflows(wfs => 
+                                                    wfs.map(wf => 
+                                                      wf.id === workflow.id 
+                                                        ? {
+                                                            ...wf, 
+                                                            stages: wf.stages.map(s => 
+                                                              s.id === stage.id 
+                                                                ? { 
+                                                                    ...s, 
+                                                                    checklistItems: s.checklistItems?.map((c: any) => 
+                                                                      c.id === item.id ? { ...c, assignedRole: value } : c
+                                                                    )
+                                                                  }
+                                                                : s
+                                                            )
+                                                          }
+                                                        : wf
+                                                    )
+                                                  );
+                                                }}>
+                                                <SelectTrigger className="w-20 h-8">
+                                                  <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  <SelectItem value="OWNER">Admin</SelectItem>
+                                                  <SelectItem value="WORKER">Worker</SelectItem>
+                                                </SelectContent>
+                                              </Select>
+                                              <Switch 
+                                                checked={item.required}
+                                                onCheckedChange={(checked) => {
+                                                  setWorkflows(wfs => 
+                                                    wfs.map(wf => 
+                                                      wf.id === workflow.id 
+                                                        ? {
+                                                            ...wf, 
+                                                            stages: wf.stages.map(s => 
+                                                              s.id === stage.id 
+                                                                ? { 
+                                                                    ...s, 
+                                                                    checklistItems: s.checklistItems?.map((c: any) => 
+                                                                      c.id === item.id ? { ...c, required: checked } : c
+                                                                    )
+                                                                  }
+                                                                : s
+                                                            )
+                                                          }
+                                                        : wf
+                                                    )
+                                                  );
+                                                }}
+                                              />
+                                              <Button variant="ghost" size="sm"
+                                                      onClick={() => {
+                                                        setWorkflows(wfs => 
+                                                          wfs.map(wf => 
+                                                            wf.id === workflow.id 
+                                                              ? {
+                                                                  ...wf, 
+                                                                  stages: wf.stages.map(s => 
+                                                                    s.id === stage.id 
+                                                                      ? { 
+                                                                          ...s, 
+                                                                          checklistItems: s.checklistItems?.filter((c: any) => c.id !== item.id)
+                                                                        }
+                                                                      : s
+                                                                  )
+                                                                }
+                                                              : wf
+                                                          )
+                                                        );
+                                                      }}>
+                                                <Trash2 className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                            
+                                            <Textarea
+                                              value={item.description}
+                                              onChange={(e) => {
+                                                setWorkflows(wfs => 
+                                                  wfs.map(wf => 
+                                                    wf.id === workflow.id 
+                                                      ? {
+                                                          ...wf, 
+                                                          stages: wf.stages.map(s => 
+                                                            s.id === stage.id 
+                                                              ? { 
+                                                                  ...s, 
+                                                                  checklistItems: s.checklistItems?.map((c: any) => 
+                                                                    c.id === item.id ? { ...c, description: e.target.value } : c
+                                                                  )
+                                                                }
+                                                              : s
+                                                          )
+                                                        }
+                                                      : wf
+                                                  )
+                                                );
+                                              }}
+                                              placeholder="Detailed instructions for this verification step..."
+                                              className="resize-none text-xs"
+                                              rows={2}
+                                            />
+                                          </div>
+                                        ))}
                                       </div>
                                     </div>
                                   ))}

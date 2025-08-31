@@ -46,6 +46,8 @@ export const reminderScopeEnum = pgEnum('reminder_scope', ['GLOBAL', 'CLIENT', '
 export const templateTypeEnum = pgEnum('template_type', ['FORM', 'DOCUMENT', 'CERTIFICATE']);
 export const fieldTypeEnum = pgEnum('field_type', ['TEXT', 'DATE', 'NUMBER', 'CHECKBOX', 'DROPDOWN', 'SIGNATURE', 'PHOTO']);
 export const languageEnum = pgEnum('language', ['en', 'ro', 'es', 'fr']);
+export const workflowStepTypeEnum = pgEnum('workflow_step_type', ['DOCUMENT_COLLECTION', 'DOCUMENT_REVIEW', 'FORM_COMPLETION', 'ADMIN_APPROVAL', 'INSTITUTIONAL_SUBMISSION', 'PAYMENT']);
+export const stepStatusEnum = pgEnum('step_status', ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'REJECTED', 'SKIPPED']);
 
 // User table (required for Replit Auth)
 export const users = pgTable("users", {
@@ -252,6 +254,121 @@ export const workflowRules = pgTable("workflow_rules", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Workflow Templates - Enhanced workflow configurations
+export const workflowTemplates = pgTable("workflow_templates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  order: integer("order").notNull(),
+  executionType: varchar("execution_type", { length: 20 }).notNull().default('sequential'), // 'sequential' or 'parallel'
+  estimatedDurationDays: integer("estimated_duration_days"),
+  createdByUserId: varchar("created_by_user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Workflow Steps - Detailed breakdown of each workflow stage
+export const workflowSteps = pgTable("workflow_steps", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workflowTemplateId: uuid("workflow_template_id").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  stepType: workflowStepTypeEnum("step_type").notNull(),
+  assignedRole: assignedToRoleEnum("assigned_role").notNull(),
+  order: integer("order").notNull(),
+  estimatedDays: integer("estimated_days").default(1),
+  isRequired: boolean("is_required").default(true),
+  requiresApproval: boolean("requires_approval").default(false),
+  approverRole: varchar("approver_role", { length: 50 }), // Who can approve this step
+  dependencies: text("dependencies").array(), // Step IDs that must be completed first
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Document Requirements - Specific documents needed for each step
+export const documentRequirements = pgTable("document_requirements", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workflowStepId: uuid("workflow_step_id").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  isRequired: boolean("is_required").default(true),
+  submittedBy: assignedToRoleEnum("submitted_by").notNull(), // Who submits this document
+  acceptedFileTypes: text("accepted_file_types").array(), // ['pdf', 'jpg', 'png']
+  maxFileSize: integer("max_file_size"), // in MB
+  templateKey: varchar("template_key", { length: 100 }), // Reference to auto-generated template
+  hasOcrExtraction: boolean("has_ocr_extraction").default(false),
+  validationRules: jsonb("validation_rules"), // Custom validation logic
+  order: integer("order").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Checklist Items - Verification tasks for admins/reviewers
+export const checklistItems = pgTable("checklist_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workflowStepId: uuid("workflow_step_id").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  isRequired: boolean("is_required").default(true),
+  assignedRole: assignedToRoleEnum("assigned_role").notNull(), // Who performs this check
+  order: integer("order").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Worker Workflow Progress - Track individual worker progress through workflows
+export const workerWorkflowProgress = pgTable("worker_workflow_progress", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workerId: uuid("worker_id").notNull(),
+  workflowTemplateId: uuid("workflow_template_id").notNull(),
+  currentStepId: uuid("current_step_id"),
+  status: stepStatusEnum("status").default('PENDING'),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Worker Step Progress - Track progress on individual steps
+export const workerStepProgress = pgTable("worker_step_progress", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workerWorkflowProgressId: uuid("worker_workflow_progress_id").notNull(),
+  workflowStepId: uuid("workflow_step_id").notNull(),
+  status: stepStatusEnum("status").default('PENDING'),
+  assignedToUserId: varchar("assigned_to_user_id"), // Specific user assigned to this step
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  rejectedAt: timestamp("rejected_at"),
+  rejectionReason: text("rejection_reason"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Document Submissions - Track document uploads for each requirement
+export const documentSubmissions = pgTable("document_submissions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workerStepProgressId: uuid("worker_step_progress_id").notNull(),
+  documentRequirementId: uuid("document_requirement_id").notNull(),
+  documentFileId: uuid("document_file_id"),
+  status: stepStatusEnum("status").default('PENDING'),
+  submittedAt: timestamp("submitted_at"),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewedByUserId: varchar("reviewed_by_user_id"),
+  reviewNotes: text("review_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Checklist Completions - Track completion of admin checklist items
+export const checklistCompletions = pgTable("checklist_completions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workerStepProgressId: uuid("worker_step_progress_id").notNull(),
+  checklistItemId: uuid("checklist_item_id").notNull(),
+  isCompleted: boolean("is_completed").default(false),
+  completedByUserId: varchar("completed_by_user_id"),
+  completedAt: timestamp("completed_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Government API Integration
 export const apiIntegrations = pgTable("api_integrations", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -448,6 +565,109 @@ export const invitationsRelations = relations(invitations, ({ one }) => ({
   }),
 }));
 
+// New workflow template relations
+export const workflowTemplatesRelations = relations(workflowTemplates, ({ one, many }) => ({
+  createdBy: one(users, {
+    fields: [workflowTemplates.createdByUserId],
+    references: [users.id],
+  }),
+  steps: many(workflowSteps),
+  workerProgresses: many(workerWorkflowProgress),
+}));
+
+export const workflowStepsRelations = relations(workflowSteps, ({ one, many }) => ({
+  workflowTemplate: one(workflowTemplates, {
+    fields: [workflowSteps.workflowTemplateId],
+    references: [workflowTemplates.id],
+  }),
+  documentRequirements: many(documentRequirements),
+  checklistItems: many(checklistItems),
+  workerStepProgresses: many(workerStepProgress),
+}));
+
+export const documentRequirementsRelations = relations(documentRequirements, ({ one, many }) => ({
+  workflowStep: one(workflowSteps, {
+    fields: [documentRequirements.workflowStepId],
+    references: [workflowSteps.id],
+  }),
+  documentSubmissions: many(documentSubmissions),
+}));
+
+export const checklistItemsRelations = relations(checklistItems, ({ one, many }) => ({
+  workflowStep: one(workflowSteps, {
+    fields: [checklistItems.workflowStepId],
+    references: [workflowSteps.id],
+  }),
+  checklistCompletions: many(checklistCompletions),
+}));
+
+export const workerWorkflowProgressRelations = relations(workerWorkflowProgress, ({ one, many }) => ({
+  worker: one(workers, {
+    fields: [workerWorkflowProgress.workerId],
+    references: [workers.id],
+  }),
+  workflowTemplate: one(workflowTemplates, {
+    fields: [workerWorkflowProgress.workflowTemplateId],
+    references: [workflowTemplates.id],
+  }),
+  currentStep: one(workflowSteps, {
+    fields: [workerWorkflowProgress.currentStepId],
+    references: [workflowSteps.id],
+  }),
+  stepProgresses: many(workerStepProgress),
+}));
+
+export const workerStepProgressRelations = relations(workerStepProgress, ({ one, many }) => ({
+  workerWorkflowProgress: one(workerWorkflowProgress, {
+    fields: [workerStepProgress.workerWorkflowProgressId],
+    references: [workerWorkflowProgress.id],
+  }),
+  workflowStep: one(workflowSteps, {
+    fields: [workerStepProgress.workflowStepId],
+    references: [workflowSteps.id],
+  }),
+  assignedToUser: one(users, {
+    fields: [workerStepProgress.assignedToUserId],
+    references: [users.id],
+  }),
+  documentSubmissions: many(documentSubmissions),
+  checklistCompletions: many(checklistCompletions),
+}));
+
+export const documentSubmissionsRelations = relations(documentSubmissions, ({ one }) => ({
+  workerStepProgress: one(workerStepProgress, {
+    fields: [documentSubmissions.workerStepProgressId],
+    references: [workerStepProgress.id],
+  }),
+  documentRequirement: one(documentRequirements, {
+    fields: [documentSubmissions.documentRequirementId],
+    references: [documentRequirements.id],
+  }),
+  documentFile: one(documentFiles, {
+    fields: [documentSubmissions.documentFileId],
+    references: [documentFiles.id],
+  }),
+  reviewedBy: one(users, {
+    fields: [documentSubmissions.reviewedByUserId],
+    references: [users.id],
+  }),
+}));
+
+export const checklistCompletionsRelations = relations(checklistCompletions, ({ one }) => ({
+  workerStepProgress: one(workerStepProgress, {
+    fields: [checklistCompletions.workerStepProgressId],
+    references: [workerStepProgress.id],
+  }),
+  checklistItem: one(checklistItems, {
+    fields: [checklistCompletions.checklistItemId],
+    references: [checklistItems.id],
+  }),
+  completedBy: one(users, {
+    fields: [checklistCompletions.completedByUserId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas using createInsertSchema
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
@@ -565,6 +785,95 @@ export const insertInvitationSchema = createInsertSchema(invitations).pick({
   expiresAt: true,
 });
 
+// New workflow template schemas
+export const insertWorkflowTemplateSchema = createInsertSchema(workflowTemplates).pick({
+  name: true,
+  description: true,
+  isActive: true,
+  order: true,
+  executionType: true,
+  estimatedDurationDays: true,
+  createdByUserId: true,
+});
+
+export const insertWorkflowStepSchema = createInsertSchema(workflowSteps).pick({
+  workflowTemplateId: true,
+  name: true,
+  description: true,
+  stepType: true,
+  assignedRole: true,
+  order: true,
+  estimatedDays: true,
+  isRequired: true,
+  requiresApproval: true,
+  approverRole: true,
+  dependencies: true,
+});
+
+export const insertDocumentRequirementSchema = createInsertSchema(documentRequirements).pick({
+  workflowStepId: true,
+  title: true,
+  description: true,
+  isRequired: true,
+  submittedBy: true,
+  acceptedFileTypes: true,
+  maxFileSize: true,
+  templateKey: true,
+  hasOcrExtraction: true,
+  validationRules: true,
+  order: true,
+});
+
+export const insertChecklistItemSchema = createInsertSchema(checklistItems).pick({
+  workflowStepId: true,
+  title: true,
+  description: true,
+  isRequired: true,
+  assignedRole: true,
+  order: true,
+});
+
+export const insertWorkerWorkflowProgressSchema = createInsertSchema(workerWorkflowProgress).pick({
+  workerId: true,
+  workflowTemplateId: true,
+  currentStepId: true,
+  status: true,
+  startedAt: true,
+  completedAt: true,
+});
+
+export const insertWorkerStepProgressSchema = createInsertSchema(workerStepProgress).pick({
+  workerWorkflowProgressId: true,
+  workflowStepId: true,
+  status: true,
+  assignedToUserId: true,
+  startedAt: true,
+  completedAt: true,
+  rejectedAt: true,
+  rejectionReason: true,
+  notes: true,
+});
+
+export const insertDocumentSubmissionSchema = createInsertSchema(documentSubmissions).pick({
+  workerStepProgressId: true,
+  documentRequirementId: true,
+  documentFileId: true,
+  status: true,
+  submittedAt: true,
+  reviewedAt: true,
+  reviewedByUserId: true,
+  reviewNotes: true,
+});
+
+export const insertChecklistCompletionSchema = createInsertSchema(checklistCompletions).pick({
+  workerStepProgressId: true,
+  checklistItemId: true,
+  isCompleted: true,
+  completedByUserId: true,
+  completedAt: true,
+  notes: true,
+});
+
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -596,6 +905,24 @@ export type InsertTranslation = z.infer<typeof insertTranslationSchema>;
 export type Invitation = typeof invitations.$inferSelect;
 export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+
+// New workflow template types
+export type WorkflowTemplate = typeof workflowTemplates.$inferSelect;
+export type InsertWorkflowTemplate = z.infer<typeof insertWorkflowTemplateSchema>;
+export type WorkflowStep = typeof workflowSteps.$inferSelect;
+export type InsertWorkflowStep = z.infer<typeof insertWorkflowStepSchema>;
+export type DocumentRequirement = typeof documentRequirements.$inferSelect;
+export type InsertDocumentRequirement = z.infer<typeof insertDocumentRequirementSchema>;
+export type ChecklistItem = typeof checklistItems.$inferSelect;
+export type InsertChecklistItem = z.infer<typeof insertChecklistItemSchema>;
+export type WorkerWorkflowProgress = typeof workerWorkflowProgress.$inferSelect;
+export type InsertWorkerWorkflowProgress = z.infer<typeof insertWorkerWorkflowProgressSchema>;
+export type WorkerStepProgress = typeof workerStepProgress.$inferSelect;
+export type InsertWorkerStepProgress = z.infer<typeof insertWorkerStepProgressSchema>;
+export type DocumentSubmission = typeof documentSubmissions.$inferSelect;
+export type InsertDocumentSubmission = z.infer<typeof insertDocumentSubmissionSchema>;
+export type ChecklistCompletion = typeof checklistCompletions.$inferSelect;
+export type InsertChecklistCompletion = z.infer<typeof insertChecklistCompletionSchema>;
 
 // ========== CRUD API SCHEMAS ==========
 
