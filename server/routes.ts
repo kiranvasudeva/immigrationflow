@@ -1475,136 +1475,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // In production, implement proper authorization
       }
 
-      // Get workflow definitions from settings
-      const workflowDefinitions = [
-        {
-          id: 'work-permit-initial',
-          name: 'Initial Work Permit Application',
-          description: 'Complete Romanian work permit application process from AJOFM labor market test through IGI permit issuance',
-          stages: [
-            {
-              id: 'doc-collection',
-              name: 'Initial Document Collection',
-              description: 'Collect passport, diplomas, employment contract, and personal documents from worker',
-              status: 'pending',
-              estimatedDays: 3,
-              responsibleParty: 'worker',
-              documentRequirements: [
-                {
-                  id: 'passport-copy',
-                  title: 'Passport Copy',
-                  description: 'High-quality scan of passport bio page (color, readable, unedited)',
-                  required: true,
-                  status: 'pending',
-                  responsibleParty: 'worker'
-                },
-                {
-                  id: 'diploma-copy',
-                  title: 'University Diploma',
-                  description: 'Original university diploma or degree certificate',
-                  required: true,
-                  status: 'pending',
-                  responsibleParty: 'worker'
-                },
-                {
-                  id: 'employment-contract',
-                  title: 'Signed Employment Contract',
-                  description: 'Signed employment contract with Romanian employer',
-                  required: true,
-                  status: 'pending',
-                  responsibleParty: 'client'
-                }
-              ]
-            },
-            {
-              id: 'ajofm-submission',
-              name: 'AJOFM Labor Market Test',
-              description: 'Submit job posting to AJOFM for labor market testing',
-              status: 'pending',
-              estimatedDays: 7,
-              responsibleParty: 'admin',
-              documentRequirements: [
-                {
-                  id: 'job-posting',
-                  title: 'Job Posting Document',
-                  description: 'Detailed job description for AJOFM submission',
-                  required: true,
-                  status: 'pending',
-                  responsibleParty: 'admin'
-                }
-              ]
-            },
-            {
-              id: 'igi-application',
-              name: 'IGI Work Permit Application',
-              description: 'Submit complete work permit application to Romanian Immigration Office',
-              status: 'pending',
-              estimatedDays: 14,
-              responsibleParty: 'admin',
-              documentRequirements: [
-                {
-                  id: 'medical-certificate',
-                  title: 'Medical Certificate',
-                  description: 'Health certificate from approved Romanian medical provider',
-                  required: true,
-                  status: 'pending',
-                  responsibleParty: 'worker'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 'residence-permit-temp',
-          name: 'Temporary Residence Permit',
-          description: 'Romanian temporary residence permit application process',
-          stages: [
-            {
-              id: 'residence-docs',
-              name: 'Residence Document Preparation',
-              description: 'Prepare documents for temporary residence permit application',
-              status: 'pending',
-              estimatedDays: 5,
-              responsibleParty: 'worker',
-              documentRequirements: [
-                {
-                  id: 'accommodation-proof',
-                  title: 'Proof of Accommodation',
-                  description: 'Rental contract or property ownership documents',
-                  required: true,
-                  status: 'pending',
-                  responsibleParty: 'worker'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 'work-permit-renewal',
-          name: 'Work Permit Renewal',
-          description: 'Renewal process for existing work permits and residence cards',
-          stages: [
-            {
-              id: 'renewal-prep',
-              name: 'Renewal Document Preparation',
-              description: 'Prepare documents for work permit renewal',
-              status: 'pending',
-              estimatedDays: 5,
-              responsibleParty: 'worker',
-              documentRequirements: [
-                {
-                  id: 'current-documents',
-                  title: 'Current Work Permit Documents',
-                  description: 'Copies of current work permit and residence card',
-                  required: true,
-                  status: 'pending',
-                  responsibleParty: 'worker'
-                }
-              ]
-            }
-          ]
-        }
-      ];
+      // Get workflow definitions from settings with stages and document requirements
+      const workflowTemplates = await storage.getAllWorkflowTemplates();
+      const workflowDefinitions = await Promise.all(
+        workflowTemplates.map(async (template) => {
+          const steps = await storage.getWorkflowSteps(template.id);
+          const stepsWithRequirements = await Promise.all(
+            steps.map(async (step) => {
+              const requirements = await storage.getDocumentRequirements(step.id);
+              return {
+                id: step.id,
+                name: step.name,
+                description: step.description,
+                status: 'pending', // Default status
+                estimatedDays: step.estimatedDays,
+                responsibleParty: step.responsibleParty,
+                documentRequirements: requirements.map(req => ({
+                  id: req.id,
+                  title: req.title,
+                  description: req.description,
+                  required: req.required,
+                  status: 'pending', // Default status
+                  responsibleParty: req.responsibleParty
+                }))
+              };
+            })
+          );
+          
+          return {
+            id: template.id,
+            name: template.name,
+            description: template.description,
+            stages: stepsWithRequirements
+          };
+        })
+      );
 
       // Check worker's assigned workflow IDs and return the matching workflow
       if (!worker.assignedWorkflowIds || worker.assignedWorkflowIds.length === 0) {
