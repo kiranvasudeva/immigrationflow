@@ -119,7 +119,7 @@ function ClientWithWorkersView({ client, userRole }: { client: Client; userRole:
               </div>
               <div className="flex items-center gap-3">
                 <Badge variant="outline" className="text-xs">
-                  {workersLoading ? '...' : `${(workers as any[]).length} workers`}
+                  {workersLoading ? '...' : `${Array.isArray(workers) ? workers.length : 0} workers`}
                 </Badge>
                 {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
               </div>
@@ -468,10 +468,10 @@ export default function ClientsPage() {
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
               <Building2 className="h-8 w-8" />
-              {t('pages.clients.title') || 'Clients'}
+              Clients
             </h1>
             <p className="text-gray-600 mt-2">
-              {t('pages.clients.description') || 'Manage client companies and their immigration needs'}
+              Manage client companies and their immigration needs
             </p>
           </div>
           
