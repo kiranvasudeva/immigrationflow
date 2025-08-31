@@ -88,7 +88,7 @@ export default function WorkerDashboard() {
               }
             }
           } catch (error) {
-            console.error('Error fetching workflow templates for admin demo:', error);
+            // Error fetching workflow templates for admin demo
           }
           // Fallback to empty data for admin if templates fetch fails
           setWorkflowData(null);
@@ -102,12 +102,12 @@ export default function WorkerDashboard() {
           const data = await response.json();
           setWorkflowData(data);
         } else {
-          console.error('Failed to fetch workflow data:', response.statusText);
+          // Failed to fetch workflow data
           // Fall back to empty data
           setWorkflowData(null);
         }
       } catch (error) {
-        console.error('Error fetching workflow data:', error);
+        // Error fetching workflow data
         setWorkflowData(null);
       } finally {
         setIsLoadingWorkflow(false);

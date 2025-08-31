@@ -51,7 +51,7 @@ export function WorkerInvitationLink({ workerId, workerEmail }: WorkerInvitation
         });
       }
     } catch (error) {
-      console.error('Error generating invitation:', error);
+      // Error generating invitation
       toast({
         title: "Error", 
         description: "Failed to generate invitation link",

@@ -63,7 +63,7 @@ export function DummyDataAlert() {
       });
       handleDismiss();
     } catch (error) {
-      console.error('Error deleting dummy data:', error);
+      // Error deleting dummy data
       toast({
         title: "Error",
         description: "Failed to delete dummy data. Please try again.",

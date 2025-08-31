@@ -135,7 +135,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
       
       return corners;
     } catch (error) {
-      console.error('Error in edge detection:', error);
+      // Edge detection failed, continue without edge assistance
       return null;
     }
   };
@@ -437,7 +437,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
         stream.getTracks().forEach(track => track.stop()); // Stop the test stream
         // Camera permission granted
       } catch (permError) {
-        console.error('Camera permission denied:', permError);
+        // Camera permission denied
         setHasCameraAccess(false);
         toast({
           title: "Camera Permission Required",
@@ -464,10 +464,10 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
         );
         const selectedCamera = backCamera?.deviceId || cameras[0].deviceId;
         setSelectedCameraId(selectedCamera);
-        console.log('Selected camera:', selectedCamera);
+        // Camera selected
       }
     } catch (error) {
-      console.error('Error checking camera availability:', error);
+      // Error checking camera availability
       setHasCameraAccess(false);
       setAvailableCameras([]);
       setSelectedCameraId('');
@@ -539,9 +539,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
   };
 
   const startPhotoCapture = async () => {
-    console.log('Starting photo capture...');
-    console.log('Available cameras:', availableCameras);
-    console.log('Selected camera ID:', selectedCameraId);
+    // Starting photo capture process
     
     try {
       // If no camera selected, pick the first available one
@@ -549,14 +547,14 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
       if (!cameraId && availableCameras.length > 0) {
         cameraId = availableCameras[0].deviceId;
         setSelectedCameraId(cameraId);
-        console.log('Auto-selected camera:', cameraId);
+        // Auto-selected camera
       }
       
       if (!cameraId) {
         throw new Error('No camera available');
       }
 
-      console.log('Requesting camera with ID:', cameraId);
+      // Requesting camera access
 
       const constraints = {
         video: {
@@ -566,19 +564,19 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
         }
       };
 
-      console.log('Camera constraints:', constraints);
+      // Setting camera constraints
       
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('Camera stream obtained:', stream);
+      // Camera stream obtained
       
       setPhotoStream(stream);
       
       // Set video source immediately
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        console.log('Video source set');
+        // Video source set
       } else {
-        console.log('Video ref not available');
+        // Video ref not available
       }
       
       toast({
@@ -586,9 +584,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
         description: "Position your document within the frame and capture.",
       });
     } catch (error: any) {
-      console.error('Error accessing camera:', error);
-      console.log('Error name:', error.name);
-      console.log('Error message:', error.message);
+      // Error accessing camera
       
       let errorMessage = "Unable to access camera. ";
       
@@ -872,7 +868,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
     setIsScanning(true);
     try {
       const { data: { text } } = await Tesseract.recognize(targetFile, ocrLanguage, {
-        logger: m => console.log(m)
+        logger: () => {}
       });
       setScannedText(text);
       
@@ -999,7 +995,7 @@ export function DocumentUploader({ assignmentId, onUploadComplete }: DocumentUpl
         }, 'image/jpeg', 0.9);
       }
     } catch (error) {
-      console.error('Scanner Error:', error);
+      // Scanner error occurred
       toast({
         title: "Scanner Error",
         description: "Failed to scan document",
