@@ -1158,7 +1158,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getWorkflowSteps(templateId: string): Promise<WorkflowStep[]> {
-    return await db.select().from(workflowSteps).where(eq(workflowSteps.templateId, templateId)).orderBy(asc(workflowSteps.stepOrder));
+    return await db.select().from(workflowSteps).where(eq(workflowSteps.workflowTemplateId, templateId)).orderBy(asc(workflowSteps.order));
   }
 
   async createWorkflowStep(step: InsertWorkflowStep): Promise<WorkflowStep> {
@@ -1178,7 +1178,7 @@ export class DatabaseStorage implements IStorage {
 
   // Document Requirements operations
   async getDocumentRequirements(stepId: string): Promise<DocumentRequirement[]> {
-    return await db.select().from(documentRequirements).where(eq(documentRequirements.stepId, stepId)).orderBy(asc(documentRequirements.title));
+    return await db.select().from(documentRequirements).where(eq(documentRequirements.workflowStepId, stepId)).orderBy(asc(documentRequirements.order));
   }
 
   async createDocumentRequirement(requirement: InsertDocumentRequirement): Promise<DocumentRequirement> {

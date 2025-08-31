@@ -1489,14 +1489,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 description: step.description,
                 status: 'pending', // Default status
                 estimatedDays: step.estimatedDays,
-                responsibleParty: step.responsibleParty,
+                responsibleParty: step.assignedRole,
                 documentRequirements: requirements.map(req => ({
                   id: req.id,
                   title: req.title,
                   description: req.description,
-                  required: req.required,
+                  required: req.isRequired,
                   status: 'pending', // Default status
-                  responsibleParty: req.responsibleParty
+                  responsibleParty: req.submittedBy
                 }))
               };
             })
