@@ -801,10 +801,10 @@ export default function ClientProfile() {
                             {/* Immigration Workflow */}
                             <div className="space-y-4">
                               <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                                {selectedWorkerWorkflowData?.name || 'Workflow Status'}
+                                {workerWorkflowData?.name || 'Workflow Status'}
                               </h3>
-                              {selectedWorkerWorkflowData?.description && (
-                                <p className="text-sm text-gray-600 -mt-2 mb-4">{selectedWorkerWorkflowData.description}</p>
+                              {workerWorkflowData?.description && (
+                                <p className="text-sm text-gray-600 -mt-2 mb-4">{workerWorkflowData.description}</p>
                               )}
                               
                               

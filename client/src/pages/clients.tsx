@@ -12,8 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Building2, Plus, Search, Filter, Edit2, Eye, MapPin, Calendar, Users, Phone, Mail } from 'lucide-react';
+import { Building2, Plus, Search, Filter, Edit2, Eye, MapPin, Calendar, Users, Phone, Mail, ChevronDown, ChevronRight, FileText, Clock } from 'lucide-react';
 import { Link } from 'wouter';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface Client {
   id: string;
@@ -29,6 +30,305 @@ interface Client {
   ownerId: string;
   createdAt: string;
   updatedAt: string;
+}
+
+interface Worker {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  nationality?: string;
+  passportNumber?: string;
+  currentWorkPermitExpiry?: string;
+  status: string;
+  clientId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Component for hierarchical client-workers view
+function ClientWithWorkersView({ client, userRole }: { client: Client; userRole: string }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [selectedWorker, setSelectedWorker] = useState<string | null>(null);
+  
+  // Fetch workers for this client
+  const { data: workers = [], isLoading: workersLoading } = useQuery({
+    queryKey: ['/api/clients', client.id, 'workers'],
+    enabled: isExpanded,
+  });
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'ACTIVE':
+        return <Badge variant="default" className="bg-green-500">Active</Badge>;
+      case 'PENDING':
+        return <Badge variant="default" className="bg-yellow-500">Pending</Badge>;
+      case 'EXPIRED':
+        return <Badge variant="destructive">Expired</Badge>;
+      case 'SUSPENDED':
+        return <Badge variant="secondary">Suspended</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getInitials = (firstName: string, lastName: string) => {
+    if (!firstName || !lastName) return 'WR';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
+
+  return (
+    <Card className="border-2">
+      <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={`https://avatar.vercel.sh/${client.email}`} />
+                  <AvatarFallback className="bg-blue-100 text-blue-600">
+                    {client.companyName ? client.companyName.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2) : 'CL'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-semibold text-gray-900">{client.companyName}</h3>
+                    {getStatusBadge(client.status)}
+                  </div>
+                  <p className="text-sm text-gray-600">{client.contactPersonName}</p>
+                  <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Mail className="h-3 w-3" />
+                      {client.email}
+                    </span>
+                    {client.phone && (
+                      <span className="flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {client.phone}
+                      </span>
+                    )}
+                    {client.industry && (
+                      <span className="flex items-center gap-1">
+                        <Building2 className="h-3 w-3" />
+                        {client.industry}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Badge variant="outline" className="text-xs">
+                  {workersLoading ? '...' : `${(workers as any[]).length} workers`}
+                </Badge>
+                {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+              </div>
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        
+        <CollapsibleContent>
+          <CardContent className="pt-0">
+            {workersLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-2"></div>
+                <span className="text-gray-600">Loading workers...</span>
+              </div>
+            ) : (workers as Worker[]).length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-600">No workers assigned to this client yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h4 className="font-medium text-gray-900 border-b pb-2">Workers ({(workers as Worker[]).length})</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(workers as Worker[]).map((worker: Worker) => (
+                    <WorkerCard 
+                      key={worker.id} 
+                      worker={worker} 
+                      userRole={userRole}
+                      isSelected={selectedWorker === worker.id}
+                      onSelect={() => setSelectedWorker(selectedWorker === worker.id ? null : worker.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
+  );
+}
+
+// Component for individual worker with workflow stages
+function WorkerCard({ worker, userRole, isSelected, onSelect }: { 
+  worker: Worker; 
+  userRole: string; 
+  isSelected: boolean; 
+  onSelect: () => void;
+}) {
+  // Fetch worker workflow data
+  const { data: workflowData, isLoading: workflowLoading } = useQuery({
+    queryKey: ['/api/workers', worker.id, 'workflow-progress'],
+    enabled: isSelected,
+  });
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'ACTIVE':
+        return <Badge variant="default" className="bg-green-500">Active</Badge>;
+      case 'PENDING':
+        return <Badge variant="default" className="bg-yellow-500">Pending</Badge>;
+      case 'EXPIRED':
+        return <Badge variant="destructive">Expired</Badge>;
+      case 'SUSPENDED':
+        return <Badge variant="secondary">Suspended</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getInitials = (firstName: string, lastName: string) => {
+    if (!firstName || !lastName) return 'WR';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
+
+  const isWorkPermitExpiring = (expiryDate?: string) => {
+    if (!expiryDate) return false;
+    const expiry = new Date(expiryDate);
+    const today = new Date();
+    const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return daysUntilExpiry <= 30 && daysUntilExpiry > 0;
+  };
+
+  return (
+    <Card className={`border transition-all ${
+      isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+    }`}>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-3">
+            <Avatar>
+              <AvatarImage src={`https://avatar.vercel.sh/${worker.email}`} />
+              <AvatarFallback>{getInitials(worker.firstName, worker.lastName)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <h5 className="font-medium text-gray-900">
+                {worker.firstName} {worker.lastName}
+              </h5>
+              <p className="text-sm text-gray-600">{worker.email}</p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onSelect}
+            data-testid={`button-toggle-worker-${worker.id}`}
+          >
+            {isSelected ? 'Hide' : 'View'} Workspace
+          </Button>
+        </div>
+
+        <div className="space-y-2 mb-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">Status:</span>
+            {getStatusBadge(worker.status)}
+          </div>
+          
+          {worker.nationality && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <MapPin className="h-3 w-3" />
+              {worker.nationality}
+            </div>
+          )}
+          
+          {worker.passportNumber && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <FileText className="h-3 w-3" />
+              Passport: {worker.passportNumber}
+            </div>
+          )}
+          
+          {worker.currentWorkPermitExpiry && (
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="h-3 w-3" />
+              <span className={isWorkPermitExpiring(worker.currentWorkPermitExpiry) ? "text-red-600 font-medium" : "text-gray-600"}>
+                Expires: {new Date(worker.currentWorkPermitExpiry).toLocaleDateString()}
+              </span>
+              {isWorkPermitExpiring(worker.currentWorkPermitExpiry) && (
+                <Badge variant="destructive" className="text-xs">Expiring Soon</Badge>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Workflow Progress Section */}
+        {isSelected && (
+          <div className="border-t pt-3 mt-3">
+            <h6 className="font-medium text-gray-900 mb-3">Immigration Workflow Progress</h6>
+            {workflowLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                <span className="text-sm text-gray-600">Loading workflow data...</span>
+              </div>
+            ) : workflowData && (workflowData as any).stages && (workflowData as any).stages.length > 0 ? (
+              <div className="space-y-3">
+                {((workflowData as any).stages || []).map((stage: any, index: number) => (
+                  <div key={stage.id || index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${
+                        stage.status === 'COMPLETED' ? 'bg-green-500' :
+                        stage.status === 'IN_PROGRESS' ? 'bg-blue-500' :
+                        stage.status === 'PENDING' ? 'bg-yellow-500' : 'bg-gray-300'
+                      }`}></div>
+                      <span className="text-sm font-medium">{stage.title}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {stage.status === 'COMPLETED' && (
+                        <Badge variant="default" className="bg-green-500 text-xs">Complete</Badge>
+                      )}
+                      {stage.status === 'IN_PROGRESS' && (
+                        <Badge variant="default" className="bg-blue-500 text-xs">In Progress</Badge>
+                      )}
+                      {stage.status === 'PENDING' && (
+                        <Badge variant="default" className="bg-yellow-500 text-xs">Pending</Badge>
+                      )}
+                      {stage.deadline && (
+                        <span className="text-xs text-gray-500">
+                          Due: {new Date(stage.deadline).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <FileText className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-600">No workflow stages assigned yet.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 mt-3">
+          <Link href={`/workers/${worker.id}`}>
+            <Button variant="outline" size="sm" className="flex-1" data-testid={`button-view-worker-${worker.id}`}>
+              <Eye className="h-4 w-4 mr-2" />
+              View Details
+            </Button>
+          </Link>
+          {userRole === 'ADMIN' && (
+            <Button variant="outline" size="sm" data-testid={`button-edit-worker-${worker.id}`}>
+              <Edit2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function ClientsPage() {
@@ -362,80 +662,13 @@ export default function ClientsPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-6">
                 {filteredClients.map((client: Client) => (
-                  <Card 
+                  <ClientWithWorkersView 
                     key={client.id} 
-                    className="hover:shadow-md transition-shadow cursor-pointer"
-                    data-testid={`client-card-${client.id}`}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <Avatar>
-                          <AvatarImage src={`https://avatar.vercel.sh/${client.email}`} />
-                          <AvatarFallback>{getInitials(client.companyName)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900">
-                            {client.companyName}
-                          </h3>
-                          <p className="text-sm text-gray-600">{client.contactPersonName}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">Status:</span>
-                          {getStatusBadge(client.status)}
-                        </div>
-                        
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Mail className="h-3 w-3" />
-                          {client.email}
-                        </div>
-                        
-                        {client.phone && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Phone className="h-3 w-3" />
-                            {client.phone}
-                          </div>
-                        )}
-                        
-                        {client.industry && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Building2 className="h-3 w-3" />
-                            {client.industry}
-                          </div>
-                        )}
-                        
-                        {client.address && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <MapPin className="h-3 w-3" />
-                            {client.address}
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <Calendar className="h-3 w-3" />
-                          Joined {new Date(client.createdAt).toLocaleDateString()}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Link href={`/clients/${client.id}`}>
-                          <Button variant="outline" size="sm" className="flex-1" data-testid={`button-view-client-${client.id}`}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </Button>
-                        </Link>
-                        {user?.role === 'ADMIN' && (
-                          <Button variant="outline" size="sm" data-testid={`button-edit-client-${client.id}`}>
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                    client={client} 
+                    userRole={user?.role || 'VIEWER'}
+                  />
                 ))}
               </div>
             )}

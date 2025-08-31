@@ -303,7 +303,7 @@ export default function AdminDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {assignments && assignments.length > 0 ? (
+              {assignments && Array.isArray(assignments) && assignments.length > 0 ? (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="text-center">
