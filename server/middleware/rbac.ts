@@ -35,8 +35,13 @@ export function requireRole(...roles: UserRole[]): RequestHandler {
       }
 
       // Get user from database to check role
-      const userId = req.user.claims.sub;
-      const dbUser = await storage.getUser(userId);
+      // Use email to lookup user (same pattern as /api/auth/user endpoint)
+      const userEmail = req.user.claims.email;
+      if (!userEmail) {
+        return res.status(401).json({ message: "Invalid user session" });
+      }
+      
+      const dbUser = await storage.getUserByEmail(userEmail);
       
       if (!dbUser) {
         return res.status(401).json({ message: "User not found" });
