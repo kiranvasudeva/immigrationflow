@@ -1,0 +1,974 @@
+{
+  "summary": {
+    "totalTests": 19,
+    "passed": 6,
+    "failed": 13,
+    "warnings": 0,
+    "startTime": "2025-08-31T21:06:09.905Z",
+    "endTime": "2025-08-31T21:06:10.652Z"
+  },
+  "routeTests": [
+    {
+      "name": "Server Health Check",
+      "status": "passed",
+      "details": [
+        "✅ Server responding (200)",
+        "✅ Response time: 47ms",
+        "✅ Health status: ok"
+      ],
+      "issues": [],
+      "timestamp": "2025-08-31T21:06:09.908Z"
+    },
+    {
+      "name": "Route: Dashboard",
+      "path": "/",
+      "status": "failed",
+      "details": [],
+      "issues": [],
+      "checks": [
+        {
+          "name": "HTTP Response",
+          "status": "passed",
+          "details": [
+            "✅ HTTP 200 OK",
+            "✅ Content-Type: text/html; charset=utf-8"
+          ],
+          "issues": []
+        },
+        {
+          "name": "HTML Structure",
+          "status": "failed",
+          "details": [
+            "✅ Valid HTML5 DOCTYPE",
+            "✅ Head element present",
+            "✅ Body element present",
+            "✅ React root element found"
+          ],
+          "issues": [
+            "❌ Missing or empty title",
+            "❌ Missing expected elements: dashboard",
+            "❌ Missing expected elements: stats",
+            "❌ Missing expected elements: client",
+            "❌ Missing expected elements: worker",
+            "❌ No navigation structure found"
+          ]
+        },
+        {
+          "name": "Content Analysis",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Very little content: 24 characters",
+            "⚠️  Missing expected content: immigration, workflow, management"
+          ],
+          "contentMetrics": {
+            "contentLength": 24,
+            "tables": 0,
+            "forms": 0,
+            "buttons": 0,
+            "inputs": 0
+          }
+        },
+        {
+          "name": "Mock Data Detection",
+          "status": "failed",
+          "details": [
+            "❌ CRITICAL: 4 mock data violations found"
+          ],
+          "issues": [
+            "❌ FORBIDDEN MOCK DATA: \"placeholder\"",
+            "❌ FORBIDDEN MOCK DATA: \"debug:\"",
+            "❌ FORBIDDEN MOCK DATA: \"null\"",
+            "❌ FORBIDDEN MOCK DATA: \"}}\""
+          ],
+          "forbiddenFound": [
+            "placeholder",
+            "debug:",
+            "null",
+            "}}"
+          ]
+        },
+        {
+          "name": "Translation Validation",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Translation error indicator: }}",
+            "❌ Translation error indicator: t("
+          ],
+          "translationErrors": [
+            "}}",
+            "t("
+          ]
+        },
+        {
+          "name": "Accessibility",
+          "status": "warning",
+          "details": [],
+          "issues": [
+            "⚠️  No heading structure found",
+            "⚠️  No ARIA landmarks found"
+          ]
+        },
+        {
+          "name": "Responsive Design Structure",
+          "status": "warning",
+          "details": [
+            "✅ Viewport meta tag: width=device-width, initial-scale=1.0, maximum-scale=1"
+          ],
+          "issues": [
+            "⚠️  No responsive CSS classes detected"
+          ]
+        }
+      ],
+      "timestamp": "2025-08-31T21:06:09.958Z",
+      "duration": 177
+    },
+    {
+      "name": "Route: Clients",
+      "path": "/clients",
+      "status": "failed",
+      "details": [],
+      "issues": [],
+      "checks": [
+        {
+          "name": "HTTP Response",
+          "status": "passed",
+          "details": [
+            "✅ HTTP 200 OK",
+            "✅ Content-Type: text/html; charset=utf-8"
+          ],
+          "issues": []
+        },
+        {
+          "name": "HTML Structure",
+          "status": "failed",
+          "details": [
+            "✅ Valid HTML5 DOCTYPE",
+            "✅ Head element present",
+            "✅ Body element present",
+            "✅ React root element found"
+          ],
+          "issues": [
+            "❌ Missing or empty title",
+            "❌ Missing expected elements: client",
+            "❌ Missing expected elements: table",
+            "❌ Missing expected elements: search",
+            "❌ No navigation structure found"
+          ]
+        },
+        {
+          "name": "Content Analysis",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Very little content: 24 characters",
+            "⚠️  Missing expected content: client, company, contact"
+          ],
+          "contentMetrics": {
+            "contentLength": 24,
+            "tables": 0,
+            "forms": 0,
+            "buttons": 0,
+            "inputs": 0
+          }
+        },
+        {
+          "name": "Mock Data Detection",
+          "status": "failed",
+          "details": [
+            "❌ CRITICAL: 4 mock data violations found"
+          ],
+          "issues": [
+            "❌ FORBIDDEN MOCK DATA: \"placeholder\"",
+            "❌ FORBIDDEN MOCK DATA: \"debug:\"",
+            "❌ FORBIDDEN MOCK DATA: \"null\"",
+            "❌ FORBIDDEN MOCK DATA: \"}}\""
+          ],
+          "forbiddenFound": [
+            "placeholder",
+            "debug:",
+            "null",
+            "}}"
+          ]
+        },
+        {
+          "name": "Translation Validation",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Translation error indicator: }}",
+            "❌ Translation error indicator: t("
+          ],
+          "translationErrors": [
+            "}}",
+            "t("
+          ]
+        },
+        {
+          "name": "Accessibility",
+          "status": "warning",
+          "details": [],
+          "issues": [
+            "⚠️  No heading structure found",
+            "⚠️  No ARIA landmarks found"
+          ]
+        },
+        {
+          "name": "Responsive Design Structure",
+          "status": "warning",
+          "details": [
+            "✅ Viewport meta tag: width=device-width, initial-scale=1.0, maximum-scale=1"
+          ],
+          "issues": [
+            "⚠️  No responsive CSS classes detected"
+          ]
+        }
+      ],
+      "timestamp": "2025-08-31T21:06:10.135Z",
+      "duration": 70
+    },
+    {
+      "name": "Route: Workers",
+      "path": "/workers",
+      "status": "failed",
+      "details": [],
+      "issues": [],
+      "checks": [
+        {
+          "name": "HTTP Response",
+          "status": "passed",
+          "details": [
+            "✅ HTTP 200 OK",
+            "✅ Content-Type: text/html; charset=utf-8"
+          ],
+          "issues": []
+        },
+        {
+          "name": "HTML Structure",
+          "status": "failed",
+          "details": [
+            "✅ Valid HTML5 DOCTYPE",
+            "✅ Head element present",
+            "✅ Body element present",
+            "✅ React root element found"
+          ],
+          "issues": [
+            "❌ Missing or empty title",
+            "❌ Missing expected elements: worker",
+            "❌ Missing expected elements: table",
+            "❌ Missing expected elements: data",
+            "❌ No navigation structure found"
+          ]
+        },
+        {
+          "name": "Content Analysis",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Very little content: 24 characters",
+            "⚠️  Missing expected content: worker, name, nationality"
+          ],
+          "contentMetrics": {
+            "contentLength": 24,
+            "tables": 0,
+            "forms": 0,
+            "buttons": 0,
+            "inputs": 0
+          }
+        },
+        {
+          "name": "Mock Data Detection",
+          "status": "failed",
+          "details": [
+            "❌ CRITICAL: 4 mock data violations found"
+          ],
+          "issues": [
+            "❌ FORBIDDEN MOCK DATA: \"placeholder\"",
+            "❌ FORBIDDEN MOCK DATA: \"debug:\"",
+            "❌ FORBIDDEN MOCK DATA: \"null\"",
+            "❌ FORBIDDEN MOCK DATA: \"}}\""
+          ],
+          "forbiddenFound": [
+            "placeholder",
+            "debug:",
+            "null",
+            "}}"
+          ]
+        },
+        {
+          "name": "Translation Validation",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Translation error indicator: }}",
+            "❌ Translation error indicator: t("
+          ],
+          "translationErrors": [
+            "}}",
+            "t("
+          ]
+        },
+        {
+          "name": "Accessibility",
+          "status": "warning",
+          "details": [],
+          "issues": [
+            "⚠️  No heading structure found",
+            "⚠️  No ARIA landmarks found"
+          ]
+        },
+        {
+          "name": "Responsive Design Structure",
+          "status": "warning",
+          "details": [
+            "✅ Viewport meta tag: width=device-width, initial-scale=1.0, maximum-scale=1"
+          ],
+          "issues": [
+            "⚠️  No responsive CSS classes detected"
+          ]
+        }
+      ],
+      "timestamp": "2025-08-31T21:06:10.205Z",
+      "duration": 47
+    },
+    {
+      "name": "Route: Assignments",
+      "path": "/assignments",
+      "status": "failed",
+      "details": [],
+      "issues": [],
+      "checks": [
+        {
+          "name": "HTTP Response",
+          "status": "passed",
+          "details": [
+            "✅ HTTP 200 OK",
+            "✅ Content-Type: text/html; charset=utf-8"
+          ],
+          "issues": []
+        },
+        {
+          "name": "HTML Structure",
+          "status": "failed",
+          "details": [
+            "✅ Valid HTML5 DOCTYPE",
+            "✅ Head element present",
+            "✅ Body element present",
+            "✅ React root element found"
+          ],
+          "issues": [
+            "❌ Missing or empty title",
+            "❌ Missing expected elements: assignment",
+            "❌ Missing expected elements: table",
+            "❌ Missing expected elements: status",
+            "❌ No navigation structure found"
+          ]
+        },
+        {
+          "name": "Content Analysis",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Very little content: 24 characters",
+            "⚠️  Missing expected content: assignment, status, stage"
+          ],
+          "contentMetrics": {
+            "contentLength": 24,
+            "tables": 0,
+            "forms": 0,
+            "buttons": 0,
+            "inputs": 0
+          }
+        },
+        {
+          "name": "Mock Data Detection",
+          "status": "failed",
+          "details": [
+            "❌ CRITICAL: 4 mock data violations found"
+          ],
+          "issues": [
+            "❌ FORBIDDEN MOCK DATA: \"placeholder\"",
+            "❌ FORBIDDEN MOCK DATA: \"debug:\"",
+            "❌ FORBIDDEN MOCK DATA: \"null\"",
+            "❌ FORBIDDEN MOCK DATA: \"}}\""
+          ],
+          "forbiddenFound": [
+            "placeholder",
+            "debug:",
+            "null",
+            "}}"
+          ]
+        },
+        {
+          "name": "Translation Validation",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Translation error indicator: }}",
+            "❌ Translation error indicator: t("
+          ],
+          "translationErrors": [
+            "}}",
+            "t("
+          ]
+        },
+        {
+          "name": "Accessibility",
+          "status": "warning",
+          "details": [],
+          "issues": [
+            "⚠️  No heading structure found",
+            "⚠️  No ARIA landmarks found"
+          ]
+        },
+        {
+          "name": "Responsive Design Structure",
+          "status": "warning",
+          "details": [
+            "✅ Viewport meta tag: width=device-width, initial-scale=1.0, maximum-scale=1"
+          ],
+          "issues": [
+            "⚠️  No responsive CSS classes detected"
+          ]
+        }
+      ],
+      "timestamp": "2025-08-31T21:06:10.252Z",
+      "duration": 53
+    },
+    {
+      "name": "Route: Workflow",
+      "path": "/workflow",
+      "status": "failed",
+      "details": [],
+      "issues": [],
+      "checks": [
+        {
+          "name": "HTTP Response",
+          "status": "passed",
+          "details": [
+            "✅ HTTP 200 OK",
+            "✅ Content-Type: text/html; charset=utf-8"
+          ],
+          "issues": []
+        },
+        {
+          "name": "HTML Structure",
+          "status": "failed",
+          "details": [
+            "✅ Valid HTML5 DOCTYPE",
+            "✅ Head element present",
+            "✅ Body element present",
+            "✅ React root element found"
+          ],
+          "issues": [
+            "❌ Missing or empty title",
+            "❌ Missing expected elements: workflow",
+            "❌ Missing expected elements: stage",
+            "❌ Missing expected elements: kanban",
+            "❌ No navigation structure found"
+          ]
+        },
+        {
+          "name": "Content Analysis",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Very little content: 24 characters",
+            "⚠️  Missing expected content: workflow, stage, process"
+          ],
+          "contentMetrics": {
+            "contentLength": 24,
+            "tables": 0,
+            "forms": 0,
+            "buttons": 0,
+            "inputs": 0
+          }
+        },
+        {
+          "name": "Mock Data Detection",
+          "status": "failed",
+          "details": [
+            "❌ CRITICAL: 4 mock data violations found"
+          ],
+          "issues": [
+            "❌ FORBIDDEN MOCK DATA: \"placeholder\"",
+            "❌ FORBIDDEN MOCK DATA: \"debug:\"",
+            "❌ FORBIDDEN MOCK DATA: \"null\"",
+            "❌ FORBIDDEN MOCK DATA: \"}}\""
+          ],
+          "forbiddenFound": [
+            "placeholder",
+            "debug:",
+            "null",
+            "}}"
+          ]
+        },
+        {
+          "name": "Translation Validation",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Translation error indicator: }}",
+            "❌ Translation error indicator: t("
+          ],
+          "translationErrors": [
+            "}}",
+            "t("
+          ]
+        },
+        {
+          "name": "Accessibility",
+          "status": "warning",
+          "details": [],
+          "issues": [
+            "⚠️  No heading structure found",
+            "⚠️  No ARIA landmarks found"
+          ]
+        },
+        {
+          "name": "Responsive Design Structure",
+          "status": "warning",
+          "details": [
+            "✅ Viewport meta tag: width=device-width, initial-scale=1.0, maximum-scale=1"
+          ],
+          "issues": [
+            "⚠️  No responsive CSS classes detected"
+          ]
+        }
+      ],
+      "timestamp": "2025-08-31T21:06:10.305Z",
+      "duration": 74
+    },
+    {
+      "name": "Route: Analytics",
+      "path": "/analytics",
+      "status": "failed",
+      "details": [],
+      "issues": [],
+      "checks": [
+        {
+          "name": "HTTP Response",
+          "status": "passed",
+          "details": [
+            "✅ HTTP 200 OK",
+            "✅ Content-Type: text/html; charset=utf-8"
+          ],
+          "issues": []
+        },
+        {
+          "name": "HTML Structure",
+          "status": "failed",
+          "details": [
+            "✅ Valid HTML5 DOCTYPE",
+            "✅ Head element present",
+            "✅ Body element present",
+            "✅ React root element found"
+          ],
+          "issues": [
+            "❌ Missing or empty title",
+            "❌ Missing expected elements: analytics",
+            "❌ Missing expected elements: chart",
+            "❌ Missing expected elements: metric",
+            "❌ No navigation structure found"
+          ]
+        },
+        {
+          "name": "Content Analysis",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Very little content: 24 characters",
+            "⚠️  Missing expected content: analytics, chart, metric"
+          ],
+          "contentMetrics": {
+            "contentLength": 24,
+            "tables": 0,
+            "forms": 0,
+            "buttons": 0,
+            "inputs": 0
+          }
+        },
+        {
+          "name": "Mock Data Detection",
+          "status": "failed",
+          "details": [
+            "❌ CRITICAL: 4 mock data violations found"
+          ],
+          "issues": [
+            "❌ FORBIDDEN MOCK DATA: \"placeholder\"",
+            "❌ FORBIDDEN MOCK DATA: \"debug:\"",
+            "❌ FORBIDDEN MOCK DATA: \"null\"",
+            "❌ FORBIDDEN MOCK DATA: \"}}\""
+          ],
+          "forbiddenFound": [
+            "placeholder",
+            "debug:",
+            "null",
+            "}}"
+          ]
+        },
+        {
+          "name": "Translation Validation",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Translation error indicator: }}",
+            "❌ Translation error indicator: t("
+          ],
+          "translationErrors": [
+            "}}",
+            "t("
+          ]
+        },
+        {
+          "name": "Accessibility",
+          "status": "warning",
+          "details": [],
+          "issues": [
+            "⚠️  No heading structure found",
+            "⚠️  No ARIA landmarks found"
+          ]
+        },
+        {
+          "name": "Responsive Design Structure",
+          "status": "warning",
+          "details": [
+            "✅ Viewport meta tag: width=device-width, initial-scale=1.0, maximum-scale=1"
+          ],
+          "issues": [
+            "⚠️  No responsive CSS classes detected"
+          ]
+        }
+      ],
+      "timestamp": "2025-08-31T21:06:10.379Z",
+      "duration": 46
+    },
+    {
+      "name": "Route: Settings",
+      "path": "/settings",
+      "status": "failed",
+      "details": [],
+      "issues": [],
+      "checks": [
+        {
+          "name": "HTTP Response",
+          "status": "passed",
+          "details": [
+            "✅ HTTP 200 OK",
+            "✅ Content-Type: text/html; charset=utf-8"
+          ],
+          "issues": []
+        },
+        {
+          "name": "HTML Structure",
+          "status": "failed",
+          "details": [
+            "✅ Valid HTML5 DOCTYPE",
+            "✅ Head element present",
+            "✅ Body element present",
+            "✅ React root element found"
+          ],
+          "issues": [
+            "❌ Missing or empty title",
+            "❌ Missing expected elements: settings",
+            "❌ Missing expected elements: form",
+            "❌ Missing expected elements: input",
+            "❌ No navigation structure found"
+          ]
+        },
+        {
+          "name": "Content Analysis",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Very little content: 24 characters",
+            "⚠️  Missing expected content: settings, preference, configuration"
+          ],
+          "contentMetrics": {
+            "contentLength": 24,
+            "tables": 0,
+            "forms": 0,
+            "buttons": 0,
+            "inputs": 0
+          }
+        },
+        {
+          "name": "Mock Data Detection",
+          "status": "failed",
+          "details": [
+            "❌ CRITICAL: 4 mock data violations found"
+          ],
+          "issues": [
+            "❌ FORBIDDEN MOCK DATA: \"placeholder\"",
+            "❌ FORBIDDEN MOCK DATA: \"debug:\"",
+            "❌ FORBIDDEN MOCK DATA: \"null\"",
+            "❌ FORBIDDEN MOCK DATA: \"}}\""
+          ],
+          "forbiddenFound": [
+            "placeholder",
+            "debug:",
+            "null",
+            "}}"
+          ]
+        },
+        {
+          "name": "Translation Validation",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Translation error indicator: }}",
+            "❌ Translation error indicator: t("
+          ],
+          "translationErrors": [
+            "}}",
+            "t("
+          ]
+        },
+        {
+          "name": "Accessibility",
+          "status": "warning",
+          "details": [],
+          "issues": [
+            "⚠️  No heading structure found",
+            "⚠️  No ARIA landmarks found"
+          ]
+        },
+        {
+          "name": "Responsive Design Structure",
+          "status": "warning",
+          "details": [
+            "✅ Viewport meta tag: width=device-width, initial-scale=1.0, maximum-scale=1"
+          ],
+          "issues": [
+            "⚠️  No responsive CSS classes detected"
+          ]
+        }
+      ],
+      "timestamp": "2025-08-31T21:06:10.425Z",
+      "duration": 63
+    }
+  ],
+  "apiTests": [
+    {
+      "name": "API: GET /api/clients",
+      "status": "failed",
+      "details": [],
+      "issues": [
+        "❌ HTTP 401 Unauthorized"
+      ],
+      "responseData": null,
+      "timestamp": "2025-08-31T21:06:10.491Z",
+      "duration": 26
+    },
+    {
+      "name": "API: GET /api/workers",
+      "status": "failed",
+      "details": [],
+      "issues": [
+        "❌ HTTP 401 Unauthorized"
+      ],
+      "responseData": null,
+      "timestamp": "2025-08-31T21:06:10.517Z",
+      "duration": 9
+    },
+    {
+      "name": "API: GET /api/assignments",
+      "status": "passed",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 10ms",
+        "✅ Response type: text/html; charset=utf-8"
+      ],
+      "issues": [],
+      "responseData": null,
+      "timestamp": "2025-08-31T21:06:10.526Z",
+      "duration": 10
+    },
+    {
+      "name": "API: GET /api/stages",
+      "status": "failed",
+      "details": [],
+      "issues": [
+        "❌ HTTP 401 Unauthorized"
+      ],
+      "responseData": null,
+      "timestamp": "2025-08-31T21:06:10.536Z",
+      "duration": 9
+    },
+    {
+      "name": "API: GET /api/dashboard/stats",
+      "status": "failed",
+      "details": [],
+      "issues": [
+        "❌ HTTP 401 Unauthorized"
+      ],
+      "responseData": null,
+      "timestamp": "2025-08-31T21:06:10.545Z",
+      "duration": 7
+    },
+    {
+      "name": "API: GET /api/dashboard/assignments",
+      "status": "failed",
+      "details": [],
+      "issues": [
+        "❌ HTTP 401 Unauthorized"
+      ],
+      "responseData": null,
+      "timestamp": "2025-08-31T21:06:10.553Z",
+      "duration": 8
+    },
+    {
+      "name": "API: GET /api/workflow",
+      "status": "passed",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 12ms",
+        "✅ Response type: text/html; charset=utf-8"
+      ],
+      "issues": [],
+      "responseData": null,
+      "timestamp": "2025-08-31T21:06:10.562Z",
+      "duration": 12
+    },
+    {
+      "name": "API: GET /api/analytics",
+      "status": "passed",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 19ms",
+        "✅ Response type: text/html; charset=utf-8"
+      ],
+      "issues": [],
+      "responseData": null,
+      "timestamp": "2025-08-31T21:06:10.574Z",
+      "duration": 19
+    },
+    {
+      "name": "API: GET /api/settings",
+      "status": "passed",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 18ms",
+        "✅ Response type: text/html; charset=utf-8"
+      ],
+      "issues": [],
+      "responseData": null,
+      "timestamp": "2025-08-31T21:06:10.593Z",
+      "duration": 18
+    },
+    {
+      "name": "API: GET /health",
+      "status": "passed",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 9ms",
+        "✅ All expected fields present: status",
+        "✅ Sample data: {\"status\":\"ok\",\"timestamp\":\"2025-08-31T21:06:10.620Z\",\"uptime\":53.51816614,\"environment\":\"development\"}...",
+        "✅ No mock data in API response"
+      ],
+      "issues": [],
+      "responseData": {
+        "status": "ok",
+        "timestamp": "2025-08-31T21:06:10.620Z",
+        "uptime": 53.51816614,
+        "environment": "development"
+      },
+      "timestamp": "2025-08-31T21:06:10.611Z",
+      "duration": 9
+    }
+  ],
+  "dataValidation": [
+    {
+      "name": "Data Integrity Validation",
+      "status": "failed",
+      "details": [],
+      "issues": [
+        "❌ Validation failed: Could not fetch data for integrity validation"
+      ],
+      "timestamp": "2025-08-31T21:06:10.651Z"
+    }
+  ],
+  "performanceMetrics": [
+    {
+      "name": "Performance Analysis",
+      "timestamp": "2025-08-31T21:06:10.652Z",
+      "metrics": {
+        "averageResponseTime": 39,
+        "slowRequests": [],
+        "fastRequests": [
+          {
+            "name": "Route: Dashboard",
+            "duration": 177
+          },
+          {
+            "name": "Route: Clients",
+            "duration": 70
+          },
+          {
+            "name": "Route: Workers",
+            "duration": 47
+          },
+          {
+            "name": "Route: Assignments",
+            "duration": 53
+          },
+          {
+            "name": "Route: Workflow",
+            "duration": 74
+          },
+          {
+            "name": "Route: Analytics",
+            "duration": 46
+          },
+          {
+            "name": "Route: Settings",
+            "duration": 63
+          },
+          {
+            "name": "API: GET /api/clients",
+            "duration": 26
+          },
+          {
+            "name": "API: GET /api/workers",
+            "duration": 9
+          },
+          {
+            "name": "API: GET /api/assignments",
+            "duration": 10
+          },
+          {
+            "name": "API: GET /api/stages",
+            "duration": 9
+          },
+          {
+            "name": "API: GET /api/dashboard/stats",
+            "duration": 7
+          },
+          {
+            "name": "API: GET /api/dashboard/assignments",
+            "duration": 8
+          },
+          {
+            "name": "API: GET /api/workflow",
+            "duration": 12
+          },
+          {
+            "name": "API: GET /api/analytics",
+            "duration": 19
+          },
+          {
+            "name": "API: GET /api/settings",
+            "duration": 18
+          },
+          {
+            "name": "API: GET /health",
+            "duration": 9
+          }
+        ],
+        "totalRequests": 17
+      }
+    }
+  ],
+  "errors": []
+}

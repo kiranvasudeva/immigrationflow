@@ -307,5 +307,8 @@
   },
   "features": "Funcționalități",
   "pricing": "Prețuri",
-  "support": "Suport"
+  "support": "Suport",
+  "actions": {
+    "signOut": "Deconectare"
+  }
 }
