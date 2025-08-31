@@ -5,16 +5,10 @@ import express from "express";
 import { setupCORS } from "./middleware/security";
 import { auditMiddleware } from "./middleware/auth";
 import { requireRole, devRbacBypass } from "./middleware/rbac";
-import { workflowEngine } from "./workers/workflow-engine";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { ROMANIAN_WORK_PERMIT_WORKFLOW, mapWorkflowStepToAPI } from "./config/mapping";
 import { setupSecurityHeaders, createRateLimiter, validateInput, createEmergencyAdminAccess } from "./middleware/security";
 import { createStructuredLogger, performanceMonitoring, errorTracking, setupHealthChecks } from "./middleware/monitoring";
-// Production config disabled temporarily to fix startup
-// import { setupProductionSecurity } from "./config/production";
-// import { productionValidator } from './config/production-validation';
-import { ROMANIAN_WORK_PERMIT_WORKFLOW, mapWorkflowStepToAPI } from "./config/mapping";
 
 let devAuthBypass: any;
 
@@ -205,9 +199,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalWorkers: workers.length,
         totalClients: clients.length,
         totalAssignments: assignments.length,
-        activeAssignments: assignments.filter(a => a.status !== 'COMPLETED').length,
-        completedAssignments: assignments.filter(a => a.status === 'COMPLETED').length,
-        pendingAssignments: assignments.filter(a => a.status === 'PENDING').length
+        activeAssignments: assignments.filter(a => a.status !== 'ACCEPTED').length,
+        completedAssignments: assignments.filter(a => a.status === 'ACCEPTED').length,
+        pendingAssignments: assignments.filter(a => a.status === 'AWAITING_UPLOAD' || a.status === 'NOT_STARTED').length
       };
 
       res.json(stats);
