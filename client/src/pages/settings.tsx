@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGr
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Settings, 
@@ -155,6 +156,9 @@ export default function SettingsPage() {
 
   // State for all settings sections
   const [documentCategories, setDocumentCategories] = useState<DocumentCategory[]>([]);
+  const [showCreateWorkflow, setShowCreateWorkflow] = useState(false);
+  const [editingWorkflow, setEditingWorkflow] = useState<Workflow | null>(null);
+  const [showStageManager, setShowStageManager] = useState<string | null>(null);
   
   // Fetch workflow templates from the database
   const { data: workflowTemplates, isLoading: loadingWorkflows } = useQuery({
@@ -285,6 +289,43 @@ export default function SettingsPage() {
     }
   }, [workflowTemplates]);
 
+  const handleCreateWorkflow = async (workflowData: any) => {
+    try {
+      const response = await fetch('/api/workflow-templates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: workflowData.name,
+          description: workflowData.description,
+          isActive: workflowData.isActive,
+          executionType: workflowData.executionType,
+          steps: [] // Start with empty steps, user can add later
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create workflow');
+      }
+      
+      toast({
+        title: "Workflow Created",
+        description: "New workflow template has been created successfully.",
+      });
+      
+      setShowCreateWorkflow(false);
+      // Refresh workflow list
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create workflow. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSaveSettings = async (section: string) => {
     try {
       if (section === 'Workflows') {
@@ -345,9 +386,15 @@ export default function SettingsPage() {
         <TabsContent value="workflows" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Workflow className="h-5 w-5" />
-                Workflow Templates
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Workflow className="h-5 w-5" />
+                  Workflow Templates
+                </div>
+                <Button onClick={() => setShowCreateWorkflow(true)} className="bg-blue-600 hover:bg-blue-700">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create New Workflow
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -369,9 +416,27 @@ export default function SettingsPage() {
                         <h3 className="text-lg font-semibold">{workflow.name}</h3>
                         <p className="text-gray-600 text-sm">{workflow.description}</p>
                       </div>
-                      <Badge variant={workflow.isActive ? "default" : "secondary"}>
-                        {workflow.isActive ? "Active" : "Inactive"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={workflow.isActive ? "default" : "secondary"}>
+                          {workflow.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => setShowStageManager(workflow.id)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Manage Stages
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => setEditingWorkflow(workflow)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
                     </div>
                     
                     <div className="space-y-3">
@@ -470,6 +535,351 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Create Workflow Dialog */}
+      <Dialog open={showCreateWorkflow} onOpenChange={setShowCreateWorkflow}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Workflow Template</DialogTitle>
+          </DialogHeader>
+          <WorkflowForm 
+            onSubmit={handleCreateWorkflow} 
+            onCancel={() => setShowCreateWorkflow(false)} 
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Workflow Dialog */}
+      <Dialog open={!!editingWorkflow} onOpenChange={() => setEditingWorkflow(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Workflow Template</DialogTitle>
+          </DialogHeader>
+          <WorkflowForm 
+            workflow={editingWorkflow}
+            onSubmit={async (data) => {
+              try {
+                const response = await fetch(`/api/workflow-templates/${editingWorkflow?.id}`, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(data),
+                });
+                
+                if (!response.ok) {
+                  throw new Error('Failed to update workflow');
+                }
+                
+                toast({
+                  title: "Workflow Updated",
+                  description: "Workflow template has been updated successfully.",
+                });
+                
+                setEditingWorkflow(null);
+                window.location.reload();
+              } catch (error) {
+                toast({
+                  title: "Error",
+                  description: "Failed to update workflow. Please try again.",
+                  variant: "destructive",
+                });
+              }
+            }} 
+            onCancel={() => setEditingWorkflow(null)} 
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Stage Manager Dialog */}
+      <Dialog open={!!showStageManager} onOpenChange={() => setShowStageManager(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Manage Workflow Stages</DialogTitle>
+          </DialogHeader>
+          <StageManager 
+            workflowId={showStageManager}
+            onClose={() => setShowStageManager(null)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+// Workflow Form Component
+function WorkflowForm({ workflow, onSubmit, onCancel }: { 
+  workflow?: Workflow | null, 
+  onSubmit: (data: any) => void, 
+  onCancel: () => void 
+}) {
+  const [formData, setFormData] = useState({
+    name: workflow?.name || '',
+    description: workflow?.description || '',
+    isActive: workflow?.isActive || true,
+    executionType: workflow?.executionType || 'sequential'
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="name">Workflow Name</Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+          placeholder="Enter workflow name"
+          required
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="Enter workflow description"
+          rows={3}
+        />
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={formData.isActive}
+          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
+        />
+        <Label>Active</Label>
+      </div>
+      
+      <div>
+        <Label htmlFor="executionType">Execution Type</Label>
+        <Select value={formData.executionType} onValueChange={(value) => setFormData(prev => ({ ...prev, executionType: value }))}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sequential">Sequential</SelectItem>
+            <SelectItem value="parallel">Parallel</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">
+          {workflow ? 'Update' : 'Create'} Workflow
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+// Stage Manager Component
+function StageManager({ workflowId, onClose }: { workflowId: string | null, onClose: () => void }) {
+  const [stages, setStages] = useState<WorkflowStage[]>([]);
+  const [showAddStage, setShowAddStage] = useState(false);
+  const [editingStage, setEditingStage] = useState<WorkflowStage | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch stages for the workflow
+  useEffect(() => {
+    const fetchStages = async () => {
+      if (!workflowId) return;
+      
+      try {
+        const response = await fetch(`/api/workflow-templates/${workflowId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setStages(data.steps || []);
+        }
+      } catch (error) {
+        console.error('Error fetching stages:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchStages();
+  }, [workflowId]);
+
+  const handleAddStage = async (stageData: any) => {
+    try {
+      // Add the new stage to the workflow template
+      const currentWorkflow = await fetch(`/api/workflow-templates/${workflowId}`).then(r => r.json());
+      const updatedSteps = [...(currentWorkflow.steps || []), {
+        name: stageData.name,
+        description: stageData.description,
+        assignedRole: stageData.assignedRole,
+        estimatedDays: stageData.estimatedDays,
+        order: (currentWorkflow.steps?.length || 0) + 1,
+        documentRequirements: [],
+        checklistItems: []
+      }];
+      
+      await fetch(`/api/workflow-templates/${workflowId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ steps: updatedSteps })
+      });
+      
+      // Refresh stages
+      const refreshResponse = await fetch(`/api/workflow-templates/${workflowId}`);
+      const refreshData = await refreshResponse.json();
+      setStages(refreshData.steps || []);
+      setShowAddStage(false);
+    } catch (error) {
+      console.error('Error adding stage:', error);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Workflow Stages</h3>
+        <Button onClick={() => setShowAddStage(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Stage
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-8 text-gray-500">
+          Loading stages...
+        </div>
+      ) : stages.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          No stages defined yet. Add your first stage to get started.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {stages.map((stage, index) => (
+            <div key={stage.id} className="border rounded-lg p-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-medium">{stage.name}</h4>
+                  <p className="text-sm text-gray-600">{stage.description}</p>
+                  <div className="flex gap-4 text-xs text-gray-500 mt-2">
+                    <span>Role: {stage.assignedRole}</span>
+                    <span>Duration: {stage.estimatedDays} days</span>
+                    <span>Documents: {stage.documentRequirements?.length || 0}</span>
+                    <span>Checklist: {stage.checklistItems?.length || 0}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setEditingStage(stage)}>
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => console.log('Delete stage', stage.id)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add Stage Form */}
+      {showAddStage && (
+        <div className="border rounded-lg p-4 bg-gray-50">
+          <h4 className="font-medium mb-4">Add New Stage</h4>
+          <StageForm onSubmit={handleAddStage} onCancel={() => setShowAddStage(false)} />
+        </div>
+      )}
+
+      <div className="flex justify-end">
+        <Button onClick={onClose}>Close</Button>
+      </div>
+    </div>
+  );
+}
+
+// Stage Form Component
+function StageForm({ stage, onSubmit, onCancel }: { 
+  stage?: WorkflowStage | null, 
+  onSubmit: (data: any) => void, 
+  onCancel: () => void 
+}) {
+  const [formData, setFormData] = useState({
+    name: stage?.name || '',
+    description: stage?.description || '',
+    assignedRole: stage?.assignedRole || 'ADMIN',
+    estimatedDays: stage?.estimatedDays || 7
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="stageName">Stage Name</Label>
+        <Input
+          id="stageName"
+          value={formData.name}
+          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+          placeholder="Enter stage name"
+          required
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="stageDescription">Description</Label>
+        <Textarea
+          id="stageDescription"
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="Enter stage description"
+          rows={2}
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="assignedRole">Assigned Role</Label>
+        <Select value={formData.assignedRole} onValueChange={(value) => setFormData(prev => ({ ...prev, assignedRole: value }))}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ADMIN">Admin</SelectItem>
+            <SelectItem value="WORKER">Worker</SelectItem>
+            <SelectItem value="OWNER">Client Owner</SelectItem>
+            <SelectItem value="VIEWER">Viewer</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="estimatedDays">Estimated Days</Label>
+        <Input
+          id="estimatedDays"
+          type="number"
+          min="1"
+          value={formData.estimatedDays}
+          onChange={(e) => setFormData(prev => ({ ...prev, estimatedDays: parseInt(e.target.value) || 1 }))}
+          placeholder="Enter estimated days"
+          required
+        />
+      </div>
+      
+      <div className="flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">
+          {stage ? 'Update' : 'Add'} Stage
+        </Button>
+      </div>
+    </form>
   );
 }
