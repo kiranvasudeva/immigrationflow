@@ -29,6 +29,23 @@ export type ResourceType = 'client' | 'worker' | 'assignment' | 'document' | 'te
 export function requireRole(...roles: UserRole[]): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Development bypass - allow all roles
+      if (process.env.NODE_ENV === 'development') {
+        // Mock dbUser with ADMIN role for development
+        if (!req.user?.dbUser) {
+          (req as any).user = {
+            ...req.user,
+            dbUser: {
+              id: 'dev-admin-1',
+              email: 'admin@dev.local',
+              role: 'ADMIN' as UserRole,
+              invitedById: null
+            }
+          };
+        }
+        return next();
+      }
+
       // Ensure user is authenticated first
       if (!req.user?.claims?.sub) {
         return res.status(401).json({ message: "Unauthorized" });
