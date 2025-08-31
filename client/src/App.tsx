@@ -23,8 +23,6 @@ import ProfilePage from "@/pages/profile";
 import ClientProfile from "@/pages/client-profile";
 import WorkerProfile from "@/pages/worker-profile";
 import SettingsPage from "@/pages/settings";
-import ClientsPage from "@/pages/clients-page";
-import WorkersPage from "@/pages/workers-page";
 import { User } from "@shared/schema";
 
 function Router() {
@@ -85,9 +83,9 @@ function Router() {
                 }} />
                 <Route path="/templates" component={TemplatesPage} />
                 <Route path="/reports" component={AnalyticsPage} />
-                <Route path="/clients" component={ClientsPage} />
+                <Route path="/clients" component={() => <AdminDashboard />} />
                 <Route path="/clients/:id" component={ClientProfile} />
-                <Route path="/workers" component={WorkersPage} />
+                <Route path="/workers" component={() => <AdminDashboard />} />
                 <Route path="/workers/:id" component={WorkerProfile} />
                 <Route path="/requirements" component={() => <AdminDashboard />} />
                 <Route path="/reminders" component={() => <AdminDashboard />} />
