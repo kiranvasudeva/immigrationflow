@@ -5,6 +5,10 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupSecurityHeaders, createRateLimiter, validateInput, setupCORS, createEmergencyAdminAccess } from "./middleware/security";
+import { createStructuredLogger, performanceMonitoring, errorTracking, setupHealthChecks } from "./middleware/monitoring";
+import { productionConfig } from "./config/production";
+import { ROMANIAN_WORK_PERMIT_WORKFLOW, mapWorkflowStepToAPI } from "./config/mapping";
 import { auditMiddleware } from "./middleware/auth";
 import { requireRole, requireOwnership, requireRoleAndOwnership, applyTenantFilter, devRbacBypass } from "./middleware/rbac";
 
@@ -97,28 +101,28 @@ async function seedRomanianWorkPermitWorkflow() {
           title: 'Verify company has valid business registration',
           description: 'Check that the employer has active business registration and tax compliance',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 1
         },
         {
           title: 'Confirm job posting requirements met',
           description: 'Verify job was posted for 30+ days in Romania before applying for foreign worker',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 2
         },
         {
           title: 'Validate salary meets minimum requirements',
           description: 'Ensure offered salary is at least Romanian minimum wage or industry standard',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 3
         },
         {
           title: 'Check CAEN code matches business activity',
           description: 'Verify company CAEN code aligns with the job being offered',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 4
         }
       ]
@@ -172,28 +176,28 @@ async function seedRomanianWorkPermitWorkflow() {
           title: 'Verify all apostille stamps are valid',
           description: 'Check that apostille or legalization stamps on foreign documents are authentic',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 1
         },
         {
           title: 'Confirm authorized translations are recent',
           description: 'Ensure all document translations are done by certified Romanian translators',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 2
         },
         {
           title: 'Validate medical certificates are current',
           description: 'Check that medical certificates are issued within 3 months of application',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 3
         },
         {
           title: 'Review criminal background check validity',
           description: 'Ensure criminal record is recent (typically within 6 months) and properly legalized',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 4
         }
       ]
@@ -247,28 +251,28 @@ async function seedRomanianWorkPermitWorkflow() {
           title: 'Verify passport validity and pages',
           description: 'Check passport has at least 6 months validity and 2 empty visa pages',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 1
         },
         {
           title: 'Confirm health insurance coverage',
           description: 'Verify insurance covers full Romanian territory and visa period',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 2
         },
         {
           title: 'Validate biometric photo specifications',
           description: 'Ensure photos meet Romanian consular biometric requirements',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 3
         },
         {
           title: 'Check visa application completeness',
           description: 'Review that all form fields are correctly filled and signed',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 4
         }
       ]
@@ -306,21 +310,21 @@ async function seedRomanianWorkPermitWorkflow() {
           title: 'Confirm legal entry into Romania',
           description: 'Verify worker entered Romania legally with proper visa and border stamps',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 1
         },
         {
           title: 'Validate accommodation documentation',
           description: 'Check that accommodation proof is valid and covers required period',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 2
         },
         {
           title: 'Prepare for residence permit application',
           description: 'Gather information needed for upcoming residence permit application',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 3
         }
       ]
@@ -366,28 +370,28 @@ async function seedRomanianWorkPermitWorkflow() {
           title: 'Verify employment contract registration',
           description: 'Confirm employment contract is properly registered with ITM',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 1
         },
         {
           title: 'Check residence permit application completeness',
           description: 'Review all required forms and documents for residence permit',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 2
         },
         {
           title: 'Validate accommodation continuity',
           description: 'Ensure accommodation documentation covers extended stay period',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 3
         },
         {
           title: 'Confirm payment of required fees',
           description: 'Verify all government fees for residence permit have been paid',
           isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
           order: 4
         }
       ]
@@ -435,8 +439,24 @@ async function seedRomanianWorkPermitWorkflow() {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Production Security Setup
+  if (productionConfig.NODE_ENV === 'production') {
+    app.use(setupSecurityHeaders());
+    app.use(createRateLimiter());
+    app.use(setupCORS());
+  }
+  
+  // Universal Middleware
+  app.use(validateInput);
+  app.use(createStructuredLogger());
+  app.use(performanceMonitoring());
+  app.use(createEmergencyAdminAccess());
+  
   // Create government status service instance
   const governmentStatusService = createGovernmentStatusService(storage);
+  
+  // Health Checks (before authentication)
+  setupHealthChecks(app, storage);
   
   // OpenAPI Documentation endpoint
   try {
@@ -1875,7 +1895,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   title: 'Passport Copy',
                   description: 'High-quality scan of passport bio page (color, readable, unedited)',
                   isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
                   status: 'pending'
                 },
                 {
@@ -1883,7 +1903,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   title: 'University Diploma',
                   description: 'Original university diploma or degree certificate',
                   isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
                   status: 'pending'
                 },
                 {
@@ -1891,7 +1911,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   title: 'Signed Employment Contract',
                   description: 'Signed employment contract with Romanian employer',
                   isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
                   status: 'pending'
                 }
               ]
@@ -1908,7 +1928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   title: 'Job Posting Document',
                   description: 'Detailed job description for AJOFM submission',
                   isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
                   status: 'pending'
                 }
               ]
@@ -1925,7 +1945,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   title: 'Medical Certificate',
                   description: 'Health certificate from approved Romanian medical provider',
                   isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
                   status: 'pending'
                 }
               ]
@@ -1949,7 +1969,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   title: 'Proof of Accommodation',
                   description: 'Rental contract or property ownership documents',
                   isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
                   status: 'pending'
                 }
               ]
@@ -1973,7 +1993,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   title: 'Current Work Permit',
                   description: 'Copy of existing work permit to be renewed',
                   isRequired: true,
-          assignedRole: 'OWNER',
+          assignedRole: 'OWNER' as const,
                   status: 'pending'
                 }
               ]
@@ -2193,11 +2213,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get document requirements for a workflow step
-  app.get('/api/workflow-steps/:stepId/document-requirements', isAuthenticated, async (req: any, res) => {
+  // Get document requirements for a workflow step - configuration-driven
+  app.get('/api/workflow-steps/:stepId/document-requirements', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER', 'VIEWER')), async (req: any, res) => {
     try {
       const { stepId } = req.params;
-      const requirements = await storage.getWorkflowStepDocumentRequirements(stepId);
+      
+      // First try to get from database
+      let requirements = await storage.getWorkflowStepDocumentRequirements(stepId);
+      
+      // If no database records, fallback to configuration mapping
+      if (!requirements || requirements.length === 0) {
+        const stepConfig = ROMANIAN_WORK_PERMIT_WORKFLOW.find(step => step.id === stepId);
+        
+        if (stepConfig) {
+          requirements = stepConfig.requirements.map((req, index) => ({
+            id: `${stepId}-req-${index + 1}`,
+            workflowStepId: stepId,
+            title: req.title,
+            description: req.description,
+            isRequired: req.isRequired,
+            submittedBy: req.submittedBy,
+            acceptedFileTypes: req.acceptedFileTypes,
+            maxFileSize: req.maxFileSize,
+            createdAt: new Date()
+          }));
+        }
+      }
+      
+      if (!requirements || requirements.length === 0) {
+        return res.status(404).json({ error: 'No document requirements found for this step' });
+      }
+      
       res.json(requirements);
     } catch (error) {
       console.error('Error fetching document requirements:', error);
