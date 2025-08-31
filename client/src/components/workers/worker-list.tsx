@@ -55,26 +55,100 @@ export default function WorkerList({ workers }: WorkerListProps) {
       role: inviteRole,
     });
   };
-  // Get real workflow data for workers
-  const getWorkerWorkflowData = (worker: any) => {
-    if (!worker.assignedWorkflowIds || worker.assignedWorkflowIds.length === 0) {
-      return { stage: 'Not Assigned', progress: 0, nextDeadline: null };
-    }
-    
-    // Use the first assigned workflow
-    const workflowId = worker.assignedWorkflowIds[0];
-    
-    // TODO: This should fetch real workflow progress from the workflow engine
-    // For now, return meaningful data based on the workflow assignment
-    return {
-      stage: workflowId === 'work-permit-initial' ? 'Initial Document Collection' : 'Work Permit Application',
-      progress: 25, // Real progress would come from completed steps
-      nextDeadline: {
-        date: 'Feb 15, 2025',
-        description: 'Passport copy due'
+  // Hook to fetch workflow progress for each worker
+  const useWorkerWorkflowData = (workerId: string) => {
+    return useQuery({
+      queryKey: ['/api/workers', workerId, 'workflow-progress'],
+      enabled: !!workerId,
+      select: (data: any[]) => {
+        if (!data || data.length === 0) {
+          return { stage: 'Not Assigned', progress: 0, nextDeadline: null };
+        }
+        
+        // Get the first workflow's progress
+        const workflow = data[0];
+        const completedSteps = workflow.steps?.filter((step: any) => step.status === 'COMPLETED')?.length || 0;
+        const totalSteps = workflow.steps?.length || 1;
+        const progress = Math.round((completedSteps / totalSteps) * 100);
+        
+        // Find next pending step with deadline
+        const nextStep = workflow.steps?.find((step: any) => step.status === 'PENDING');
+        const nextDeadline = nextStep?.deadline ? {
+          date: new Date(nextStep.deadline).toLocaleDateString(),
+          description: nextStep.title
+        } : null;
+        
+        return {
+          stage: workflow.workflowName || 'In Progress',
+          progress,
+          nextDeadline
+        };
       }
-    };
+    });
   };
+
+  // WorkerRow component that uses the workflow data hook
+  function WorkerRow({ worker }: { worker: any }) {
+    const { data: workflowData = { stage: 'Not Assigned', progress: 0, nextDeadline: null } } = useWorkerWorkflowData(worker.id);
+    const initials = `${worker.firstName[0]}${worker.lastName[0]}`.toUpperCase();
+    
+    return (
+      <tr className="hover:bg-gray-50" data-testid={`worker-row-${worker.id}`}>
+        <td className="py-4 px-6">
+          <div className="flex items-center">
+            <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+              <span className="text-sm font-medium text-indigo-600">{initials}</span>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">{worker.firstName} {worker.lastName}</p>
+              <p className="text-sm text-secondary">{worker.email}</p>
+            </div>
+          </div>
+        </td>
+        <td className="py-4 px-6">
+          <Badge variant="outline">{worker.nationality}</Badge>
+        </td>
+        <td className="py-4 px-6">
+          <Badge variant="secondary">{workflowData.stage}</Badge>
+        </td>
+        <td className="py-4 px-6">
+          <div className="flex items-center">
+            <div className="w-full bg-gray-200 rounded-full h-2 mr-3">
+              <div 
+                className="bg-success h-2 rounded-full" 
+                style={{ width: `${workflowData.progress}%` }}
+              ></div>
+            </div>
+            <span className="text-sm text-secondary">{workflowData.progress}%</span>
+          </div>
+        </td>
+        <td className="py-4 px-6">
+          {workflowData.nextDeadline ? (
+            <>
+              <p className="text-sm text-gray-900">{workflowData.nextDeadline.date}</p>
+              <p className="text-xs text-warning">{workflowData.nextDeadline.description}</p>
+            </>
+          ) : (
+            <p className="text-sm text-gray-500">No deadline</p>
+          )}
+        </td>
+        <td className="py-4 px-6">
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="sm" data-testid={`button-view-worker-${worker.id}`}>
+              <i className="fas fa-eye mr-1"></i>{t('actions.view') || 'View'}
+            </Button>
+            <Button variant="ghost" size="sm" data-testid={`button-edit-worker-${worker.id}`}>
+              <i className="fas fa-edit mr-1"></i>{t('actions.edit') || 'Edit'}
+            </Button>
+            <WorkerInvitationLink 
+              workerId={worker.id} 
+              workerEmail={worker.email || ''}
+            />
+          </div>
+        </td>
+      </tr>
+    );
+  }
 
   return (
     <Card data-testid="card-workers-list">
@@ -177,67 +251,9 @@ export default function WorkerList({ workers }: WorkerListProps) {
                   </td>
                 </tr>
               ) : (
-                workers.map((worker) => {
-                  const workflowData = getWorkerWorkflowData(worker);
-                  const initials = `${worker.firstName[0]}${worker.lastName[0]}`.toUpperCase();
-                  
-                  return (
-                    <tr key={worker.id} className="hover:bg-gray-50" data-testid={`worker-row-${worker.id}`}>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
-                            <span className="text-sm font-medium text-indigo-600">{initials}</span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{worker.firstName} {worker.lastName}</p>
-                            <p className="text-sm text-secondary">{worker.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <Badge variant="outline">{worker.nationality}</Badge>
-                      </td>
-                      <td className="py-4 px-6">
-                        <Badge variant="secondary">{workflowData.stage}</Badge>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center">
-                          <div className="w-full bg-gray-200 rounded-full h-2 mr-3">
-                            <div 
-                              className="bg-success h-2 rounded-full" 
-                              style={{ width: `${workflowData.progress}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm text-secondary">{workflowData.progress}%</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        {workflowData.nextDeadline ? (
-                          <>
-                            <p className="text-sm text-gray-900">{workflowData.nextDeadline.date}</p>
-                            <p className="text-xs text-warning">{workflowData.nextDeadline.description}</p>
-                          </>
-                        ) : (
-                          <p className="text-sm text-gray-500">No deadline</p>
-                        )}
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center space-x-2">
-                          <Button variant="ghost" size="sm" data-testid={`button-view-worker-${worker.id}`}>
-                            <i className="fas fa-eye mr-1"></i>{t('actions.view') || 'View'}
-                          </Button>
-                          <Button variant="ghost" size="sm" data-testid={`button-edit-worker-${worker.id}`}>
-                            <i className="fas fa-edit mr-1"></i>{t('actions.edit') || 'Edit'}
-                          </Button>
-                          <WorkerInvitationLink 
-                            workerId={worker.id} 
-                            workerEmail={worker.email || ''}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
+                workers.map((worker) => (
+                  <WorkerRow key={worker.id} worker={worker} />
+                ))
               )}
             </tbody>
           </table>
