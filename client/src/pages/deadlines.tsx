@@ -84,7 +84,7 @@ export default function DeadlinesPage() {
     }
   };
 
-  const sortedDeadlines = deadlines.sort((a, b) => {
+  const sortedDeadlines = (deadlines as any[]).sort((a: any, b: any) => {
     const aDays = getDaysUntilDue(a.dueDate);
     const bDays = getDaysUntilDue(b.dueDate);
     if (a.status === 'completed') return 1;
@@ -93,8 +93,9 @@ export default function DeadlinesPage() {
   });
 
   return (
-    <div className="flex flex-col">
-      <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <>
+      <div className="flex flex-col">
+        <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold">{t('pages.deadlines.title') || 'Deadlines'}</h1>
@@ -105,7 +106,7 @@ export default function DeadlinesPage() {
           </div>
 
           <div className="grid gap-4">
-            {sortedDeadlines.map((deadline) => {
+            {sortedDeadlines.map((deadline: any) => {
               const daysUntil = getDaysUntilDue(deadline.dueDate);
               
               return (
@@ -150,7 +151,7 @@ export default function DeadlinesPage() {
             })}
           </div>
 
-          {deadlines.length === 0 && !deadlinesLoading && (
+          {(deadlines as any[]).length === 0 && !deadlinesLoading && (
             <Card className="text-center py-12">
               <CardContent>
                 <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -163,6 +164,6 @@ export default function DeadlinesPage() {
           )}
         </main>
       </div>
-    </div>
+    </>
   );
 }

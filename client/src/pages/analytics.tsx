@@ -72,7 +72,7 @@ export default function AnalyticsPage() {
   });
 
   // Process assignment data for charts
-  const statusData = assignments.reduce((acc: any[], assignment: any) => {
+  const statusData = (assignments as any[]).reduce((acc: any[], assignment: any) => {
     const existing = acc.find(item => item.status === assignment.status);
     if (existing) {
       existing.count += 1;
@@ -107,7 +107,7 @@ export default function AnalyticsPage() {
   }, []);
 
   // Client performance data
-  const clientData = assignments.reduce((acc: any[], assignment: any) => {
+  const clientData = (assignments as any[]).reduce((acc: any[], assignment: any) => {
     const clientName = assignment.clientProfile?.companyName || 'Unknown';
     const existing = acc.find(item => item.client === clientName);
     if (existing) {
@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('analytics.options.allClients') || 'All Clients'}</SelectItem>
-                  {clients.map((client: any) => (
+                  {(clients as any[]).map((client: any) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.companyName}
                     </SelectItem>
@@ -170,10 +170,9 @@ export default function AnalyticsPage() {
                 </SelectContent>
               </Select>
             </div>
-          }
-        />
+        </div>
         
-        <div className="p-8 space-y-6">
+        <div className="space-y-6">
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -336,7 +335,7 @@ export default function AnalyticsPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {assignments.slice(0, 5).map((assignment: any, index: number) => (
+            {(assignments as any[]).slice(0, 5).map((assignment: any, index: number) => (
               <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -355,7 +354,7 @@ export default function AnalyticsPage() {
               </div>
             ))}
             
-            {assignments.length === 0 && (
+            {(assignments as any[]).length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 No recent activity to display
               </div>
@@ -363,6 +362,7 @@ export default function AnalyticsPage() {
           </div>
         </CardContent>
       </Card>
+        </div>
       </main>
     </div>
   );

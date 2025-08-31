@@ -62,8 +62,9 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="flex flex-col">
-      <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <>
+      <div className="flex flex-col">
+        <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold">{t('pages.documents.title') || 'Documents'}</h1>
@@ -88,7 +89,7 @@ export default function DocumentsPage() {
           )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {documents.map((doc) => (
+            {(documents as any[]).map((doc: any) => (
               <Card key={doc.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -137,7 +138,7 @@ export default function DocumentsPage() {
             ))}
           </div>
 
-          {documents.length === 0 && !documentsLoading && (
+          {(documents as any[]).length === 0 && !documentsLoading && (
             <Card className="text-center py-12">
               <CardContent>
                 <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -154,6 +155,6 @@ export default function DocumentsPage() {
           )}
         </main>
       </div>
-    </div>
+    </>
   );
 }

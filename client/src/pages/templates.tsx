@@ -145,24 +145,23 @@ export default function TemplatesPage() {
     return (
       <div className="flex flex-col">
         <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-            <div className="flex items-center justify-between mb-6">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSelectedTemplate(null);
-                  setIsCreating(false);
-                }}
-              >
-                ← Back to Templates
-              </Button>
-            </div>
-            <TemplateBuilder
-              template={selectedTemplate?.template}
-              fields={selectedTemplate?.fields}
-              onSave={handleSave}
-            />
+          <div className="flex items-center justify-between mb-6">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSelectedTemplate(null);
+                setIsCreating(false);
+              }}
+            >
+              ← Back to Templates
+            </Button>
           </div>
-        </div>
+          <TemplateBuilder
+            template={selectedTemplate?.template}
+            fields={selectedTemplate?.fields}
+            onSave={handleSave}
+          />
+        </main>
       </div>
     );
   }
@@ -178,13 +177,12 @@ export default function TemplatesPage() {
           <Button
             onClick={() => setIsCreating(true)}
             className="flex items-center space-x-2"
-              data-testid="button-create-template"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Create Template</span>
-            </Button>
-          }
-        />
+            data-testid="button-create-template"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Create Template</span>
+          </Button>
+        </div>
         
         <div className="p-8">
           {templatesLoading ? (
@@ -193,7 +191,7 @@ export default function TemplatesPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {templates.length === 0 ? (
+              {(templates as DocumentTemplate[]).length === 0 ? (
                 <div className="col-span-full">
                   <Card className="text-center py-12">
                     <CardContent>
@@ -213,7 +211,7 @@ export default function TemplatesPage() {
                   </Card>
                 </div>
               ) : (
-                templates.map((template: DocumentTemplate) => (
+                (templates as DocumentTemplate[]).map((template: DocumentTemplate) => (
                   <Card key={template.id} className="hover:shadow-lg transition-shadow">
                     <CardHeader>
                       <div className="flex justify-between items-start">
@@ -269,7 +267,7 @@ export default function TemplatesPage() {
                       </div>
 
                       <div className="text-xs text-gray-400">
-                        Created {new Date(template.createdAt).toLocaleDateString()}
+                        Created {template.createdAt ? new Date(template.createdAt).toLocaleDateString() : 'N/A'}
                       </div>
                     </CardContent>
                   </Card>
@@ -277,7 +275,8 @@ export default function TemplatesPage() {
               )}
             </div>
           )}
-        </main>
-      </div>
+        </div>
+      </main>
+    </div>
   );
 }

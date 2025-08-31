@@ -225,7 +225,7 @@ export default function AdminDashboard() {
   }
 
   // Filter clients based on search term
-  const filteredClients = clients.filter((client: any) => {
+  const filteredClients = (clients as any[]).filter((client: any) => {
     const matchesSearch = !clientSearchTerm || 
       client.legalName.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
       client.contactEmail.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
@@ -256,7 +256,7 @@ export default function AdminDashboard() {
                 <CardTitle className="text-sm font-medium text-gray-600">Total Clients</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{(stats as any).totalClients || 0}</div>
+                <div className="text-2xl font-bold">{((stats as any)?.totalClients) || 0}</div>
               </CardContent>
             </Card>
             <Card>
@@ -264,7 +264,7 @@ export default function AdminDashboard() {
                 <CardTitle className="text-sm font-medium text-gray-600">Total Workers</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{(stats as any).totalWorkers || 0}</div>
+                <div className="text-2xl font-bold">{((stats as any)?.totalWorkers) || 0}</div>
               </CardContent>
             </Card>
             <Card>
@@ -272,7 +272,7 @@ export default function AdminDashboard() {
                 <CardTitle className="text-sm font-medium text-gray-600">Active Workers</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{(stats as any).activeWorkers || 0}</div>
+                <div className="text-2xl font-bold">{((stats as any)?.activeWorkers) || 0}</div>
               </CardContent>
             </Card>
             <Card>
@@ -280,7 +280,7 @@ export default function AdminDashboard() {
                 <CardTitle className="text-sm font-medium text-gray-600">Workflow Templates</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{(stats as any).totalWorkflowTemplates || 0}</div>
+                <div className="text-2xl font-bold">{((stats as any)?.totalWorkflowTemplates) || 0}</div>
               </CardContent>
             </Card>
             <Card>
@@ -288,7 +288,7 @@ export default function AdminDashboard() {
                 <CardTitle className="text-sm font-medium text-gray-600">Pending Actions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{(stats as any).pendingActions || 0}</div>
+                <div className="text-2xl font-bold">{((stats as any)?.pendingActions) || 0}</div>
               </CardContent>
             </Card>
           </div>
@@ -690,7 +690,7 @@ export default function AdminDashboard() {
             </CollapsibleTrigger>
             
             <CollapsibleContent className="space-y-4 mt-6">
-              {assignments.slice(0, 5).map((assignment: any) => (
+              {(assignments as any[]).slice(0, 5).map((assignment: any) => (
                 <Card key={assignment.id} className="p-4">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -713,7 +713,7 @@ export default function AdminDashboard() {
                 </Card>
               ))}
               
-              {assignments.length === 0 && (
+              {(assignments as any[]).length === 0 && (
                 <Card className="p-6 text-center">
                   <Clock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                   <p className="text-gray-600 text-sm">No recent workflow activity</p>
@@ -752,7 +752,7 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker, isA
   });
 
   // Filter workers based on search term
-  const filteredWorkers = workers.filter((worker: any) => {
+  const filteredWorkers = (workers as any[]).filter((worker: any) => {
     const matchesSearch = !workerSearchTerm || 
       worker.firstName.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
       worker.lastName.toLowerCase().includes(workerSearchTerm.toLowerCase()) ||
@@ -774,7 +774,7 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker, isA
     );
   }
 
-  if (workers.length === 0) {
+  if ((workers as any[]).length === 0) {
     return (
       <div className="mt-6 pt-6 border-t border-gray-100">
         <div className="text-center py-6">
@@ -790,7 +790,7 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker, isA
   return (
     <div className="mt-6 pt-6 border-t border-gray-100">
       <div className="flex items-center justify-between mb-4">
-        <h4 className="font-semibold text-gray-900">Workers ({workers.length})</h4>
+        <h4 className="font-semibold text-gray-900">Workers ({(workers as any[]).length})</h4>
       </div>
 
       {/* Worker Search Filter */}
@@ -863,16 +863,16 @@ function ClientWorkersDisplay({ clientId, selectedWorker, setSelectedWorker, isA
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     <span className="ml-2 text-gray-600">Loading workflow data...</span>
                   </div>
-                ) : selectedWorkerWorkflowData && selectedWorkerWorkflowData.stages && selectedWorkerWorkflowData.stages.length > 0 ? (
+                ) : selectedWorkerWorkflowData && (selectedWorkerWorkflowData as any)?.stages && (selectedWorkerWorkflowData as any)?.stages?.length > 0 ? (
                   <div className="space-y-4">
                     <div className="border-b border-gray-200 pb-3">
-                      <h4 className="font-semibold text-gray-900">{selectedWorkerWorkflowData.name}</h4>
-                      {selectedWorkerWorkflowData.description && (
-                        <p className="text-sm text-gray-600 mt-1">{selectedWorkerWorkflowData.description}</p>
+                      <h4 className="font-semibold text-gray-900">{(selectedWorkerWorkflowData as any)?.name}</h4>
+                      {(selectedWorkerWorkflowData as any)?.description && (
+                        <p className="text-sm text-gray-600 mt-1">{(selectedWorkerWorkflowData as any)?.description}</p>
                       )}
                     </div>
                     {/* Display workflow stages from settings */}
-                    {selectedWorkerWorkflowData.stages.map((stage: any, index: number) => (
+                    {((selectedWorkerWorkflowData as any)?.stages || []).map((stage: any, index: number) => (
                       <div key={stage.id} className="bg-white border rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
