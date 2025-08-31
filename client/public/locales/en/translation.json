@@ -1,0 +1,29 @@
+{
+  "features": "Features",
+  "pricing": "Pricing", 
+  "support": "Support",
+  "landing": {
+    "login": "Login",
+    "title": "ImmigrationFlow",
+    "subtitle": "Streamline Romanian Immigration Workflows",
+    "description": "Comprehensive SaaS platform for managing Romanian immigration processes, from work permits to residence applications.",
+    "trial": "Start Free Trial",
+    "demo": "Request Demo",
+    "features": {
+      "title": "Powerful Features",
+      "subtitle": "Everything you need to manage Romanian immigration workflows efficiently",
+      "clientManagement": "Client Management",
+      "clientManagementDesc": "Organize and track all your clients with comprehensive profile management",
+      "workflowTracking": "Workflow Tracking", 
+      "workflowTrackingDesc": "Monitor progress through AJOFM, IGI, and consulate processes",
+      "documentGeneration": "Document Generation",
+      "documentGenerationDesc": "Auto-generate Romanian immigration forms with pre-filled data",
+      "smartReminders": "Smart Reminders",
+      "smartRemindersDesc": "Automated notifications for deadlines and document renewals",
+      "gdprCompliant": "GDPR Compliant",
+      "gdprCompliantDesc": "Secure handling of personal data with EU compliance",
+      "advancedSearch": "Advanced Search",
+      "advancedSearchDesc": "Quickly find clients, documents, and cases with powerful search"
+    }
+  }
+}
