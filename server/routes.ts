@@ -258,6 +258,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Workflow Templates CRUD API endpoints
+  app.get('/api/workflow-templates', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const templates = await storage.getAllWorkflowTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching workflow templates:', error);
+      res.status(500).json({ message: "Failed to fetch workflow templates" });
+    }
+  });
+
+  app.get('/api/workflow-templates/:id', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const template = await storage.getWorkflowTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ message: "Workflow template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error('Error fetching workflow template:', error);
+      res.status(500).json({ message: "Failed to fetch workflow template" });
+    }
+  });
+
+  app.post('/api/workflow-templates', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const template = await storage.createWorkflowTemplate(req.body);
+      res.status(201).json(template);
+    } catch (error) {
+      console.error('Error creating workflow template:', error);
+      res.status(500).json({ message: "Failed to create workflow template" });
+    }
+  });
+
+  app.put('/api/workflow-templates/:id', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const template = await storage.updateWorkflowTemplate(req.params.id, req.body);
+      res.json(template);
+    } catch (error) {
+      console.error('Error updating workflow template:', error);
+      res.status(500).json({ message: "Failed to update workflow template" });
+    }
+  });
+
+  app.delete('/api/workflow-templates/:id', isAuthenticated, requireRole('ADMIN'), async (req: any, res) => {
+    try {
+      const success = await storage.deleteWorkflowTemplate(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Workflow template not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting workflow template:', error);
+      res.status(500).json({ message: "Failed to delete workflow template" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
