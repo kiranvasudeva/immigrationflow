@@ -33,13 +33,18 @@ export default function WorkflowKanban({ assignments = [] }: WorkflowKanbanProps
 
   // Map status to column configuration
   const statusConfig = {
-    'AWAITING_UPLOAD': { title: "Awaiting Client", color: "orange", type: "warning" },
-    'SUBMITTED_BY_USER': { title: "Awaiting Admin", color: "blue", type: "info" },
-    'RECEIVED_BY_ADMIN': { title: "Awaiting Admin", color: "blue", type: "success" },
+    'PENDING': { title: "Pending", color: "gray", type: "warning" },
+    'IN_PROGRESS': { title: "In Progress", color: "blue", type: "info" },
+    'COMPLETED': { title: "Completed", color: "green", type: "success" },
+    'REJECTED': { title: "Rejected", color: "red", type: "error" },
+    'SKIPPED': { title: "Skipped", color: "yellow", type: "warning" },
+    // Legacy statuses for backwards compatibility during migration
+    'AWAITING_UPLOAD': { title: "Pending Upload", color: "orange", type: "warning" },
+    'SUBMITTED_BY_USER': { title: "Needs Review", color: "blue", type: "info" },
+    'RECEIVED_BY_ADMIN': { title: "Under Review", color: "blue", type: "success" },
     'SUBMITTED_TO_INSTITUTION_DIGITAL': { title: "Submitted", color: "purple", type: "info" },
     'SUBMITTED_TO_INSTITUTION_COURIER': { title: "Submitted", color: "purple", type: "info" },
-    'ACCEPTED': { title: "Approved", color: "green", type: "success" },
-    'REJECTED': { title: "Rejected", color: "red", type: "error" }
+    'ACCEPTED': { title: "Approved", color: "green", type: "success" }
   };
 
   // Create columns with real data

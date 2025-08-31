@@ -34,11 +34,12 @@ interface WorkflowProgressTrackerProps {
 }
 
 interface StepProgress {
-  id: string;
+  id?: string;
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED' | 'SKIPPED';
   startedAt?: string;
   completedAt?: string;
   notes?: string;
+  assignedToUserId?: string;
 }
 
 interface DocumentRequirement {
@@ -56,6 +57,9 @@ interface ChecklistItem {
   description: string;
   isRequired: boolean;
   assignedRole: 'WORKER' | 'OWNER';
+  isCompleted?: boolean;
+  completedAt?: string;
+  completedByUserId?: string;
 }
 
 interface WorkflowStep {
@@ -411,13 +415,13 @@ export default function WorkflowProgressTracker({
                                 <div key={item.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                                   {canUserVerify(item) ? (
                                     <Switch
-                                      checked={false} // This would come from API data
+                                      checked={item.isCompleted || false}
                                       onCheckedChange={(checked) => handleChecklistToggle(workflowItem.progress.id, step.id, item.id, checked)}
                                       data-testid={`switch-checklist-${item.id}`}
                                     />
                                   ) : (
                                     <div className="mt-1">
-                                      {false ? <CheckSquare className="h-4 w-4 text-green-500" /> : <Square className="h-4 w-4 text-gray-400" />}
+                                      {item.isCompleted ? <CheckSquare className="h-4 w-4 text-green-500" /> : <Square className="h-4 w-4 text-gray-400" />}
                                     </div>
                                   )}
                                   <div className="flex-1">
