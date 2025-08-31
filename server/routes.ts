@@ -169,6 +169,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Client workers API endpoint - get workers for a specific client
+  app.get('/api/clients/:clientId/workers', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const { clientId } = req.params;
+      const workers = await storage.getWorkersByClientId(clientId);
+      res.json(workers);
+    } catch (error) {
+      console.error('Error fetching client workers:', error);
+      res.status(500).json({ message: "Failed to fetch client workers" });
+    }
+  });
+
   // Clients API endpoint - only ADMIN and OWNER can view all clients
   app.get('/api/clients', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
