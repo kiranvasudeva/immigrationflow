@@ -7,8 +7,10 @@ import StageProgress from "@/components/progress/stage-progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useTranslation } from "@/contexts/I18nProvider";
+import WorkflowProgressTracker from "@/components/WorkflowProgressTracker";
 
 export default function WorkerDashboard() {
   const { toast } = useToast();
@@ -170,8 +172,23 @@ export default function WorkerDashboard() {
             </div>
           )}
 
-          {/* Progress Overview */}
-          <StageProgress />
+          {/* Main Content */}
+          {user?.id ? (
+            <WorkflowProgressTracker 
+              workerId={user.id}
+              userRole={user.role || 'WORKER'}
+              showUploadPane={true}
+              showVerificationToggles={false}
+            />
+          ) : (
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center text-gray-500">
+                  <p>{t('workflow.noUser') || 'Unable to load user information'}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Current Tasks */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">

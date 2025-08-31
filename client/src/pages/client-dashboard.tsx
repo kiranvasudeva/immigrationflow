@@ -8,8 +8,10 @@ import CompanyProfile from "@/components/profile/company-profile";
 import WorkerList from "@/components/workers/worker-list";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useTranslation } from "@/contexts/I18nProvider";
+import WorkflowProgressTracker from "@/components/WorkflowProgressTracker";
 
 export default function ClientDashboard() {
   const { toast } = useToast();
@@ -125,8 +127,51 @@ export default function ClientDashboard() {
             </Card>
           </div>
 
-          {/* Workers List */}
-          <WorkerList workers={workers || []} />
+          {/* Main Content Tabs */}
+          <Tabs defaultValue="workers" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="workers" data-testid="tab-workers">
+                {t('dashboard.tabs.workers') || 'Workers'}
+              </TabsTrigger>
+              <TabsTrigger value="workflows" data-testid="tab-workflows">
+                {t('dashboard.tabs.workflows') || 'Workflow Progress'}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="workers" className="space-y-4">
+              <WorkerList workers={workers || []} />
+            </TabsContent>
+
+            <TabsContent value="workflows" className="space-y-4">
+              {workers.length > 0 ? (
+                <div className="space-y-6">
+                  {workers.map((worker) => (
+                    <div key={worker.id} className="space-y-2">
+                      <h3 className="text-lg font-semibold">
+                        {worker.firstName} {worker.lastName}
+                        {worker.position && <span className="text-sm text-muted-foreground ml-2">({worker.position})</span>}
+                      </h3>
+                      <WorkflowProgressTracker 
+                        workerId={worker.id}
+                        userRole={user?.role || 'OWNER'}
+                        showUploadPane={true}
+                        showVerificationToggles={true}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center text-gray-500">
+                      <p>{t('dashboard.noWorkers') || 'No workers found'}</p>
+                      <p className="text-sm">{t('dashboard.addWorkersFirst') || 'Add workers to track their workflow progress'}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

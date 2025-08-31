@@ -1761,6 +1761,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Worker workflow progress endpoints
+  app.get('/api/workers/:workerId/workflow-progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const { workerId } = req.params;
+      const userId = req.user.id;
+      
+      // Check authorization - worker can view their own progress, admin/owner can view all
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'ADMIN' && user?.role !== 'OWNER' && workerId !== userId) {
+        return res.status(403).json({ message: "Unauthorized to view this worker's progress" });
+      }
+      
+      // Get all workflow progress for this worker
+      const workflows = await storage.getWorkflowsForWorker(workerId);
+      const progressData = [];
+      
+      for (const workflow of workflows) {
+        const progress = await storage.getWorkerWorkflowProgress(workerId, workflow.id);
+        if (progress) {
+          const steps = await storage.getWorkflowSteps(workflow.id);
+          const stepProgress = await storage.getWorkerStepProgress(progress.id);
+          
+          const detailedSteps = await Promise.all(steps.map(async (step) => {
+            const stepProg = stepProgress.find(sp => sp.workflowStepId === step.id);
+            const docRequirements = await storage.getDocumentRequirements(step.id);
+            const checklistItems = await storage.getChecklistItems(step.id);
+            
+            return {
+              ...step,
+              progress: stepProg || { status: 'PENDING' },
+              documentRequirements,
+              checklistItems
+            };
+          }));
+          
+          progressData.push({
+            workflow,
+            progress,
+            steps: detailedSteps
+          });
+        }
+      }
+      
+      res.json(progressData);
+    } catch (error) {
+      console.error('Error fetching worker workflow progress:', error);
+      res.status(500).json({ message: "Failed to fetch worker workflow progress" });
+    }
+  });
+
+  app.put('/api/workers/:workerId/workflow-progress/:progressId/steps/:stepId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { workerId, progressId, stepId } = req.params;
+      const { status, notes } = req.body;
+      const userId = req.user.id;
+      
+      // Check authorization
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'ADMIN' && user?.role !== 'OWNER' && workerId !== userId) {
+        return res.status(403).json({ message: "Unauthorized to update this worker's progress" });
+      }
+      
+      // Update step progress
+      const existingProgress = await storage.getWorkerStepProgress(progressId);
+      const stepProgress = existingProgress.find(sp => sp.workflowStepId === stepId);
+      
+      if (stepProgress) {
+        const updated = await storage.updateWorkerStepProgress(stepProgress.id, {
+          status,
+          notes,
+          ...(status === 'COMPLETED' && { completedAt: new Date() }),
+          ...(status === 'IN_PROGRESS' && !stepProgress.startedAt && { startedAt: new Date() })
+        });
+        res.json(updated);
+      } else {
+        // Create new step progress
+        const newProgress = await storage.createWorkerStepProgress({
+          workerWorkflowProgressId: progressId,
+          workflowStepId: stepId,
+          status,
+          notes,
+          startedAt: status === 'IN_PROGRESS' ? new Date() : undefined,
+          completedAt: status === 'COMPLETED' ? new Date() : undefined
+        });
+        res.json(newProgress);
+      }
+    } catch (error) {
+      console.error('Error updating worker step progress:', error);
+      res.status(500).json({ message: "Failed to update worker step progress" });
+    }
+  });
+
+  app.post('/api/workers/:workerId/workflow-progress/:progressId/steps/:stepId/checklist/:itemId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { workerId, progressId, stepId, itemId } = req.params;
+      const { isCompleted, notes } = req.body;
+      const userId = req.user.id;
+      
+      // Check authorization - only admin/owner can complete checklist items
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'ADMIN' && user?.role !== 'OWNER') {
+        return res.status(403).json({ message: "Unauthorized to complete checklist items" });
+      }
+      
+      // Get or create step progress
+      const existingProgress = await storage.getWorkerStepProgress(progressId);
+      let stepProgress = existingProgress.find(sp => sp.workflowStepId === stepId);
+      
+      if (!stepProgress) {
+        stepProgress = await storage.createWorkerStepProgress({
+          workerWorkflowProgressId: progressId,
+          workflowStepId: stepId,
+          status: 'IN_PROGRESS'
+        });
+      }
+      
+      // Update checklist completion
+      const existingCompletions = await storage.getChecklistCompletions(itemId, workerId);
+      
+      if (existingCompletions.length > 0) {
+        const updated = await storage.updateChecklistCompletion(existingCompletions[0].id, {
+          isCompleted,
+          notes,
+          completedByUserId: userId,
+          completedAt: isCompleted ? new Date() : undefined
+        });
+        res.json(updated);
+      } else {
+        const newCompletion = await storage.createChecklistCompletion({
+          workerStepProgressId: stepProgress.id,
+          checklistItemId: itemId,
+          isCompleted,
+          notes,
+          completedByUserId: userId,
+          completedAt: isCompleted ? new Date() : undefined
+        });
+        res.json(newCompletion);
+      }
+    } catch (error) {
+      console.error('Error updating checklist completion:', error);
+      res.status(500).json({ message: "Failed to update checklist completion" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
