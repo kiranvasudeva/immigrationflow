@@ -1,0 +1,2266 @@
+{
+  "summary": {
+    "totalTests": 19,
+    "passed": 8,
+    "failed": 8,
+    "warnings": 3,
+    "startTime": "2025-08-31T21:27:03.067Z",
+    "endTime": "2025-08-31T21:27:05.619Z"
+  },
+  "routeTests": [
+    {
+      "name": "Server Health Check",
+      "status": "passed",
+      "details": [
+        "✅ Server responding (200)",
+        "✅ Response time: 48ms",
+        "✅ Health status: ok"
+      ],
+      "issues": [],
+      "timestamp": "2025-08-31T21:27:03.071Z"
+    },
+    {
+      "name": "Route: Dashboard",
+      "path": "/",
+      "status": "failed",
+      "details": [],
+      "issues": [],
+      "checks": [
+        {
+          "name": "HTTP Response",
+          "status": "passed",
+          "details": [
+            "✅ HTTP 200 OK",
+            "✅ Content-Type: text/html; charset=utf-8"
+          ],
+          "issues": []
+        },
+        {
+          "name": "HTML Structure",
+          "status": "failed",
+          "details": [
+            "✅ Valid HTML5 DOCTYPE",
+            "✅ Head element present",
+            "✅ Body element present",
+            "✅ Title: ImmigrationFlow - Romanian Immigration Workflow Management",
+            "✅ React root element found"
+          ],
+          "issues": [
+            "❌ Missing expected elements: dashboard",
+            "❌ Missing expected elements: stats",
+            "❌ Missing expected elements: client",
+            "❌ Missing expected elements: worker",
+            "❌ No navigation structure found"
+          ]
+        },
+        {
+          "name": "Content Analysis",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Very little content: 24 characters",
+            "⚠️  Missing expected content: immigration, workflow, management"
+          ],
+          "contentMetrics": {
+            "contentLength": 24,
+            "tables": 0,
+            "forms": 0,
+            "buttons": 0,
+            "inputs": 0
+          }
+        },
+        {
+          "name": "Mock Data Detection",
+          "status": "passed",
+          "details": [
+            "✅ NO MOCK DATA FOUND - All content appears to be real",
+            "✅ Scanned 29 forbidden patterns",
+            "✅ Content length: 24 characters"
+          ],
+          "issues": [],
+          "forbiddenFound": []
+        },
+        {
+          "name": "Translation Validation",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Translation error indicator: }}",
+            "❌ Translation error indicator: t("
+          ],
+          "translationErrors": [
+            "}}",
+            "t("
+          ]
+        },
+        {
+          "name": "Accessibility",
+          "status": "warning",
+          "details": [],
+          "issues": [
+            "⚠️  No heading structure found",
+            "⚠️  No ARIA landmarks found"
+          ]
+        },
+        {
+          "name": "Responsive Design Structure",
+          "status": "warning",
+          "details": [
+            "✅ Viewport meta tag: width=device-width, initial-scale=1.0, maximum-scale=1"
+          ],
+          "issues": [
+            "⚠️  No responsive CSS classes detected"
+          ]
+        }
+      ],
+      "timestamp": "2025-08-31T21:27:03.124Z",
+      "duration": 249
+    },
+    {
+      "name": "Route: Clients",
+      "path": "/clients",
+      "status": "failed",
+      "details": [],
+      "issues": [],
+      "checks": [
+        {
+          "name": "HTTP Response",
+          "status": "passed",
+          "details": [
+            "✅ HTTP 200 OK",
+            "✅ Content-Type: text/html; charset=utf-8"
+          ],
+          "issues": []
+        },
+        {
+          "name": "HTML Structure",
+          "status": "failed",
+          "details": [
+            "✅ Valid HTML5 DOCTYPE",
+            "✅ Head element present",
+            "✅ Body element present",
+            "✅ Title: ImmigrationFlow - Romanian Immigration Workflow Management",
+            "✅ React root element found"
+          ],
+          "issues": [
+            "❌ Missing expected elements: client",
+            "❌ Missing expected elements: table",
+            "❌ Missing expected elements: search",
+            "❌ No navigation structure found"
+          ]
+        },
+        {
+          "name": "Content Analysis",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Very little content: 24 characters",
+            "⚠️  Missing expected content: client, company, contact"
+          ],
+          "contentMetrics": {
+            "contentLength": 24,
+            "tables": 0,
+            "forms": 0,
+            "buttons": 0,
+            "inputs": 0
+          }
+        },
+        {
+          "name": "Mock Data Detection",
+          "status": "passed",
+          "details": [
+            "✅ NO MOCK DATA FOUND - All content appears to be real",
+            "✅ Scanned 29 forbidden patterns",
+            "✅ Content length: 24 characters"
+          ],
+          "issues": [],
+          "forbiddenFound": []
+        },
+        {
+          "name": "Translation Validation",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Translation error indicator: }}",
+            "❌ Translation error indicator: t("
+          ],
+          "translationErrors": [
+            "}}",
+            "t("
+          ]
+        },
+        {
+          "name": "Accessibility",
+          "status": "warning",
+          "details": [],
+          "issues": [
+            "⚠️  No heading structure found",
+            "⚠️  No ARIA landmarks found"
+          ]
+        },
+        {
+          "name": "Responsive Design Structure",
+          "status": "warning",
+          "details": [
+            "✅ Viewport meta tag: width=device-width, initial-scale=1.0, maximum-scale=1"
+          ],
+          "issues": [
+            "⚠️  No responsive CSS classes detected"
+          ]
+        }
+      ],
+      "timestamp": "2025-08-31T21:27:03.373Z",
+      "duration": 68
+    },
+    {
+      "name": "Route: Workers",
+      "path": "/workers",
+      "status": "failed",
+      "details": [],
+      "issues": [],
+      "checks": [
+        {
+          "name": "HTTP Response",
+          "status": "passed",
+          "details": [
+            "✅ HTTP 200 OK",
+            "✅ Content-Type: text/html; charset=utf-8"
+          ],
+          "issues": []
+        },
+        {
+          "name": "HTML Structure",
+          "status": "failed",
+          "details": [
+            "✅ Valid HTML5 DOCTYPE",
+            "✅ Head element present",
+            "✅ Body element present",
+            "✅ Title: ImmigrationFlow - Romanian Immigration Workflow Management",
+            "✅ React root element found"
+          ],
+          "issues": [
+            "❌ Missing expected elements: worker",
+            "❌ Missing expected elements: table",
+            "❌ Missing expected elements: data",
+            "❌ No navigation structure found"
+          ]
+        },
+        {
+          "name": "Content Analysis",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Very little content: 24 characters",
+            "⚠️  Missing expected content: worker, name, nationality"
+          ],
+          "contentMetrics": {
+            "contentLength": 24,
+            "tables": 0,
+            "forms": 0,
+            "buttons": 0,
+            "inputs": 0
+          }
+        },
+        {
+          "name": "Mock Data Detection",
+          "status": "passed",
+          "details": [
+            "✅ NO MOCK DATA FOUND - All content appears to be real",
+            "✅ Scanned 29 forbidden patterns",
+            "✅ Content length: 24 characters"
+          ],
+          "issues": [],
+          "forbiddenFound": []
+        },
+        {
+          "name": "Translation Validation",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Translation error indicator: }}",
+            "❌ Translation error indicator: t("
+          ],
+          "translationErrors": [
+            "}}",
+            "t("
+          ]
+        },
+        {
+          "name": "Accessibility",
+          "status": "warning",
+          "details": [],
+          "issues": [
+            "⚠️  No heading structure found",
+            "⚠️  No ARIA landmarks found"
+          ]
+        },
+        {
+          "name": "Responsive Design Structure",
+          "status": "warning",
+          "details": [
+            "✅ Viewport meta tag: width=device-width, initial-scale=1.0, maximum-scale=1"
+          ],
+          "issues": [
+            "⚠️  No responsive CSS classes detected"
+          ]
+        }
+      ],
+      "timestamp": "2025-08-31T21:27:03.442Z",
+      "duration": 60
+    },
+    {
+      "name": "Route: Assignments",
+      "path": "/assignments",
+      "status": "failed",
+      "details": [],
+      "issues": [],
+      "checks": [
+        {
+          "name": "HTTP Response",
+          "status": "passed",
+          "details": [
+            "✅ HTTP 200 OK",
+            "✅ Content-Type: text/html; charset=utf-8"
+          ],
+          "issues": []
+        },
+        {
+          "name": "HTML Structure",
+          "status": "failed",
+          "details": [
+            "✅ Valid HTML5 DOCTYPE",
+            "✅ Head element present",
+            "✅ Body element present",
+            "✅ Title: ImmigrationFlow - Romanian Immigration Workflow Management",
+            "✅ React root element found"
+          ],
+          "issues": [
+            "❌ Missing expected elements: assignment",
+            "❌ Missing expected elements: table",
+            "❌ Missing expected elements: status",
+            "❌ No navigation structure found"
+          ]
+        },
+        {
+          "name": "Content Analysis",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Very little content: 24 characters",
+            "⚠️  Missing expected content: assignment, status, stage"
+          ],
+          "contentMetrics": {
+            "contentLength": 24,
+            "tables": 0,
+            "forms": 0,
+            "buttons": 0,
+            "inputs": 0
+          }
+        },
+        {
+          "name": "Mock Data Detection",
+          "status": "passed",
+          "details": [
+            "✅ NO MOCK DATA FOUND - All content appears to be real",
+            "✅ Scanned 29 forbidden patterns",
+            "✅ Content length: 24 characters"
+          ],
+          "issues": [],
+          "forbiddenFound": []
+        },
+        {
+          "name": "Translation Validation",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Translation error indicator: }}",
+            "❌ Translation error indicator: t("
+          ],
+          "translationErrors": [
+            "}}",
+            "t("
+          ]
+        },
+        {
+          "name": "Accessibility",
+          "status": "warning",
+          "details": [],
+          "issues": [
+            "⚠️  No heading structure found",
+            "⚠️  No ARIA landmarks found"
+          ]
+        },
+        {
+          "name": "Responsive Design Structure",
+          "status": "warning",
+          "details": [
+            "✅ Viewport meta tag: width=device-width, initial-scale=1.0, maximum-scale=1"
+          ],
+          "issues": [
+            "⚠️  No responsive CSS classes detected"
+          ]
+        }
+      ],
+      "timestamp": "2025-08-31T21:27:03.503Z",
+      "duration": 46
+    },
+    {
+      "name": "Route: Workflow",
+      "path": "/workflow",
+      "status": "failed",
+      "details": [],
+      "issues": [],
+      "checks": [
+        {
+          "name": "HTTP Response",
+          "status": "passed",
+          "details": [
+            "✅ HTTP 200 OK",
+            "✅ Content-Type: text/html; charset=utf-8"
+          ],
+          "issues": []
+        },
+        {
+          "name": "HTML Structure",
+          "status": "failed",
+          "details": [
+            "✅ Valid HTML5 DOCTYPE",
+            "✅ Head element present",
+            "✅ Body element present",
+            "✅ Title: ImmigrationFlow - Romanian Immigration Workflow Management",
+            "✅ React root element found"
+          ],
+          "issues": [
+            "❌ Missing expected elements: workflow",
+            "❌ Missing expected elements: stage",
+            "❌ Missing expected elements: kanban",
+            "❌ No navigation structure found"
+          ]
+        },
+        {
+          "name": "Content Analysis",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Very little content: 24 characters",
+            "⚠️  Missing expected content: workflow, stage, process"
+          ],
+          "contentMetrics": {
+            "contentLength": 24,
+            "tables": 0,
+            "forms": 0,
+            "buttons": 0,
+            "inputs": 0
+          }
+        },
+        {
+          "name": "Mock Data Detection",
+          "status": "passed",
+          "details": [
+            "✅ NO MOCK DATA FOUND - All content appears to be real",
+            "✅ Scanned 29 forbidden patterns",
+            "✅ Content length: 24 characters"
+          ],
+          "issues": [],
+          "forbiddenFound": []
+        },
+        {
+          "name": "Translation Validation",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Translation error indicator: }}",
+            "❌ Translation error indicator: t("
+          ],
+          "translationErrors": [
+            "}}",
+            "t("
+          ]
+        },
+        {
+          "name": "Accessibility",
+          "status": "warning",
+          "details": [],
+          "issues": [
+            "⚠️  No heading structure found",
+            "⚠️  No ARIA landmarks found"
+          ]
+        },
+        {
+          "name": "Responsive Design Structure",
+          "status": "warning",
+          "details": [
+            "✅ Viewport meta tag: width=device-width, initial-scale=1.0, maximum-scale=1"
+          ],
+          "issues": [
+            "⚠️  No responsive CSS classes detected"
+          ]
+        }
+      ],
+      "timestamp": "2025-08-31T21:27:03.549Z",
+      "duration": 63
+    },
+    {
+      "name": "Route: Analytics",
+      "path": "/analytics",
+      "status": "failed",
+      "details": [],
+      "issues": [],
+      "checks": [
+        {
+          "name": "HTTP Response",
+          "status": "passed",
+          "details": [
+            "✅ HTTP 200 OK",
+            "✅ Content-Type: text/html; charset=utf-8"
+          ],
+          "issues": []
+        },
+        {
+          "name": "HTML Structure",
+          "status": "failed",
+          "details": [
+            "✅ Valid HTML5 DOCTYPE",
+            "✅ Head element present",
+            "✅ Body element present",
+            "✅ Title: ImmigrationFlow - Romanian Immigration Workflow Management",
+            "✅ React root element found"
+          ],
+          "issues": [
+            "❌ Missing expected elements: analytics",
+            "❌ Missing expected elements: chart",
+            "❌ Missing expected elements: metric",
+            "❌ No navigation structure found"
+          ]
+        },
+        {
+          "name": "Content Analysis",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Very little content: 24 characters",
+            "⚠️  Missing expected content: analytics, chart, metric"
+          ],
+          "contentMetrics": {
+            "contentLength": 24,
+            "tables": 0,
+            "forms": 0,
+            "buttons": 0,
+            "inputs": 0
+          }
+        },
+        {
+          "name": "Mock Data Detection",
+          "status": "passed",
+          "details": [
+            "✅ NO MOCK DATA FOUND - All content appears to be real",
+            "✅ Scanned 29 forbidden patterns",
+            "✅ Content length: 24 characters"
+          ],
+          "issues": [],
+          "forbiddenFound": []
+        },
+        {
+          "name": "Translation Validation",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Translation error indicator: }}",
+            "❌ Translation error indicator: t("
+          ],
+          "translationErrors": [
+            "}}",
+            "t("
+          ]
+        },
+        {
+          "name": "Accessibility",
+          "status": "warning",
+          "details": [],
+          "issues": [
+            "⚠️  No heading structure found",
+            "⚠️  No ARIA landmarks found"
+          ]
+        },
+        {
+          "name": "Responsive Design Structure",
+          "status": "warning",
+          "details": [
+            "✅ Viewport meta tag: width=device-width, initial-scale=1.0, maximum-scale=1"
+          ],
+          "issues": [
+            "⚠️  No responsive CSS classes detected"
+          ]
+        }
+      ],
+      "timestamp": "2025-08-31T21:27:03.612Z",
+      "duration": 78
+    },
+    {
+      "name": "Route: Settings",
+      "path": "/settings",
+      "status": "failed",
+      "details": [],
+      "issues": [],
+      "checks": [
+        {
+          "name": "HTTP Response",
+          "status": "passed",
+          "details": [
+            "✅ HTTP 200 OK",
+            "✅ Content-Type: text/html; charset=utf-8"
+          ],
+          "issues": []
+        },
+        {
+          "name": "HTML Structure",
+          "status": "failed",
+          "details": [
+            "✅ Valid HTML5 DOCTYPE",
+            "✅ Head element present",
+            "✅ Body element present",
+            "✅ Title: ImmigrationFlow - Romanian Immigration Workflow Management",
+            "✅ React root element found"
+          ],
+          "issues": [
+            "❌ Missing expected elements: settings",
+            "❌ Missing expected elements: form",
+            "❌ Missing expected elements: input",
+            "❌ No navigation structure found"
+          ]
+        },
+        {
+          "name": "Content Analysis",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Very little content: 24 characters",
+            "⚠️  Missing expected content: settings, preference, configuration"
+          ],
+          "contentMetrics": {
+            "contentLength": 24,
+            "tables": 0,
+            "forms": 0,
+            "buttons": 0,
+            "inputs": 0
+          }
+        },
+        {
+          "name": "Mock Data Detection",
+          "status": "passed",
+          "details": [
+            "✅ NO MOCK DATA FOUND - All content appears to be real",
+            "✅ Scanned 29 forbidden patterns",
+            "✅ Content length: 24 characters"
+          ],
+          "issues": [],
+          "forbiddenFound": []
+        },
+        {
+          "name": "Translation Validation",
+          "status": "failed",
+          "details": [],
+          "issues": [
+            "❌ Translation error indicator: }}",
+            "❌ Translation error indicator: t("
+          ],
+          "translationErrors": [
+            "}}",
+            "t("
+          ]
+        },
+        {
+          "name": "Accessibility",
+          "status": "warning",
+          "details": [],
+          "issues": [
+            "⚠️  No heading structure found",
+            "⚠️  No ARIA landmarks found"
+          ]
+        },
+        {
+          "name": "Responsive Design Structure",
+          "status": "warning",
+          "details": [
+            "✅ Viewport meta tag: width=device-width, initial-scale=1.0, maximum-scale=1"
+          ],
+          "issues": [
+            "⚠️  No responsive CSS classes detected"
+          ]
+        }
+      ],
+      "timestamp": "2025-08-31T21:27:03.690Z",
+      "duration": 42
+    }
+  ],
+  "apiTests": [
+    {
+      "name": "API: GET /api/clients",
+      "status": "warning",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 531ms",
+        "✅ Array response with 4 items",
+        "✅ Sample data: {\"id\":\"0711c9c3-f844-4f80-9fdb-d5c52238d0f3\",\"legalName\":\"Test Construction Company 1\",\"registrationNumber\":\"J40/1000/2024\",\"cui\":\"RO20000001\",\"legalAddress\":\"Test Address 1, Sector 1, București, Româ...",
+        "✅ No mock data in API response"
+      ],
+      "issues": [
+        "❌ Missing fields: name, email"
+      ],
+      "responseData": [
+        {
+          "id": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "legalName": "Test Construction Company 1",
+          "registrationNumber": "J40/1000/2024",
+          "cui": "RO20000001",
+          "legalAddress": "Test Address 1, Sector 1, București, România",
+          "adminName": "Admin 1",
+          "contactEmail": "test.company1@replit.dev",
+          "phoneNumber": "+40720000001",
+          "bankIban": "RO49AAAA1B310075938401000",
+          "caen": "4120",
+          "ownerUserId": "QSTD4XsVFsroB2QfuFeTw",
+          "createdAt": "2025-08-31T08:47:59.528Z"
+        },
+        {
+          "id": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "legalName": "Test Construction Company 2",
+          "registrationNumber": "J40/1001/2024",
+          "cui": "RO20001001",
+          "legalAddress": "Test Address 2, Sector 2, București, România",
+          "adminName": "Admin 2",
+          "contactEmail": "test.company2@replit.dev",
+          "phoneNumber": "+40720001001",
+          "bankIban": "RO49AAAA1B310075938401001",
+          "caen": "4120",
+          "ownerUserId": "mzB3IHAuwpk2xC6KfTjW6",
+          "createdAt": "2025-08-31T08:47:59.528Z"
+        },
+        {
+          "id": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "legalName": "Test IT Solutions 1",
+          "registrationNumber": "J12/1000/2024",
+          "cui": "RO20000002",
+          "legalAddress": "Test IT Address 1, Cluj-Napoca, România",
+          "adminName": "IT Admin 1",
+          "contactEmail": "test.it1@replit.dev",
+          "phoneNumber": "+40730000001",
+          "bankIban": "RO49BBBB1B310075938402000",
+          "caen": "6201",
+          "ownerUserId": "QSTD4XsVFsroB2QfuFeTw",
+          "createdAt": "2025-08-31T08:47:59.528Z"
+        },
+        {
+          "id": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "legalName": "Test IT Solutions 2",
+          "registrationNumber": "J12/1001/2024",
+          "cui": "RO20001002",
+          "legalAddress": "Test IT Address 2, Cluj-Napoca, România",
+          "adminName": "IT Admin 2",
+          "contactEmail": "test.it2@replit.dev",
+          "phoneNumber": "+40730001001",
+          "bankIban": "RO49BBBB1B310075938402001",
+          "caen": "6201",
+          "ownerUserId": "mzB3IHAuwpk2xC6KfTjW6",
+          "createdAt": "2025-08-31T08:47:59.528Z"
+        }
+      ],
+      "timestamp": "2025-08-31T21:27:03.733Z",
+      "duration": 531
+    },
+    {
+      "name": "API: GET /api/workers",
+      "status": "warning",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 127ms",
+        "✅ Array response with 12 items",
+        "✅ Sample data: {\"id\":\"56144523-b16c-47c2-b582-e46e1f4e67ff\",\"clientProfileId\":\"0711c9c3-f844-4f80-9fdb-d5c52238d0f3\",\"firstName\":\"Test Worker\",\"lastName\":\"Alpha\",\"dob\":\"1990-01-15T00:00:00.000Z\",\"nationality\":\"India...",
+        "✅ No mock data in API response"
+      ],
+      "issues": [
+        "❌ Missing fields: name"
+      ],
+      "responseData": [
+        {
+          "id": "56144523-b16c-47c2-b582-e46e1f4e67ff",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "firstName": "Test Worker",
+          "lastName": "Alpha",
+          "dob": "1990-01-15T00:00:00.000Z",
+          "nationality": "Indian",
+          "passportNumber": "T12345265",
+          "passportExpiry": "2028-12-31T00:00:00.000Z",
+          "email": "test.worker.alpha.RO20000001@replit.dev",
+          "phone": "+40700358266",
+          "createdAt": "2025-08-31T08:47:59.642Z"
+        },
+        {
+          "id": "ee89a9fb-7f63-4440-82d4-9827433fcacd",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "firstName": "Test Worker",
+          "lastName": "Alpha",
+          "dob": "1990-01-15T00:00:00.000Z",
+          "nationality": "Indian",
+          "passportNumber": "T12345679",
+          "passportExpiry": "2028-12-31T00:00:00.000Z",
+          "email": "test.worker.alpha.RO20000002@replit.dev",
+          "phone": "+40700601955",
+          "createdAt": "2025-08-31T08:47:59.642Z"
+        },
+        {
+          "id": "6676914b-0abc-4799-81c9-482724ace5dd",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "firstName": "Test Worker",
+          "lastName": "Alpha",
+          "dob": "1990-01-15T00:00:00.000Z",
+          "nationality": "Indian",
+          "passportNumber": "T12345567",
+          "passportExpiry": "2028-12-31T00:00:00.000Z",
+          "email": "test.worker.alpha.RO20001001@replit.dev",
+          "phone": "+40700202779",
+          "createdAt": "2025-08-31T08:47:59.642Z"
+        },
+        {
+          "id": "da0a9e21-5649-487a-a7b9-e493e7cc8e7e",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "firstName": "Test Worker",
+          "lastName": "Alpha",
+          "dob": "1990-01-15T00:00:00.000Z",
+          "nationality": "Indian",
+          "passportNumber": "T12345281",
+          "passportExpiry": "2028-12-31T00:00:00.000Z",
+          "email": "test.worker.alpha.RO20001002@replit.dev",
+          "phone": "+40700539699",
+          "createdAt": "2025-08-31T08:47:59.642Z"
+        },
+        {
+          "id": "ffc37547-8bf2-451c-9094-b78b55bf7531",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "firstName": "Test Worker",
+          "lastName": "Beta",
+          "dob": "1992-05-22T00:00:00.000Z",
+          "nationality": "Filipino",
+          "passportNumber": "T54321650",
+          "passportExpiry": "2029-06-15T00:00:00.000Z",
+          "email": "test.worker.beta.RO20000001@replit.dev",
+          "phone": "+40701167503",
+          "createdAt": "2025-08-31T08:47:59.642Z"
+        },
+        {
+          "id": "12c7c226-c1c8-4905-934d-26910e928a9c",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "firstName": "Test Worker",
+          "lastName": "Beta",
+          "dob": "1992-05-22T00:00:00.000Z",
+          "nationality": "Filipino",
+          "passportNumber": "T54321390",
+          "passportExpiry": "2029-06-15T00:00:00.000Z",
+          "email": "test.worker.beta.RO20000002@replit.dev",
+          "phone": "+40701601087",
+          "createdAt": "2025-08-31T08:47:59.642Z"
+        },
+        {
+          "id": "41072861-9d93-4fad-a2a9-7f4e8212538a",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "firstName": "Test Worker",
+          "lastName": "Beta",
+          "dob": "1992-05-22T00:00:00.000Z",
+          "nationality": "Filipino",
+          "passportNumber": "T54321653",
+          "passportExpiry": "2029-06-15T00:00:00.000Z",
+          "email": "test.worker.beta.RO20001001@replit.dev",
+          "phone": "+40701177824",
+          "createdAt": "2025-08-31T08:47:59.642Z"
+        },
+        {
+          "id": "62a0c069-76cc-48c1-8a09-95a2824bf13e",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "firstName": "Test Worker",
+          "lastName": "Beta",
+          "dob": "1992-05-22T00:00:00.000Z",
+          "nationality": "Filipino",
+          "passportNumber": "T54321775",
+          "passportExpiry": "2029-06-15T00:00:00.000Z",
+          "email": "test.worker.beta.RO20001002@replit.dev",
+          "phone": "+40701586362",
+          "createdAt": "2025-08-31T08:47:59.642Z"
+        },
+        {
+          "id": "e9d01c11-303f-4724-a84d-7b52571acacf",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "firstName": "Test Worker",
+          "lastName": "Gamma",
+          "dob": "1988-11-08T00:00:00.000Z",
+          "nationality": "Ukrainian",
+          "passportNumber": "T67890941",
+          "passportExpiry": "2027-10-20T00:00:00.000Z",
+          "email": "test.worker.gamma.RO20000001@replit.dev",
+          "phone": "+40702395784",
+          "createdAt": "2025-08-31T08:47:59.642Z"
+        },
+        {
+          "id": "4b5a8494-9eb4-44ec-be39-e710fa715437",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "firstName": "Test Worker",
+          "lastName": "Gamma",
+          "dob": "1988-11-08T00:00:00.000Z",
+          "nationality": "Ukrainian",
+          "passportNumber": "T67890353",
+          "passportExpiry": "2027-10-20T00:00:00.000Z",
+          "email": "test.worker.gamma.RO20000002@replit.dev",
+          "phone": "+40702453906",
+          "createdAt": "2025-08-31T08:47:59.642Z"
+        },
+        {
+          "id": "b101854a-269c-4c7b-9662-5b1998afa50a",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "firstName": "Test Worker",
+          "lastName": "Gamma",
+          "dob": "1988-11-08T00:00:00.000Z",
+          "nationality": "Ukrainian",
+          "passportNumber": "T67890474",
+          "passportExpiry": "2027-10-20T00:00:00.000Z",
+          "email": "test.worker.gamma.RO20001001@replit.dev",
+          "phone": "+40702392037",
+          "createdAt": "2025-08-31T08:47:59.642Z"
+        },
+        {
+          "id": "cf21a835-127a-4541-a95e-509ba568da48",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "firstName": "Test Worker",
+          "lastName": "Gamma",
+          "dob": "1988-11-08T00:00:00.000Z",
+          "nationality": "Ukrainian",
+          "passportNumber": "T67890698",
+          "passportExpiry": "2027-10-20T00:00:00.000Z",
+          "email": "test.worker.gamma.RO20001002@replit.dev",
+          "phone": "+40702163289",
+          "createdAt": "2025-08-31T08:47:59.642Z"
+        }
+      ],
+      "timestamp": "2025-08-31T21:27:04.265Z",
+      "duration": 127
+    },
+    {
+      "name": "API: GET /api/assignments",
+      "status": "passed",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 9ms",
+        "✅ Response type: text/html; charset=utf-8"
+      ],
+      "issues": [],
+      "responseData": null,
+      "timestamp": "2025-08-31T21:27:04.392Z",
+      "duration": 9
+    },
+    {
+      "name": "API: GET /api/stages",
+      "status": "warning",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 125ms",
+        "✅ Array response with 4 items",
+        "✅ Sample data: {\"id\":\"1846106d-8d6e-4c9d-9cc2-053d9d58ef12\",\"key\":\"AJOFM\",\"title\":\"AJOFM Labor Market Test\",\"description\":\"Romanian National Employment Agency labor market test approval\",\"order\":1}...",
+        "✅ No mock data in API response"
+      ],
+      "issues": [
+        "❌ Missing fields: name"
+      ],
+      "responseData": [
+        {
+          "id": "1846106d-8d6e-4c9d-9cc2-053d9d58ef12",
+          "key": "AJOFM",
+          "title": "AJOFM Labor Market Test",
+          "description": "Romanian National Employment Agency labor market test approval",
+          "order": 1
+        },
+        {
+          "id": "69be1e4e-83de-4ad8-9608-390a46bd21cc",
+          "key": "IGI_WORK_PERMIT",
+          "title": "IGI Work Permit",
+          "description": "Romanian Immigration Office work permit application",
+          "order": 2
+        },
+        {
+          "id": "4559ebf9-0c76-4c5e-9869-4ef739d32194",
+          "key": "CONSULATE_VISA",
+          "title": "Consulate Visa",
+          "description": "Romanian consulate visa application",
+          "order": 3
+        },
+        {
+          "id": "91b9b939-20b1-41da-8670-39e0a9ec42a2",
+          "key": "IGI_RESIDENCE",
+          "title": "IGI Residence Permit",
+          "description": "Romanian Immigration Office residence permit application",
+          "order": 4
+        }
+      ],
+      "timestamp": "2025-08-31T21:27:04.401Z",
+      "duration": 125
+    },
+    {
+      "name": "API: GET /api/dashboard/stats",
+      "status": "passed",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 601ms",
+        "✅ All expected fields present: totalClients, totalWorkers",
+        "✅ Sample data: {\"totalWorkers\":12,\"totalClients\":4,\"totalAssignments\":60,\"activeAssignments\":53,\"completedAssignments\":7,\"pendingAssignments\":25}...",
+        "✅ No mock data in API response"
+      ],
+      "issues": [],
+      "responseData": {
+        "totalWorkers": 12,
+        "totalClients": 4,
+        "totalAssignments": 60,
+        "activeAssignments": 53,
+        "completedAssignments": 7,
+        "pendingAssignments": 25
+      },
+      "timestamp": "2025-08-31T21:27:04.527Z",
+      "duration": 601
+    },
+    {
+      "name": "API: GET /api/dashboard/assignments",
+      "status": "passed",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 136ms",
+        "✅ JSON response (30888 chars)",
+        "✅ No mock data in API response"
+      ],
+      "issues": [],
+      "responseData": [
+        {
+          "id": "7351c72b-825c-45a5-a19c-6dd97cdc370e",
+          "requirementId": "2239e5b8-64f8-416a-9197-218b8511c8ac",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "56144523-b16c-47c2-b582-e46e1f4e67ff",
+          "assignedToRole": "WORKER",
+          "status": "ACCEPTED",
+          "institution": "AJOFM București",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "d56f57f1-6a20-4983-a4ce-830679fdee0f",
+          "requirementId": "cd58dd03-3369-4fd8-b2a5-d816e0cf943e",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "56144523-b16c-47c2-b582-e46e1f4e67ff",
+          "assignedToRole": "WORKER",
+          "status": "SUBMITTED_BY_USER",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "eee2185c-18a5-47b0-ba74-4a6abf4f5b98",
+          "requirementId": "e586e90b-9bd5-4f5f-8e9d-5b682b27870a",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "56144523-b16c-47c2-b582-e46e1f4e67ff",
+          "assignedToRole": "WORKER",
+          "status": "AWAITING_UPLOAD",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "e9b319e5-ffb0-4130-9af5-f352e96ba9de",
+          "requirementId": "5e51abd0-2a6a-43dd-a9aa-c29637854a33",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "56144523-b16c-47c2-b582-e46e1f4e67ff",
+          "assignedToRole": "WORKER",
+          "status": "SUBMITTED_BY_USER",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "73ae2bfd-24b3-46b2-b9c9-9159c449be9a",
+          "requirementId": "66490064-5e99-4ea5-acd7-703d21918d2f",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "56144523-b16c-47c2-b582-e46e1f4e67ff",
+          "assignedToRole": "WORKER",
+          "status": "AWAITING_UPLOAD",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "ccf016b8-4b40-4c2c-994d-78d77df36e1b",
+          "requirementId": "2239e5b8-64f8-416a-9197-218b8511c8ac",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "ffc37547-8bf2-451c-9094-b78b55bf7531",
+          "assignedToRole": "WORKER",
+          "status": "RECEIVED_BY_ADMIN",
+          "institution": "AJOFM București",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "748a1ad0-5c90-48d6-b98b-c204661b6649",
+          "requirementId": "cd58dd03-3369-4fd8-b2a5-d816e0cf943e",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "ffc37547-8bf2-451c-9094-b78b55bf7531",
+          "assignedToRole": "WORKER",
+          "status": "AWAITING_UPLOAD",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "c113193a-a7bd-4fac-9e76-fe9d54ab1d19",
+          "requirementId": "e586e90b-9bd5-4f5f-8e9d-5b682b27870a",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "ffc37547-8bf2-451c-9094-b78b55bf7531",
+          "assignedToRole": "WORKER",
+          "status": "AWAITING_UPLOAD",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "18b71fa2-39ef-4cc7-a1b8-9e78ede041a2",
+          "requirementId": "5e51abd0-2a6a-43dd-a9aa-c29637854a33",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "ffc37547-8bf2-451c-9094-b78b55bf7531",
+          "assignedToRole": "WORKER",
+          "status": "AWAITING_UPLOAD",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "f8834c65-d140-476f-a4b7-e595f8faa99f",
+          "requirementId": "66490064-5e99-4ea5-acd7-703d21918d2f",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "ffc37547-8bf2-451c-9094-b78b55bf7531",
+          "assignedToRole": "WORKER",
+          "status": "AWAITING_UPLOAD",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "b94e304f-2df8-4787-967d-ef8b67f26b8f",
+          "requirementId": "2239e5b8-64f8-416a-9197-218b8511c8ac",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "e9d01c11-303f-4724-a84d-7b52571acacf",
+          "assignedToRole": "WORKER",
+          "status": "NOT_STARTED",
+          "institution": "AJOFM București",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "674e38f0-0509-4a68-9ac1-9348fd237248",
+          "requirementId": "cd58dd03-3369-4fd8-b2a5-d816e0cf943e",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "e9d01c11-303f-4724-a84d-7b52571acacf",
+          "assignedToRole": "WORKER",
+          "status": "RECEIVED_BY_ADMIN",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "884cf970-cfad-4490-9d95-88f41f500c09",
+          "requirementId": "e586e90b-9bd5-4f5f-8e9d-5b682b27870a",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "e9d01c11-303f-4724-a84d-7b52571acacf",
+          "assignedToRole": "WORKER",
+          "status": "SUBMITTED_BY_USER",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "2b467ee5-8527-439c-bb62-4f658bb9e441",
+          "requirementId": "5e51abd0-2a6a-43dd-a9aa-c29637854a33",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "e9d01c11-303f-4724-a84d-7b52571acacf",
+          "assignedToRole": "WORKER",
+          "status": "NOT_STARTED",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "6c4c6fb8-accc-4aaf-b19f-375ae0f9b37f",
+          "requirementId": "66490064-5e99-4ea5-acd7-703d21918d2f",
+          "clientProfileId": "0711c9c3-f844-4f80-9fdb-d5c52238d0f3",
+          "workerId": "e9d01c11-303f-4724-a84d-7b52571acacf",
+          "assignedToRole": "WORKER",
+          "status": "NOT_STARTED",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "a1b78ac7-fb9e-45d9-940a-378a8437b793",
+          "requirementId": "2239e5b8-64f8-416a-9197-218b8511c8ac",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "ee89a9fb-7f63-4440-82d4-9827433fcacd",
+          "assignedToRole": "WORKER",
+          "status": "RECEIVED_BY_ADMIN",
+          "institution": "AJOFM București",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "0bfd1859-d819-491e-ba00-178450f877a8",
+          "requirementId": "cd58dd03-3369-4fd8-b2a5-d816e0cf943e",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "ee89a9fb-7f63-4440-82d4-9827433fcacd",
+          "assignedToRole": "WORKER",
+          "status": "SUBMITTED_BY_USER",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "e1601445-b2ea-4072-a5ab-7bfc8e048159",
+          "requirementId": "e586e90b-9bd5-4f5f-8e9d-5b682b27870a",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "ee89a9fb-7f63-4440-82d4-9827433fcacd",
+          "assignedToRole": "WORKER",
+          "status": "AWAITING_UPLOAD",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "869a2db4-5ede-4aa7-8152-1bc8070e8124",
+          "requirementId": "5e51abd0-2a6a-43dd-a9aa-c29637854a33",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "ee89a9fb-7f63-4440-82d4-9827433fcacd",
+          "assignedToRole": "WORKER",
+          "status": "SUBMITTED_BY_USER",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "719d996f-2db9-45fe-83a1-d8a2b19413ca",
+          "requirementId": "66490064-5e99-4ea5-acd7-703d21918d2f",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "ee89a9fb-7f63-4440-82d4-9827433fcacd",
+          "assignedToRole": "WORKER",
+          "status": "ACCEPTED",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "6dd56dc8-3a38-479c-a1ff-2cb4f413b30a",
+          "requirementId": "2239e5b8-64f8-416a-9197-218b8511c8ac",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "12c7c226-c1c8-4905-934d-26910e928a9c",
+          "assignedToRole": "WORKER",
+          "status": "ACCEPTED",
+          "institution": "AJOFM București",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "056a94f0-f75a-4521-9bdf-1b8c1be399d2",
+          "requirementId": "cd58dd03-3369-4fd8-b2a5-d816e0cf943e",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "12c7c226-c1c8-4905-934d-26910e928a9c",
+          "assignedToRole": "WORKER",
+          "status": "RECEIVED_BY_ADMIN",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "afa3802d-2b35-40ab-a701-dc44a7076cbd",
+          "requirementId": "e586e90b-9bd5-4f5f-8e9d-5b682b27870a",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "12c7c226-c1c8-4905-934d-26910e928a9c",
+          "assignedToRole": "WORKER",
+          "status": "AWAITING_UPLOAD",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "47434fb6-42cd-4f76-b3bf-cc8c9afb496f",
+          "requirementId": "5e51abd0-2a6a-43dd-a9aa-c29637854a33",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "12c7c226-c1c8-4905-934d-26910e928a9c",
+          "assignedToRole": "WORKER",
+          "status": "RECEIVED_BY_ADMIN",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "3f730521-2dbd-4bfb-bd3e-41bc377ade7b",
+          "requirementId": "66490064-5e99-4ea5-acd7-703d21918d2f",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "12c7c226-c1c8-4905-934d-26910e928a9c",
+          "assignedToRole": "WORKER",
+          "status": "RECEIVED_BY_ADMIN",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "940a8913-1397-4424-8429-5a91b78e80b4",
+          "requirementId": "2239e5b8-64f8-416a-9197-218b8511c8ac",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "4b5a8494-9eb4-44ec-be39-e710fa715437",
+          "assignedToRole": "WORKER",
+          "status": "RECEIVED_BY_ADMIN",
+          "institution": "AJOFM București",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "d03b5431-2ad6-4d6e-ad31-1c075102d61a",
+          "requirementId": "cd58dd03-3369-4fd8-b2a5-d816e0cf943e",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "4b5a8494-9eb4-44ec-be39-e710fa715437",
+          "assignedToRole": "WORKER",
+          "status": "RECEIVED_BY_ADMIN",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "b64b7a12-c34c-455d-8302-4bcdcaa9ea99",
+          "requirementId": "e586e90b-9bd5-4f5f-8e9d-5b682b27870a",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "4b5a8494-9eb4-44ec-be39-e710fa715437",
+          "assignedToRole": "WORKER",
+          "status": "RECEIVED_BY_ADMIN",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "81b37677-b60e-476c-b62a-70a9eb8cc374",
+          "requirementId": "5e51abd0-2a6a-43dd-a9aa-c29637854a33",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "4b5a8494-9eb4-44ec-be39-e710fa715437",
+          "assignedToRole": "WORKER",
+          "status": "NOT_STARTED",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "3edc1207-1924-49d9-82d7-fd12e56f42c7",
+          "requirementId": "66490064-5e99-4ea5-acd7-703d21918d2f",
+          "clientProfileId": "2913cc73-592a-4aa6-be46-fccda17a8620",
+          "workerId": "4b5a8494-9eb4-44ec-be39-e710fa715437",
+          "assignedToRole": "WORKER",
+          "status": "SUBMITTED_BY_USER",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "8894fcf5-ece6-422e-9af3-045bb792ddb3",
+          "requirementId": "2239e5b8-64f8-416a-9197-218b8511c8ac",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "6676914b-0abc-4799-81c9-482724ace5dd",
+          "assignedToRole": "WORKER",
+          "status": "RECEIVED_BY_ADMIN",
+          "institution": "AJOFM București",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "f2def234-29d5-4bf4-8a6e-7d78379ea574",
+          "requirementId": "cd58dd03-3369-4fd8-b2a5-d816e0cf943e",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "6676914b-0abc-4799-81c9-482724ace5dd",
+          "assignedToRole": "WORKER",
+          "status": "AWAITING_UPLOAD",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "02dad594-0013-4fd3-b228-60bc107505a1",
+          "requirementId": "e586e90b-9bd5-4f5f-8e9d-5b682b27870a",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "6676914b-0abc-4799-81c9-482724ace5dd",
+          "assignedToRole": "WORKER",
+          "status": "ACCEPTED",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "d9f1d372-1edd-449f-852b-7bf362673e46",
+          "requirementId": "5e51abd0-2a6a-43dd-a9aa-c29637854a33",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "6676914b-0abc-4799-81c9-482724ace5dd",
+          "assignedToRole": "WORKER",
+          "status": "AWAITING_UPLOAD",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "bafc6e4f-6e81-425e-b5b4-7a5e119b8ed6",
+          "requirementId": "66490064-5e99-4ea5-acd7-703d21918d2f",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "6676914b-0abc-4799-81c9-482724ace5dd",
+          "assignedToRole": "WORKER",
+          "status": "SUBMITTED_BY_USER",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "af6005aa-b639-4e0f-b26f-041366c1b78c",
+          "requirementId": "2239e5b8-64f8-416a-9197-218b8511c8ac",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "41072861-9d93-4fad-a2a9-7f4e8212538a",
+          "assignedToRole": "WORKER",
+          "status": "NOT_STARTED",
+          "institution": "AJOFM București",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "8525ee08-dcbb-4c1b-9828-0f2d63c97790",
+          "requirementId": "cd58dd03-3369-4fd8-b2a5-d816e0cf943e",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "41072861-9d93-4fad-a2a9-7f4e8212538a",
+          "assignedToRole": "WORKER",
+          "status": "AWAITING_UPLOAD",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "2e2e9686-c2bc-488e-a216-19db749c5902",
+          "requirementId": "e586e90b-9bd5-4f5f-8e9d-5b682b27870a",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "41072861-9d93-4fad-a2a9-7f4e8212538a",
+          "assignedToRole": "WORKER",
+          "status": "NOT_STARTED",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "44b4e999-7d46-4818-8582-f25b19838c73",
+          "requirementId": "5e51abd0-2a6a-43dd-a9aa-c29637854a33",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "41072861-9d93-4fad-a2a9-7f4e8212538a",
+          "assignedToRole": "WORKER",
+          "status": "SUBMITTED_BY_USER",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "e4cf90b8-7162-43b9-8288-04185ee52f47",
+          "requirementId": "66490064-5e99-4ea5-acd7-703d21918d2f",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "41072861-9d93-4fad-a2a9-7f4e8212538a",
+          "assignedToRole": "WORKER",
+          "status": "RECEIVED_BY_ADMIN",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "7abd8195-a67c-4ab9-86d8-1afd9222eca7",
+          "requirementId": "2239e5b8-64f8-416a-9197-218b8511c8ac",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "b101854a-269c-4c7b-9662-5b1998afa50a",
+          "assignedToRole": "WORKER",
+          "status": "RECEIVED_BY_ADMIN",
+          "institution": "AJOFM București",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "b8bb502e-e0b1-4415-8d88-96ca6f4ee5d6",
+          "requirementId": "cd58dd03-3369-4fd8-b2a5-d816e0cf943e",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "b101854a-269c-4c7b-9662-5b1998afa50a",
+          "assignedToRole": "WORKER",
+          "status": "SUBMITTED_BY_USER",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "50bd918b-e1fa-47c6-a6c3-ead9bf469e9b",
+          "requirementId": "e586e90b-9bd5-4f5f-8e9d-5b682b27870a",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "b101854a-269c-4c7b-9662-5b1998afa50a",
+          "assignedToRole": "WORKER",
+          "status": "SUBMITTED_BY_USER",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "22c5a75d-8378-4cce-adb3-09f9c153ef46",
+          "requirementId": "5e51abd0-2a6a-43dd-a9aa-c29637854a33",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "b101854a-269c-4c7b-9662-5b1998afa50a",
+          "assignedToRole": "WORKER",
+          "status": "RECEIVED_BY_ADMIN",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "39b040fc-4d11-4191-80d5-df7fac0e87b6",
+          "requirementId": "66490064-5e99-4ea5-acd7-703d21918d2f",
+          "clientProfileId": "387da808-a6a1-45a4-9a66-f2538fe64dc3",
+          "workerId": "b101854a-269c-4c7b-9662-5b1998afa50a",
+          "assignedToRole": "WORKER",
+          "status": "SUBMITTED_BY_USER",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "0ef9f517-29cc-4076-86d2-34a5f4643ce0",
+          "requirementId": "2239e5b8-64f8-416a-9197-218b8511c8ac",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "da0a9e21-5649-487a-a7b9-e493e7cc8e7e",
+          "assignedToRole": "WORKER",
+          "status": "NOT_STARTED",
+          "institution": "AJOFM București",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "72986c7a-f435-4a45-b989-2d4ca91d3889",
+          "requirementId": "cd58dd03-3369-4fd8-b2a5-d816e0cf943e",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "da0a9e21-5649-487a-a7b9-e493e7cc8e7e",
+          "assignedToRole": "WORKER",
+          "status": "ACCEPTED",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "270a4f56-d9df-46c5-b854-03f618eae1d7",
+          "requirementId": "e586e90b-9bd5-4f5f-8e9d-5b682b27870a",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "da0a9e21-5649-487a-a7b9-e493e7cc8e7e",
+          "assignedToRole": "WORKER",
+          "status": "SUBMITTED_BY_USER",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "78040104-cb14-4ea9-8f1e-d86f98fcbca0",
+          "requirementId": "5e51abd0-2a6a-43dd-a9aa-c29637854a33",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "da0a9e21-5649-487a-a7b9-e493e7cc8e7e",
+          "assignedToRole": "WORKER",
+          "status": "SUBMITTED_BY_USER",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "1c57c5f2-9358-49ac-950f-57101f7720ea",
+          "requirementId": "66490064-5e99-4ea5-acd7-703d21918d2f",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "da0a9e21-5649-487a-a7b9-e493e7cc8e7e",
+          "assignedToRole": "WORKER",
+          "status": "AWAITING_UPLOAD",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "e384f7b0-97eb-432c-9382-fcdc2e5951f7",
+          "requirementId": "2239e5b8-64f8-416a-9197-218b8511c8ac",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "62a0c069-76cc-48c1-8a09-95a2824bf13e",
+          "assignedToRole": "WORKER",
+          "status": "SUBMITTED_BY_USER",
+          "institution": "AJOFM București",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "2af4a8be-1d63-4f2a-bce3-ebcc44314ff8",
+          "requirementId": "cd58dd03-3369-4fd8-b2a5-d816e0cf943e",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "62a0c069-76cc-48c1-8a09-95a2824bf13e",
+          "assignedToRole": "WORKER",
+          "status": "AWAITING_UPLOAD",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "48a16ec4-7aaa-4e6d-a885-0ce456df5dc3",
+          "requirementId": "e586e90b-9bd5-4f5f-8e9d-5b682b27870a",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "62a0c069-76cc-48c1-8a09-95a2824bf13e",
+          "assignedToRole": "WORKER",
+          "status": "ACCEPTED",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "e6af1b6e-0249-459a-b169-1be0693a2b92",
+          "requirementId": "5e51abd0-2a6a-43dd-a9aa-c29637854a33",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "62a0c069-76cc-48c1-8a09-95a2824bf13e",
+          "assignedToRole": "WORKER",
+          "status": "NOT_STARTED",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "40ad1daa-36fc-47cb-b353-7913420c80e5",
+          "requirementId": "66490064-5e99-4ea5-acd7-703d21918d2f",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "62a0c069-76cc-48c1-8a09-95a2824bf13e",
+          "assignedToRole": "WORKER",
+          "status": "RECEIVED_BY_ADMIN",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "486ca356-c463-4ad4-ada2-37921e862664",
+          "requirementId": "2239e5b8-64f8-416a-9197-218b8511c8ac",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "cf21a835-127a-4541-a95e-509ba568da48",
+          "assignedToRole": "WORKER",
+          "status": "NOT_STARTED",
+          "institution": "AJOFM București",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "1d129679-0665-4c93-917c-2170fceeb41c",
+          "requirementId": "cd58dd03-3369-4fd8-b2a5-d816e0cf943e",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "cf21a835-127a-4541-a95e-509ba568da48",
+          "assignedToRole": "WORKER",
+          "status": "AWAITING_UPLOAD",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "59e86490-2512-46b4-95a4-d53683dfbb69",
+          "requirementId": "e586e90b-9bd5-4f5f-8e9d-5b682b27870a",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "cf21a835-127a-4541-a95e-509ba568da48",
+          "assignedToRole": "WORKER",
+          "status": "NOT_STARTED",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "8decddb6-bae9-4d5c-addf-265160d133a2",
+          "requirementId": "5e51abd0-2a6a-43dd-a9aa-c29637854a33",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "cf21a835-127a-4541-a95e-509ba568da48",
+          "assignedToRole": "WORKER",
+          "status": "NOT_STARTED",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        },
+        {
+          "id": "f4767bad-3760-47b0-bcbb-974eda041421",
+          "requirementId": "66490064-5e99-4ea5-acd7-703d21918d2f",
+          "clientProfileId": "2d0a0520-f235-4a01-a55c-a07a96a286d3",
+          "workerId": "cf21a835-127a-4541-a95e-509ba568da48",
+          "assignedToRole": "WORKER",
+          "status": "ACCEPTED",
+          "institution": "Immigration Office",
+          "submissionChannel": null,
+          "receiptNumber": null,
+          "courierAwb": null,
+          "courierName": null,
+          "submittedAt": null,
+          "approvedAt": null,
+          "rejectedReason": null,
+          "createdAt": "2025-08-31T08:48:00.092Z",
+          "updatedAt": "2025-08-31T08:48:00.092Z"
+        }
+      ],
+      "timestamp": "2025-08-31T21:27:05.129Z",
+      "duration": 136
+    },
+    {
+      "name": "API: GET /api/workflow",
+      "status": "passed",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 42ms",
+        "✅ Response type: text/html; charset=utf-8"
+      ],
+      "issues": [],
+      "responseData": null,
+      "timestamp": "2025-08-31T21:27:05.266Z",
+      "duration": 42
+    },
+    {
+      "name": "API: GET /api/analytics",
+      "status": "passed",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 20ms",
+        "✅ Response type: text/html; charset=utf-8"
+      ],
+      "issues": [],
+      "responseData": null,
+      "timestamp": "2025-08-31T21:27:05.308Z",
+      "duration": 20
+    },
+    {
+      "name": "API: GET /api/settings",
+      "status": "passed",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 18ms",
+        "✅ Response type: text/html; charset=utf-8"
+      ],
+      "issues": [],
+      "responseData": null,
+      "timestamp": "2025-08-31T21:27:05.328Z",
+      "duration": 18
+    },
+    {
+      "name": "API: GET /health",
+      "status": "passed",
+      "details": [
+        "✅ HTTP 200 OK",
+        "✅ Response time: 14ms",
+        "✅ All expected fields present: status",
+        "✅ Sample data: {\"status\":\"ok\",\"timestamp\":\"2025-08-31T21:27:05.358Z\",\"uptime\":237.555433288,\"environment\":\"development\"}...",
+        "✅ No mock data in API response"
+      ],
+      "issues": [],
+      "responseData": {
+        "status": "ok",
+        "timestamp": "2025-08-31T21:27:05.358Z",
+        "uptime": 237.555433288,
+        "environment": "development"
+      },
+      "timestamp": "2025-08-31T21:27:05.346Z",
+      "duration": 14
+    }
+  ],
+  "dataValidation": [
+    {
+      "name": "Data Integrity Validation",
+      "status": "failed",
+      "details": [],
+      "issues": [
+        "❌ Validation failed: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"
+      ],
+      "timestamp": "2025-08-31T21:27:05.618Z"
+    }
+  ],
+  "performanceMetrics": [
+    {
+      "name": "Performance Analysis",
+      "timestamp": "2025-08-31T21:27:05.619Z",
+      "metrics": {
+        "averageResponseTime": 131,
+        "slowRequests": [],
+        "fastRequests": [
+          {
+            "name": "Route: Dashboard",
+            "duration": 249
+          },
+          {
+            "name": "Route: Clients",
+            "duration": 68
+          },
+          {
+            "name": "Route: Workers",
+            "duration": 60
+          },
+          {
+            "name": "Route: Assignments",
+            "duration": 46
+          },
+          {
+            "name": "Route: Workflow",
+            "duration": 63
+          },
+          {
+            "name": "Route: Analytics",
+            "duration": 78
+          },
+          {
+            "name": "Route: Settings",
+            "duration": 42
+          },
+          {
+            "name": "API: GET /api/workers",
+            "duration": 127
+          },
+          {
+            "name": "API: GET /api/assignments",
+            "duration": 9
+          },
+          {
+            "name": "API: GET /api/stages",
+            "duration": 125
+          },
+          {
+            "name": "API: GET /api/dashboard/assignments",
+            "duration": 136
+          },
+          {
+            "name": "API: GET /api/workflow",
+            "duration": 42
+          },
+          {
+            "name": "API: GET /api/analytics",
+            "duration": 20
+          },
+          {
+            "name": "API: GET /api/settings",
+            "duration": 18
+          },
+          {
+            "name": "API: GET /health",
+            "duration": 14
+          }
+        ],
+        "totalRequests": 17
+      }
+    }
+  ],
+  "errors": []
+}

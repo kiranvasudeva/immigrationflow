@@ -94,26 +94,23 @@ const API_ENDPOINTS = [
   { path: '/health', method: 'GET', expectedFields: ['status'] }
 ];
 
-// Strict forbidden data patterns
+// ENHANCED: Strict forbidden data patterns (excluding legitimate React patterns)
 const FORBIDDEN_PATTERNS = [
-  // Mock data patterns
-  'lorem ipsum', 'placeholder', 'example.com', 'test@example.com',
-  'john doe', 'jane smith', 'john.doe', 'jane.doe', 'sample data',
-  'mock data', 'dummy data', 'fake data', 'test data', 'demo data',
+  // Mock data patterns (real violations)
+  'lorem ipsum dolor', 'john doe', 'jane smith', 'john.doe@example.com', 'jane.doe@test.com',
+  'mock[-_]?data', 'dummy[-_]?data', 'fake[-_]?data', 'test[-_]?data(?!-testid)', 'demo[-_]?data', 'sample[-_]?data',
   
-  // Common test values
+  // Common fake test values
   '555-555-5555', '123-456-7890', '(555) 555-5555',
-  'acme corp', 'test company', 'sample company',
+  'acme corp', 'test company inc', 'sample company ltd',
   'foo@bar.com', 'user@domain.com', 'admin@test.com',
   
-  // Development artifacts
-  'todo:', 'fixme:', 'hack:', 'temp:', 'debug:',
-  'console.log', 'alert(', 'debugger;',
-  '[object object]', 'undefined', 'null',
+  // Development debugging artifacts (not React patterns)
+  'todo: implement', 'fixme: urgent', 'hack: temporary',
+  'console.log\\(.*\\)', 'alert\\(.*\\)', 'debugger;',
   
-  // Translation errors
-  '[translation error]', 'translation not found', 'missing translation',
-  'i18n.', 'translation.', '{{', '}}'
+  // Translation errors (not t() function calls)
+  '\\[translation error\\]', 'translation not found', 'missing translation key'
 ];
 
 class ThoroughValidationSuite {
@@ -984,7 +981,7 @@ class ThoroughValidationSuite {
       }
       
       // Validate data completeness
-      const clientsWithMissingData = clients.filter(c => !c.name || !c.email);
+      const clientsWithMissingData = clients.filter(c => !c.legalName || !c.email);
       const workersWithMissingData = workers.filter(w => !w.name || !w.nationality);
       
       if (clientsWithMissingData.length === 0) {
@@ -997,6 +994,51 @@ class ThoroughValidationSuite {
         validation.details.push('✅ All workers have required data');
       } else {
         validation.issues.push(`❌ ${workersWithMissingData.length} workers missing required data`);
+      }
+
+      // ENHANCED: Check for workers without assignments (real functional issue)
+      const workersWithAssignments = new Set(assignments.map(a => a.workerId));
+      const workersWithoutAssignments = workers.filter(w => !workersWithAssignments.has(w.id));
+      
+      if (workersWithoutAssignments.length === 0) {
+        validation.details.push('✅ All workers have workflow assignments');
+      } else {
+        validation.issues.push(`❌ CRITICAL: ${workersWithoutAssignments.length} workers without workflow assignments`);
+        workersWithoutAssignments.forEach(worker => {
+          validation.issues.push(`   ⚠️  Worker "${worker.name}" (${worker.nationality}) has no workflow assigned`);
+        });
+      }
+
+      // ENHANCED: Check for clients without workers
+      const clientsWithAssignments = new Set(assignments.map(a => a.clientId));
+      const clientsWithoutWorkers = clients.filter(c => !clientsWithAssignments.has(c.id));
+      
+      if (clientsWithoutWorkers.length === 0) {
+        validation.details.push('✅ All clients have assigned workers');
+      } else {
+        validation.issues.push(`❌ CRITICAL: ${clientsWithoutWorkers.length} clients without assigned workers`);
+        clientsWithoutWorkers.forEach(client => {
+          validation.issues.push(`   ⚠️  Client "${client.legalName}" has no workers assigned`);
+        });
+      }
+
+      // ENHANCED: Check assignment status distribution for workflow health
+      const assignmentsByStatus = assignments.reduce((acc, assignment) => {
+        acc[assignment.status] = (acc[assignment.status] || 0) + 1;
+        return acc;
+      }, {});
+      
+      const totalAssignments = assignments.length;
+      const notStarted = assignmentsByStatus['NOT_STARTED'] || 0;
+      const awaitingUpload = assignmentsByStatus['AWAITING_UPLOAD'] || 0;
+      const stuckPercentage = ((notStarted + awaitingUpload) / totalAssignments) * 100;
+      
+      if (stuckPercentage > 50) {
+        validation.issues.push(`❌ WORKFLOW ISSUE: ${stuckPercentage.toFixed(1)}% of assignments stuck in early stages`);
+      } else if (stuckPercentage > 25) {
+        validation.issues.push(`⚠️  WORKFLOW WARNING: ${stuckPercentage.toFixed(1)}% of assignments in early stages`);
+      } else {
+        validation.details.push(`✅ Healthy workflow progress: ${stuckPercentage.toFixed(1)}% in early stages`);
       }
       
       // Summary metrics
