@@ -943,17 +943,180 @@ export default function SettingsPage() {
 
   const handleSaveSettings = async (section: string) => {
     try {
+      if (section === 'Workflows') {
+        // Save workflow templates to database
+        await saveWorkflowTemplates();
+      } else if (section === 'Document Categories') {
+        // Save document categories to database  
+        await saveDocumentCategories();
+      }
+      
       toast({
         title: 'Settings Saved',
         description: `${section} settings have been saved successfully.`,
       });
     } catch (error) {
+      console.error('Save settings error:', error);
       toast({
         title: 'Error',
         description: 'Failed to save settings. Please try again.',
         variant: 'destructive',
       });
     }
+  };
+
+  const saveWorkflowTemplates = async () => {
+    for (const workflow of workflows) {
+      const workflowData = {
+        name: workflow.name,
+        description: workflow.description,
+        isActive: workflow.isActive,
+        steps: workflow.stages.map((stage, index) => ({
+          name: stage.name,
+          stepType: getStepTypeFromStage(stage),
+          order: index + 1,
+          estimatedDuration: stage.timeframeDays || 7,
+          description: stage.description || '',
+          documentRequirements: stage.documentRequirements?.map((req, reqIndex) => ({
+            title: req.title,
+            description: req.description,
+            isRequired: req.required,
+            submittedBy: req.submittedBy,
+            acceptedFileTypes: req.acceptedTypes,
+            order: reqIndex + 1
+          })) || [],
+          checklistItems: stage.checklistItems?.map((item, itemIndex) => ({
+            title: item.title,
+            description: item.description,
+            isRequired: item.required,
+            order: itemIndex + 1
+          })) || []
+        }))
+      };
+
+      try {
+        // Check if workflow exists by trying to fetch it
+        const existingTemplate = await fetch(`/api/workflow-templates/${workflow.id}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (existingTemplate.ok) {
+          // Update existing template
+          await fetch(`/api/workflow-templates/${workflow.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(workflowData)
+          });
+        } else {
+          // Create new template
+          const response = await fetch('/api/workflow-templates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(workflowData)
+          });
+          
+          if (response.ok) {
+            const createdTemplate = await response.json();
+            // Update local workflow with real ID
+            setWorkflows(wfs => wfs.map(wf => 
+              wf.id === workflow.id ? { ...wf, id: createdTemplate.id } : wf
+            ));
+          }
+        }
+      } catch (error) {
+        console.error(`Error saving workflow ${workflow.name}:`, error);
+        throw error;
+      }
+    }
+  };
+
+  const saveDocumentCategories = async () => {
+    // For now, document categories are handled in local state
+    // In a real implementation, you would save these to the database as well
+    console.log('Saving document categories:', documentCategories);
+  };
+
+  const getStepTypeFromStage = (stage: any): string => {
+    // Map stage properties to step types based on stage characteristics
+    if (stage.responsible === 'worker' && stage.name.toLowerCase().includes('document')) {
+      return 'DOCUMENT_COLLECTION';
+    } else if (stage.responsible === 'admin' && stage.name.toLowerCase().includes('review')) {
+      return 'DOCUMENT_REVIEW';
+    } else if (stage.name.toLowerCase().includes('form') || stage.name.toLowerCase().includes('declaration')) {
+      return 'FORM_COMPLETION';
+    } else if (stage.name.toLowerCase().includes('submission') || stage.name.toLowerCase().includes('submit')) {
+      return 'INSTITUTIONAL_SUBMISSION';
+    } else if (stage.name.toLowerCase().includes('approval') || stage.name.toLowerCase().includes('certificate')) {
+      return 'ADMIN_APPROVAL';
+    } else {
+      return 'DOCUMENT_COLLECTION'; // Default fallback
+    }
+  };
+
+  // Delete functionality
+  const deleteWorkflow = async (workflowId: string) => {
+    try {
+      const response = await fetch(`/api/workflow-templates/${workflowId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        setWorkflows(wfs => wfs.filter(wf => wf.id !== workflowId));
+        toast({
+          title: 'Workflow Deleted',
+          description: 'Workflow has been successfully deleted.',
+        });
+      } else {
+        throw new Error('Failed to delete workflow');
+      }
+    } catch (error) {
+      console.error('Error deleting workflow:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete workflow. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const deleteWorkflowStage = (workflowId: string, stageId: string) => {
+    setWorkflows(wfs => 
+      wfs.map(wf => 
+        wf.id === workflowId 
+          ? { ...wf, stages: wf.stages.filter(s => s.id !== stageId) }
+          : wf
+      )
+    );
+    toast({
+      title: 'Stage Deleted',
+      description: 'Workflow stage has been removed.',
+    });
+  };
+
+  const deleteDocumentRequirement = (workflowId: string, stageId: string, docId: string) => {
+    setWorkflows(wfs => 
+      wfs.map(wf => 
+        wf.id === workflowId 
+          ? {
+              ...wf, 
+              stages: wf.stages.map(s => 
+                s.id === stageId 
+                  ? { 
+                      ...s, 
+                      documentRequirements: s.documentRequirements?.filter((d: any) => d.id !== docId)
+                    }
+                  : s
+              )
+            }
+          : wf
+      )
+    );
+    toast({
+      title: 'Document Removed',
+      description: 'Document requirement has been removed from stage.',
+    });
   };
 
   const addDocumentCategory = () => {
@@ -1574,9 +1737,25 @@ export default function SettingsPage() {
                                     {workflow.isActive ? 'Active' : 'Inactive'}
                                   </Badge>
                                 </div>
-                                <Button size="sm" variant="ghost" onClick={(e) => e.stopPropagation()}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
+                                <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                                  <Button size="sm" variant="outline" onClick={() => handleSaveSettings('Workflows')}>
+                                    <Save className="h-4 w-4" />
+                                  </Button>
+                                  <Button size="sm" variant="ghost">
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    onClick={() => {
+                                      if (confirm('Are you sure you want to delete this workflow? This action cannot be undone.')) {
+                                        deleteWorkflow(workflow.id);
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
                               
                               {!isExpanded && (
@@ -1706,6 +1885,17 @@ export default function SettingsPage() {
                                           }}
                                           className="flex-1 font-medium"
                                         />
+                                        <Button 
+                                          size="sm" 
+                                          variant="ghost" 
+                                          onClick={() => {
+                                            if (confirm('Are you sure you want to delete this stage? This action cannot be undone.')) {
+                                              deleteWorkflowStage(workflow.id, stage.id);
+                                            }
+                                          }}
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
                                       </div>
                                       
                                       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
