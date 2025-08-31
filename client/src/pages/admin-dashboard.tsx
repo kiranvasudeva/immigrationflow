@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/contexts/I18nProvider';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
@@ -36,6 +36,8 @@ import {
 } from "lucide-react";
 import { DocumentUploader } from "@/components/documents/DocumentUploader";
 import { DocumentViewer } from "@/components/documents/DocumentViewer";
+import WorkerWorkflowAssignments from "@/components/WorkerWorkflowAssignments";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, ResponsiveContainer } from 'recharts';
 
 export default function AdminDashboard() {
   const { toast } = useToast();
@@ -235,22 +237,83 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-600 mt-2">Manage clients, workers, and immigration workflows</p>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-gray-600 mt-2">Manage clients, workers, and immigration workflows</p>
+            </div>
+          </div>
+          
+          {/* Navigation Tabs */}
+          <div className="flex space-x-1 border-b border-gray-200">
+            <button
+              onClick={() => setActiveSection('overview')}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+                activeSection === 'overview'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              data-testid="tab-overview"
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveSection('workflows')}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+                activeSection === 'workflows'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              data-testid="tab-workflows"
+            >
+              Workflow Templates
+            </button>
+            <button
+              onClick={() => setActiveSection('clients')}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+                activeSection === 'clients'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              data-testid="tab-clients"
+            >
+              Clients
+            </button>
+            <button
+              onClick={() => setActiveSection('workers')}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+                activeSection === 'workers'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              data-testid="tab-workers"
+            >
+              Workers
+            </button>
+            <button
+              onClick={() => setActiveSection('activity')}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+                activeSection === 'activity'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              data-testid="tab-activity"
+            >
+              Activity
+            </button>
           </div>
         </div>
 
         {/* Dashboard Statistics - Only show on overview */}
         {activeSection === 'overview' && stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-600">Total Clients</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalClients}</div>
+                <div className="text-2xl font-bold">{(stats as any).totalClients || 0}</div>
               </CardContent>
             </Card>
             <Card>
@@ -258,7 +321,7 @@ export default function AdminDashboard() {
                 <CardTitle className="text-sm font-medium text-gray-600">Total Workers</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalWorkers}</div>
+                <div className="text-2xl font-bold">{(stats as any).totalWorkers || 0}</div>
               </CardContent>
             </Card>
             <Card>
@@ -266,7 +329,15 @@ export default function AdminDashboard() {
                 <CardTitle className="text-sm font-medium text-gray-600">Active Workers</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.activeWorkers}</div>
+                <div className="text-2xl font-bold">{(stats as any).activeWorkers || 0}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">Workflow Templates</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{(stats as any).totalWorkflowTemplates || 0}</div>
               </CardContent>
             </Card>
             <Card>
@@ -274,7 +345,27 @@ export default function AdminDashboard() {
                 <CardTitle className="text-sm font-medium text-gray-600">Pending Actions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.pendingActions}</div>
+                <div className="text-2xl font-bold">{(stats as any).pendingActions || 0}</div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Workflow Analytics Section */}
+        {activeSection === 'workflows' && (
+          <div className="w-full space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  Workflow Template Management & Analytics
+                </CardTitle>
+                <CardDescription>
+                  Manage workflow templates and view assignment statistics
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <WorkerWorkflowAssignments />
               </CardContent>
             </Card>
           </div>

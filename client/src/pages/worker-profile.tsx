@@ -34,6 +34,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useTranslation } from "@/contexts/I18nProvider";
 import { DocumentViewer } from "@/components/documents/DocumentViewer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import WorkerWorkflowDashboard from "@/components/WorkerWorkflowDashboard";
 
 interface WorkerAssignment {
   id: string;
@@ -346,52 +347,10 @@ export default function WorkerProfile() {
                 </Card>
               ) : (
                 <div className="space-y-6">
-                  {/* Workflow Progress Overview */}
-                  <Card data-testid="card-workflow-progress">
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <CheckCircle className="h-5 w-5 mr-2" />
-                        Immigration Progress
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      {/* Overall Progress */}
-                      <div>
-                        <div className="flex justify-between text-sm text-gray-600 mb-2">
-                          <span>Overall Progress</span>
-                          <span data-testid="text-overall-progress">{overall}% Complete</span>
-                        </div>
-                        <Progress value={overall} className="h-3" data-testid="progress-overall" />
-                      </div>
-
-                      {/* Stage Progress */}
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        {stages.map((stage, index) => (
-                          <div key={stage.key} className="text-center" data-testid={`stage-${stage.key.toLowerCase()}`}>
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 ${
-                              stage.status === 'completed' ? 'bg-green-500' :
-                              stage.status === 'current' ? 'bg-blue-500' : 'bg-gray-300'
-                            }`}>
-                              {stage.status === 'completed' ? (
-                                <CheckCircle className="h-6 w-6 text-white" />
-                              ) : (
-                                <span className="text-white text-sm font-bold">{index + 1}</span>
-                              )}
-                            </div>
-                            <h3 className="font-medium text-gray-900 text-sm">{stage.title}</h3>
-                            <p className="text-xs text-gray-500">{stage.completed}/{stage.total} tasks</p>
-                            <p className={`text-xs ${
-                              stage.status === 'completed' ? 'text-green-600' :
-                              stage.status === 'current' ? 'text-blue-600' : 'text-gray-500'
-                            }`}>
-                              {stage.status === 'completed' ? 'Completed' :
-                               stage.status === 'current' ? 'In Progress' : 'Pending'}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  {/* Enhanced Workflow Dashboard */}
+                  {workerId && (
+                    <WorkerWorkflowDashboard workerId={workerId} />
+                  )}
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Personal Information */}

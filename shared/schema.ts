@@ -930,12 +930,7 @@ export type InsertChecklistCompletion = z.infer<typeof insertChecklistCompletion
 export const createClientSchema = insertClientProfileSchema.omit({ 
   ownerUserId: true 
 });
-export const updateClientSchema = insertClientProfileSchema.partial().omit({
-  id: true,
-  ownerUserId: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const updateClientSchema = insertClientProfileSchema.partial();
 export const clientResponseSchema = z.object({
   id: z.string().uuid(),
   fullName: z.string(),
@@ -951,11 +946,7 @@ export const clientResponseSchema = z.object({
 
 // Worker CRUD Schemas  
 export const createWorkerSchema = insertWorkerSchema;
-export const updateWorkerSchema = insertWorkerSchema.partial().omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const updateWorkerSchema = insertWorkerSchema.partial();
 export const workerResponseSchema = z.object({
   id: z.string().uuid(),
   fullName: z.string(),
@@ -993,12 +984,7 @@ export const stageResponseSchema = z.object({
 export const createRequirementSchema = insertRequirementSchema.omit({
   createdByUserId: true
 });
-export const updateRequirementSchema = insertRequirementSchema.partial().omit({
-  id: true,
-  createdByUserId: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const updateRequirementSchema = insertRequirementSchema.partial();
 export const requirementResponseSchema = z.object({
   id: z.string().uuid(),
   stageId: z.string().uuid(),

@@ -17,6 +17,14 @@ import {
   translations,
   analyticsEvents,
   invitations,
+  workflowTemplates,
+  workflowSteps,
+  documentRequirements,
+  checklistItems,
+  workerWorkflowProgress,
+  workerStepProgress,
+  documentSubmissions,
+  checklistCompletions,
   type User,
   type UpsertUser,
   type ClientProfile,
@@ -46,6 +54,22 @@ import {
   type AnalyticsEvent,
   type Invitation,
   type InsertInvitation,
+  type WorkflowTemplate,
+  type InsertWorkflowTemplate,
+  type WorkflowStep,
+  type InsertWorkflowStep,
+  type DocumentRequirement,
+  type InsertDocumentRequirement,
+  type ChecklistItem,
+  type InsertChecklistItem,
+  type WorkerWorkflowProgress,
+  type InsertWorkerWorkflowProgress,
+  type WorkerStepProgress,
+  type InsertWorkerStepProgress,
+  type DocumentSubmission,
+  type InsertDocumentSubmission,
+  type ChecklistCompletion,
+  type InsertChecklistCompletion,
   extractedDocumentData,
   documentFieldMappings,
   type ExtractedDocumentData,
@@ -185,6 +209,53 @@ export interface IStorage {
     stage: Stage;
   }>>;
   
+  // Workflow Template operations
+  getAllWorkflowTemplates(): Promise<WorkflowTemplate[]>;
+  getWorkflowTemplate(id: string): Promise<WorkflowTemplate | undefined>;
+  createWorkflowTemplate(template: InsertWorkflowTemplate): Promise<WorkflowTemplate>;
+  updateWorkflowTemplate(id: string, updates: Partial<InsertWorkflowTemplate>): Promise<WorkflowTemplate>;
+  deleteWorkflowTemplate(id: string): Promise<boolean>;
+  getWorkflowSteps(templateId: string): Promise<WorkflowStep[]>;
+  createWorkflowStep(step: InsertWorkflowStep): Promise<WorkflowStep>;
+  updateWorkflowStep(id: string, updates: Partial<InsertWorkflowStep>): Promise<WorkflowStep>;
+  deleteWorkflowStep(id: string): Promise<boolean>;
+  
+  // Document Requirements operations
+  getDocumentRequirements(stepId: string): Promise<DocumentRequirement[]>;
+  createDocumentRequirement(requirement: InsertDocumentRequirement): Promise<DocumentRequirement>;
+  updateDocumentRequirement(id: string, updates: Partial<InsertDocumentRequirement>): Promise<DocumentRequirement>;
+  deleteDocumentRequirement(id: string): Promise<boolean>;
+  
+  // Checklist Items operations
+  getChecklistItems(stepId: string): Promise<ChecklistItem[]>;
+  createChecklistItem(item: InsertChecklistItem): Promise<ChecklistItem>;
+  updateChecklistItem(id: string, updates: Partial<InsertChecklistItem>): Promise<ChecklistItem>;
+  deleteChecklistItem(id: string): Promise<boolean>;
+  
+  // Worker Workflow Progress operations
+  getWorkerWorkflowProgress(workerId: string, templateId: string): Promise<WorkerWorkflowProgress | undefined>;
+  createWorkerWorkflowProgress(progress: InsertWorkerWorkflowProgress): Promise<WorkerWorkflowProgress>;
+  updateWorkerWorkflowProgress(id: string, updates: Partial<InsertWorkerWorkflowProgress>): Promise<WorkerWorkflowProgress>;
+  getWorkerStepProgress(progressId: string): Promise<WorkerStepProgress[]>;
+  createWorkerStepProgress(progress: InsertWorkerStepProgress): Promise<WorkerStepProgress>;
+  updateWorkerStepProgress(id: string, updates: Partial<InsertWorkerStepProgress>): Promise<WorkerStepProgress>;
+  
+  // Document Submission operations
+  getDocumentSubmissions(requirementId: string, workerId: string): Promise<DocumentSubmission[]>;
+  createDocumentSubmission(submission: InsertDocumentSubmission): Promise<DocumentSubmission>;
+  updateDocumentSubmission(id: string, updates: Partial<InsertDocumentSubmission>): Promise<DocumentSubmission>;
+  
+  // Checklist Completion operations
+  getChecklistCompletions(itemId: string, workerId: string): Promise<ChecklistCompletion[]>;
+  createChecklistCompletion(completion: InsertChecklistCompletion): Promise<ChecklistCompletion>;
+  updateChecklistCompletion(id: string, updates: Partial<InsertChecklistCompletion>): Promise<ChecklistCompletion>;
+  
+  // Worker workflow linking operations
+  linkWorkerToWorkflow(workerId: string, templateId: string): Promise<WorkerWorkflowProgress>;
+  unlinkWorkerFromWorkflow(workerId: string, templateId: string): Promise<boolean>;
+  getWorkersForWorkflow(templateId: string): Promise<Worker[]>;
+  getWorkflowsForWorker(workerId: string): Promise<WorkflowTemplate[]>;
+
   // RBAC helper methods
   getWorkerAssignments(workerId: string): Promise<Assignment[]>;
   getWorkerProfile(workerId: string): Promise<Worker | undefined>;
@@ -949,6 +1020,208 @@ export class DatabaseStorage implements IStorage {
   async getTemplate(templateId: string): Promise<DocumentTemplate | undefined> {
     const [template] = await db.select().from(documentTemplates).where(eq(documentTemplates.id, templateId));
     return template;
+  }
+
+  // Workflow Template operations
+  async getAllWorkflowTemplates(): Promise<WorkflowTemplate[]> {
+    return await db.select().from(workflowTemplates).orderBy(asc(workflowTemplates.name));
+  }
+
+  async getWorkflowTemplate(id: string): Promise<WorkflowTemplate | undefined> {
+    const [template] = await db.select().from(workflowTemplates).where(eq(workflowTemplates.id, id));
+    return template;
+  }
+
+  async createWorkflowTemplate(template: InsertWorkflowTemplate): Promise<WorkflowTemplate> {
+    const result = await db.insert(workflowTemplates).values(template).returning();
+    return result[0];
+  }
+
+  async updateWorkflowTemplate(id: string, updates: Partial<InsertWorkflowTemplate>): Promise<WorkflowTemplate> {
+    const result = await db.update(workflowTemplates).set(updates).where(eq(workflowTemplates.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteWorkflowTemplate(id: string): Promise<boolean> {
+    const result = await db.delete(workflowTemplates).where(eq(workflowTemplates.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getWorkflowSteps(templateId: string): Promise<WorkflowStep[]> {
+    return await db.select().from(workflowSteps).where(eq(workflowSteps.templateId, templateId)).orderBy(asc(workflowSteps.stepOrder));
+  }
+
+  async createWorkflowStep(step: InsertWorkflowStep): Promise<WorkflowStep> {
+    const result = await db.insert(workflowSteps).values(step).returning();
+    return result[0];
+  }
+
+  async updateWorkflowStep(id: string, updates: Partial<InsertWorkflowStep>): Promise<WorkflowStep> {
+    const result = await db.update(workflowSteps).set(updates).where(eq(workflowSteps.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteWorkflowStep(id: string): Promise<boolean> {
+    const result = await db.delete(workflowSteps).where(eq(workflowSteps.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Document Requirements operations
+  async getDocumentRequirements(stepId: string): Promise<DocumentRequirement[]> {
+    return await db.select().from(documentRequirements).where(eq(documentRequirements.stepId, stepId)).orderBy(asc(documentRequirements.title));
+  }
+
+  async createDocumentRequirement(requirement: InsertDocumentRequirement): Promise<DocumentRequirement> {
+    const result = await db.insert(documentRequirements).values(requirement).returning();
+    return result[0];
+  }
+
+  async updateDocumentRequirement(id: string, updates: Partial<InsertDocumentRequirement>): Promise<DocumentRequirement> {
+    const result = await db.update(documentRequirements).set(updates).where(eq(documentRequirements.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteDocumentRequirement(id: string): Promise<boolean> {
+    const result = await db.delete(documentRequirements).where(eq(documentRequirements.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Checklist Items operations
+  async getChecklistItems(stepId: string): Promise<ChecklistItem[]> {
+    return await db.select().from(checklistItems).where(eq(checklistItems.stepId, stepId)).orderBy(asc(checklistItems.title));
+  }
+
+  async createChecklistItem(item: InsertChecklistItem): Promise<ChecklistItem> {
+    const result = await db.insert(checklistItems).values(item).returning();
+    return result[0];
+  }
+
+  async updateChecklistItem(id: string, updates: Partial<InsertChecklistItem>): Promise<ChecklistItem> {
+    const result = await db.update(checklistItems).set(updates).where(eq(checklistItems.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteChecklistItem(id: string): Promise<boolean> {
+    const result = await db.delete(checklistItems).where(eq(checklistItems.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Worker Workflow Progress operations
+  async getWorkerWorkflowProgress(workerId: string, templateId: string): Promise<WorkerWorkflowProgress | undefined> {
+    const [progress] = await db.select().from(workerWorkflowProgress)
+      .where(and(eq(workerWorkflowProgress.workerId, workerId), eq(workerWorkflowProgress.templateId, templateId)));
+    return progress;
+  }
+
+  async createWorkerWorkflowProgress(progress: InsertWorkerWorkflowProgress): Promise<WorkerWorkflowProgress> {
+    const result = await db.insert(workerWorkflowProgress).values(progress).returning();
+    return result[0];
+  }
+
+  async updateWorkerWorkflowProgress(id: string, updates: Partial<InsertWorkerWorkflowProgress>): Promise<WorkerWorkflowProgress> {
+    const result = await db.update(workerWorkflowProgress).set(updates).where(eq(workerWorkflowProgress.id, id)).returning();
+    return result[0];
+  }
+
+  async getWorkerStepProgress(progressId: string): Promise<WorkerStepProgress[]> {
+    return await db.select().from(workerStepProgress).where(eq(workerStepProgress.progressId, progressId));
+  }
+
+  async createWorkerStepProgress(progress: InsertWorkerStepProgress): Promise<WorkerStepProgress> {
+    const result = await db.insert(workerStepProgress).values(progress).returning();
+    return result[0];
+  }
+
+  async updateWorkerStepProgress(id: string, updates: Partial<InsertWorkerStepProgress>): Promise<WorkerStepProgress> {
+    const result = await db.update(workerStepProgress).set(updates).where(eq(workerStepProgress.id, id)).returning();
+    return result[0];
+  }
+
+  // Document Submission operations
+  async getDocumentSubmissions(requirementId: string, workerId: string): Promise<DocumentSubmission[]> {
+    return await db.select().from(documentSubmissions)
+      .where(and(eq(documentSubmissions.requirementId, requirementId), eq(documentSubmissions.workerId, workerId)))
+      .orderBy(desc(documentSubmissions.submittedAt));
+  }
+
+  async createDocumentSubmission(submission: InsertDocumentSubmission): Promise<DocumentSubmission> {
+    const result = await db.insert(documentSubmissions).values(submission).returning();
+    return result[0];
+  }
+
+  async updateDocumentSubmission(id: string, updates: Partial<InsertDocumentSubmission>): Promise<DocumentSubmission> {
+    const result = await db.update(documentSubmissions).set(updates).where(eq(documentSubmissions.id, id)).returning();
+    return result[0];
+  }
+
+  // Checklist Completion operations
+  async getChecklistCompletions(itemId: string, workerId: string): Promise<ChecklistCompletion[]> {
+    return await db.select().from(checklistCompletions)
+      .where(and(eq(checklistCompletions.itemId, itemId), eq(checklistCompletions.workerId, workerId)))
+      .orderBy(desc(checklistCompletions.completedAt));
+  }
+
+  async createChecklistCompletion(completion: InsertChecklistCompletion): Promise<ChecklistCompletion> {
+    const result = await db.insert(checklistCompletions).values(completion).returning();
+    return result[0];
+  }
+
+  async updateChecklistCompletion(id: string, updates: Partial<InsertChecklistCompletion>): Promise<ChecklistCompletion> {
+    const result = await db.update(checklistCompletions).set(updates).where(eq(checklistCompletions.id, id)).returning();
+    return result[0];
+  }
+
+  // Worker workflow linking operations
+  async linkWorkerToWorkflow(workerId: string, templateId: string): Promise<WorkerWorkflowProgress> {
+    // Check if already linked
+    const existing = await this.getWorkerWorkflowProgress(workerId, templateId);
+    if (existing) {
+      return existing;
+    }
+    
+    // Create new workflow progress
+    const progress: InsertWorkerWorkflowProgress = {
+      workerId,
+      templateId,
+      status: 'not_started',
+      startedAt: new Date(),
+      completedAt: null,
+      notes: null
+    };
+    
+    return await this.createWorkerWorkflowProgress(progress);
+  }
+
+  async unlinkWorkerFromWorkflow(workerId: string, templateId: string): Promise<boolean> {
+    const progress = await this.getWorkerWorkflowProgress(workerId, templateId);
+    if (!progress) {
+      return false;
+    }
+    
+    // Delete all related step progress
+    await db.delete(workerStepProgress).where(eq(workerStepProgress.progressId, progress.id));
+    
+    // Delete workflow progress
+    const result = await db.delete(workerWorkflowProgress).where(eq(workerWorkflowProgress.id, progress.id));
+    return result.rowCount > 0;
+  }
+
+  async getWorkersForWorkflow(templateId: string): Promise<Worker[]> {
+    const result = await db.select({ worker: workers })
+      .from(workerWorkflowProgress)
+      .innerJoin(workers, eq(workerWorkflowProgress.workerId, workers.id))
+      .where(eq(workerWorkflowProgress.templateId, templateId));
+    
+    return result.map(r => r.worker);
+  }
+
+  async getWorkflowsForWorker(workerId: string): Promise<WorkflowTemplate[]> {
+    const result = await db.select({ template: workflowTemplates })
+      .from(workerWorkflowProgress)
+      .innerJoin(workflowTemplates, eq(workerWorkflowProgress.templateId, workflowTemplates.id))
+      .where(eq(workerWorkflowProgress.workerId, workerId));
+    
+    return result.map(r => r.template);
   }
 
   // Data consistency fixes

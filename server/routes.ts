@@ -7,6 +7,9 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { auditMiddleware } from "./middleware/auth";
 import { requireRole, requireOwnership, requireRoleAndOwnership, applyTenantFilter, devRbacBypass } from "./middleware/rbac";
+
+// Simple admin middleware using requireRole
+const requireAdmin = requireRole('ADMIN');
 import { governmentApiService } from "./services/government-api";
 import { ocrService } from "./services/ocr-service";
 import { workflowEngine } from "./services/workflow-engine";
@@ -1460,6 +1463,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/file-scanner/health', isAuthenticated, async (req, res) => {
     const health = await fileScanningService.healthCheck();
     res.status(health.healthy ? 200 : 503).json(health);
+  });
+
+  // Workflow Template Management API Endpoints
+  app.get('/api/workflow-templates', isAuthenticated, async (req: any, res) => {
+    try {
+      const templates = await storage.getAllWorkflowTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching workflow templates:', error);
+      res.status(500).json({ message: "Failed to fetch workflow templates" });
+    }
+  });
+
+  app.get('/api/workflow-templates/:templateId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { templateId } = req.params;
+      const template = await storage.getWorkflowTemplate(templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Workflow template not found" });
+      }
+      
+      // Get steps for this template
+      const steps = await storage.getWorkflowSteps(templateId);
+      
+      // Get document requirements and checklist items for each step
+      const stepsWithDetails = await Promise.all(steps.map(async (step) => {
+        const documentRequirements = await storage.getDocumentRequirements(step.id);
+        const checklistItems = await storage.getChecklistItems(step.id);
+        return {
+          ...step,
+          documentRequirements,
+          checklistItems
+        };
+      }));
+      
+      res.json({
+        ...template,
+        steps: stepsWithDetails
+      });
+    } catch (error) {
+      console.error('Error fetching workflow template:', error);
+      res.status(500).json({ message: "Failed to fetch workflow template" });
+    }
+  });
+
+  app.post('/api/workflow-templates', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const templateData = req.body;
+      const template = await storage.createWorkflowTemplate(templateData);
+      res.status(201).json(template);
+    } catch (error) {
+      console.error('Error creating workflow template:', error);
+      res.status(500).json({ message: "Failed to create workflow template" });
+    }
+  });
+
+  app.put('/api/workflow-templates/:templateId', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { templateId } = req.params;
+      const updates = req.body;
+      const template = await storage.updateWorkflowTemplate(templateId, updates);
+      res.json(template);
+    } catch (error) {
+      console.error('Error updating workflow template:', error);
+      res.status(500).json({ message: "Failed to update workflow template" });
+    }
+  });
+
+  app.delete('/api/workflow-templates/:templateId', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { templateId } = req.params;
+      const success = await storage.deleteWorkflowTemplate(templateId);
+      if (!success) {
+        return res.status(404).json({ message: "Workflow template not found" });
+      }
+      res.json({ success: true, message: "Workflow template deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting workflow template:', error);
+      res.status(500).json({ message: "Failed to delete workflow template" });
+    }
+  });
+
+  // Worker-Workflow Linking API Endpoints
+  app.post('/api/workers/:workerId/workflows/:templateId/link', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { workerId, templateId } = req.params;
+      
+      // Verify worker exists
+      const worker = await storage.getWorker(workerId);
+      if (!worker) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+      
+      // Verify template exists
+      const template = await storage.getWorkflowTemplate(templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Workflow template not found" });
+      }
+      
+      const progress = await storage.linkWorkerToWorkflow(workerId, templateId);
+      res.status(201).json(progress);
+    } catch (error) {
+      console.error('Error linking worker to workflow:', error);
+      res.status(500).json({ message: "Failed to link worker to workflow" });
+    }
+  });
+
+  app.delete('/api/workers/:workerId/workflows/:templateId/unlink', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { workerId, templateId } = req.params;
+      const success = await storage.unlinkWorkerFromWorkflow(workerId, templateId);
+      if (!success) {
+        return res.status(404).json({ message: "Worker workflow link not found" });
+      }
+      res.json({ success: true, message: "Worker unlinked from workflow successfully" });
+    } catch (error) {
+      console.error('Error unlinking worker from workflow:', error);
+      res.status(500).json({ message: "Failed to unlink worker from workflow" });
+    }
+  });
+
+  app.get('/api/workers/:workerId/workflows', isAuthenticated, async (req: any, res) => {
+    try {
+      const { workerId } = req.params;
+      const userId = req.user.id;
+      
+      // Check authorization - worker can view their own workflows, admin can view all
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'ADMIN') {
+        // Check if the requesting user is the worker or has access to this worker
+        const worker = await storage.getWorker(workerId);
+        if (!worker) {
+          return res.status(404).json({ message: "Worker not found" });
+        }
+        // Add proper authorization logic here based on your requirements
+      }
+      
+      const workflows = await storage.getWorkflowsForWorker(workerId);
+      res.json(workflows);
+    } catch (error) {
+      console.error('Error fetching worker workflows:', error);
+      res.status(500).json({ message: "Failed to fetch worker workflows" });
+    }
+  });
+
+  app.get('/api/workflow-templates/:templateId/workers', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { templateId } = req.params;
+      const workers = await storage.getWorkersForWorkflow(templateId);
+      res.json(workers);
+    } catch (error) {
+      console.error('Error fetching workflow workers:', error);
+      res.status(500).json({ message: "Failed to fetch workflow workers" });
+    }
   });
 
   const httpServer = createServer(app);

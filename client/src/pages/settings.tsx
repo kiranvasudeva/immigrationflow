@@ -42,6 +42,7 @@ import {
   Upload
 } from 'lucide-react';
 import PatraIcon from '@/components/icons/PatraIcon';
+import WorkerWorkflowAssignments from '@/components/WorkerWorkflowAssignments';
 
 interface DocumentCategory {
   id: string;
@@ -1054,7 +1055,11 @@ export default function SettingsPage() {
 
           {/* Add navigation for additional tabs */}
           <div className="mt-4">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="worker-assignments" className="flex items-center gap-2">
+                <UserCheck className="h-4 w-4" />
+                <span className="hidden sm:inline">Worker Assignments</span>
+              </TabsTrigger>
               <TabsTrigger value="notifications" className="flex items-center gap-2">
                 <Bell className="h-4 w-4" />
                 <span className="hidden sm:inline">Notifications</span>
@@ -2991,6 +2996,24 @@ export default function SettingsPage() {
                     Save Backup Settings
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Worker-Workflow Assignments */}
+          <TabsContent value="worker-assignments" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCheck className="h-5 w-5" />
+                  Worker-Workflow Assignments
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Link workers to specific workflows to track their progress and manage their tasks.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <WorkerWorkflowAssignments />
               </CardContent>
             </Card>
           </TabsContent>
