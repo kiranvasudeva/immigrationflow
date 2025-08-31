@@ -206,6 +206,12 @@ export interface IStorage {
     pendingSteps: number;
     inProgressSteps: number;
   }>;
+  getMonthlyAnalytics(): Promise<Array<{
+    month: string;
+    completed: number;
+    pending: number;
+    rejected: number;
+  }>>;
   
   // Enhanced assignment queries for kanban
   getAssignmentsWithDetails(): Promise<Array<Assignment & {
@@ -805,10 +811,78 @@ export class DatabaseStorage implements IStorage {
     
     return {
       totalSteps: totalStepsResult[0]?.count ?? 0,
-      completedSteps: statusCounts['COMPLETED'] ?? 0,
-      pendingSteps: statusCounts['PENDING'] ?? 0,
-      inProgressSteps: statusCounts['IN_PROGRESS'] ?? 0,
+      completedSteps: statusCounts.COMPLETED || 0,
+      pendingSteps: statusCounts.PENDING || 0,
+      inProgressSteps: statusCounts.IN_PROGRESS || 0,
     };
+  }
+  
+  // Get monthly analytics data
+  async getMonthlyAnalytics(): Promise<Array<{
+    month: string;
+    completed: number;
+    pending: number;
+    rejected: number;
+  }>> {
+    // Get data for last 6 months
+    const months = [];
+    const now = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      
+      const monthName = monthDate.toLocaleDateString('en-US', { month: 'short' });
+      
+      // Get completed assignments for this month
+      const completedResult = await db
+        .select({ count: count() })
+        .from(assignments)
+        .where(
+          and(
+            eq(assignments.status, 'ACCEPTED'),
+            sql`${assignments.approvedAt} >= ${monthDate.toISOString()}`,
+            sql`${assignments.approvedAt} < ${nextMonth.toISOString()}`
+          )
+        );
+      
+      // Get pending assignments for this month
+      const pendingResult = await db
+        .select({ count: count() })
+        .from(assignments)
+        .where(
+          and(
+            or(
+              eq(assignments.status, 'AWAITING_UPLOAD'),
+              eq(assignments.status, 'SUBMITTED_BY_USER'),
+              eq(assignments.status, 'RECEIVED_BY_ADMIN')
+            ),
+            sql`${assignments.createdAt} >= ${monthDate.toISOString()}`,
+            sql`${assignments.createdAt} < ${nextMonth.toISOString()}`
+          )
+        );
+      
+      // Get rejected assignments for this month
+      const rejectedResult = await db
+        .select({ count: count() })
+        .from(assignments)
+        .where(
+          and(
+            eq(assignments.status, 'REJECTED'),
+            sql`${assignments.createdAt} >= ${monthDate.toISOString()}`,
+            sql`${assignments.createdAt} < ${nextMonth.toISOString()}`
+          )
+        );
+      
+      months.push({
+        month: monthName,
+        completed: completedResult[0]?.count || 0,
+        pending: pendingResult[0]?.count || 0,
+        rejected: rejectedResult[0]?.count || 0,
+      });
+    }
+    
+    return months;
   }
   
   // Enhanced assignment queries for kanban

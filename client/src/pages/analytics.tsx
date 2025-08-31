@@ -67,6 +67,11 @@ export default function AnalyticsPage() {
     queryKey: ['/api/analytics/events', { clientId: selectedClient !== 'all' ? selectedClient : undefined }],
   });
 
+  const { data: monthlyData = [] } = useQuery({
+    queryKey: ['/api/analytics/monthly'],
+    enabled: isAuthenticated && !isLoading,
+  });
+
   // Process assignment data for charts
   const statusData = assignments.reduce((acc: any[], assignment: any) => {
     const existing = acc.find(item => item.status === assignment.status);
@@ -121,15 +126,7 @@ export default function AnalyticsPage() {
     return acc;
   }, []);
 
-  // Monthly progress data (simulated)
-  const monthlyData = [
-    { month: 'Jan', completed: 12, pending: 8, rejected: 2 },
-    { month: 'Feb', completed: 19, pending: 12, rejected: 3 },
-    { month: 'Mar', completed: 25, pending: 15, rejected: 1 },
-    { month: 'Apr', completed: 31, pending: 18, rejected: 4 },
-    { month: 'May', completed: 28, pending: 14, rejected: 2 },
-    { month: 'Jun', completed: 34, pending: 20, rejected: 3 },
-  ];
+  // Monthly progress data is now fetched from the API
 
   if (statsLoading || assignmentsLoading) {
     return (

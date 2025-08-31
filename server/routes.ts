@@ -145,6 +145,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Monthly analytics endpoint
+  app.get('/api/analytics/monthly', devRbacBypass(requireRole('ADMIN', 'OWNER')), devAuditBypass, async (req: any, res) => {
+    try {
+      const monthlyData = await storage.getMonthlyAnalytics();
+      res.json(monthlyData);
+    } catch (error) {
+      console.error("Error fetching monthly analytics:", error);
+      res.status(500).json({ message: "Failed to fetch monthly analytics" });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', async (req: any, res) => {
     try {
