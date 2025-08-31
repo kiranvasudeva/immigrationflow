@@ -3,8 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from '@/contexts/I18nProvider';
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -65,6 +63,7 @@ export default function AnalyticsPage() {
 
   const { data: analyticsEvents = [] } = useQuery({
     queryKey: ['/api/analytics/events', { clientId: selectedClient !== 'all' ? selectedClient : undefined }],
+    enabled: user?.role === 'ADMIN',
   });
 
   const { data: monthlyData = [] } = useQuery({
@@ -137,15 +136,14 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar userRole={user?.role || 'VIEWER'} />
-      
-      <div className="ml-64">
-        <Header 
-          title={t('pages.analytics.title') || 'Analytics Dashboard'}
-          subtitle={t('pages.analytics.subtitle') || 'Comprehensive analytics and reporting for immigration workflows'}
-          actions={
-            <div className="flex space-x-4">
+    <div className="flex flex-col">
+      <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">{t('pages.analytics.title') || 'Analytics Dashboard'}</h1>
+            <p className="text-secondary mt-1">{t('pages.analytics.subtitle') || 'Comprehensive analytics and reporting for immigration workflows'}</p>
+          </div>
+          <div className="flex space-x-4">
               <Select value={selectedClient} onValueChange={setSelectedClient}>
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder={t('analytics.placeholders.allClients') || 'All Clients'} />
@@ -365,8 +363,7 @@ export default function AnalyticsPage() {
           </div>
         </CardContent>
       </Card>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

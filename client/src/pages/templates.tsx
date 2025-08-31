@@ -143,11 +143,8 @@ export default function TemplatesPage() {
 
   if (selectedTemplate || isCreating) {
     return (
-      <div className="min-h-screen bg-background">
-        <Sidebar userRole={user?.role || 'VIEWER'} />
-        
-        <div className="ml-64">
-          <div className="p-8">
+      <div className="flex flex-col">
+        <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
             <div className="flex items-center justify-between mb-6">
               <Button
                 variant="outline"
@@ -171,17 +168,16 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar userRole={user?.role || 'VIEWER'} />
-      
-      <div className="ml-64">
-        <Header 
-          title="Document Templates"
-          subtitle="Create and manage document templates for Romanian immigration forms"
-          actions={
-            <Button
-              onClick={() => setIsCreating(true)}
-              className="flex items-center space-x-2"
+    <div className="flex flex-col">
+      <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Document Templates</h1>
+            <p className="text-secondary mt-1">Create and manage document templates for Romanian immigration forms</p>
+          </div>
+          <Button
+            onClick={() => setIsCreating(true)}
+            className="flex items-center space-x-2"
               data-testid="button-create-template"
             >
               <Plus className="h-4 w-4" />
@@ -281,8 +277,7 @@ export default function TemplatesPage() {
               )}
             </div>
           )}
-        </div>
+        </main>
       </div>
-    </div>
   );
 }

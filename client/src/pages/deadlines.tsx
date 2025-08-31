@@ -3,8 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from '@/contexts/I18nProvider';
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -95,12 +93,8 @@ export default function DeadlinesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar userRole={user?.role || 'VIEWER'} />
-      
-      <div className="ml-64">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-6">
+    <div className="flex flex-col">
+      <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold">{t('pages.deadlines.title') || 'Deadlines'}</h1>

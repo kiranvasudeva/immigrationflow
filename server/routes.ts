@@ -1310,6 +1310,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User-specific documents endpoint
+  app.get('/api/user/documents', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER')), devAuditBypass, async (req: any, res) => {
+    try {
+      const userType = req.query.role || 'ADMIN';
+      let documents = [];
+
+      if (userType === 'WORKER') {
+        // Workers see only their own uploaded documents
+        const workerAssignments = await storage.getAssignmentsByWorker('worker-john-001');
+        for (const assignment of workerAssignments) {
+          const assignmentDocs = await storage.getDocumentFilesByAssignment(assignment.id);
+          documents.push(...assignmentDocs);
+        }
+      } else if (userType === 'OWNER') {
+        // Client owners see documents for their workers
+        const allAssignments = await storage.getAssignmentsWithDetails();
+        const clientAssignments = allAssignments.filter((assignment: any) => 
+          assignment.clientProfile?.id === 'client-techcorp-001'
+        );
+        for (const assignment of clientAssignments) {
+          const assignmentDocs = await storage.getDocumentFilesByAssignment(assignment.id);
+          documents.push(...assignmentDocs);
+        }
+      } else {
+        // Admin sees all documents
+        const allAssignments = await storage.getAssignmentsWithDetails();
+        for (const assignment of allAssignments) {
+          const assignmentDocs = await storage.getDocumentFilesByAssignment(assignment.id);
+          documents.push(...assignmentDocs);
+        }
+      }
+
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching user documents:", error);
+      res.status(500).json({ message: "Failed to fetch documents" });
+    }
+  });
+
+  // User-specific deadlines endpoint  
+  app.get('/api/user/deadlines', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER')), devAuditBypass, async (req: any, res) => {
+    try {
+      const userType = req.query.role || 'ADMIN';
+      let deadlines = [];
+
+      if (userType === 'WORKER') {
+        // Workers see only their own assignment deadlines
+        const workerAssignments = await storage.getAssignmentsByWorker('worker-john-001');
+        deadlines = workerAssignments.map((assignment: any) => ({
+          id: assignment.id,
+          title: `${assignment.requirement?.title || 'Assignment'} Deadline`,
+          description: assignment.requirement?.description || 'Complete assignment requirements',
+          dueDate: assignment.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now if no due date
+          status: assignment.status === 'COMPLETED' ? 'completed' : 'upcoming',
+          assignmentId: assignment.id
+        }));
+      } else if (userType === 'OWNER') {
+        // Client owners see deadlines for their workers
+        const allAssignments = await storage.getAssignmentsWithDetails();
+        const clientAssignments = allAssignments.filter((assignment: any) => 
+          assignment.clientProfile?.id === 'client-techcorp-001'
+        );
+        deadlines = clientAssignments.map((assignment: any) => ({
+          id: assignment.id,
+          title: `${assignment.worker?.firstName || 'Worker'} - ${assignment.requirement?.title || 'Assignment'}`,
+          description: assignment.requirement?.description || 'Worker assignment deadline',
+          dueDate: assignment.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          status: assignment.status === 'COMPLETED' ? 'completed' : 'upcoming',
+          assignmentId: assignment.id
+        }));
+      } else {
+        // Admin sees all deadlines
+        const allAssignments = await storage.getAssignmentsWithDetails();
+        deadlines = allAssignments.map((assignment: any) => ({
+          id: assignment.id,
+          title: `${assignment.clientProfile?.legalName || 'Client'} - ${assignment.worker?.firstName || 'Worker'} - ${assignment.requirement?.title || 'Assignment'}`,
+          description: assignment.requirement?.description || 'Assignment deadline',
+          dueDate: assignment.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          status: assignment.status === 'COMPLETED' ? 'completed' : 'upcoming',
+          assignmentId: assignment.id
+        }));
+      }
+
+      res.json(deadlines);
+    } catch (error) {
+      console.error("Error fetching user deadlines:", error);
+      res.status(500).json({ message: "Failed to fetch deadlines" });
+    }
+  });
+
   // Analytics routes
   app.get('/api/analytics/events', devRbacBypass(requireRole('ADMIN')), devAuditBypass, async (req: any, res) => {
     try {
