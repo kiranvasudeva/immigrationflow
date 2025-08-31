@@ -43,7 +43,7 @@ export default function WorkerDashboard() {
   }
 
   // Real workflow data state
-  const [workflowData, setWorkflowData] = useState(null);
+  const [workflowData, setWorkflowData] = useState<any>(null);
   const [isLoadingWorkflow, setIsLoadingWorkflow] = useState(true);
 
   // Fetch workflow data for this worker
@@ -75,10 +75,10 @@ export default function WorkerDashboard() {
   }, [user?.id]);
 
   // Generate urgent actions and next steps from workflow data
-  const urgentActions = workflowData?.stages?.filter(stage => stage.status === 'in-progress')
-    .flatMap(stage => 
-      stage.documentRequirements?.filter(doc => doc.required && doc.status === 'pending')
-        .map(doc => ({
+  const urgentActions = workflowData?.stages?.filter((stage: any) => stage.status === 'in-progress')
+    .flatMap((stage: any) => 
+      stage.documentRequirements?.filter((doc: any) => doc.required && doc.status === 'pending')
+        .map((doc: any) => ({
           id: doc.id,
           title: doc.title,
           description: doc.description,
@@ -87,9 +87,9 @@ export default function WorkerDashboard() {
         })) || []
     ) || [];
 
-  const nextSteps = workflowData?.stages?.filter(stage => stage.status === 'pending')
+  const nextSteps = workflowData?.stages?.filter((stage: any) => stage.status === 'pending')
     .slice(0, 3) // Show next 3 upcoming stages
-    .map(stage => ({
+    .map((stage: any) => ({
       id: stage.id,
       title: stage.name,
       description: stage.description,
@@ -97,8 +97,8 @@ export default function WorkerDashboard() {
     })) || [];
 
   // Generate document list from workflow data
-  const documents = workflowData?.stages?.flatMap(stage => 
-    stage.documentRequirements?.map(doc => ({
+  const documents = workflowData?.stages?.flatMap((stage: any) => 
+    stage.documentRequirements?.map((doc: any) => ({
       id: doc.id,
       name: doc.title,
       stage: stage.name,
@@ -144,7 +144,7 @@ export default function WorkerDashboard() {
                       <p className="text-sm">Great work! Keep up the progress.</p>
                     </div>
                   ) : (
-                    urgentActions.map((action) => (
+                    urgentActions.map((action: any) => (
                     <div 
                       key={action.id}
                       className={`flex items-start p-4 rounded-lg border ${
@@ -195,7 +195,7 @@ export default function WorkerDashboard() {
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-4">
-                  {nextSteps.map((step, index) => (
+                  {nextSteps.map((step: any, index: number) => (
                     <div 
                       key={step.id}
                       className="flex items-start p-4 bg-blue-50 border border-blue-200 rounded-lg"
@@ -237,7 +237,7 @@ export default function WorkerDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {documents.map((doc) => (
+                    {documents.map((doc: any) => (
                       <tr key={doc.id} className="hover:bg-gray-50" data-testid={`document-row-${doc.id}`}>
                         <td className="py-4 px-6">
                           <div className="flex items-center">
