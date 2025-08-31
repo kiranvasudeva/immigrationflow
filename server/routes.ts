@@ -2009,8 +2009,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/workflow-templates', isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
-      const templateData = req.body;
+      const { steps, ...templateData } = req.body;
+      
+      // Create the workflow template first
       const template = await storage.createWorkflowTemplate(templateData);
+      
+      // Create steps and their associated document requirements and checklist items
+      if (steps && steps.length > 0) {
+        for (const stepData of steps) {
+          const { documentRequirements, checklistItems, ...stepInfo } = stepData;
+          
+          // Create the step
+          const step = await storage.createWorkflowStep({
+            workflowTemplateId: template.id,
+            ...stepInfo
+          });
+          
+          // Create document requirements for this step
+          if (documentRequirements && documentRequirements.length > 0) {
+            for (const docReq of documentRequirements) {
+              await storage.createDocumentRequirement({
+                workflowStepId: step.id,
+                ...docReq
+              });
+            }
+          }
+          
+          // Create checklist items for this step
+          if (checklistItems && checklistItems.length > 0) {
+            for (const checklistItem of checklistItems) {
+              await storage.createChecklistItem({
+                workflowStepId: step.id,
+                ...checklistItem
+              });
+            }
+          }
+        }
+      }
+      
       res.status(201).json(template);
     } catch (error) {
       console.error('Error creating workflow template:', error);
@@ -2021,8 +2057,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/workflow-templates/:templateId', isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
       const { templateId } = req.params;
-      const updates = req.body;
+      const { steps, ...updates } = req.body;
+      
+      // Update the workflow template
       const template = await storage.updateWorkflowTemplate(templateId, updates);
+      
+      // If steps are provided, we need to handle step updates
+      if (steps && steps.length > 0) {
+        // Get existing steps for this template
+        const existingSteps = await storage.getWorkflowSteps(templateId);
+        const existingStepIds = existingSteps.map(s => s.id);
+        
+        // Process each step in the request
+        for (const stepData of steps) {
+          const { documentRequirements, checklistItems, id: stepId, ...stepInfo } = stepData;
+          
+          let step;
+          if (stepId && existingStepIds.includes(stepId)) {
+            // Update existing step
+            step = await storage.updateWorkflowStep(stepId, stepInfo);
+          } else {
+            // Create new step
+            step = await storage.createWorkflowStep({
+              workflowTemplateId: templateId,
+              ...stepInfo
+            });
+          }
+          
+          // Handle document requirements
+          if (documentRequirements) {
+            // Get existing document requirements for this step
+            const existingDocReqs = await storage.getDocumentRequirements(step.id);
+            const existingDocReqIds = existingDocReqs.map(d => d.id);
+            
+            // Update or create document requirements
+            for (const docReq of documentRequirements) {
+              if (docReq.id && existingDocReqIds.includes(docReq.id)) {
+                // Update existing document requirement
+                await storage.updateDocumentRequirement(docReq.id, docReq);
+              } else {
+                // Create new document requirement
+                await storage.createDocumentRequirement({
+                  workflowStepId: step.id,
+                  ...docReq
+                });
+              }
+            }
+            
+            // Delete document requirements that are no longer present
+            const providedDocReqIds = documentRequirements.filter(d => d.id).map(d => d.id);
+            const toDelete = existingDocReqIds.filter(id => !providedDocReqIds.includes(id));
+            for (const deleteId of toDelete) {
+              await storage.deleteDocumentRequirement(deleteId);
+            }
+          }
+          
+          // Handle checklist items
+          if (checklistItems) {
+            // Get existing checklist items for this step
+            const existingChecklistItems = await storage.getChecklistItems(step.id);
+            const existingChecklistIds = existingChecklistItems.map(c => c.id);
+            
+            // Update or create checklist items
+            for (const checklistItem of checklistItems) {
+              if (checklistItem.id && existingChecklistIds.includes(checklistItem.id)) {
+                // Update existing checklist item
+                await storage.updateChecklistItem(checklistItem.id, checklistItem);
+              } else {
+                // Create new checklist item
+                await storage.createChecklistItem({
+                  workflowStepId: step.id,
+                  ...checklistItem
+                });
+              }
+            }
+            
+            // Delete checklist items that are no longer present
+            const providedChecklistIds = checklistItems.filter(c => c.id).map(c => c.id);
+            const toDeleteChecklist = existingChecklistIds.filter(id => !providedChecklistIds.includes(id));
+            for (const deleteId of toDeleteChecklist) {
+              await storage.deleteChecklistItem(deleteId);
+            }
+          }
+        }
+        
+        // Delete steps that are no longer present
+        const providedStepIds = steps.filter(s => s.id).map(s => s.id);
+        const stepsToDelete = existingStepIds.filter(id => !providedStepIds.includes(id));
+        for (const deleteId of stepsToDelete) {
+          await storage.deleteWorkflowStep(deleteId);
+        }
+      }
+      
       res.json(template);
     } catch (error) {
       console.error('Error updating workflow template:', error);

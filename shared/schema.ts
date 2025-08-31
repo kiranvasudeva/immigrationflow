@@ -93,7 +93,6 @@ export const workers = pgTable("workers", {
   passportExpiry: timestamp("passport_expiry"),
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 20 }),
-  assignedWorkflowIds: text("assigned_workflow_ids").array(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -726,7 +725,6 @@ export const insertWorkerSchema = createInsertSchema(workers).pick({
   passportExpiry: true,
   email: true,
   phone: true,
-  assignedWorkflowIds: true,
 });
 
 export const insertAssignmentSchema = createInsertSchema(assignments).pick({
