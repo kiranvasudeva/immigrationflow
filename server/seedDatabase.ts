@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { 
   users, clientProfiles, workers, stages, requirements, assignments, 
-  translations, documentTemplates, templateFields 
+  translations, documentTemplates, templateFields, documentFiles 
 } from "@shared/schema";
 import { nanoid } from 'nanoid';
 import { sql } from 'drizzle-orm';
@@ -12,6 +12,7 @@ export async function seedDatabase() {
   try {
     // Clear existing test data only - clear in correct order due to foreign keys
     console.log('🗑️  Clearing existing test data...');
+    await db.delete(documentFiles);
     await db.delete(assignments);
     await db.delete(requirements);
     await db.delete(stages);
@@ -478,6 +479,59 @@ export async function seedDatabase() {
     const insertedTemplates = await db.insert(documentTemplates).values(templatesData).returning();
     console.log(`✅ Created ${insertedTemplates.length} test document templates`);
 
+    // Create sample document files for testing
+    const sampleDocuments = [
+      {
+        fileName: 'test-work-contract.pdf',
+        originalName: 'Work Contract - Test Worker Alpha.pdf',
+        mimeType: 'application/pdf',
+        fileSize: 245760,
+        s3Key: 'test/documents/work-contract-alpha.pdf',
+        assignmentId: insertedAssignments[0]?.id,
+        uploadedByUserId: insertedWorkers[0]?.id,
+        uploadedAt: new Date('2024-01-15'),
+        status: 'VERIFIED' as const,
+        isScanned: true,
+        scanStatus: 'CLEAN' as const,
+        scanResults: { threats: [], safe: true },
+      },
+      {
+        fileName: 'test-criminal-background.pdf',
+        originalName: 'Criminal Background Check - Test Worker Beta.pdf',
+        mimeType: 'application/pdf',
+        fileSize: 180240,
+        s3Key: 'test/documents/criminal-background-beta.pdf',
+        assignmentId: insertedAssignments[5]?.id,
+        uploadedByUserId: insertedWorkers[1]?.id,
+        uploadedAt: new Date('2024-01-20'),
+        status: 'VERIFIED' as const,
+        isScanned: true,
+        scanStatus: 'CLEAN' as const,
+        scanResults: { threats: [], safe: true },
+      },
+      {
+        fileName: 'test-diploma.pdf',
+        originalName: 'Educational Certificate - Test Worker Gamma.pdf',
+        mimeType: 'application/pdf',
+        fileSize: 320480,
+        s3Key: 'test/documents/diploma-gamma.pdf',
+        assignmentId: insertedAssignments[10]?.id,
+        uploadedByUserId: insertedWorkers[2]?.id,
+        uploadedAt: new Date('2024-01-25'),
+        status: 'PENDING' as const,
+        isScanned: true,
+        scanStatus: 'CLEAN' as const,
+        scanResults: { threats: [], safe: true },
+      },
+    ];
+
+    const validDocuments = sampleDocuments.filter(doc => doc.assignmentId);
+    let insertedDocuments = [];
+    if (validDocuments.length > 0) {
+      insertedDocuments = await db.insert(documentFiles).values(validDocuments).returning();
+      console.log(`✅ Created ${insertedDocuments.length} sample document files`);
+    }
+
     console.log('🎉 Database seeding completed successfully!');
     return {
       admins: insertedAdmins.length,
@@ -487,6 +541,7 @@ export async function seedDatabase() {
       requirements: insertedRequirements.length,
       assignments: insertedAssignments.length,
       templates: insertedTemplates.length,
+      documents: insertedDocuments.length,
     };
     
   } catch (error) {

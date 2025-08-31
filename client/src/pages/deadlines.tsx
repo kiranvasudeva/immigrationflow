@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from '@/contexts/I18nProvider';
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +13,7 @@ import { Calendar, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 export default function DeadlinesPage() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { t } = useTranslation();
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -40,45 +42,11 @@ export default function DeadlinesPage() {
     return null;
   }
 
-  // Mock data - would come from API based on user's assignments
-  const mockDeadlines = [
-    {
-      id: "1",
-      title: "Upload Work Contract",
-      description: "Required for IGI work permit application",
-      dueDate: "2024-02-15",
-      status: "urgent",
-      stage: "IGI Work Permit",
-      priority: "high"
-    },
-    {
-      id: "2",
-      title: "Submit Medical Certificate",
-      description: "Medical examination results needed",
-      dueDate: "2024-02-20",
-      status: "upcoming",
-      stage: "Medical Requirements",
-      priority: "medium"
-    },
-    {
-      id: "3",
-      title: "Criminal Background Check",
-      description: "FBI background check with apostille",
-      dueDate: "2024-02-10",
-      status: "completed",
-      stage: "Document Preparation",
-      priority: "high"
-    },
-    {
-      id: "4",
-      title: "Consulate Appointment",
-      description: "Visa interview at Romanian consulate",
-      dueDate: "2024-03-01",
-      status: "scheduled",
-      stage: "Consulate Process",
-      priority: "high"
-    }
-  ];
+  // Fetch user-specific deadlines from API
+  const { data: deadlines = [], isLoading: deadlinesLoading, error: deadlinesError } = useQuery({
+    queryKey: ['/api/user/deadlines'],
+    enabled: isAuthenticated,
+  });
 
   const getDaysUntilDue = (dueDate: string) => {
     const today = new Date();
@@ -91,17 +59,17 @@ export default function DeadlinesPage() {
   const getStatusBadge = (status: string, daysUntil: number) => {
     switch (status) {
       case 'completed':
-        return <Badge variant="default" className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Completed</Badge>;
+        return <Badge variant="default" className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />{t('status.completed') || 'Completed'}</Badge>;
       case 'urgent':
-        return <Badge variant="destructive"><AlertTriangle className="h-3 w-3 mr-1" />Urgent</Badge>;
+        return <Badge variant="destructive"><AlertTriangle className="h-3 w-3 mr-1" />{t('status.urgent') || 'Urgent'}</Badge>;
       case 'upcoming':
         return daysUntil <= 7 ? 
-          <Badge variant="destructive"><Clock className="h-3 w-3 mr-1" />Due Soon</Badge> :
-          <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />Upcoming</Badge>;
+          <Badge variant="destructive"><Clock className="h-3 w-3 mr-1" />{t('status.dueSoon') || 'Due Soon'}</Badge> :
+          <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />{t('status.upcoming') || 'Upcoming'}</Badge>;
       case 'scheduled':
-        return <Badge variant="default" className="bg-blue-500"><Calendar className="h-3 w-3 mr-1" />Scheduled</Badge>;
+        return <Badge variant="default" className="bg-blue-500"><Calendar className="h-3 w-3 mr-1" />{t('status.scheduled') || 'Scheduled'}</Badge>;
       default:
-        return <Badge variant="outline">Unknown</Badge>;
+        return <Badge variant="outline">{t('status.unknown') || 'Unknown'}</Badge>;
     }
   };
 
@@ -118,7 +86,7 @@ export default function DeadlinesPage() {
     }
   };
 
-  const sortedDeadlines = mockDeadlines.sort((a, b) => {
+  const sortedDeadlines = deadlines.sort((a, b) => {
     const aDays = getDaysUntilDue(a.dueDate);
     const bDays = getDaysUntilDue(b.dueDate);
     if (a.status === 'completed') return 1;
@@ -135,9 +103,9 @@ export default function DeadlinesPage() {
         <main className="flex-1 overflow-y-auto p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold">Deadlines</h1>
+              <h1 className="text-3xl font-bold">{t('pages.deadlines.title') || 'Deadlines'}</h1>
               <p className="text-gray-600 mt-2">
-                Track important deadlines for your immigration process
+                {t('pages.deadlines.description') || 'Track important deadlines for your immigration process'}
               </p>
             </div>
           </div>
@@ -178,7 +146,7 @@ export default function DeadlinesPage() {
                       
                       {deadline.status !== 'completed' && (
                         <Button size="sm" data-testid={`button-action-${deadline.id}`}>
-                          Take Action
+                          {t('actions.takeAction') || 'Take Action'}
                         </Button>
                       )}
                     </div>
@@ -188,13 +156,13 @@ export default function DeadlinesPage() {
             })}
           </div>
 
-          {mockDeadlines.length === 0 && (
+          {deadlines.length === 0 && !deadlinesLoading && (
             <Card className="text-center py-12">
               <CardContent>
                 <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No Deadlines</h3>
+                <h3 className="text-xl font-semibold mb-2">{t('pages.deadlines.noDeadlines') || 'No Deadlines'}</h3>
                 <p className="text-gray-600">
-                  No upcoming deadlines at this time.
+                  {t('pages.deadlines.noDeadlinesDescription') || 'No upcoming deadlines at this time.'}
                 </p>
               </CardContent>
             </Card>

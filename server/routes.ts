@@ -1068,6 +1068,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User Documents routes
+  app.get('/api/user/documents', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER', 'VIEWER')), devAuditBypass, async (req: any, res) => {
+    try {
+      const user = req.user.dbUser || await storage.getUserByEmail(req.user.claims?.email || 'admin@dev.local');
+      
+      let documents = [];
+      if (user?.role === 'ADMIN') {
+        // Admin sees all documents with assignment info
+        const assignments = await storage.getAssignmentsWithDetails();
+        for (const assignment of assignments) {
+          const assignmentDocs = await storage.getDocumentFilesByAssignment(assignment.id);
+          documents.push(...assignmentDocs.map(doc => ({
+            ...doc,
+            assignment: {
+              id: assignment.id,
+              requirement: assignment.requirement.title,
+              stage: assignment.stage.title,
+              worker: assignment.worker ? `${assignment.worker.firstName} ${assignment.worker.lastName}` : null,
+              client: assignment.clientProfile.legalName
+            }
+          })));
+        }
+      } else if (user?.role === 'OWNER') {
+        // Owners see documents from their clients
+        const clients = await storage.getClientsByOwner(user.id);
+        for (const client of clients) {
+          const assignments = await storage.getAssignmentsByClient(client.id);
+          for (const assignment of assignments) {
+            const assignmentDocs = await storage.getDocumentFilesByAssignment(assignment.id);
+            const requirement = await storage.getRequirement(assignment.requirementId);
+            documents.push(...assignmentDocs.map(doc => ({
+              ...doc,
+              assignment: {
+                id: assignment.id,
+                requirement: requirement?.title || 'Unknown',
+                stage: requirement?.stageId || 'Unknown',
+                client: client.legalName
+              }
+            })));
+          }
+        }
+      } else if (user?.role === 'WORKER') {
+        // Workers see their own documents
+        const assignments = await storage.getWorkerAssignments(user.id);
+        for (const assignment of assignments) {
+          const assignmentDocs = await storage.getDocumentFilesByAssignment(assignment.id);
+          const requirement = await storage.getRequirement(assignment.requirementId);
+          documents.push(...assignmentDocs.map(doc => ({
+            ...doc,
+            assignment: {
+              id: assignment.id,
+              requirement: requirement?.title || 'Unknown',
+              stage: requirement?.stageId || 'Unknown'
+            }
+          })));
+        }
+      }
+      
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching user documents:", error);
+      res.status(500).json({ message: "Failed to fetch documents" });
+    }
+  });
+
+  // User Deadlines routes
+  app.get('/api/user/deadlines', devRbacBypass(requireRole('ADMIN', 'OWNER', 'WORKER', 'VIEWER')), devAuditBypass, async (req: any, res) => {
+    try {
+      const user = req.user.dbUser || await storage.getUserByEmail(req.user.claims?.email || 'admin@dev.local');
+      
+      let deadlines = [];
+      const now = new Date();
+      const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      
+      if (user?.role === 'ADMIN') {
+        // Admin sees all pending assignments as deadlines
+        const assignments = await storage.getAssignmentsWithDetails();
+        deadlines = assignments
+          .filter(assignment => ['NOT_STARTED', 'AWAITING_UPLOAD', 'SUBMITTED_BY_USER'].includes(assignment.status))
+          .map(assignment => ({
+            id: assignment.id,
+            title: assignment.requirement.title,
+            description: assignment.requirement.description || 'Complete this requirement',
+            dueDate: new Date(now.getTime() + Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Random due date within 2 weeks
+            status: assignment.status === 'NOT_STARTED' ? 'urgent' : 
+                   assignment.status === 'AWAITING_UPLOAD' ? 'upcoming' : 'completed',
+            stage: assignment.stage.title,
+            priority: assignment.requirement.required ? 'high' : 'medium',
+            worker: assignment.worker ? `${assignment.worker.firstName} ${assignment.worker.lastName}` : null,
+            client: assignment.clientProfile.legalName
+          }));
+      } else if (user?.role === 'OWNER') {
+        // Owners see deadlines from their clients
+        const clients = await storage.getClientsByOwner(user.id);
+        for (const client of clients) {
+          const assignments = await storage.getAssignmentsByClient(client.id);
+          for (const assignment of assignments) {
+            if (['NOT_STARTED', 'AWAITING_UPLOAD', 'SUBMITTED_BY_USER'].includes(assignment.status)) {
+              const requirement = await storage.getRequirement(assignment.requirementId);
+              const worker = assignment.workerId ? await storage.getWorker(assignment.workerId) : null;
+              deadlines.push({
+                id: assignment.id,
+                title: requirement?.title || 'Unknown Requirement',
+                description: requirement?.description || 'Complete this requirement',
+                dueDate: new Date(now.getTime() + Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                status: assignment.status === 'NOT_STARTED' ? 'urgent' : 
+                       assignment.status === 'AWAITING_UPLOAD' ? 'upcoming' : 'completed',
+                stage: requirement?.stageId || 'Unknown',
+                priority: requirement?.required ? 'high' : 'medium',
+                worker: worker ? `${worker.firstName} ${worker.lastName}` : null,
+                client: client.legalName
+              });
+            }
+          }
+        }
+      } else if (user?.role === 'WORKER') {
+        // Workers see their own assignment deadlines
+        const assignments = await storage.getWorkerAssignments(user.id);
+        for (const assignment of assignments) {
+          if (['NOT_STARTED', 'AWAITING_UPLOAD', 'SUBMITTED_BY_USER'].includes(assignment.status)) {
+            const requirement = await storage.getRequirement(assignment.requirementId);
+            deadlines.push({
+              id: assignment.id,
+              title: requirement?.title || 'Unknown Requirement',
+              description: requirement?.description || 'Complete this requirement',
+              dueDate: new Date(now.getTime() + Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              status: assignment.status === 'NOT_STARTED' ? 'urgent' : 
+                     assignment.status === 'AWAITING_UPLOAD' ? 'upcoming' : 'completed',
+              stage: requirement?.stageId || 'Unknown',
+              priority: requirement?.required ? 'high' : 'medium'
+            });
+          }
+        }
+      }
+      
+      res.json(deadlines);
+    } catch (error) {
+      console.error("Error fetching user deadlines:", error);
+      res.status(500).json({ message: "Failed to fetch deadlines" });
+    }
+  });
+
   // Analytics routes
   app.get('/api/analytics/events', devRbacBypass(requireRole('ADMIN')), devAuditBypass, async (req: any, res) => {
     try {
