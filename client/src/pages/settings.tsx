@@ -160,6 +160,7 @@ export default function SettingsPage() {
   const [showCreateWorkflow, setShowCreateWorkflow] = useState(false);
   const [editingWorkflow, setEditingWorkflow] = useState<Workflow | null>(null);
   const [showStageManager, setShowStageManager] = useState<string | null>(null);
+  const [seedingRomanian, setSeedingRomanian] = useState(false);
   
   // Fetch workflow templates from the database
   const { data: workflowTemplates, isLoading: loadingWorkflows } = useQuery({
@@ -290,6 +291,42 @@ export default function SettingsPage() {
     }
   }, [workflowTemplates]);
 
+  // Function to seed Romanian work permit workflow with real documents and checklists
+  const seedRomanianWorkflow = async () => {
+    setSeedingRomanian(true);
+    try {
+      const response = await fetch('/api/seed-romanian-workflow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to seed Romanian workflow');
+      }
+      
+      const result = await response.json();
+      
+      toast({
+        title: "Success",
+        description: "Romanian work permit documents and verification checklists have been populated successfully.",
+      });
+      
+      // Refresh the page to show the updated data
+      window.location.reload();
+    } catch (error) {
+      console.error('Error seeding Romanian workflow:', error);
+      toast({
+        title: "Error",
+        description: "Failed to populate Romanian workflow documents. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSeedingRomanian(false);
+    }
+  };
+
   const handleCreateWorkflow = async (workflowData: any) => {
     try {
       const response = await fetch('/api/workflow-templates', {
@@ -392,10 +429,27 @@ export default function SettingsPage() {
                   <Workflow className="h-5 w-5" />
                   Workflow Templates
                 </div>
-                <Button onClick={() => setShowCreateWorkflow(true)} className="bg-blue-600 hover:bg-blue-700">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create New Workflow
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={seedRomanianWorkflow} 
+                    variant="outline" 
+                    data-testid="button-seed-romanian-workflow"
+                    disabled={seedingRomanian}
+                  >
+                    {seedingRomanian ? (
+                      <>Loading...</>
+                    ) : (
+                      <>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Populate Romanian Documents
+                      </>
+                    )}
+                  </Button>
+                  <Button onClick={() => setShowCreateWorkflow(true)} className="bg-blue-600 hover:bg-blue-700">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create New Workflow
+                  </Button>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>

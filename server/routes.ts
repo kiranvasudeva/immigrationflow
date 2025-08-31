@@ -44,6 +44,377 @@ import {
 } from "@shared/schema";
 import { seedDatabase } from "./seedDatabase";
 
+// Romanian Work Permit Workflow Seeding Function
+async function seedRomanianWorkPermitWorkflow() {
+  // Get the Romanian Work Permit workflow template
+  const templates = await storage.getWorkflowTemplates();
+  const romanianTemplate = templates.find(t => t.name === 'Romanian Work Permit Process');
+  
+  if (!romanianTemplate) {
+    throw new Error('Romanian Work Permit Process template not found');
+  }
+
+  // Real Romanian work permit documents and verification checklists for each stage
+  const stageData = [
+    {
+      stageName: 'AJOFM Labor Market Test',
+      documents: [
+        {
+          title: 'Cerere AJOFM pentru avizarea postului de muncă',
+          description: 'Official application form for labor market testing submitted to AJOFM',
+          isRequired: true,
+          submittedBy: 'ADMIN',
+          acceptedFileTypes: ['application/pdf', 'application/msword'],
+          maxFileSize: 10485760
+        },
+        {
+          title: 'Contract individual de muncă',
+          description: 'Employment contract in Romanian language, signed by employer',
+          isRequired: true,
+          submittedBy: 'ADMIN',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 5242880
+        },
+        {
+          title: 'Certificat de înregistrare ONRC',
+          description: 'Company registration certificate from National Trade Registry Office',
+          isRequired: true,
+          submittedBy: 'ADMIN',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 5242880
+        },
+        {
+          title: 'Fișa postului de muncă',
+          description: 'Detailed job description with responsibilities, qualifications, and salary',
+          isRequired: true,
+          submittedBy: 'ADMIN',
+          acceptedFileTypes: ['application/pdf', 'application/msword'],
+          maxFileSize: 5242880
+        }
+      ],
+      checklist: [
+        {
+          title: 'Verify company has valid business registration',
+          description: 'Check that the employer has active business registration and tax compliance',
+          required: true,
+          order: 1
+        },
+        {
+          title: 'Confirm job posting requirements met',
+          description: 'Verify job was posted for 30+ days in Romania before applying for foreign worker',
+          required: true,
+          order: 2
+        },
+        {
+          title: 'Validate salary meets minimum requirements',
+          description: 'Ensure offered salary is at least Romanian minimum wage or industry standard',
+          required: true,
+          order: 3
+        },
+        {
+          title: 'Check CAEN code matches business activity',
+          description: 'Verify company CAEN code aligns with the job being offered',
+          required: true,
+          order: 4
+        }
+      ]
+    },
+    {
+      stageName: 'IGI Work Permit Application',
+      documents: [
+        {
+          title: 'Cerere pentru autorizație de muncă',
+          description: 'Official work permit application form (IGI form)',
+          isRequired: true,
+          submittedBy: 'ADMIN',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 10485760
+        },
+        {
+          title: 'Avizul AJOFM',
+          description: 'Labor market test approval from AJOFM (obtained from previous stage)',
+          isRequired: true,
+          submittedBy: 'ADMIN',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 5242880
+        },
+        {
+          title: 'Cazier judiciar apostilat',
+          description: 'Criminal background check from home country, apostilled or legalized',
+          isRequired: true,
+          submittedBy: 'WORKER',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 10485760
+        },
+        {
+          title: 'Diploma apostilată și tradusă autorizat',
+          description: 'Educational certificates, apostilled and officially translated to Romanian',
+          isRequired: true,
+          submittedBy: 'WORKER',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 15728640
+        },
+        {
+          title: 'Certificate medicale',
+          description: 'Medical certificates proving fitness for work, issued within 3 months',
+          isRequired: true,
+          submittedBy: 'WORKER',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 10485760
+        }
+      ],
+      checklist: [
+        {
+          title: 'Verify all apostille stamps are valid',
+          description: 'Check that apostille or legalization stamps on foreign documents are authentic',
+          required: true,
+          order: 1
+        },
+        {
+          title: 'Confirm authorized translations are recent',
+          description: 'Ensure all document translations are done by certified Romanian translators',
+          required: true,
+          order: 2
+        },
+        {
+          title: 'Validate medical certificates are current',
+          description: 'Check that medical certificates are issued within 3 months of application',
+          required: true,
+          order: 3
+        },
+        {
+          title: 'Review criminal background check validity',
+          description: 'Ensure criminal record is recent (typically within 6 months) and properly legalized',
+          required: true,
+          order: 4
+        }
+      ]
+    },
+    {
+      stageName: 'Consulate Visa Application',
+      documents: [
+        {
+          title: 'Formularul de cerere de viză D',
+          description: 'Long-stay visa application form completed and signed',
+          isRequired: true,
+          submittedBy: 'WORKER',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 5242880
+        },
+        {
+          title: 'Autorizația de muncă IGI',
+          description: 'Work permit issued by IGI (obtained from previous stage)',
+          isRequired: true,
+          submittedBy: 'ADMIN',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 5242880
+        },
+        {
+          title: 'Pașaport valid',
+          description: 'Valid passport with at least 6 months validity remaining',
+          isRequired: true,
+          submittedBy: 'WORKER',
+          acceptedFileTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+          maxFileSize: 10485760
+        },
+        {
+          title: 'Fotografii biometrice',
+          description: '2 recent biometric photos meeting Romanian consular requirements',
+          isRequired: true,
+          submittedBy: 'WORKER',
+          acceptedFileTypes: ['image/jpeg', 'image/png'],
+          maxFileSize: 5242880
+        },
+        {
+          title: 'Asigurare medicală',
+          description: 'Health insurance covering Romanian territory for visa duration',
+          isRequired: true,
+          submittedBy: 'WORKER',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 5242880
+        }
+      ],
+      checklist: [
+        {
+          title: 'Verify passport validity and pages',
+          description: 'Check passport has at least 6 months validity and 2 empty visa pages',
+          required: true,
+          order: 1
+        },
+        {
+          title: 'Confirm health insurance coverage',
+          description: 'Verify insurance covers full Romanian territory and visa period',
+          required: true,
+          order: 2
+        },
+        {
+          title: 'Validate biometric photo specifications',
+          description: 'Ensure photos meet Romanian consular biometric requirements',
+          required: true,
+          order: 3
+        },
+        {
+          title: 'Check visa application completeness',
+          description: 'Review that all form fields are correctly filled and signed',
+          required: true,
+          order: 4
+        }
+      ]
+    },
+    {
+      stageName: 'Entry and Registration',
+      documents: [
+        {
+          title: 'Viza D obținută',
+          description: 'Long-stay visa stamped in passport by Romanian consulate',
+          isRequired: true,
+          submittedBy: 'WORKER',
+          acceptedFileTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+          maxFileSize: 10485760
+        },
+        {
+          title: 'Declarație de intrare în România',
+          description: 'Border entry declaration or stamp showing legal entry into Romania',
+          isRequired: true,
+          submittedBy: 'WORKER',
+          acceptedFileTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+          maxFileSize: 5242880
+        },
+        {
+          title: 'Adresă de domiciliu',
+          description: 'Proof of accommodation in Romania (rental contract, hotel booking, etc.)',
+          isRequired: true,
+          submittedBy: 'WORKER',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 10485760
+        }
+      ],
+      checklist: [
+        {
+          title: 'Confirm legal entry into Romania',
+          description: 'Verify worker entered Romania legally with proper visa and border stamps',
+          required: true,
+          order: 1
+        },
+        {
+          title: 'Validate accommodation documentation',
+          description: 'Check that accommodation proof is valid and covers required period',
+          required: true,
+          order: 2
+        },
+        {
+          title: 'Prepare for residence permit application',
+          description: 'Gather information needed for upcoming residence permit application',
+          required: true,
+          order: 3
+        }
+      ]
+    },
+    {
+      stageName: 'Residence Permit Application',
+      documents: [
+        {
+          title: 'Cerere pentru permis de ședere',
+          description: 'Official residence permit application form',
+          isRequired: true,
+          submittedBy: 'WORKER',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 10485760
+        },
+        {
+          title: 'Contract de muncă înregistrat ITM',
+          description: 'Employment contract registered with Labor Inspectorate (ITM)',
+          isRequired: true,
+          submittedBy: 'ADMIN',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 5242880
+        },
+        {
+          title: 'Adeverință de salariu',
+          description: 'Salary certificate or employment verification from employer',
+          isRequired: true,
+          submittedBy: 'ADMIN',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 5242880
+        },
+        {
+          title: 'Certificat de cazier român',
+          description: 'Romanian criminal record certificate (if staying longer than 90 days)',
+          isRequired: false,
+          submittedBy: 'WORKER',
+          acceptedFileTypes: ['application/pdf'],
+          maxFileSize: 5242880
+        }
+      ],
+      checklist: [
+        {
+          title: 'Verify employment contract registration',
+          description: 'Confirm employment contract is properly registered with ITM',
+          required: true,
+          order: 1
+        },
+        {
+          title: 'Check residence permit application completeness',
+          description: 'Review all required forms and documents for residence permit',
+          required: true,
+          order: 2
+        },
+        {
+          title: 'Validate accommodation continuity',
+          description: 'Ensure accommodation documentation covers extended stay period',
+          required: true,
+          order: 3
+        },
+        {
+          title: 'Confirm payment of required fees',
+          description: 'Verify all government fees for residence permit have been paid',
+          required: true,
+          order: 4
+        }
+      ]
+    }
+  ];
+
+  // Find each stage and add documents and checklist items
+  for (const stageInfo of stageData) {
+    // Find the workflow step by name
+    const steps = await storage.getWorkflowSteps(romanianTemplate.id);
+    const step = steps.find(s => s.name === stageInfo.stageName);
+    
+    if (step) {
+      console.log(`Adding documents and checklist for stage: ${stageInfo.stageName}`);
+      
+      // Add document requirements
+      for (const doc of stageInfo.documents) {
+        try {
+          await storage.createWorkflowStepDocumentRequirement({
+            workflowStepId: step.id,
+            ...doc
+          });
+        } catch (error) {
+          console.log(`Document requirement ${doc.title} already exists or error:`, error);
+        }
+      }
+      
+      // Add checklist items
+      for (const item of stageInfo.checklist) {
+        try {
+          await storage.createChecklistItem({
+            workflowStepId: step.id,
+            ...item
+          });
+        } catch (error) {
+          console.log(`Checklist item ${item.title} already exists or error:`, error);
+        }
+      }
+    } else {
+      console.warn(`Stage not found: ${stageInfo.stageName}`);
+    }
+  }
+  
+  console.log('Romanian work permit workflow seeded successfully');
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create government status service instance
   const governmentStatusService = createGovernmentStatusService(storage);
@@ -70,6 +441,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Auth middleware
   await setupAuth(app);
+
+  // Seed Romanian work permit workflow data
+  app.post('/api/seed-romanian-workflow', async (req, res) => {
+    try {
+      await seedRomanianWorkPermitWorkflow();
+      res.json({ success: true, message: 'Romanian work permit workflow seeded successfully' });
+    } catch (error) {
+      console.error('Error seeding Romanian workflow:', error);
+      res.status(500).json({ error: 'Failed to seed Romanian workflow' });
+    }
+  });
 
   // Development seed route - only in development
   app.post('/api/seed-database', async (req, res) => {
@@ -2275,6 +2657,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Checklist Items Management
+  // Get checklist items for a workflow step
+  app.get('/api/workflow/steps/:stepId/checklist-items', isAuthenticated, async (req: any, res) => {
+    try {
+      const { stepId } = req.params;
+      const items = await storage.getChecklistItems(stepId);
+      res.json(items);
+    } catch (error) {
+      console.error('Error fetching checklist items:', error);
+      res.status(500).json({ message: "Failed to fetch checklist items" });
+    }
+  });
+
   app.post('/api/workflow-steps/:stepId/checklist-items', isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
       const { stepId } = req.params;
