@@ -376,32 +376,40 @@ export default function SettingsPage() {
                     
                     <div className="space-y-3">
                       <div className="text-sm text-gray-600">
-                        <strong>Stages:</strong> {workflow.stages.length}
+                        <strong>Stages:</strong> {workflow.stages?.length || 0}
                       </div>
                       
-                      {workflow.stages.map((stage, index) => (
-                        <div key={stage.id} className="ml-4 pl-4 border-l-2 border-gray-200">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium">{stage.name}</h4>
-                            <span className="text-xs text-gray-500">{stage.estimatedDays} days</span>
-                          </div>
-                          <p className="text-sm text-gray-600 mt-1">{stage.description}</p>
-                          
-                          {stage.documentRequirements && stage.documentRequirements.length > 0 && (
-                            <div className="mt-2">
-                              <p className="text-xs font-medium text-gray-700">Document Requirements:</p>
-                              <ul className="text-xs text-gray-600 ml-4">
-                                {stage.documentRequirements.map((req) => (
-                                  <li key={req.id} className="flex items-center gap-1">
-                                    <span>• {req.title}</span>
-                                    {req.required && <span className="text-red-500">*</span>}
-                                  </li>
-                                ))}
-                              </ul>
+                      {workflow.stages && workflow.stages.length > 0 ? (
+                        workflow.stages.map((stage, index) => (
+                          <div key={stage.id} className="ml-4 pl-4 border-l-2 border-gray-200">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium">{stage.name}</h4>
+                              <span className="text-xs text-gray-500">{stage.estimatedDays} days</span>
                             </div>
-                          )}
+                            <p className="text-sm text-gray-600 mt-1">{stage.description}</p>
+                            
+                            {stage.documentRequirements && stage.documentRequirements.length > 0 && (
+                              <div className="mt-2">
+                                <p className="text-xs font-medium text-gray-700">Document Requirements:</p>
+                                <ul className="text-xs text-gray-600 ml-4">
+                                  {stage.documentRequirements.map((req) => (
+                                    <li key={req.id} className="flex items-center gap-1">
+                                      <span>• {req.title}</span>
+                                      {req.required && <span className="text-red-500">*</span>}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="ml-4 text-sm text-gray-500 italic">
+                          This workflow template has been created but no stages have been defined yet.
+                          <br />
+                          Detailed stage configuration is needed to make this workflow operational.
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
                 ))}

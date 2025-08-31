@@ -1326,7 +1326,7 @@ export class DatabaseStorage implements IStorage {
 
   // Checklist Items operations
   async getChecklistItems(stepId: string): Promise<ChecklistItem[]> {
-    return await db.select().from(checklistItems).where(eq(checklistItems.stepId, stepId)).orderBy(asc(checklistItems.title));
+    return await db.select().from(checklistItems).where(eq(checklistItems.workflowStepId, stepId)).orderBy(asc(checklistItems.title));
   }
 
   async createChecklistItem(item: InsertChecklistItem): Promise<ChecklistItem> {
