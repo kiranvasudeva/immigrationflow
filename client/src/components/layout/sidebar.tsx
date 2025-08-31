@@ -78,19 +78,19 @@ export default function Sidebar({ userRole, onSectionChange, currentSection }: S
       case 'OWNER':
         return [
           ...commonItems,
-          { icon: 'fas fa-building', label: t('nav.companyProfile') || 'Company Profile', href: '/profile', active: isActive('/profile') },
-          { icon: 'fas fa-users', label: t('common.workers') || 'Workers', href: '/workers', active: isActive('/workers') },
-          { icon: 'fas fa-file-alt', label: t('nav.documents') || 'Documents', href: '/documents', active: isActive('/documents') },
-          { icon: 'fas fa-chart-line', label: t('nav.reports') || 'Reports', href: '/reports', active: isActive('/reports') },
-          { icon: 'fas fa-euro-sign', label: t('nav.payments') || 'Payments', href: '/payments', active: isActive('/payments') },
-          { icon: 'fas fa-cog', label: t('nav.settings') || 'Settings', href: '/settings', active: isActive('/settings') }
+          { icon: 'fas fa-building', label: 'Company Profile', href: '/profile', active: isActive('/profile') },
+          { icon: 'fas fa-users', label: 'Workers', href: '/workers', active: isActive('/workers') },
+          { icon: 'fas fa-file-alt', label: 'Documents', href: '/documents', active: isActive('/documents') },
+          { icon: 'fas fa-chart-line', label: 'Reports', href: '/reports', active: isActive('/reports') },
+          { icon: 'fas fa-euro-sign', label: 'Payments', href: '/payments', active: isActive('/payments') },
+          { icon: 'fas fa-cog', label: 'Settings', href: '/settings', active: isActive('/settings') }
         ];
       case 'WORKER':
         return [
-          { icon: 'fas fa-chart-bar', label: t('nav.myProgress') || 'My Progress', href: '/dashboard', active: isActive('/dashboard') || isActive('/') },
-          { icon: 'fas fa-file-alt', label: t('nav.documents') || 'Documents', href: '/documents', active: isActive('/documents') },
-          { icon: 'fas fa-calendar', label: t('nav.deadlines') || 'Deadlines', href: '/deadlines', active: isActive('/deadlines') },
-          { icon: 'fas fa-user', label: t('nav.profile') || 'Profile', href: '/profile', active: isActive('/profile') }
+          { icon: 'fas fa-chart-bar', label: 'My Progress', href: '/dashboard', active: isActive('/dashboard') || isActive('/') },
+          { icon: 'fas fa-file-alt', label: 'Documents', href: '/documents', active: isActive('/documents') },
+          { icon: 'fas fa-calendar', label: 'Deadlines', href: '/deadlines', active: isActive('/deadlines') },
+          { icon: 'fas fa-user', label: 'Profile', href: '/profile', active: isActive('/profile') }
         ];
       default:
         return commonItems;
