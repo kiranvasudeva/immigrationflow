@@ -921,21 +921,51 @@ class ThoroughValidationSuite {
   }
 
   async validateDataIntegrity() {
-    console.log('  🔍 Cross-referencing client-worker relationships...');
+    console.log('  🔍 Comprehensive Data Integrity Validation...');
     
     try {
-      // Get all data
-      const clientsResponse = await this.makeRequest('/api/clients', 'GET');
-      const workersResponse = await this.makeRequest('/api/workers', 'GET');
-      const assignmentsResponse = await this.makeRequest('/api/assignments', 'GET');
+      // ENHANCED: Get ALL application data dynamically
+      const dataEndpoints = [
+        { name: 'clients', path: '/api/clients', key: 'id', required: ['legalName', 'email'] },
+        { name: 'workers', path: '/api/workers', key: 'id', required: ['name', 'nationality'], parent: 'clientProfileId' },
+        { name: 'assignments', path: '/api/assignments', key: 'id', required: ['status'], references: ['clientProfileId', 'workerId', 'requirementId'] },
+        { name: 'stages', path: '/api/stages', key: 'id', required: ['title', 'key'] },
+        { name: 'requirements', path: '/api/requirements', key: 'id', required: ['title'], references: ['stageId'] },
+        { name: 'documentFiles', path: '/api/documents', key: 'id', required: ['fileName'], references: ['assignmentId'] },
+        { name: 'workflowTemplates', path: '/api/workflow-templates', key: 'id', required: ['name'] },
+        { name: 'workflowSteps', path: '/api/workflow-steps', key: 'id', required: ['name'], references: ['templateId'] },
+        { name: 'payments', path: '/api/payments', key: 'id', required: ['amount'], references: ['assignmentId'] },
+        { name: 'reminderRules', path: '/api/reminders', key: 'id', required: ['frequency'] },
+        { name: 'auditLogs', path: '/api/audit-logs', key: 'id', required: ['action'] },
+        { name: 'documentTemplates', path: '/api/document-templates', key: 'id', required: ['name'] },
+        { name: 'invitations', path: '/api/invitations', key: 'id', required: ['email'] },
+        { name: 'translations', path: '/api/translations', key: 'id', required: ['key', 'value'] }
+      ];
+
+      // Fetch all available data
+      const allData = {};
+      const unavailableEndpoints = [];
       
-      if (!clientsResponse.ok || !workersResponse.ok || !assignmentsResponse.ok) {
-        throw new Error('Could not fetch data for integrity validation');
+      for (const endpoint of dataEndpoints) {
+        try {
+          const response = await this.makeRequest(endpoint.path, 'GET');
+          if (response.ok) {
+            allData[endpoint.name] = {
+              data: await response.json(),
+              config: endpoint
+            };
+          } else {
+            unavailableEndpoints.push(endpoint.name);
+          }
+        } catch (error) {
+          unavailableEndpoints.push(endpoint.name);
+        }
       }
-      
-      const clients = await clientsResponse.json();
-      const workers = await workersResponse.json();
-      const assignments = await assignmentsResponse.json();
+
+      // Extract actual data from successful endpoints
+      const clients = allData.clients?.data || [];
+      const workers = allData.workers?.data || [];
+      const assignments = allData.assignments?.data || [];
       
       const validation = {
         name: 'Data Integrity Validation',
@@ -1022,27 +1052,136 @@ class ThoroughValidationSuite {
         });
       }
 
-      // ENHANCED: Check assignment status distribution for workflow health
-      const assignmentsByStatus = assignments.reduce((acc, assignment) => {
-        acc[assignment.status] = (acc[assignment.status] || 0) + 1;
-        return acc;
-      }, {});
-      
-      const totalAssignments = assignments.length;
-      const notStarted = assignmentsByStatus['NOT_STARTED'] || 0;
-      const awaitingUpload = assignmentsByStatus['AWAITING_UPLOAD'] || 0;
-      const stuckPercentage = ((notStarted + awaitingUpload) / totalAssignments) * 100;
-      
-      if (stuckPercentage > 50) {
-        validation.issues.push(`❌ WORKFLOW ISSUE: ${stuckPercentage.toFixed(1)}% of assignments stuck in early stages`);
-      } else if (stuckPercentage > 25) {
-        validation.issues.push(`⚠️  WORKFLOW WARNING: ${stuckPercentage.toFixed(1)}% of assignments in early stages`);
-      } else {
-        validation.details.push(`✅ Healthy workflow progress: ${stuckPercentage.toFixed(1)}% in early stages`);
+      // ENHANCED: Universal orphaned record detection across ALL entities
+      let totalOrphans = 0;
+      let totalMissingReferences = 0;
+      let totalIntegrityIssues = 0;
+
+      Object.entries(allData).forEach(([entityName, entityInfo]) => {
+        const { data: records, config } = entityInfo;
+        
+        // Check for missing required fields
+        if (config.required) {
+          const recordsWithMissingFields = records.filter(record => {
+            return config.required.some(field => !record[field] || record[field] === '');
+          });
+          
+          if (recordsWithMissingFields.length > 0) {
+            validation.issues.push(`❌ ${entityName.toUpperCase()}: ${recordsWithMissingFields.length} records missing required fields`);
+            recordsWithMissingFields.forEach(record => {
+              const missingFields = config.required.filter(field => !record[field] || record[field] === '');
+              validation.issues.push(`   ⚠️  ${entityName} ID ${record[config.key]}: missing ${missingFields.join(', ')}`);
+            });
+            totalIntegrityIssues += recordsWithMissingFields.length;
+          }
+        }
+
+        // Check parent-child relationships
+        if (config.parent && allData[config.parent.replace('Id', 's')]) {
+          const parentData = allData[config.parent.replace('Id', 's')].data;
+          const parentIds = new Set(parentData.map(p => p.id));
+          const orphanedRecords = records.filter(record => record[config.parent] && !parentIds.has(record[config.parent]));
+          
+          if (orphanedRecords.length > 0) {
+            validation.issues.push(`❌ ${entityName.toUpperCase()}: ${orphanedRecords.length} orphaned records (invalid parent references)`);
+            orphanedRecords.forEach(record => {
+              validation.issues.push(`   ⚠️  ${entityName} "${record.name || record.title || record[config.key]}" references non-existent parent`);
+            });
+            totalOrphans += orphanedRecords.length;
+          }
+        }
+
+        // Check foreign key references
+        if (config.references) {
+          config.references.forEach(refField => {
+            const refTableName = refField.replace('Id', 's');
+            if (allData[refTableName]) {
+              const refData = allData[refTableName].data;
+              const refIds = new Set(refData.map(r => r.id));
+              const invalidRefs = records.filter(record => record[refField] && !refIds.has(record[refField]));
+              
+              if (invalidRefs.length > 0) {
+                validation.issues.push(`❌ ${entityName.toUpperCase()}: ${invalidRefs.length} invalid ${refField} references`);
+                invalidRefs.forEach(record => {
+                  validation.issues.push(`   ⚠️  ${entityName} "${record.name || record.title || record[config.key]}" references non-existent ${refTableName}`);
+                });
+                totalMissingReferences += invalidRefs.length;
+              }
+            }
+          });
+        }
+      });
+
+      // ENHANCED: Cross-entity relationship validation
+      const crossEntityIssues = [];
+
+      // Workers without any assignments
+      const workersWithAssignments = new Set(assignments.map(a => a.workerId).filter(Boolean));
+      const workersWithoutWork = workers.filter(w => !workersWithAssignments.has(w.id));
+      if (workersWithoutWork.length > 0) {
+        crossEntityIssues.push(`❌ CRITICAL: ${workersWithoutWork.length} workers without any workflow assignments`);
+        workersWithoutWork.forEach(worker => {
+          crossEntityIssues.push(`   ⚠️  Worker "${worker.name}" (${worker.nationality}) has no assignments`);
+        });
       }
+
+      // Clients without workers
+      const clientsWithWorkers = new Set(workers.map(w => w.clientProfileId).filter(Boolean));
+      const clientsWithoutWorkers = clients.filter(c => !clientsWithWorkers.has(c.id));
+      if (clientsWithoutWorkers.length > 0) {
+        crossEntityIssues.push(`❌ CRITICAL: ${clientsWithoutWorkers.length} clients without any workers`);
+        clientsWithoutWorkers.forEach(client => {
+          crossEntityIssues.push(`   ⚠️  Client "${client.legalName}" has no workers assigned`);
+        });
+      }
+
+      // Assignments without workers when they should have them
+      const assignmentsWithoutWorkers = assignments.filter(a => !a.workerId && a.assignedToRole === 'WORKER');
+      if (assignmentsWithoutWorkers.length > 0) {
+        crossEntityIssues.push(`❌ WORKFLOW: ${assignmentsWithoutWorkers.length} worker assignments without assigned workers`);
+      }
+
+      validation.issues.push(...crossEntityIssues);
+
+      // ENHANCED: Workflow health analysis
+      if (assignments.length > 0) {
+        const statusDistribution = assignments.reduce((acc, assignment) => {
+          acc[assignment.status] = (acc[assignment.status] || 0) + 1;
+          return acc;
+        }, {});
+        
+        const totalAssignments = assignments.length;
+        const notStarted = statusDistribution['NOT_STARTED'] || 0;
+        const awaitingUpload = statusDistribution['AWAITING_UPLOAD'] || 0;
+        const stuckPercentage = ((notStarted + awaitingUpload) / totalAssignments) * 100;
+        
+        if (stuckPercentage > 50) {
+          validation.issues.push(`❌ WORKFLOW HEALTH: ${stuckPercentage.toFixed(1)}% of assignments stuck in early stages`);
+        } else if (stuckPercentage > 25) {
+          validation.issues.push(`⚠️  WORKFLOW WARNING: ${stuckPercentage.toFixed(1)}% in early stages`);
+        } else {
+          validation.details.push(`✅ Healthy workflow: ${stuckPercentage.toFixed(1)}% in early stages`);
+        }
+
+        // Status breakdown
+        validation.details.push(`📊 Assignment status: ${Object.entries(statusDistribution).map(([status, count]) => `${status}:${count}`).join(', ')}`);
+      }
+
+      // ENHANCED: Comprehensive metrics
+      const entityCounts = Object.entries(allData).map(([name, info]) => `${name}:${info.data.length}`).join(', ');
+      validation.details.push(`📊 Entity counts: ${entityCounts}`);
       
-      // Summary metrics
-      validation.details.push(`📊 Data summary: ${clients.length} clients, ${workers.length} workers, ${assignments.length} assignments`);
+      if (unavailableEndpoints.length > 0) {
+        validation.details.push(`ℹ️  Unavailable endpoints: ${unavailableEndpoints.join(', ')}`);
+      }
+
+      // Final integrity summary
+      const totalIssues = totalOrphans + totalMissingReferences + totalIntegrityIssues + crossEntityIssues.length;
+      if (totalIssues === 0) {
+        validation.details.push(`✅ COMPREHENSIVE INTEGRITY CHECK: All ${Object.keys(allData).length} entity types validated successfully`);
+      } else {
+        validation.issues.push(`❌ INTEGRITY SUMMARY: ${totalIssues} total issues (${totalOrphans} orphans, ${totalMissingReferences} broken refs, ${totalIntegrityIssues} missing fields)`);
+      }
       
       // Sample real data validation
       if (clients.length > 0) {
