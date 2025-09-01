@@ -994,7 +994,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create standalone workflow step with ordering
   app.post('/api/workflow-steps', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
+      console.log('Received workflow step creation request:', JSON.stringify(req.body, null, 2));
       const { workflowTemplateId, insertPosition, targetStepId, ...stepData } = req.body;
+      
+      if (!workflowTemplateId) {
+        console.error('Missing workflowTemplateId');
+        return res.status(400).json({ message: "workflowTemplateId is required" });
+      }
       
       // Calculate order based on position
       let order = 1;
@@ -1017,20 +1023,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } else {
         // Add at the end
+        console.log('Getting existing steps for workflowTemplateId:', workflowTemplateId);
         const existingSteps = await storage.getWorkflowSteps(workflowTemplateId);
+        console.log('Existing steps:', existingSteps.length);
         order = existingSteps.length > 0 ? Math.max(...existingSteps.map(s => s.order)) + 1 : 1;
       }
       
-      const newStep = await storage.createWorkflowStep({
+      const finalStepData = {
         ...stepData,
         workflowTemplateId,
         order
-      });
+      };
+      
+      console.log('Final step data to create:', JSON.stringify(finalStepData, null, 2));
+      const newStep = await storage.createWorkflowStep(finalStepData);
+      console.log('Successfully created workflow step:', newStep.id);
       
       res.status(201).json(newStep);
     } catch (error) {
       console.error('Error creating workflow step:', error);
-      res.status(500).json({ message: "Failed to create workflow step" });
+      console.error('Error stack:', error.stack);
+      res.status(500).json({ message: "Failed to create workflow step", error: error.message });
     }
   });
 
