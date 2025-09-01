@@ -1256,6 +1256,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Worker workflow linking endpoints
+  app.post('/api/workers/:workerId/workflows/:templateId/link', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const { workerId, templateId } = req.params;
+      
+      if (!workerId || !templateId) {
+        return res.status(400).json({ message: "Worker ID and Template ID are required" });
+      }
+
+      const progress = await storage.linkWorkerToWorkflow(workerId, templateId);
+      res.status(201).json(progress);
+    } catch (error) {
+      console.error('Error linking worker to workflow:', error);
+      res.status(500).json({ message: "Failed to link worker to workflow", error: (error as Error).message });
+    }
+  });
+
+  app.delete('/api/workers/:workerId/workflows/:templateId/unlink', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const { workerId, templateId } = req.params;
+      
+      if (!workerId || !templateId) {
+        return res.status(400).json({ message: "Worker ID and Template ID are required" });
+      }
+
+      const success = await storage.unlinkWorkerFromWorkflow(workerId, templateId);
+      if (!success) {
+        return res.status(404).json({ message: "Worker workflow link not found" });
+      }
+      
+      res.json({ message: "Worker successfully unlinked from workflow" });
+    } catch (error) {
+      console.error('Error unlinking worker from workflow:', error);
+      res.status(500).json({ message: "Failed to unlink worker from workflow", error: (error as Error).message });
+    }
+  });
+
   // Health Check Routes
   app.get('/api/health-check/status', async (req, res) => {
     try {

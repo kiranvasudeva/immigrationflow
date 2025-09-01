@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from '@/contexts/I18nProvider';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { queryClient } from '@/lib/queryClient';
+import { queryClient, apiRequest } from '@/lib/queryClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Users, Plus, Search, Filter, Edit2, Eye, MapPin, Calendar, Briefcase } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Users, Plus, Search, Filter, Edit2, Eye, MapPin, Calendar, Briefcase, Save, X } from 'lucide-react';
 import { Link } from 'wouter';
 
 interface Worker {
@@ -40,6 +41,19 @@ export default function WorkersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedNationality, setSelectedNationality] = useState('all');
+  const [showNewWorkerForm, setShowNewWorkerForm] = useState(false);
+  const [editingWorker, setEditingWorker] = useState<Worker | null>(null);
+  const [newWorkerForm, setNewWorkerForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    nationality: '',
+    passportNumber: '',
+    currentWorkPermitExpiry: '',
+    status: 'PENDING',
+    clientId: ''
+  });
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -72,6 +86,67 @@ export default function WorkersPage() {
   const { data: workers = [], isLoading: workersLoading } = useQuery({
     queryKey: ['/api/workers'],
     enabled: isAuthenticated,
+  });
+
+  // Fetch clients for the dropdown
+  const { data: clients = [] } = useQuery({
+    queryKey: ['/api/clients'],
+    enabled: isAuthenticated && user?.role === 'ADMIN',
+  });
+
+  // Create worker mutation
+  const createWorkerMutation = useMutation({
+    mutationFn: (workerData: typeof newWorkerForm) => {
+      return apiRequest('/api/workers', 'POST', workerData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workers'] });
+      setShowNewWorkerForm(false);
+      setNewWorkerForm({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        nationality: '',
+        passportNumber: '',
+        currentWorkPermitExpiry: '',
+        status: 'PENDING',
+        clientId: ''
+      });
+      toast({
+        title: "Success",
+        description: "Worker created successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create worker",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update worker mutation
+  const updateWorkerMutation = useMutation({
+    mutationFn: ({ id, ...workerData }: Worker) => {
+      return apiRequest(`/api/workers/${id}`, 'PUT', workerData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workers'] });
+      setEditingWorker(null);
+      toast({
+        title: "Success",
+        description: "Worker updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update worker",
+        variant: "destructive",
+      });
+    },
   });
 
   // Filter workers based on search criteria
@@ -129,6 +204,17 @@ export default function WorkersPage() {
               {t('pages.workers.description') || 'Manage foreign workers and their immigration status'}
             </p>
           </div>
+          {(user?.role === 'ADMIN' || user?.role === 'OWNER') && (
+            <Button
+              onClick={() => setShowNewWorkerForm(true)}
+              disabled={showNewWorkerForm}
+              className="flex items-center gap-2"
+              data-testid="button-add-worker"
+            >
+              <Plus className="h-4 w-4" />
+              Add Worker
+            </Button>
+          )}
         </div>
 
         {/* Filters */}
@@ -190,6 +276,286 @@ export default function WorkersPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Add New Worker Form */}
+        {showNewWorkerForm && (
+          <Card className="border-2 border-green-200 bg-green-50">
+            <CardHeader>
+              <CardTitle className="text-lg text-green-800">Add New Worker</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                createWorkerMutation.mutate(newWorkerForm);
+              }} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="firstName">First Name *</Label>
+                    <Input
+                      id="firstName"
+                      value={newWorkerForm.firstName}
+                      onChange={(e) => setNewWorkerForm(prev => ({ ...prev, firstName: e.target.value }))}
+                      required
+                      data-testid="input-worker-firstName"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Input
+                      id="lastName"
+                      value={newWorkerForm.lastName}
+                      onChange={(e) => setNewWorkerForm(prev => ({ ...prev, lastName: e.target.value }))}
+                      required
+                      data-testid="input-worker-lastName"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={newWorkerForm.email}
+                      onChange={(e) => setNewWorkerForm(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                      data-testid="input-worker-email"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={newWorkerForm.phone}
+                      onChange={(e) => setNewWorkerForm(prev => ({ ...prev, phone: e.target.value }))}
+                      data-testid="input-worker-phone"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="nationality">Nationality</Label>
+                    <Select value={newWorkerForm.nationality} onValueChange={(value) => setNewWorkerForm(prev => ({ ...prev, nationality: value }))}>
+                      <SelectTrigger data-testid="select-worker-nationality">
+                        <SelectValue placeholder="Select nationality" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="India">India</SelectItem>
+                        <SelectItem value="Philippines">Philippines</SelectItem>
+                        <SelectItem value="Nepal">Nepal</SelectItem>
+                        <SelectItem value="Sri Lanka">Sri Lanka</SelectItem>
+                        <SelectItem value="Bangladesh">Bangladesh</SelectItem>
+                        <SelectItem value="Pakistan">Pakistan</SelectItem>
+                        <SelectItem value="Ukrainian">Ukrainian</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="passportNumber">Passport Number</Label>
+                    <Input
+                      id="passportNumber"
+                      value={newWorkerForm.passportNumber}
+                      onChange={(e) => setNewWorkerForm(prev => ({ ...prev, passportNumber: e.target.value }))}
+                      data-testid="input-worker-passportNumber"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="currentWorkPermitExpiry">Work Permit Expiry</Label>
+                    <Input
+                      id="currentWorkPermitExpiry"
+                      type="date"
+                      value={newWorkerForm.currentWorkPermitExpiry}
+                      onChange={(e) => setNewWorkerForm(prev => ({ ...prev, currentWorkPermitExpiry: e.target.value }))}
+                      data-testid="input-worker-currentWorkPermitExpiry"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={newWorkerForm.status} onValueChange={(value) => setNewWorkerForm(prev => ({ ...prev, status: value }))}>
+                      <SelectTrigger data-testid="select-worker-status">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PENDING">Pending</SelectItem>
+                        <SelectItem value="ACTIVE">Active</SelectItem>
+                        <SelectItem value="EXPIRED">Expired</SelectItem>
+                        <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {user?.role === 'ADMIN' && (
+                    <div>
+                      <Label htmlFor="clientId">Client *</Label>
+                      <Select value={newWorkerForm.clientId} onValueChange={(value) => setNewWorkerForm(prev => ({ ...prev, clientId: value }))}>
+                        <SelectTrigger data-testid="select-worker-client">
+                          <SelectValue placeholder="Select client" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(clients as any[]).map((client: any) => (
+                            <SelectItem key={client.id} value={client.id}>
+                              {client.legalName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button 
+                    type="submit" 
+                    disabled={createWorkerMutation.isPending}
+                    data-testid="button-save-worker"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {createWorkerMutation.isPending ? 'Saving...' : 'Save Worker'}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setShowNewWorkerForm(false)}
+                    data-testid="button-cancel-worker"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Edit Worker Dialog */}
+        {editingWorker && (
+          <Dialog open={!!editingWorker} onOpenChange={() => setEditingWorker(null)}>
+            <DialogContent className="max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>Edit Worker</DialogTitle>
+                <DialogDescription>
+                  Update worker information for {editingWorker.firstName} {editingWorker.lastName}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                updateWorkerMutation.mutate(editingWorker);
+              }} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-firstName">First Name *</Label>
+                    <Input
+                      id="edit-firstName"
+                      value={editingWorker.firstName}
+                      onChange={(e) => setEditingWorker(prev => prev ? { ...prev, firstName: e.target.value } : null)}
+                      required
+                      data-testid="input-edit-worker-firstName"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-lastName">Last Name *</Label>
+                    <Input
+                      id="edit-lastName"
+                      value={editingWorker.lastName}
+                      onChange={(e) => setEditingWorker(prev => prev ? { ...prev, lastName: e.target.value } : null)}
+                      required
+                      data-testid="input-edit-worker-lastName"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-email">Email *</Label>
+                    <Input
+                      id="edit-email"
+                      type="email"
+                      value={editingWorker.email}
+                      onChange={(e) => setEditingWorker(prev => prev ? { ...prev, email: e.target.value } : null)}
+                      required
+                      data-testid="input-edit-worker-email"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-phone">Phone</Label>
+                    <Input
+                      id="edit-phone"
+                      value={editingWorker.phone || ''}
+                      onChange={(e) => setEditingWorker(prev => prev ? { ...prev, phone: e.target.value } : null)}
+                      data-testid="input-edit-worker-phone"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-nationality">Nationality</Label>
+                    <Select value={editingWorker.nationality || ''} onValueChange={(value) => setEditingWorker(prev => prev ? { ...prev, nationality: value } : null)}>
+                      <SelectTrigger data-testid="select-edit-worker-nationality">
+                        <SelectValue placeholder="Select nationality" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="India">India</SelectItem>
+                        <SelectItem value="Philippines">Philippines</SelectItem>
+                        <SelectItem value="Nepal">Nepal</SelectItem>
+                        <SelectItem value="Sri Lanka">Sri Lanka</SelectItem>
+                        <SelectItem value="Bangladesh">Bangladesh</SelectItem>
+                        <SelectItem value="Pakistan">Pakistan</SelectItem>
+                        <SelectItem value="Ukrainian">Ukrainian</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-passportNumber">Passport Number</Label>
+                    <Input
+                      id="edit-passportNumber"
+                      value={editingWorker.passportNumber || ''}
+                      onChange={(e) => setEditingWorker(prev => prev ? { ...prev, passportNumber: e.target.value } : null)}
+                      data-testid="input-edit-worker-passportNumber"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-currentWorkPermitExpiry">Work Permit Expiry</Label>
+                    <Input
+                      id="edit-currentWorkPermitExpiry"
+                      type="date"
+                      value={editingWorker.currentWorkPermitExpiry ? editingWorker.currentWorkPermitExpiry.split('T')[0] : ''}
+                      onChange={(e) => setEditingWorker(prev => prev ? { ...prev, currentWorkPermitExpiry: e.target.value } : null)}
+                      data-testid="input-edit-worker-currentWorkPermitExpiry"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-status">Status</Label>
+                    <Select value={editingWorker.status} onValueChange={(value) => setEditingWorker(prev => prev ? { ...prev, status: value } : null)}>
+                      <SelectTrigger data-testid="select-edit-worker-status">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PENDING">Pending</SelectItem>
+                        <SelectItem value="ACTIVE">Active</SelectItem>
+                        <SelectItem value="EXPIRED">Expired</SelectItem>
+                        <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {user?.role === 'ADMIN' && (
+                    <div>
+                      <Label htmlFor="edit-clientId">Client *</Label>
+                      <Select value={editingWorker.clientId} onValueChange={(value) => setEditingWorker(prev => prev ? { ...prev, clientId: value } : null)}>
+                        <SelectTrigger data-testid="select-edit-worker-client">
+                          <SelectValue placeholder="Select client" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(clients as any[]).map((client: any) => (
+                            <SelectItem key={client.id} value={client.id}>
+                              {client.legalName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setEditingWorker(null)} data-testid="button-cancel-edit-worker">
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={updateWorkerMutation.isPending} data-testid="button-save-edit-worker">
+                    {updateWorkerMutation.isPending ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {/* Workers List */}
         <Card>
@@ -278,7 +644,12 @@ export default function WorkersPage() {
                           </Button>
                         </Link>
                         {user?.role === 'ADMIN' && (
-                          <Button variant="outline" size="sm" data-testid={`button-edit-worker-${worker.id}`}>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setEditingWorker(worker)}
+                            data-testid={`button-edit-worker-${worker.id}`}
+                          >
                             <Edit2 className="h-4 w-4" />
                           </Button>
                         )}
