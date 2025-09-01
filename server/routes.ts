@@ -187,9 +187,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const worker = await storage.createWorker(workerData);
       res.status(201).json(worker);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating worker:', error);
-      res.status(500).json({ message: "Failed to create worker" });
+      console.error('Error details:', error.message);
+      console.error('Worker data received:', req.body);
+      console.error('Client ID:', req.params.clientId);
+      res.status(500).json({ message: error.message || "Failed to create worker" });
     }
   });
 
