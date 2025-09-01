@@ -130,7 +130,7 @@ export default function WorkersPage() {
   // Update worker mutation
   const updateWorkerMutation = useMutation({
     mutationFn: ({ id, ...workerData }: Worker) => {
-      return apiRequest(`/api/workers/${id}`, 'PUT', workerData);
+      return apiRequest('PUT', `/api/workers/${id}`, workerData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/workers'] });

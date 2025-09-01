@@ -260,17 +260,17 @@ export interface IStorage {
   getWorkerWorkflowProgress(workerId: string, templateId: string): Promise<WorkerWorkflowProgress | undefined>;
   createWorkerWorkflowProgress(progress: InsertWorkerWorkflowProgress): Promise<WorkerWorkflowProgress>;
   updateWorkerWorkflowProgress(id: string, updates: Partial<InsertWorkerWorkflowProgress>): Promise<WorkerWorkflowProgress>;
-  getWorkerStepProgress(progressId: string): Promise<WorkerStepProgress[]>;
+  getWorkerStepProgress(workerWorkflowProgressId: string): Promise<WorkerStepProgress[]>;
   createWorkerStepProgress(progress: InsertWorkerStepProgress): Promise<WorkerStepProgress>;
   updateWorkerStepProgress(id: string, updates: Partial<InsertWorkerStepProgress>): Promise<WorkerStepProgress>;
   
   // Document Submission operations
-  getDocumentSubmissions(requirementId: string, workerId: string): Promise<DocumentSubmission[]>;
+  getDocumentSubmissions(documentRequirementId: string, workerStepProgressId: string): Promise<DocumentSubmission[]>;
   createDocumentSubmission(submission: InsertDocumentSubmission): Promise<DocumentSubmission>;
   updateDocumentSubmission(id: string, updates: Partial<InsertDocumentSubmission>): Promise<DocumentSubmission>;
   
   // Checklist Completion operations
-  getChecklistCompletions(itemId: string, workerId: string): Promise<ChecklistCompletion[]>;
+  getChecklistCompletions(checklistItemId: string, workerStepProgressId: string): Promise<ChecklistCompletion[]>;
   createChecklistCompletion(completion: InsertChecklistCompletion): Promise<ChecklistCompletion>;
   updateChecklistCompletion(id: string, updates: Partial<InsertChecklistCompletion>): Promise<ChecklistCompletion>;
   
@@ -457,15 +457,6 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(workers);
   }
 
-  // Legacy worker method aliases for API compatibility
-  async getAllWorkers(): Promise<Worker[]> {
-    return await db.select().from(workers);
-  }
-
-  async getWorkersByClientId(clientId: string): Promise<Worker[]> {
-    return await db.select().from(workers).where(eq(workers.clientProfileId, clientId));
-  }
-
   async deleteWorker(id: string): Promise<boolean> {
     const result = await db
       .delete(workers)
@@ -598,6 +589,7 @@ export class DatabaseStorage implements IStorage {
       action: 'document_status_update',
       entityType: 'document_file',
       entityId: documentId,
+      ip: null,
       metadata: { status, notes }
     });
     
@@ -1393,8 +1385,8 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getWorkerStepProgress(progressId: string): Promise<WorkerStepProgress[]> {
-    return await db.select().from(workerStepProgress).where(eq(workerStepProgress.workerWorkflowProgressId, progressId));
+  async getWorkerStepProgress(workerWorkflowProgressId: string): Promise<WorkerStepProgress[]> {
+    return await db.select().from(workerStepProgress).where(eq(workerStepProgress.workerWorkflowProgressId, workerWorkflowProgressId));
   }
 
   async createWorkerStepProgress(progress: InsertWorkerStepProgress): Promise<WorkerStepProgress> {
@@ -1408,9 +1400,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Document Submission operations
-  async getDocumentSubmissions(requirementId: string, workerId: string): Promise<DocumentSubmission[]> {
+  async getDocumentSubmissions(documentRequirementId: string, workerStepProgressId: string): Promise<DocumentSubmission[]> {
     return await db.select().from(documentSubmissions)
-      .where(and(eq(documentSubmissions.requirementId, requirementId), eq(documentSubmissions.workerId, workerId)))
+      .where(and(eq(documentSubmissions.documentRequirementId, documentRequirementId), eq(documentSubmissions.workerStepProgressId, workerStepProgressId)))
       .orderBy(desc(documentSubmissions.submittedAt));
   }
 
@@ -1425,9 +1417,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Checklist Completion operations
-  async getChecklistCompletions(itemId: string, workerId: string): Promise<ChecklistCompletion[]> {
+  async getChecklistCompletions(checklistItemId: string, workerStepProgressId: string): Promise<ChecklistCompletion[]> {
     return await db.select().from(checklistCompletions)
-      .where(and(eq(checklistCompletions.itemId, itemId), eq(checklistCompletions.workerId, workerId)))
+      .where(and(eq(checklistCompletions.checklistItemId, checklistItemId), eq(checklistCompletions.workerStepProgressId, workerStepProgressId)))
       .orderBy(desc(checklistCompletions.completedAt));
   }
 
@@ -1452,8 +1444,8 @@ export class DatabaseStorage implements IStorage {
     // Create new workflow progress
     const progress: InsertWorkerWorkflowProgress = {
       workerId,
-      templateId,
-      status: 'not_started',
+      workflowTemplateId: templateId,
+      status: 'NOT_STARTED',
       startedAt: new Date(),
       completedAt: null,
       notes: null
@@ -1469,7 +1461,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     // Delete all related step progress
-    await db.delete(workerStepProgress).where(eq(workerStepProgress.progressId, progress.id));
+    await db.delete(workerStepProgress).where(eq(workerStepProgress.workerWorkflowProgressId, progress.id));
     
     // Delete workflow progress
     const result = await db.delete(workerWorkflowProgress).where(eq(workerWorkflowProgress.id, progress.id));
@@ -1480,7 +1472,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db.select({ worker: workers })
       .from(workerWorkflowProgress)
       .innerJoin(workers, eq(workerWorkflowProgress.workerId, workers.id))
-      .where(eq(workerWorkflowProgress.templateId, templateId));
+      .where(eq(workerWorkflowProgress.workflowTemplateId, templateId));
     
     return result.map(r => r.worker);
   }
