@@ -45,7 +45,8 @@ import {
   ChevronUp,
   Code,
   Upload,
-  CheckSquare
+  CheckSquare,
+  ListChecks
 } from 'lucide-react';
 import PatraIcon from '@/components/icons/PatraIcon';
 import WorkerWorkflowAssignments from '@/components/WorkerWorkflowAssignments';
