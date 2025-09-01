@@ -1182,7 +1182,25 @@ export class DatabaseStorage implements IStorage {
 
   // Workflow Template operations
   async getAllWorkflowTemplates(): Promise<WorkflowTemplate[]> {
-    return await db.select().from(workflowTemplates).orderBy(asc(workflowTemplates.name));
+    const templates = await db.select().from(workflowTemplates).orderBy(asc(workflowTemplates.name));
+    
+    // Fetch and attach stages (workflow steps) for each template
+    const templatesWithStages = await Promise.all(
+      templates.map(async (template) => {
+        const stages = await db
+          .select()
+          .from(workflowSteps)
+          .where(eq(workflowSteps.workflowTemplateId, template.id))
+          .orderBy(asc(workflowSteps.order));
+        
+        return {
+          ...template,
+          stages: stages
+        };
+      })
+    );
+    
+    return templatesWithStages;
   }
 
   async getWorkflowTemplate(id: string): Promise<WorkflowTemplate | undefined> {
