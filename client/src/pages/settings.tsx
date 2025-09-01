@@ -718,7 +718,7 @@ function WorkflowManagement() {
                                                   <SelectContent>
                                                     <SelectItem value="OWNER">Owner</SelectItem>
                                                     <SelectItem value="WORKER">Worker</SelectItem>
-                                                    <SelectItem value="ADMIN">Admin</SelectItem>
+
                                                   </SelectContent>
                                                 </Select>
                                               </div>
@@ -930,7 +930,7 @@ function WorkflowManagement() {
                                                   <SelectContent>
                                                     <SelectItem value="WORKER">Worker</SelectItem>
                                                     <SelectItem value="OWNER">Owner</SelectItem>
-                                                    <SelectItem value="ADMIN">Admin</SelectItem>
+
                                                   </SelectContent>
                                                 </Select>
                                               </div>
