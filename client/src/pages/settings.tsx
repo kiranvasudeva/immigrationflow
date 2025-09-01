@@ -232,7 +232,7 @@ function WorkflowManagement() {
   // Delete mutations
   const deleteWorkflowMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiRequest(`/api/workflow-templates/${id}`, 'DELETE');
+      const response = await apiRequest('DELETE', `/api/workflow-templates/${id}`);
       return response;
     },
     onSuccess: () => {
@@ -254,7 +254,7 @@ function WorkflowManagement() {
 
   const deleteStepMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiRequest(`/api/workflow-steps/${id}`, 'DELETE');
+      const response = await apiRequest('DELETE', `/api/workflow-steps/${id}`);
       return response;
     },
     onSuccess: () => {
@@ -275,7 +275,7 @@ function WorkflowManagement() {
 
   const deleteDocumentMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiRequest(`/api/document-requirements/${id}`, 'DELETE');
+      const response = await apiRequest('DELETE', `/api/document-requirements/${id}`);
       return response;
     },
     onSuccess: () => {
@@ -296,7 +296,7 @@ function WorkflowManagement() {
 
   const deleteChecklistMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiRequest(`/api/checklist-items/${id}`, 'DELETE');
+      const response = await apiRequest('DELETE', `/api/checklist-items/${id}`);
       return response;
     },
     onSuccess: () => {
