@@ -62,18 +62,18 @@ interface WorkerAssignment {
 
 interface WorkerData {
   id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  dob: string;
-  nationality: string;
-  passportNumber: string;
-  passportExpiry: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  phone: string | null;
+  dob: string | null;
+  nationality: string | null;
+  passportNumber: string | null;
+  passportExpiry: string | null;
   clientProfile: {
     id: string;
     legalName: string;
-  };
+  } | null;
   assignments: WorkerAssignment[];
 }
 
@@ -102,7 +102,7 @@ export default function WorkerProfile() {
   });
 
   // Fetch worker data
-  const { data: worker, isLoading: workerLoading, error: workerError } = useQuery({
+  const { data: worker, isLoading: workerLoading, error: workerError } = useQuery<WorkerData>({
     queryKey: ['/api/workers', workerId],
     enabled: !!workerId && isAuthenticated,
     retry: (failureCount, error) => {
@@ -181,8 +181,8 @@ export default function WorkerProfile() {
   const handleSave = async () => {
     const submitData = {
       ...formData,
-      dob: formData.dob ? new Date(formData.dob).toISOString() : null,
-      passportExpiry: formData.passportExpiry ? new Date(formData.passportExpiry).toISOString() : null
+      dob: formData.dob && formData.dob.trim() !== '' ? new Date(formData.dob).toISOString() : null,
+      passportExpiry: formData.passportExpiry && formData.passportExpiry.trim() !== '' ? new Date(formData.passportExpiry).toISOString() : null
     };
     await updateWorkerMutation.mutateAsync(submitData);
   };
@@ -270,7 +270,7 @@ export default function WorkerProfile() {
         <Sidebar userRole={user.role} onSectionChange={() => {}} />
         
         <div className="flex-1 flex flex-col min-w-0">
-          <Header />
+          <Header title="Worker Profile" subtitle="View and manage worker information" />
           
           <main className="flex-1 overflow-y-auto p-6">
             <div className="max-w-6xl mx-auto space-y-6">
