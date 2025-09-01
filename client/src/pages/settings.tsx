@@ -343,6 +343,7 @@ function WorkflowManagement() {
 
   const createStageMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log('Creating stage with data:', data);
       const response = await apiRequest('/api/workflow-steps', 'POST', data);
       return response;
     },
@@ -355,10 +356,11 @@ function WorkflowManagement() {
       setShowCreateStage(false);
       setCreateStageData({});
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Stage creation error:', error);
       toast({
         title: "Error",
-        description: "Failed to create workflow stage.",
+        description: error?.message || "Failed to create workflow stage.",
         variant: "destructive"
       });
     }
@@ -1266,7 +1268,11 @@ function WorkflowManagement() {
                 onClick={() => {
                   const stageData = {
                     ...createStageData,
-                    workflowTemplateId: selectedWorkflow?.id
+                    workflowTemplateId: selectedWorkflow?.id,
+                    order: createStageData.order ? parseInt(createStageData.order) : 1,
+                    estimatedDays: createStageData.estimatedDays ? parseInt(createStageData.estimatedDays) : 1,
+                    isRequired: createStageData.isRequired !== undefined ? createStageData.isRequired : true,
+                    requiresApproval: createStageData.requiresApproval || false
                   };
                   createStageMutation.mutate(stageData);
                 }}
