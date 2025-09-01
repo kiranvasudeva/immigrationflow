@@ -1,0 +1,85 @@
+{
+  "timestamp": "2025-09-01T08:28:45.002Z",
+  "totalTests": 19,
+  "passed": 7,
+  "failed": 10,
+  "warnings": 2,
+  "successRate": 36.8,
+  "criticalIssues": 10,
+  "mockDataViolations": 0,
+  "performanceMetrics": {
+    "averageResponseTime": 91,
+    "slowRequests": [],
+    "fastRequests": [
+      {
+        "name": "Route: Dashboard",
+        "duration": 228
+      },
+      {
+        "name": "Route: Clients",
+        "duration": 93
+      },
+      {
+        "name": "Route: Workers",
+        "duration": 48
+      },
+      {
+        "name": "Route: Assignments",
+        "duration": 62
+      },
+      {
+        "name": "Route: Workflow",
+        "duration": 46
+      },
+      {
+        "name": "Route: Analytics",
+        "duration": 47
+      },
+      {
+        "name": "Route: Settings",
+        "duration": 39
+      },
+      {
+        "name": "API: GET /api/clients",
+        "duration": 498
+      },
+      {
+        "name": "API: GET /api/workers",
+        "duration": 28
+      },
+      {
+        "name": "API: GET /api/assignments",
+        "duration": 12
+      },
+      {
+        "name": "API: GET /api/stages",
+        "duration": 130
+      },
+      {
+        "name": "API: GET /api/dashboard/stats",
+        "duration": 6
+      },
+      {
+        "name": "API: GET /api/dashboard/assignments",
+        "duration": 244
+      },
+      {
+        "name": "API: GET /api/workflow",
+        "duration": 21
+      },
+      {
+        "name": "API: GET /api/analytics",
+        "duration": 14
+      },
+      {
+        "name": "API: GET /api/settings",
+        "duration": 17
+      },
+      {
+        "name": "API: GET /health",
+        "duration": 12
+      }
+    ],
+    "totalRequests": 17
+  }
+}
