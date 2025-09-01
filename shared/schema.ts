@@ -303,6 +303,7 @@ export const documentRequirements = pgTable("document_requirements", {
   templateKey: varchar("template_key", { length: 100 }), // Reference to auto-generated template
   hasOcrExtraction: boolean("has_ocr_extraction").default(false),
   validationRules: jsonb("validation_rules"), // Custom validation logic
+  requiredByDays: integer("required_by_days"), // Number of days by when this document is required
   order: integer("order").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -316,6 +317,7 @@ export const checklistItems = pgTable("checklist_items", {
   checklistType: checklistTypeEnum("checklist_type").default('VERIFICATION'),
   isRequired: boolean("is_required").default(true),
   assignedRole: assignedToRoleEnum("assigned_role").notNull(), // Who performs this check
+  requiredByDays: integer("required_by_days"), // Number of days by when this checklist item is required
   order: integer("order").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -845,6 +847,7 @@ export const insertDocumentRequirementSchema = createInsertSchema(documentRequir
   hasOcrExtraction: true,
   validationRules: true,
   order: true,
+  requiredByDays: true,
 });
 
 export const insertChecklistItemSchema = createInsertSchema(checklistItems).pick({
@@ -853,7 +856,9 @@ export const insertChecklistItemSchema = createInsertSchema(checklistItems).pick
   description: true,
   isRequired: true,
   assignedRole: true,
+  checklistType: true,
   order: true,
+  requiredByDays: true,
 });
 
 export const insertWorkerWorkflowProgressSchema = createInsertSchema(workerWorkflowProgress).pick({

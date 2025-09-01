@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/contexts/I18nProvider';
@@ -47,7 +47,8 @@ import {
   Code,
   Upload,
   CheckSquare,
-  ListChecks
+  ListChecks,
+  X
 } from 'lucide-react';
 import PatraIcon from '@/components/icons/PatraIcon';
 import WorkerWorkflowAssignments from '@/components/WorkerWorkflowAssignments';
@@ -136,6 +137,10 @@ function WorkflowManagement() {
   const [expandedStage, setExpandedStage] = useState<string | null>(null);
   const [expandedDocument, setExpandedDocument] = useState<string | null>(null);
   const [expandedChecklist, setExpandedChecklist] = useState<string | null>(null);
+  const [editingDocument, setEditingDocument] = useState<string | null>(null);
+  const [editingChecklist, setEditingChecklist] = useState<string | null>(null);
+  const [editingDocumentData, setEditingDocumentData] = useState<any>({});
+  const [editingChecklistData, setEditingChecklistData] = useState<any>({});
   
   const { data: workflows, isLoading } = useQuery({
     queryKey: ['/api/workflow-templates'],
@@ -154,6 +159,100 @@ function WorkflowManagement() {
     },
     enabled: !!selectedWorkflow
   });
+
+  // Mutation for updating document requirements
+  const updateDocumentMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await apiRequest(`/api/document-requirements/${id}`, 'PUT', data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workflow-templates', selectedWorkflow?.id, 'complete'] });
+      toast({
+        title: "Document updated",
+        description: "Document requirement has been updated successfully."
+      });
+      setEditingDocument(null);
+      setEditingDocumentData({});
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update document requirement.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Mutation for updating checklist items
+  const updateChecklistMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await apiRequest(`/api/checklist-items/${id}`, 'PUT', data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workflow-templates', selectedWorkflow?.id, 'complete'] });
+      toast({
+        title: "Checklist updated",
+        description: "Checklist item has been updated successfully."
+      });
+      setEditingChecklist(null);
+      setEditingChecklistData({});
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update checklist item.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleEditDocument = (doc: any) => {
+    setEditingDocument(doc.id);
+    setEditingDocumentData({
+      title: doc.title,
+      description: doc.description,
+      submittedBy: doc.submittedBy,
+      isRequired: doc.isRequired,
+      requiredByDays: doc.requiredByDays || ''
+    });
+  };
+
+  const handleEditChecklist = (item: any) => {
+    setEditingChecklist(item.id);
+    setEditingChecklistData({
+      title: item.title,
+      description: item.description,
+      assignedRole: item.assignedRole,
+      isRequired: item.isRequired,
+      requiredByDays: item.requiredByDays || ''
+    });
+  };
+
+  const handleSaveDocument = () => {
+    if (!editingDocument) return;
+    
+    updateDocumentMutation.mutate({
+      id: editingDocument,
+      data: {
+        ...editingDocumentData,
+        requiredByDays: editingDocumentData.requiredByDays ? parseInt(editingDocumentData.requiredByDays) : null
+      }
+    });
+  };
+
+  const handleSaveChecklist = () => {
+    if (!editingChecklist) return;
+    
+    updateChecklistMutation.mutate({
+      id: editingChecklist,
+      data: {
+        ...editingChecklistData,
+        requiredByDays: editingChecklistData.requiredByDays ? parseInt(editingChecklistData.requiredByDays) : null
+      }
+    });
+  };
 
   if (isLoading) {
     return (
@@ -293,33 +392,131 @@ function WorkflowManagement() {
                                         {docIndex + 1}
                                       </div>
                                       <div className="flex-1 space-y-2">
-                                        <div className="flex items-start justify-between">
-                                          <div>
-                                            <h6 className="font-medium text-sm">{doc.title}</h6>
-                                            <p className="text-xs text-muted-foreground">{doc.description}</p>
+                                        {editingDocument === doc.id ? (
+                                          <div className="space-y-3">
+                                            <div className="grid grid-cols-2 gap-3">
+                                              <div>
+                                                <Label htmlFor="doc-title" className="text-xs">Title</Label>
+                                                <Input 
+                                                  id="doc-title"
+                                                  value={editingDocumentData.title || ''}
+                                                  onChange={(e) => setEditingDocumentData({...editingDocumentData, title: e.target.value})}
+                                                  className="h-8 text-xs"
+                                                />
+                                              </div>
+                                              <div>
+                                                <Label htmlFor="doc-owner" className="text-xs">Owner</Label>
+                                                <Select 
+                                                  value={editingDocumentData.submittedBy} 
+                                                  onValueChange={(value) => setEditingDocumentData({...editingDocumentData, submittedBy: value})}
+                                                >
+                                                  <SelectTrigger className="h-8 text-xs">
+                                                    <SelectValue />
+                                                  </SelectTrigger>
+                                                  <SelectContent>
+                                                    <SelectItem value="OWNER">Owner</SelectItem>
+                                                    <SelectItem value="WORKER">Worker</SelectItem>
+                                                    <SelectItem value="ADMIN">Admin</SelectItem>
+                                                  </SelectContent>
+                                                </Select>
+                                              </div>
+                                            </div>
+                                            <div>
+                                              <Label htmlFor="doc-description" className="text-xs">Description</Label>
+                                              <Textarea 
+                                                id="doc-description"
+                                                value={editingDocumentData.description || ''}
+                                                onChange={(e) => setEditingDocumentData({...editingDocumentData, description: e.target.value})}
+                                                className="text-xs min-h-[60px]"
+                                              />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                              <div>
+                                                <Label htmlFor="doc-required-days" className="text-xs">Required by (days)</Label>
+                                                <Input 
+                                                  id="doc-required-days"
+                                                  type="number"
+                                                  value={editingDocumentData.requiredByDays}
+                                                  onChange={(e) => setEditingDocumentData({...editingDocumentData, requiredByDays: e.target.value})}
+                                                  className="h-8 text-xs"
+                                                  placeholder="Optional"
+                                                />
+                                              </div>
+                                              <div className="flex items-center space-x-2 pt-4">
+                                                <Checkbox 
+                                                  id="doc-required"
+                                                  checked={editingDocumentData.isRequired}
+                                                  onCheckedChange={(checked) => setEditingDocumentData({...editingDocumentData, isRequired: checked})}
+                                                />
+                                                <Label htmlFor="doc-required" className="text-xs">Required</Label>
+                                              </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                              <Button 
+                                                size="sm" 
+                                                onClick={handleSaveDocument}
+                                                disabled={updateDocumentMutation.isPending}
+                                                className="h-7 px-3 text-xs"
+                                              >
+                                                <Save className="w-3 h-3 mr-1" />
+                                                Save
+                                              </Button>
+                                              <Button 
+                                                size="sm" 
+                                                variant="outline" 
+                                                onClick={() => {setEditingDocument(null); setEditingDocumentData({});}}
+                                                className="h-7 px-3 text-xs"
+                                              >
+                                                <X className="w-3 h-3 mr-1" />
+                                                Cancel
+                                              </Button>
+                                            </div>
                                           </div>
-                                          <div className="flex items-center gap-2">
-                                            {doc.isRequired && (
-                                              <Badge variant="destructive" className="text-xs">Required</Badge>
-                                            )}
-                                          </div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
-                                          <div>
-                                            <span className="font-medium">Submitted by:</span> {doc.submittedBy}
-                                          </div>
-                                          <div>
-                                            <span className="font-medium">File types:</span> {
-                                              (() => {
-                                                try {
-                                                  return JSON.parse(doc.acceptedFileTypes || '["PDF"]').join(', ');
-                                                } catch {
-                                                  return doc.acceptedFileTypes || 'PDF';
+                                        ) : (
+                                          <>
+                                            <div className="flex items-start justify-between">
+                                              <div>
+                                                <h6 className="font-medium text-sm">{doc.title}</h6>
+                                                <p className="text-xs text-muted-foreground">{doc.description}</p>
+                                              </div>
+                                              <div className="flex items-center gap-2">
+                                                {doc.isRequired && (
+                                                  <Badge variant="destructive" className="text-xs">Required</Badge>
+                                                )}
+                                                {doc.requiredByDays && (
+                                                  <Badge variant="outline" className="text-xs">
+                                                    <Clock className="w-3 h-3 mr-1" />
+                                                    {doc.requiredByDays}d
+                                                  </Badge>
+                                                )}
+                                                <Button 
+                                                  size="sm" 
+                                                  variant="ghost" 
+                                                  onClick={() => handleEditDocument(doc)}
+                                                  className="h-6 w-6 p-0"
+                                                >
+                                                  <Edit className="w-3 h-3" />
+                                                </Button>
+                                              </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
+                                              <div>
+                                                <span className="font-medium">Submitted by:</span> {doc.submittedBy}
+                                              </div>
+                                              <div>
+                                                <span className="font-medium">File types:</span> {
+                                                  (() => {
+                                                    try {
+                                                      return JSON.parse(doc.acceptedFileTypes || '["PDF"]').join(', ');
+                                                    } catch {
+                                                      return doc.acceptedFileTypes || 'PDF';
+                                                    }
+                                                  })()
                                                 }
-                                              })()
-                                            }
-                                          </div>
-                                        </div>
+                                              </div>
+                                            </div>
+                                          </>
+                                        )}
                                       </div>
                                     </div>
                                   </div>
@@ -363,20 +560,118 @@ function WorkflowManagement() {
                                         {itemIndex + 1}
                                       </div>
                                       <div className="flex-1 space-y-2">
-                                        <div className="flex items-start justify-between">
-                                          <div>
-                                            <h6 className="font-medium text-sm">{item.title}</h6>
-                                            <p className="text-xs text-muted-foreground">{item.description}</p>
+                                        {editingChecklist === item.id ? (
+                                          <div className="space-y-3">
+                                            <div className="grid grid-cols-2 gap-3">
+                                              <div>
+                                                <Label htmlFor="checklist-title" className="text-xs">Title</Label>
+                                                <Input 
+                                                  id="checklist-title"
+                                                  value={editingChecklistData.title || ''}
+                                                  onChange={(e) => setEditingChecklistData({...editingChecklistData, title: e.target.value})}
+                                                  className="h-8 text-xs"
+                                                />
+                                              </div>
+                                              <div>
+                                                <Label htmlFor="checklist-role" className="text-xs">Assigned Role</Label>
+                                                <Select 
+                                                  value={editingChecklistData.assignedRole} 
+                                                  onValueChange={(value) => setEditingChecklistData({...editingChecklistData, assignedRole: value})}
+                                                >
+                                                  <SelectTrigger className="h-8 text-xs">
+                                                    <SelectValue />
+                                                  </SelectTrigger>
+                                                  <SelectContent>
+                                                    <SelectItem value="WORKER">Worker</SelectItem>
+                                                    <SelectItem value="OWNER">Owner</SelectItem>
+                                                    <SelectItem value="ADMIN">Admin</SelectItem>
+                                                  </SelectContent>
+                                                </Select>
+                                              </div>
+                                            </div>
+                                            <div>
+                                              <Label htmlFor="checklist-description" className="text-xs">Description</Label>
+                                              <Textarea 
+                                                id="checklist-description"
+                                                value={editingChecklistData.description || ''}
+                                                onChange={(e) => setEditingChecklistData({...editingChecklistData, description: e.target.value})}
+                                                className="text-xs min-h-[60px]"
+                                              />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                              <div>
+                                                <Label htmlFor="checklist-required-days" className="text-xs">Required by (days)</Label>
+                                                <Input 
+                                                  id="checklist-required-days"
+                                                  type="number"
+                                                  value={editingChecklistData.requiredByDays}
+                                                  onChange={(e) => setEditingChecklistData({...editingChecklistData, requiredByDays: e.target.value})}
+                                                  className="h-8 text-xs"
+                                                  placeholder="Optional"
+                                                />
+                                              </div>
+                                              <div className="flex items-center space-x-2 pt-4">
+                                                <Checkbox 
+                                                  id="checklist-required"
+                                                  checked={editingChecklistData.isRequired}
+                                                  onCheckedChange={(checked) => setEditingChecklistData({...editingChecklistData, isRequired: checked})}
+                                                />
+                                                <Label htmlFor="checklist-required" className="text-xs">Required</Label>
+                                              </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                              <Button 
+                                                size="sm" 
+                                                onClick={handleSaveChecklist}
+                                                disabled={updateChecklistMutation.isPending}
+                                                className="h-7 px-3 text-xs"
+                                              >
+                                                <Save className="w-3 h-3 mr-1" />
+                                                Save
+                                              </Button>
+                                              <Button 
+                                                size="sm" 
+                                                variant="outline" 
+                                                onClick={() => {setEditingChecklist(null); setEditingChecklistData({});}}
+                                                className="h-7 px-3 text-xs"
+                                              >
+                                                <X className="w-3 h-3 mr-1" />
+                                                Cancel
+                                              </Button>
+                                            </div>
                                           </div>
-                                          <div className="flex items-center gap-2">
-                                            {item.isRequired && (
-                                              <Badge variant="destructive" className="text-xs">Required</Badge>
-                                            )}
-                                          </div>
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">
-                                          <span className="font-medium">Assigned to:</span> {item.assignedRole}
-                                        </div>
+                                        ) : (
+                                          <>
+                                            <div className="flex items-start justify-between">
+                                              <div>
+                                                <h6 className="font-medium text-sm">{item.title}</h6>
+                                                <p className="text-xs text-muted-foreground">{item.description}</p>
+                                              </div>
+                                              <div className="flex items-center gap-2">
+                                                {item.isRequired && (
+                                                  <Badge variant="destructive" className="text-xs">Required</Badge>
+                                                )}
+                                                {item.requiredByDays && (
+                                                  <Badge variant="outline" className="text-xs">
+                                                    <Clock className="w-3 h-3 mr-1" />
+                                                    {item.requiredByDays}d
+                                                  </Badge>
+                                                )}
+                                                <Button 
+                                                  size="sm" 
+                                                  variant="ghost" 
+                                                  onClick={() => handleEditChecklist(item)}
+                                                  className="h-6 w-6 p-0"
+                                                >
+                                                  <Edit className="w-3 h-3" />
+                                                </Button>
+                                              </div>
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">
+                                              <span className="font-medium">Assigned to:</span> {item.assignedRole}
+                                            </div>
+                                          </>
+                                        )}
                                       </div>
                                     </div>
                                   </div>

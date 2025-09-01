@@ -815,6 +815,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Workflow Step Management
+  app.post('/api/workflow-templates/:templateId/steps', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const { templateId } = req.params;
+      const { name, description, stepType, assignedRole, order, estimatedDays, isRequired, position } = req.body;
+      
+      // Adjust order of existing steps if inserting in middle or beginning
+      if (position && position !== 'end') {
+        const steps = await storage.getWorkflowSteps(templateId);
+        for (const step of steps) {
+          if (step.order >= order) {
+            await storage.updateWorkflowStep(step.id, { order: step.order + 1 });
+          }
+        }
+      }
+      
+      const stepData = {
+        workflowTemplateId: templateId,
+        name,
+        description: description || '',
+        stepType,
+        assignedRole,
+        order: order || 1,
+        estimatedDays: estimatedDays || 1,
+        isRequired: isRequired !== undefined ? isRequired : true,
+        requiresApproval: false,
+        approverRole: null,
+        dependencies: null
+      };
+      
+      const step = await storage.createWorkflowStep(stepData);
+      res.status(201).json(step);
+    } catch (error) {
+      console.error('Error creating workflow step:', error);
+      res.status(500).json({ message: "Failed to create workflow step" });
+    }
+  });
+
+  app.put('/api/workflow-steps/:stepId', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const step = await storage.updateWorkflowStep(req.params.stepId, req.body);
+      res.json(step);
+    } catch (error) {
+      console.error('Error updating workflow step:', error);
+      res.status(500).json({ message: "Failed to update workflow step" });
+    }
+  });
+
+  app.delete('/api/workflow-steps/:stepId', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      await storage.deleteWorkflowStep(req.params.stepId);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting workflow step:', error);
+      res.status(500).json({ message: "Failed to delete workflow step" });
+    }
+  });
+
   // Document Requirements CRUD API endpoints
   app.get('/api/workflow-steps/:id/documents', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
@@ -828,9 +886,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/workflow-steps/:id/documents', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
+      const { title, description, isRequired, submittedBy, acceptedFileTypes, requiredByDays, order } = req.body;
       const docData = {
         workflowStepId: req.params.id,
-        ...req.body
+        title,
+        description: description || '',
+        isRequired: isRequired !== undefined ? isRequired : true,
+        submittedBy: submittedBy || 'OWNER',
+        acceptedFileTypes: acceptedFileTypes || ['pdf'],
+        requiredByDays: requiredByDays ? parseInt(requiredByDays) : null,
+        order: order || 1
       };
       const document = await storage.createDocumentRequirement(docData);
       res.json(document);
@@ -842,6 +907,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/document-requirements/:id', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
+      // Parse requiredByDays as integer if provided
+      if (req.body.requiredByDays) {
+        req.body.requiredByDays = parseInt(req.body.requiredByDays);
+      }
       const document = await storage.updateDocumentRequirement(req.params.id, req.body);
       res.json(document);
     } catch (error) {
@@ -876,9 +945,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/workflow-steps/:id/checklist', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
+      const { title, description, isRequired, assignedRole, checklistType, requiredByDays, order } = req.body;
       const checklistData = {
         workflowStepId: req.params.id,
-        ...req.body
+        title,
+        description: description || '',
+        isRequired: isRequired !== undefined ? isRequired : true,
+        assignedRole: assignedRole || 'WORKER',
+        checklistType: checklistType || 'VERIFICATION',
+        requiredByDays: requiredByDays ? parseInt(requiredByDays) : null,
+        order: order || 1
       };
       const item = await storage.createChecklistItem(checklistData);
       res.json(item);
@@ -890,6 +966,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/checklist-items/:id', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
+      // Parse requiredByDays as integer if provided
+      if (req.body.requiredByDays) {
+        req.body.requiredByDays = parseInt(req.body.requiredByDays);
+      }
       const item = await storage.updateChecklistItem(req.params.id, req.body);
       res.json(item);
     } catch (error) {
