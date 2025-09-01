@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/contexts/I18nProvider';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -168,6 +169,15 @@ export default function SettingsPage() {
   const { data: workflowTemplates, isLoading: loadingWorkflows } = useQuery({
     queryKey: ['/api/workflow-templates'],
   });
+
+  // Refresh function to invalidate cache and refetch data
+  const refreshWorkflowData = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['/api/workflow-templates'] });
+    toast({
+      title: "Data refreshed",
+      description: "Workflow templates have been updated from the database."
+    });
+  };
 
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   
@@ -446,6 +456,10 @@ export default function SettingsPage() {
                         Populate Romanian Documents
                       </>
                     )}
+                  </Button>
+                  <Button onClick={refreshWorkflowData} variant="outline" className="bg-green-50 hover:bg-green-100 border-green-200">
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Refresh Data
                   </Button>
                   <Button onClick={() => setShowCreateWorkflow(true)} className="bg-blue-600 hover:bg-blue-700">
                     <Plus className="h-4 w-4 mr-2" />

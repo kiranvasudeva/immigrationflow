@@ -264,6 +264,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Workflow Templates CRUD API endpoints
   app.get('/api/workflow-templates', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
+      // Disable caching to ensure fresh data
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
       const templates = await storage.getAllWorkflowTemplates();
       res.json(templates);
     } catch (error) {
@@ -333,6 +338,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Seed Romanian workflow data endpoint
+  // Cache refresh endpoint
+  app.post('/api/refresh-workflow-cache', isAuthenticated, requireRole('ADMIN'), async (req: any, res) => {
+    try {
+      // This endpoint is just to trigger a cache refresh on the frontend
+      // by returning a different response each time
+      res.json({ 
+        message: "Cache refresh triggered", 
+        timestamp: new Date().toISOString(),
+        cacheBuster: Math.random()
+      });
+    } catch (error) {
+      console.error('Error refreshing cache:', error);
+      res.status(500).json({ message: "Failed to refresh cache" });
+    }
+  });
+
   app.post('/api/seed-romanian-workflow', isAuthenticated, requireRole('ADMIN'), async (req: any, res) => {
     try {
       const userId = req.user.id || req.user.claims?.sub || 'dev-user';
