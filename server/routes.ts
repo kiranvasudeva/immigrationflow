@@ -256,11 +256,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/clients', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
       const clientData = req.body;
-      const client = await storage.createClientProfile(clientData);
+      
+      // Validate required fields
+      const requiredFields = ['legalName', 'registrationNumber', 'cui', 'legalAddress', 'adminName', 'contactEmail', 'phoneNumber', 'bankIban', 'caen'];
+      const missingFields = requiredFields.filter(field => !clientData[field]);
+      
+      if (missingFields.length > 0) {
+        return res.status(400).json({ 
+          message: "Missing required fields", 
+          missingFields: missingFields 
+        });
+      }
+
+      // Add ownerUserId from authenticated user
+      const userClaims = (req.user as any).claims;
+      if (!userClaims?.sub) {
+        return res.status(401).json({ message: "Invalid user session" });
+      }
+
+      const clientDataWithOwner = {
+        ...clientData,
+        ownerUserId: userClaims.sub
+      };
+
+      const client = await storage.createClientProfile(clientDataWithOwner);
       res.status(201).json(client);
     } catch (error) {
       console.error('Error creating client:', error);
-      res.status(500).json({ message: "Failed to create client" });
+      res.status(500).json({ message: "Failed to create client", error: (error as Error).message });
     }
   });
 
