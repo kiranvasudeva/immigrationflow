@@ -17,6 +17,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -208,6 +219,92 @@ function WorkflowManagement() {
     }
   });
 
+  // Delete mutations
+  const deleteWorkflowMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRequest(`/api/workflow-templates/${id}`, 'DELETE');
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workflow-templates'] });
+      toast({
+        title: "Workflow deleted",
+        description: "Workflow template has been deleted successfully."
+      });
+      setSelectedWorkflow(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete workflow template.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const deleteStepMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRequest(`/api/workflow-steps/${id}`, 'DELETE');
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workflow-templates', selectedWorkflow?.id, 'complete'] });
+      toast({
+        title: "Stage deleted",
+        description: "Workflow stage has been deleted successfully."
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete workflow stage.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const deleteDocumentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRequest(`/api/document-requirements/${id}`, 'DELETE');
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workflow-templates', selectedWorkflow?.id, 'complete'] });
+      toast({
+        title: "Document deleted",
+        description: "Document requirement has been deleted successfully."
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete document requirement.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const deleteChecklistMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRequest(`/api/checklist-items/${id}`, 'DELETE');
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workflow-templates', selectedWorkflow?.id, 'complete'] });
+      toast({
+        title: "Checklist deleted",
+        description: "Checklist item has been deleted successfully."
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete checklist item.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleEditDocument = (doc: any) => {
     setEditingDocument(doc.id);
     setEditingDocumentData({
@@ -274,29 +371,57 @@ function WorkflowManagement() {
           <CardDescription>Select a workflow template to view and manage its stages, documents, and checklists</CardDescription>
         </CardHeader>
         <CardContent>
-          <Select 
-            value={selectedWorkflow?.id || ''} 
-            onValueChange={(value) => {
-              const workflow = workflows?.find((w: any) => w.id === value);
-              setSelectedWorkflow(workflow);
-              setExpandedStage(null);
-              setExpandedDocument(null);
-              setExpandedChecklist(null);
-            }}
-          >
-            <SelectTrigger data-testid="select-workflow">
-              <SelectValue placeholder="Choose a workflow to manage..." />
-            </SelectTrigger>
-            <SelectContent>
-              {workflows?.filter((workflow: any, index: number, self: any[]) => 
-                index === self.findIndex((w: any) => w.name === workflow.name)
-              ).map((workflow: any) => (
-                <SelectItem key={workflow.id} value={workflow.id}>
-                  {workflow.name} ({workflow.estimatedDurationDays} days)
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select 
+              value={selectedWorkflow?.id || ''} 
+              onValueChange={(value) => {
+                const workflow = workflows?.find((w: any) => w.id === value);
+                setSelectedWorkflow(workflow);
+                setExpandedStage(null);
+                setExpandedDocument(null);
+                setExpandedChecklist(null);
+              }}
+            >
+              <SelectTrigger data-testid="select-workflow" className="flex-1">
+                <SelectValue placeholder="Choose a workflow to manage..." />
+              </SelectTrigger>
+              <SelectContent>
+                {workflows?.filter((workflow: any, index: number, self: any[]) => 
+                  index === self.findIndex((w: any) => w.name === workflow.name)
+                ).map((workflow: any) => (
+                  <SelectItem key={workflow.id} value={workflow.id}>
+                    {workflow.name} ({workflow.estimatedDurationDays} days)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedWorkflow && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={deleteWorkflowMutation.isPending}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Workflow Template</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete "{selectedWorkflow.name}"? This will permanently delete the entire workflow template, including all stages, documents, and checklists. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteWorkflowMutation.mutate(selectedWorkflow.id)}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete Workflow
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -356,6 +481,36 @@ function WorkflowManagement() {
                           <CheckSquare className="w-3 h-3 ml-2" />
                           {stage.checklistItems?.length || 0}
                         </div>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => e.stopPropagation()}
+                              disabled={deleteStepMutation.isPending}
+                              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Stage</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete the stage "{stage.name}"? This will permanently delete all documents and checklists associated with this stage. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteStepMutation.mutate(stage.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete Stage
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                         <ChevronDown className={`w-4 h-4 transition-transform ${expandedStage === stage.id ? 'rotate-180' : ''}`} />
                       </div>
                     </div>
@@ -497,6 +652,35 @@ function WorkflowManagement() {
                                                 >
                                                   <Edit className="w-3 h-3" />
                                                 </Button>
+                                                <AlertDialog>
+                                                  <AlertDialogTrigger asChild>
+                                                    <Button
+                                                      size="sm"
+                                                      variant="ghost"
+                                                      disabled={deleteDocumentMutation.isPending}
+                                                      className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                                    >
+                                                      <Trash2 className="w-3 h-3" />
+                                                    </Button>
+                                                  </AlertDialogTrigger>
+                                                  <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                      <AlertDialogTitle>Delete Document</AlertDialogTitle>
+                                                      <AlertDialogDescription>
+                                                        Are you sure you want to delete "{doc.title}"? This action cannot be undone.
+                                                      </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                      <AlertDialogAction
+                                                        onClick={() => deleteDocumentMutation.mutate(doc.id)}
+                                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                      >
+                                                        Delete Document
+                                                      </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                  </AlertDialogContent>
+                                                </AlertDialog>
                                               </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
@@ -665,6 +849,35 @@ function WorkflowManagement() {
                                                 >
                                                   <Edit className="w-3 h-3" />
                                                 </Button>
+                                                <AlertDialog>
+                                                  <AlertDialogTrigger asChild>
+                                                    <Button
+                                                      size="sm"
+                                                      variant="ghost"
+                                                      disabled={deleteChecklistMutation.isPending}
+                                                      className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                                    >
+                                                      <Trash2 className="w-3 h-3" />
+                                                    </Button>
+                                                  </AlertDialogTrigger>
+                                                  <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                      <AlertDialogTitle>Delete Checklist Item</AlertDialogTitle>
+                                                      <AlertDialogDescription>
+                                                        Are you sure you want to delete "{item.title}"? This action cannot be undone.
+                                                      </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                      <AlertDialogAction
+                                                        onClick={() => deleteChecklistMutation.mutate(item.id)}
+                                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                      >
+                                                        Delete Checklist Item
+                                                      </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                  </AlertDialogContent>
+                                                </AlertDialog>
                                               </div>
                                             </div>
                                             <div className="text-xs text-muted-foreground">
