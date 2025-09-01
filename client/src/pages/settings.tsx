@@ -152,6 +152,16 @@ function WorkflowManagement() {
   const [editingChecklist, setEditingChecklist] = useState<string | null>(null);
   const [editingDocumentData, setEditingDocumentData] = useState<any>({});
   const [editingChecklistData, setEditingChecklistData] = useState<any>({});
+
+  // Create form state
+  const [showCreateWorkflow, setShowCreateWorkflow] = useState(false);
+  const [showCreateStage, setShowCreateStage] = useState(false);
+  const [showCreateDocument, setShowCreateDocument] = useState(false);
+  const [showCreateChecklist, setShowCreateChecklist] = useState(false);
+  const [createStageData, setCreateStageData] = useState<any>({});
+  const [createDocumentData, setCreateDocumentData] = useState<any>({});
+  const [createChecklistData, setCreateChecklistData] = useState<any>({});
+  const [createWorkflowData, setCreateWorkflowData] = useState<any>({});
   
   const { data: workflows, isLoading } = useQuery({
     queryKey: ['/api/workflow-templates'],
@@ -305,6 +315,99 @@ function WorkflowManagement() {
     }
   });
 
+  // Create mutations
+  const createWorkflowMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('/api/workflow-templates', 'POST', data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workflow-templates'] });
+      toast({
+        title: "Workflow created",
+        description: "New workflow template has been created successfully."
+      });
+      setShowCreateWorkflow(false);
+      setCreateWorkflowData({});
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create workflow template.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const createStageMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('/api/workflow-steps', 'POST', data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workflow-templates', selectedWorkflow?.id, 'complete'] });
+      toast({
+        title: "Stage created",
+        description: "New workflow stage has been created successfully."
+      });
+      setShowCreateStage(false);
+      setCreateStageData({});
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create workflow stage.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const createDocumentMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('/api/document-requirements', 'POST', data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workflow-templates', selectedWorkflow?.id, 'complete'] });
+      toast({
+        title: "Document created",
+        description: "New document requirement has been created successfully."
+      });
+      setShowCreateDocument(false);
+      setCreateDocumentData({});
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create document requirement.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const createChecklistMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('/api/checklist-items', 'POST', data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workflow-templates', selectedWorkflow?.id, 'complete'] });
+      toast({
+        title: "Checklist created",
+        description: "New checklist item has been created successfully."
+      });
+      setShowCreateChecklist(false);
+      setCreateChecklistData({});
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create checklist item.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleEditDocument = (doc: any) => {
     setEditingDocument(doc.id);
     setEditingDocumentData({
@@ -367,8 +470,20 @@ function WorkflowManagement() {
       {/* Workflow Selection */}
       <Card>
         <CardHeader>
-          <CardTitle>Workflow Templates</CardTitle>
-          <CardDescription>Select a workflow template to view and manage its stages, documents, and checklists</CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>Workflow Templates</CardTitle>
+              <CardDescription>Select a workflow template to view and manage its stages, documents, and checklists</CardDescription>
+            </div>
+            <Button
+              onClick={() => setShowCreateWorkflow(true)}
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              New Workflow
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
@@ -444,7 +559,20 @@ function WorkflowManagement() {
           </Card>
 
           {/* Hierarchical Workflow Stages */}
-          {completeWorkflow.steps?.length > 0 ? (
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Workflow Stages</h3>
+              <Button
+                onClick={() => setShowCreateStage(true)}
+                size="sm"
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Stage
+              </Button>
+            </div>
+            {completeWorkflow.steps?.length > 0 ? (
             <div className="space-y-3">
               {completeWorkflow.steps
                 .sort((a: any, b: any) => a.order - b.order)
@@ -530,7 +658,22 @@ function WorkflowManagement() {
                               <FileText className="w-4 h-4 text-green-600" />
                               Document Requirements ({stage.documentRequirements?.length || 0})
                             </CardTitle>
-                            <ChevronDown className={`w-4 h-4 transition-transform ${expandedDocument === stage.id ? 'rotate-180' : ''}`} />
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCreateDocumentData({ workflowStepId: stage.id });
+                                  setShowCreateDocument(true);
+                                }}
+                                className="h-6 px-2 text-xs"
+                              >
+                                <Plus className="w-3 h-3 mr-1" />
+                                Add Doc
+                              </Button>
+                              <ChevronDown className={`w-4 h-4 transition-transform ${expandedDocument === stage.id ? 'rotate-180' : ''}`} />
+                            </div>
                           </div>
                         </CardHeader>
                         
@@ -727,7 +870,22 @@ function WorkflowManagement() {
                               <CheckSquare className="w-4 h-4 text-orange-600" />
                               Checklist Items ({stage.checklistItems?.length || 0})
                             </CardTitle>
-                            <ChevronDown className={`w-4 h-4 transition-transform ${expandedChecklist === stage.id ? 'rotate-180' : ''}`} />
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCreateChecklistData({ workflowStepId: stage.id });
+                                  setShowCreateChecklist(true);
+                                }}
+                                className="h-6 px-2 text-xs"
+                              >
+                                <Plus className="w-3 h-3 mr-1" />
+                                Add Item
+                              </Button>
+                              <ChevronDown className={`w-4 h-4 transition-transform ${expandedChecklist === stage.id ? 'rotate-180' : ''}`} />
+                            </div>
                           </div>
                         </CardHeader>
                         
@@ -910,6 +1068,7 @@ function WorkflowManagement() {
               <p className="text-muted-foreground">No stages defined for this workflow</p>
             </div>
           )}
+          </div>
         </div>
       )}
 
@@ -919,6 +1078,344 @@ function WorkflowManagement() {
           <p className="text-muted-foreground">Select a workflow template to view and manage its stages</p>
         </div>
       )}
+
+      {/* Create Workflow Dialog */}
+      <Dialog open={showCreateWorkflow} onOpenChange={setShowCreateWorkflow}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Workflow Template</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="workflow-name">Name</Label>
+              <Input 
+                id="workflow-name"
+                value={createWorkflowData.name || ''}
+                onChange={(e) => setCreateWorkflowData({...createWorkflowData, name: e.target.value})}
+                placeholder="Enter workflow name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="workflow-description">Description</Label>
+              <Textarea 
+                id="workflow-description"
+                value={createWorkflowData.description || ''}
+                onChange={(e) => setCreateWorkflowData({...createWorkflowData, description: e.target.value})}
+                placeholder="Enter workflow description"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="workflow-duration">Duration (days)</Label>
+                <Input 
+                  id="workflow-duration"
+                  type="number"
+                  value={createWorkflowData.estimatedDurationDays || ''}
+                  onChange={(e) => setCreateWorkflowData({...createWorkflowData, estimatedDurationDays: e.target.value})}
+                  placeholder="60"
+                />
+              </div>
+              <div>
+                <Label htmlFor="workflow-type">Execution Type</Label>
+                <Select 
+                  value={createWorkflowData.executionType || ''} 
+                  onValueChange={(value) => setCreateWorkflowData({...createWorkflowData, executionType: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="SEQUENTIAL">Sequential</SelectItem>
+                    <SelectItem value="PARALLEL">Parallel</SelectItem>
+                    <SelectItem value="CONDITIONAL">Conditional</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => createWorkflowMutation.mutate(createWorkflowData)}
+                disabled={createWorkflowMutation.isPending || !createWorkflowData.name}
+                className="flex-1"
+              >
+                Create Workflow
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {setShowCreateWorkflow(false); setCreateWorkflowData({});}}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Stage Dialog */}
+      <Dialog open={showCreateStage} onOpenChange={setShowCreateStage}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create New Stage</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="stage-name">Name</Label>
+              <Input 
+                id="stage-name"
+                value={createStageData.name || ''}
+                onChange={(e) => setCreateStageData({...createStageData, name: e.target.value})}
+                placeholder="Enter stage name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="stage-description">Description</Label>
+              <Textarea 
+                id="stage-description"
+                value={createStageData.description || ''}
+                onChange={(e) => setCreateStageData({...createStageData, description: e.target.value})}
+                placeholder="Enter stage description"
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label htmlFor="stage-duration">Duration (days)</Label>
+                <Input 
+                  id="stage-duration"
+                  type="number"
+                  value={createStageData.estimatedDays || ''}
+                  onChange={(e) => setCreateStageData({...createStageData, estimatedDays: e.target.value})}
+                  placeholder="5"
+                />
+              </div>
+              <div>
+                <Label htmlFor="stage-role">Assigned Role</Label>
+                <Select 
+                  value={createStageData.assignedRole || ''} 
+                  onValueChange={(value) => setCreateStageData({...createStageData, assignedRole: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="WORKER">Worker</SelectItem>
+                    <SelectItem value="OWNER">Owner</SelectItem>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2 pt-6">
+                <Checkbox 
+                  id="stage-approval"
+                  checked={createStageData.requiresApproval || false}
+                  onCheckedChange={(checked) => setCreateStageData({...createStageData, requiresApproval: checked})}
+                />
+                <Label htmlFor="stage-approval" className="text-sm">Requires Approval</Label>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="stage-position">Position</Label>
+              <Select 
+                value={createStageData.position || 'end'} 
+                onValueChange={(value) => setCreateStageData({...createStageData, position: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select position" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="start">At beginning</SelectItem>
+                  <SelectItem value="end">At end</SelectItem>
+                  {completeWorkflow?.steps?.map((step: any, index: number) => (
+                    <SelectItem key={step.id} value={`after-${step.id}`}>
+                      After "{step.name}" (position {index + 1})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => {
+                  const stageData = {
+                    ...createStageData,
+                    workflowTemplateId: selectedWorkflow?.id
+                  };
+                  createStageMutation.mutate(stageData);
+                }}
+                disabled={createStageMutation.isPending || !createStageData.name || !selectedWorkflow?.id}
+                className="flex-1"
+              >
+                Create Stage
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {setShowCreateStage(false); setCreateStageData({});}}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Document Dialog */}
+      <Dialog open={showCreateDocument} onOpenChange={setShowCreateDocument}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create New Document Requirement</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="doc-title">Title</Label>
+              <Input 
+                id="doc-title"
+                value={createDocumentData.title || ''}
+                onChange={(e) => setCreateDocumentData({...createDocumentData, title: e.target.value})}
+                placeholder="Enter document title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="doc-description">Description</Label>
+              <Textarea 
+                id="doc-description"
+                value={createDocumentData.description || ''}
+                onChange={(e) => setCreateDocumentData({...createDocumentData, description: e.target.value})}
+                placeholder="Enter document description"
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label htmlFor="doc-required-days">Required by (days)</Label>
+                <Input 
+                  id="doc-required-days"
+                  type="number"
+                  value={createDocumentData.requiredByDays || ''}
+                  onChange={(e) => setCreateDocumentData({...createDocumentData, requiredByDays: e.target.value})}
+                  placeholder="Optional"
+                />
+              </div>
+              <div>
+                <Label htmlFor="doc-role">Assigned Role</Label>
+                <Select 
+                  value={createDocumentData.assignedRole || ''} 
+                  onValueChange={(value) => setCreateDocumentData({...createDocumentData, assignedRole: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="WORKER">Worker</SelectItem>
+                    <SelectItem value="OWNER">Owner</SelectItem>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2 pt-6">
+                <Checkbox 
+                  id="doc-required"
+                  checked={createDocumentData.isRequired || false}
+                  onCheckedChange={(checked) => setCreateDocumentData({...createDocumentData, isRequired: checked})}
+                />
+                <Label htmlFor="doc-required" className="text-sm">Required</Label>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => createDocumentMutation.mutate(createDocumentData)}
+                disabled={createDocumentMutation.isPending || !createDocumentData.title || !createDocumentData.workflowStepId}
+                className="flex-1"
+              >
+                Create Document
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {setShowCreateDocument(false); setCreateDocumentData({});}}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Checklist Dialog */}
+      <Dialog open={showCreateChecklist} onOpenChange={setShowCreateChecklist}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create New Checklist Item</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="checklist-title">Title</Label>
+              <Input 
+                id="checklist-title"
+                value={createChecklistData.title || ''}
+                onChange={(e) => setCreateChecklistData({...createChecklistData, title: e.target.value})}
+                placeholder="Enter checklist item title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="checklist-description">Description</Label>
+              <Textarea 
+                id="checklist-description"
+                value={createChecklistData.description || ''}
+                onChange={(e) => setCreateChecklistData({...createChecklistData, description: e.target.value})}
+                placeholder="Enter checklist item description"
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label htmlFor="checklist-required-days">Required by (days)</Label>
+                <Input 
+                  id="checklist-required-days"
+                  type="number"
+                  value={createChecklistData.requiredByDays || ''}
+                  onChange={(e) => setCreateChecklistData({...createChecklistData, requiredByDays: e.target.value})}
+                  placeholder="Optional"
+                />
+              </div>
+              <div>
+                <Label htmlFor="checklist-role">Assigned Role</Label>
+                <Select 
+                  value={createChecklistData.assignedRole || ''} 
+                  onValueChange={(value) => setCreateChecklistData({...createChecklistData, assignedRole: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="WORKER">Worker</SelectItem>
+                    <SelectItem value="OWNER">Owner</SelectItem>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2 pt-6">
+                <Checkbox 
+                  id="checklist-required"
+                  checked={createChecklistData.isRequired || false}
+                  onCheckedChange={(checked) => setCreateChecklistData({...createChecklistData, isRequired: checked})}
+                />
+                <Label htmlFor="checklist-required" className="text-sm">Required</Label>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => createChecklistMutation.mutate(createChecklistData)}
+                disabled={createChecklistMutation.isPending || !createChecklistData.title || !createChecklistData.workflowStepId}
+                className="flex-1"
+              >
+                Create Checklist Item
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {setShowCreateChecklist(false); setCreateChecklistData({});}}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -991,6 +991,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create standalone workflow step with ordering
+  app.post('/api/workflow-steps', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const { workflowTemplateId, insertPosition, targetStepId, ...stepData } = req.body;
+      
+      // Calculate order based on position
+      let order = 1;
+      if (insertPosition && targetStepId) {
+        const existingSteps = await storage.getWorkflowSteps(workflowTemplateId);
+        const targetStep = existingSteps.find(s => s.id === targetStepId);
+        
+        if (targetStep && insertPosition === 'after') {
+          order = targetStep.order + 1;
+          // Update orders of subsequent steps
+          for (const step of existingSteps.filter(s => s.order > targetStep.order)) {
+            await storage.updateWorkflowStep(step.id, { order: step.order + 1 });
+          }
+        } else if (targetStep && insertPosition === 'before') {
+          order = targetStep.order;
+          // Update orders of current and subsequent steps
+          for (const step of existingSteps.filter(s => s.order >= targetStep.order)) {
+            await storage.updateWorkflowStep(step.id, { order: step.order + 1 });
+          }
+        }
+      } else {
+        // Add at the end
+        const existingSteps = await storage.getWorkflowSteps(workflowTemplateId);
+        order = existingSteps.length > 0 ? Math.max(...existingSteps.map(s => s.order)) + 1 : 1;
+      }
+      
+      const newStep = await storage.createWorkflowStep({
+        ...stepData,
+        workflowTemplateId,
+        order
+      });
+      
+      res.status(201).json(newStep);
+    } catch (error) {
+      console.error('Error creating workflow step:', error);
+      res.status(500).json({ message: "Failed to create workflow step" });
+    }
+  });
+
+  // Create standalone document requirement
+  app.post('/api/document-requirements', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const documentData = req.body;
+      const newDocument = await storage.createDocumentRequirement(documentData);
+      res.status(201).json(newDocument);
+    } catch (error) {
+      console.error('Error creating document requirement:', error);
+      res.status(500).json({ message: "Failed to create document requirement" });
+    }
+  });
+
+  // Create standalone checklist item
+  app.post('/api/checklist-items', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const checklistData = req.body;
+      const newItem = await storage.createChecklistItem(checklistData);
+      res.status(201).json(newItem);
+    } catch (error) {
+      console.error('Error creating checklist item:', error);
+      res.status(500).json({ message: "Failed to create checklist item" });
+    }
+  });
+
   // Get complete workflow with all stages, documents, and checklists
   app.get('/api/workflow-templates/:id/complete', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
