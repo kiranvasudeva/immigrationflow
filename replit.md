@@ -1,6 +1,154 @@
+# System Bible - ImmigrationFlow
+
+## MANDATORY UPDATE TRIGGERS
+**I MUST update this documentation when:**
+- ✅ Every time I complete a task → Update relevant sections
+- ✅ Every time I discover a pattern → Add to Code Patterns & Standards
+- ✅ Every time I fix an error → Add to Troubleshooting & Solutions
+- ✅ Every time I create something new → Add to Component Library
+
+## MANDATORY PRE-WORK PROTOCOL
+**I MUST always:**
+1. Read this entire replit.md file first
+2. Search existing codebase for similar patterns before coding
+3. Follow established patterns documented here
+4. Update this documentation after completion
+
 # Overview
 
 ImmigrationFlow is a comprehensive SaaS platform for managing Romanian immigration workflows, including work permits, visa applications, and residence permits. The system handles the complete Romanian immigration process from AJOFM labor market tests through IGI work permits, consulate visa applications, to final residence permits. It features multi-role access control (Admin, Client Owner, Worker, Viewer), document management with PDF generation, automated reminders, audit logging, and a kanban-style workflow interface.
+
+# Code Patterns & Standards
+
+## Frontend Patterns
+### Translation System
+- **Hook**: `import { useTranslation } from '@/contexts/I18nProvider'`
+- **Usage**: `const { t } = useTranslation();`
+- **Pattern**: `t('key') || 'Default Text'` for fallbacks
+- **NEVER use**: `useI18n` (does not exist)
+
+### Form Patterns
+- **Library**: React Hook Form + Zod validation
+- **Schema Extension**: `const schema = insertSchema.extend({ field: z.string() })`
+- **Type Inference**: `type FormData = z.infer<typeof schema>`
+- **Components**: `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage`
+
+### API Call Patterns
+- **Fetching**: `useQuery({ queryKey: ['/api/endpoint'], enabled: condition })`
+- **Mutations**: `useMutation({ mutationFn: async (data) => apiRequest("POST", "/api/endpoint", data) })`
+- **Cache Invalidation**: `queryClient.invalidateQueries({ queryKey: ['/api/endpoint'] })`
+- **Error Handling**: Check `isUnauthorizedError` in mutation callbacks
+
+### Component Imports
+- **UI Components**: `@/components/ui/*` (Button, Card, Input, Dialog, Select, Tabs)
+- **Custom Hooks**: `@/hooks/*` (useAuth, useToast)
+- **Contexts**: `@/contexts/*` (useTranslation from I18nProvider)
+- **Schema**: `@shared/schema` for type definitions
+
+### Component Structure Standards
+- Always include `data-testid` attributes for interactive elements
+- Use descriptive test IDs: `{action}-{target}` or `{type}-{content}`
+- For dynamic elements: `{type}-{description}-{id}`
+
+## Backend Patterns
+### API Endpoint Structure
+- **Authentication**: `isAuthenticated` middleware required for protected routes
+- **Authorization**: `requireRole('ADMIN', 'OWNER', 'WORKER')` for role-based access
+- **Audit**: `auditMiddleware` for logging API requests
+- **Validation**: Zod schemas for request validation
+
+### Error Handling Pattern
+```javascript
+try {
+  // operation
+  res.json(result);
+} catch (error) {
+  console.error('Error description:', error);
+  res.status(500).json({ message: "User-friendly error message" });
+}
+```
+
+### Database Query Patterns
+- **Access**: Via `storage` abstraction layer (never direct db access)
+- **Methods**: `storage.getUser()`, `storage.createClient()`, etc.
+- **Authorization Checks**: Verify user access before data operations
+
+### Security Headers
+Always include security headers:
+```javascript
+res.setHeader('X-Content-Type-Options', 'nosniff');
+res.setHeader('X-Frame-Options', 'DENY');
+res.setHeader('X-XSS-Protection', '1; mode=block');
+```
+
+## Database Schema Patterns
+### Table Definitions
+- **ORM**: Drizzle ORM with `pgTable`
+- **Primary Keys**: `uuid("id").primaryKey().defaultRandom()` or `varchar("id").primaryKey().default(sql\`gen_random_uuid()\`)`
+- **Timestamps**: `createdAt` and `updatedAt` with `timestamp().defaultNow()`
+- **Relations**: Defined separately using `relations()` function
+
+### Schema Validation
+- **Insert Schemas**: `createInsertSchema(table).pick({...})` for API validation
+- **Type Inference**: `typeof table.$inferSelect` for select types
+
+# Business Logic Rules
+
+## Role-Based Permissions
+- **ADMIN**: Full system access, can view/edit everything
+- **OWNER** (Client Owner): Manage their workers, documents, company profile
+- **WORKER**: View their assignments, upload documents, update progress
+- **VIEWER**: Read-only access to assigned data
+
+## Romanian Immigration Workflows
+### Standard Workflow Stages
+1. AJOFM Labor Market Test
+2. IGI Work Permit Application  
+3. Consulate Visa Application
+4. Residence Permit Application
+
+### Assignment Status Flow
+- `NOT_STARTED` → `AWAITING_UPLOAD` → `SUBMITTED_BY_USER` → `RECEIVED_BY_ADMIN` → `SUBMITTED_TO_INSTITUTION_DIGITAL/COURIER` → `ACCEPTED/REJECTED`
+
+# Component Library
+
+## Standard Form Components
+- **Client Form**: Uses `insertClientProfileSchema` with extensions
+- **Worker Form**: Uses `insertWorkerSchema` with extensions
+- **Modal Pattern**: Create/Edit modals with form validation
+
+## File Upload Patterns
+- **S3 Integration**: Signed URLs for direct uploads
+- **Security**: Virus scanning, file validation
+- **Authorization**: User must have access to assignment
+
+# API Documentation
+
+## Authentication Endpoints
+- `GET /api/auth/user` - Get current user
+- Authentication via Replit Auth integration
+
+## Core Resource Endpoints
+- `GET /api/workers` - List workers (ADMIN/OWNER only)
+- `GET /api/clients` - List clients  
+- `GET /api/assignments/:id` - Get assignment details
+- `PATCH /api/assignments/:id/status` - Update assignment status
+
+## File Endpoints
+- `POST /api/documents/upload-url` - Get signed upload URL
+- `POST /api/documents/confirm-upload` - Confirm file upload
+- `GET /api/documents/:fileId/download` - Get download URL
+
+# Troubleshooting & Solutions
+
+## Translation Issues
+- **Error**: `useI18n is not exported`
+- **Solution**: Use `useTranslation` from `@/contexts/I18nProvider`
+- **Root Cause**: Inconsistent naming conventions
+
+## Common Import Errors
+- Always verify exports exist in target files
+- Check existing component usage patterns before creating new ones
 
 # Recent Changes
 
