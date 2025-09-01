@@ -319,7 +319,7 @@ function WorkflowManagement() {
   const createWorkflowMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log('Creating workflow with data:', data);
-      const response = await apiRequest('/api/workflow-templates', 'POST', data);
+      const response = await apiRequest('POST', '/api/workflow-templates', data);
       return response;
     },
     onSuccess: () => {
@@ -344,7 +344,7 @@ function WorkflowManagement() {
   const createStageMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log('Creating stage with data:', data);
-      const response = await apiRequest('/api/workflow-steps', 'POST', data);
+      const response = await apiRequest('POST', '/api/workflow-steps', data);
       return response;
     },
     onSuccess: () => {
@@ -368,7 +368,7 @@ function WorkflowManagement() {
 
   const createDocumentMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('/api/document-requirements', 'POST', data);
+      const response = await apiRequest('POST', '/api/document-requirements', data);
       return response;
     },
     onSuccess: () => {
@@ -391,7 +391,7 @@ function WorkflowManagement() {
 
   const createChecklistMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('/api/checklist-items', 'POST', data);
+      const response = await apiRequest('POST', '/api/checklist-items', data);
       return response;
     },
     onSuccess: () => {
