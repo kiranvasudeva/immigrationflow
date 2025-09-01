@@ -8,7 +8,7 @@ import { requireRole, devRbacBypass } from "./middleware/rbac";
 import { storage } from "./storage";
 import { db } from "./db";
 import { sql, eq, like, count, isNotNull } from "drizzle-orm";
-import { users, clientProfiles, workers, stages, assignments, sessions, requirements, documentFiles, auditLogs } from "../shared/schema";
+import { users, clientProfiles, workers, stages, assignments, sessions, requirements, documentFiles, auditLogs, workflowStepTypeEnum, assignedToRoleEnum } from "../shared/schema";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { setupSecurityHeaders, createRateLimiter, validateInput, createEmergencyAdminAccess } from "./middleware/security";
 import { createStructuredLogger, performanceMonitoring, errorTracking, setupHealthChecks } from "./middleware/monitoring";
@@ -716,12 +716,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           workflowTemplateId: romanianTemplate.id,
           name: stageData.name,
           description: stageData.description,
-          stepType: stageData.stepType,
-          assignedRole: stageData.assignedRole,
-          estimatedDuration: stageData.estimatedDuration,
+          stepType: stageData.stepType as typeof workflowStepTypeEnum.enumValues[number],
+          assignedRole: stageData.assignedRole as typeof assignedToRoleEnum.enumValues[number],
           order: stageData.order,
           isRequired: true,
-          approvalRequired: false
         });
 
         // Create document requirements for this step
@@ -732,7 +730,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             title: req.title,
             description: req.description,
             isRequired: req.isRequired,
-            submittedBy: req.submittedBy,
+            submittedBy: req.submittedBy as typeof assignedToRoleEnum.enumValues[number],
             acceptedFileTypes: req.acceptedFileTypes,
             order: i + 1
           });
@@ -746,7 +744,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             title: item.title,
             description: item.description,
             isRequired: item.isRequired,
-            assignedRole: item.assignedRole,
+            assignedRole: item.assignedRole as typeof assignedToRoleEnum.enumValues[number],
             order: i + 1
           });
         }
@@ -758,7 +756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         workflowTemplateId: romanianTemplate.id,
         stagesCreated: workflowStages.length
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error seeding Romanian workflow:', error);
       res.status(500).json({ 
         message: "Failed to seed Romanian workflow", 
@@ -1065,7 +1063,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Successfully created workflow step:', newStep.id);
       
       res.status(201).json(newStep);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating workflow step:', error);
       console.error('Error stack:', error.stack);
       res.status(500).json({ message: "Failed to create workflow step", error: error.message });
