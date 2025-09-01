@@ -804,10 +804,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/workflow-steps/:id', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
-      const success = await storage.deleteWorkflowStep(req.params.id);
+      const stepId = req.params.id;
+      
+      // First delete all associated document requirements
+      const documents = await storage.getDocumentRequirements(stepId);
+      for (const doc of documents) {
+        await storage.deleteDocumentRequirement(doc.id);
+      }
+      
+      // Then delete all associated checklist items
+      const checklists = await storage.getChecklistItems(stepId);
+      for (const item of checklists) {
+        await storage.deleteChecklistItem(item.id);
+      }
+      
+      // Finally delete the workflow step itself
+      const success = await storage.deleteWorkflowStep(stepId);
       if (!success) {
         return res.status(404).json({ message: "Workflow step not found" });
       }
+      
       res.json({ success: true });
     } catch (error) {
       console.error('Error deleting workflow step:', error);
@@ -881,15 +897,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/workflow-steps/:stepId', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
-    try {
-      await storage.deleteWorkflowStep(req.params.stepId);
-      res.status(204).send();
-    } catch (error) {
-      console.error('Error deleting workflow step:', error);
-      res.status(500).json({ message: "Failed to delete workflow step" });
-    }
-  });
 
   // Document Requirements CRUD API endpoints
   app.get('/api/workflow-steps/:id/documents', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
