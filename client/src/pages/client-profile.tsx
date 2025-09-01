@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ArrowLeft, Building, Mail, Phone, MapPin, CreditCard, Edit, Save, X, User, Plus, Calendar, Globe, CheckCircle, Clock, AlertTriangle, FileText, Upload, Download, Eye } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useTranslation } from "@/contexts/I18nProvider";
@@ -65,6 +66,17 @@ export default function ClientProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null);
   const [isEditingWorker, setIsEditingWorker] = useState(false);
+  const [isAddingWorker, setIsAddingWorker] = useState(false);
+  const [newWorkerData, setNewWorkerData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    nationality: '',
+    dob: '',
+    passportNumber: '',
+    passportExpiry: ''
+  });
   
   // Extract client ID from URL
   const clientId = location.split('/clients/')[1];
@@ -122,6 +134,40 @@ export default function ClientProfile() {
 
 
 
+
+  // Create worker mutation
+  const createWorkerMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", `/api/clients/${clientId}/workers`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/clients', clientId, 'workers'] });
+      setIsAddingWorker(false);
+      setNewWorkerData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        nationality: '',
+        dob: '',
+        passportNumber: '',
+        passportExpiry: ''
+      });
+      toast({
+        title: "Success",
+        description: "Worker created successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating worker:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create worker",
+        variant: "destructive",
+      });
+    }
+  });
 
   // Update client mutation
   const updateClientMutation = useMutation({
@@ -490,7 +536,12 @@ export default function ClientProfile() {
                   <Card className="lg:col-span-2">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle>Workers</CardTitle>
-                      <Button variant="outline" size="sm" data-testid="button-add-worker">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        data-testid="button-add-worker"
+                        onClick={() => setIsAddingWorker(true)}
+                      >
                         <Plus className="h-4 w-4 mr-1" />
                         Add Worker
                       </Button>
@@ -546,7 +597,12 @@ export default function ClientProfile() {
                         <div className="text-center py-8">
                           <User className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                           <p className="text-gray-600 mb-4">No workers assigned to this client</p>
-                          <Button variant="outline" size="sm" data-testid="button-add-first-worker">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            data-testid="button-add-first-worker"
+                            onClick={() => setIsAddingWorker(true)}
+                          >
                             <Plus className="h-4 w-4 mr-1" />
                             Add First Worker
                           </Button>
@@ -934,6 +990,149 @@ export default function ClientProfile() {
           </main>
         </div>
       </div>
+
+      {/* Worker Creation Dialog */}
+      <Dialog open={isAddingWorker} onOpenChange={setIsAddingWorker}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Add New Worker</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  First Name *
+                </label>
+                <Input
+                  value={newWorkerData.firstName}
+                  onChange={(e) => setNewWorkerData({ ...newWorkerData, firstName: e.target.value })}
+                  placeholder="Enter first name"
+                  data-testid="input-new-worker-first-name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Name *
+                </label>
+                <Input
+                  value={newWorkerData.lastName}
+                  onChange={(e) => setNewWorkerData({ ...newWorkerData, lastName: e.target.value })}
+                  placeholder="Enter last name"
+                  data-testid="input-new-worker-last-name"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email *
+                </label>
+                <Input
+                  type="email"
+                  value={newWorkerData.email}
+                  onChange={(e) => setNewWorkerData({ ...newWorkerData, email: e.target.value })}
+                  placeholder="email@example.com"
+                  data-testid="input-new-worker-email"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone *
+                </label>
+                <Input
+                  value={newWorkerData.phone}
+                  onChange={(e) => setNewWorkerData({ ...newWorkerData, phone: e.target.value })}
+                  placeholder="+40 XXX XXX XXX"
+                  data-testid="input-new-worker-phone"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nationality *
+                </label>
+                <Input
+                  value={newWorkerData.nationality}
+                  onChange={(e) => setNewWorkerData({ ...newWorkerData, nationality: e.target.value })}
+                  placeholder="Enter nationality"
+                  data-testid="input-new-worker-nationality"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date of Birth *
+                </label>
+                <Input
+                  type="date"
+                  value={newWorkerData.dob}
+                  onChange={(e) => setNewWorkerData({ ...newWorkerData, dob: e.target.value })}
+                  data-testid="input-new-worker-dob"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Passport Number *
+                </label>
+                <Input
+                  value={newWorkerData.passportNumber}
+                  onChange={(e) => setNewWorkerData({ ...newWorkerData, passportNumber: e.target.value })}
+                  placeholder="Enter passport number"
+                  data-testid="input-new-worker-passport"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Passport Expiry *
+                </label>
+                <Input
+                  type="date"
+                  value={newWorkerData.passportExpiry}
+                  onChange={(e) => setNewWorkerData({ ...newWorkerData, passportExpiry: e.target.value })}
+                  data-testid="input-new-worker-passport-expiry"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAddingWorker(false);
+                setNewWorkerData({
+                  firstName: '',
+                  lastName: '',
+                  email: '',
+                  phone: '',
+                  nationality: '',
+                  dob: '',
+                  passportNumber: '',
+                  passportExpiry: ''
+                });
+              }}
+              data-testid="button-cancel-new-worker"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                const workerDataToSend = {
+                  ...newWorkerData,
+                  dob: newWorkerData.dob ? new Date(newWorkerData.dob).toISOString() : undefined,
+                  passportExpiry: newWorkerData.passportExpiry ? new Date(newWorkerData.passportExpiry).toISOString() : undefined
+                };
+                createWorkerMutation.mutate(workerDataToSend);
+              }}
+              disabled={createWorkerMutation.isPending || !newWorkerData.firstName || !newWorkerData.lastName || !newWorkerData.email}
+              data-testid="button-save-new-worker"
+            >
+              {createWorkerMutation.isPending ? 'Creating...' : 'Create Worker'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
