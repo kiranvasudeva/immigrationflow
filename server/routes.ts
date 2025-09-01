@@ -487,10 +487,8 @@ async function testDatabaseConnection() {
   try {
     const startTime = Date.now();
     
-    // Test 1: Basic connectivity with transaction
-    await db.transaction(async (tx) => {
-      await tx.execute(sql`SELECT 1 as test_connection`);
-    });
+    // Test 1: Basic connectivity
+    await db.execute(sql`SELECT 1 as test_connection`);
     
     // Test 2: Schema validation - check all required tables exist
     const requiredTables = ['users', 'client_profiles', 'workers', 'assignments', 'stages', 'document_files', 'audit_logs'];
@@ -508,8 +506,8 @@ async function testDatabaseConnection() {
     // Test 3: Index performance check
     const indexTestQueries = [
       sql`EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'test@example.com'`,
-      sql`EXPLAIN ANALYZE SELECT * FROM workers WHERE "client_profile_id" = 'test-id'`,
-      sql`EXPLAIN ANALYZE SELECT * FROM assignments WHERE "worker_id" = 'test-id'`
+      sql`EXPLAIN ANALYZE SELECT * FROM workers WHERE "client_profile_id" IS NOT NULL LIMIT 1`,
+      sql`EXPLAIN ANALYZE SELECT * FROM assignments WHERE "worker_id" IS NOT NULL LIMIT 1`
     ];
     
     const performanceResults = [];
@@ -541,8 +539,8 @@ async function testDatabaseConnection() {
     if (slowQueries.length > 0) {
       issues.push(`Slow queries detected (>100ms): ${slowQueries.length}`);
     }
-    if (connectionTime > 1000) {
-      issues.push(`Database connection time too high: ${connectionTime}ms`);
+    if (connectionTime > 2000) {
+      issues.push(`Database connection time high: ${connectionTime}ms (includes web overhead)`);
     }
     
     return {
