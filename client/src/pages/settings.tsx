@@ -608,128 +608,140 @@ export default function SettingsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Admin Role */}
-                <div className="space-y-4">
+                <div className="space-y-4 p-4 border rounded-lg bg-red-50">
                   <div className="flex items-center gap-2">
                     <Badge variant="destructive">ADMIN</Badge>
-                    <span className="text-sm text-gray-600">Full System Access</span>
+                    <span className="text-sm font-medium">Full System Access</span>
                   </div>
                   <div className="space-y-3 text-sm">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span>Manage all clients and workers</span>
+                      <span>Create and manage all workflows</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span>Configure system settings</span>
+                      <span>Access all client and worker data</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span>Access all documents and workflows</span>
+                      <span>Configure system settings and permissions</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span>Approve workflow stages</span>
+                      <span>Manage document templates and requirements</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span>Generate reports and analytics</span>
+                      <span>View audit logs and system analytics</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Invite and manage all user roles</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Client Owner Role */}
-                <div className="space-y-4">
+                <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
                   <div className="flex items-center gap-2">
-                    <Badge variant="default">OWNER</Badge>
-                    <span className="text-sm text-gray-600">Client Management</span>
+                    <Badge variant="default">CLIENT OWNER</Badge>
+                    <span className="text-sm font-medium">Client Management</span>
                   </div>
                   <div className="space-y-3 text-sm">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span>Manage own workers and assignments</span>
+                      <span>Manage own client profiles and data</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span>View own workflow progress</span>
+                      <span>Assign workers to client cases</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span>Upload and access own documents</span>
+                      <span>View progress of assigned workflows</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span>Submit required documentation</span>
+                      <span>Upload and manage client documents</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <XCircle className="h-4 w-4 text-red-600" />
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Communicate with assigned workers</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <XCircle className="h-4 w-4 text-red-500" />
                       <span>Cannot access other clients' data</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Worker Role */}
-                <div className="space-y-4">
+                <div className="space-y-4 p-4 border rounded-lg bg-green-50">
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">WORKER</Badge>
-                    <span className="text-sm text-gray-600">Case Processing</span>
+                    <span className="text-sm font-medium">Case Processing</span>
                   </div>
                   <div className="space-y-3 text-sm">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span>Process assigned workflow stages</span>
+                      <span>View assigned client cases and workflows</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span>Submit institutional documents</span>
+                      <span>Update workflow stage progress</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span>Update case progress and notes</span>
+                      <span>Upload required documents and evidence</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span>Access assigned case documents</span>
+                      <span>Communicate with client owners</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <XCircle className="h-4 w-4 text-red-600" />
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Generate progress reports</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <XCircle className="h-4 w-4 text-red-500" />
                       <span>Cannot access unassigned cases</span>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Document Access Configuration</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="client-document-access">Client Document Access</Label>
-                    <Select defaultValue="own-only">
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select access level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="own-only">Own Documents Only</SelectItem>
-                        <SelectItem value="assigned-workers">Own + Assigned Workers</SelectItem>
-                        <SelectItem value="all-clients">All Client Documents</SelectItem>
-                      </SelectContent>
-                    </Select>
+                {/* Viewer Role */}
+                <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">VIEWER</Badge>
+                    <span className="text-sm font-medium">Read-Only Access</span>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="worker-document-access">Worker Document Access</Label>
-                    <Select defaultValue="assigned-only">
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select access level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="assigned-only">Assigned Cases Only</SelectItem>
-                        <SelectItem value="team-cases">Team Cases</SelectItem>
-                        <SelectItem value="all-cases">All Cases</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>View assigned client cases (read-only)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Access workflow progress reports</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>View document status and deadlines</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <XCircle className="h-4 w-4 text-red-500" />
+                      <span>Cannot modify any data or documents</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <XCircle className="h-4 w-4 text-red-500" />
+                      <span>Cannot upload files or update progress</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <XCircle className="h-4 w-4 text-red-500" />
+                      <span>Cannot access administrative functions</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -737,44 +749,48 @@ export default function SettingsPage() {
               <Separator />
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Workflow Stage Permissions</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Document Collection</h4>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="default" className="text-xs">OWNER</Badge>
-                        <span>Upload personal documents</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="text-xs">WORKER</Badge>
-                        <span>Review and approve documents</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Institutional Submission</h4>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="text-xs">WORKER</Badge>
-                        <span>Submit to government agencies</span>
-                      </div>
+                <h3 className="text-lg font-semibold">Document Access Permissions</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Document Upload Permissions</h4>
+                    <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2">
                         <Badge variant="destructive" className="text-xs">ADMIN</Badge>
-                        <span>Override submission status</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Final Approval</h4>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="destructive" className="text-xs">ADMIN</Badge>
-                        <span>Final case approval</span>
+                        <span>Upload any document type, modify templates</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="default" className="text-xs">OWNER</Badge>
-                        <span>Accept completed case</span>
+                        <span>Upload client company documents, employment contracts</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">WORKER</Badge>
+                        <span>Upload worker personal documents, progress evidence</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">VIEWER</Badge>
+                        <span>No upload permissions</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Workflow Stage Permissions</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="destructive" className="text-xs">ADMIN</Badge>
+                        <span>Create, modify, and delete any workflow stage</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="default" className="text-xs">OWNER</Badge>
+                        <span>Mark stages complete, provide approvals</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">WORKER</Badge>
+                        <span>Update assigned stage progress and status</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">VIEWER</Badge>
+                        <span>View stage status only</span>
                       </div>
                     </div>
                   </div>
@@ -785,6 +801,176 @@ export default function SettingsPage() {
                 <Button className="bg-blue-600 hover:bg-blue-700">
                   <Save className="h-4 w-4 mr-2" />
                   Save Permission Settings
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="documents" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Document Templates & Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Available Document Templates</h3>
+                  <div className="space-y-3">
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">Romanian Employment Contract</h4>
+                        <Badge variant="default">Active</Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Standard Romanian employment contract template (Contract Individual de Muncă)
+                      </p>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit Template
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Upload className="h-4 w-4 mr-1" />
+                          Preview
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">Power of Attorney</h4>
+                        <Badge variant="default">Active</Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Legal representation document for immigration procedures
+                      </p>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit Template
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Upload className="h-4 w-4 mr-1" />
+                          Preview
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">Job Description Document</h4>
+                        <Badge variant="default">Active</Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Detailed job description for AJOFM labor market applications
+                      </p>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit Template
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Upload className="h-4 w-4 mr-1" />
+                          Preview
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button className="w-full" variant="outline">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add New Template
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Document Requirements by Stage</h3>
+                  <div className="space-y-3">
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-medium mb-2">AJOFM Labor Market Test</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <CheckSquare className="h-4 w-4 text-green-600" />
+                          <span>Job Description (Auto-generated)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckSquare className="h-4 w-4 text-green-600" />
+                          <span>Company Registration Certificate</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckSquare className="h-4 w-4 text-green-600" />
+                          <span>AJOFM Application Form</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-medium mb-2">IGI Work Permit Application</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <CheckSquare className="h-4 w-4 text-green-600" />
+                          <span>Employment Contract (Auto-generated)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckSquare className="h-4 w-4 text-green-600" />
+                          <span>Worker Passport Copy</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckSquare className="h-4 w-4 text-green-600" />
+                          <span>Educational Certificates</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-medium mb-2">Consulate Visa Application</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <CheckSquare className="h-4 w-4 text-green-600" />
+                          <span>Visa Application Form</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckSquare className="h-4 w-4 text-green-600" />
+                          <span>Work Permit Approval</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckSquare className="h-4 w-4 text-green-600" />
+                          <span>Financial Guarantee</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Template Configuration</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="auto-fill">Auto-fill client data</Label>
+                    <Switch id="auto-fill" defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="watermark">Add security watermark</Label>
+                    <Switch id="watermark" defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="digital-signature">Require digital signature</Label>
+                    <Switch id="digital-signature" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Document Settings
                 </Button>
               </div>
             </CardContent>
