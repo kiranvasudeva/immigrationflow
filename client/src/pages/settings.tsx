@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/contexts/I18nProvider';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useBreadcrumb } from '@/contexts/BreadcrumbContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
