@@ -27,7 +27,7 @@ interface Worker {
   passportNumber?: string;
   currentWorkPermitExpiry?: string;
   status: string;
-  clientId: string;
+  clientProfileId: string;
   assignmentId?: string;
   createdAt: string;
   updatedAt: string;
@@ -52,7 +52,7 @@ export default function WorkersPage() {
     passportNumber: '',
     currentWorkPermitExpiry: '',
     status: 'PENDING',
-    clientId: ''
+    clientProfileId: ''
   });
 
   // Redirect if not authenticated
@@ -97,7 +97,10 @@ export default function WorkersPage() {
   // Create worker mutation
   const createWorkerMutation = useMutation({
     mutationFn: (workerData: typeof newWorkerForm) => {
-      return apiRequest('/api/workers', 'POST', workerData);
+      if (!workerData.clientProfileId) {
+        throw new Error('Client ID is required to create a worker');
+      }
+      return apiRequest(`/api/clients/${workerData.clientProfileId}/workers`, 'POST', workerData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/workers'] });
@@ -111,7 +114,7 @@ export default function WorkersPage() {
         passportNumber: '',
         currentWorkPermitExpiry: '',
         status: 'PENDING',
-        clientId: ''
+        clientProfileId: ''
       });
       toast({
         title: "Success",
@@ -129,8 +132,11 @@ export default function WorkersPage() {
 
   // Update worker mutation
   const updateWorkerMutation = useMutation({
-    mutationFn: ({ id, ...workerData }: Worker) => {
-      return apiRequest('PUT', `/api/workers/${id}`, workerData);
+    mutationFn: ({ id, clientProfileId, ...workerData }: Worker) => {
+      if (!clientProfileId) {
+        throw new Error('Client ID is required to update a worker');
+      }
+      return apiRequest(`/api/clients/${clientProfileId}/workers/${id}`, 'PUT', workerData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/workers'] });
@@ -381,8 +387,8 @@ export default function WorkersPage() {
                   </div>
                   {user?.role === 'ADMIN' && (
                     <div>
-                      <Label htmlFor="clientId">Client *</Label>
-                      <Select value={newWorkerForm.clientId} onValueChange={(value) => setNewWorkerForm(prev => ({ ...prev, clientId: value }))}>
+                      <Label htmlFor="clientProfileId">Client *</Label>
+                      <Select value={newWorkerForm.clientProfileId} onValueChange={(value) => setNewWorkerForm(prev => ({ ...prev, clientProfileId: value }))}>
                         <SelectTrigger data-testid="select-worker-client">
                           <SelectValue placeholder="Select client" />
                         </SelectTrigger>
@@ -528,8 +534,8 @@ export default function WorkersPage() {
                   </div>
                   {user?.role === 'ADMIN' && (
                     <div>
-                      <Label htmlFor="edit-clientId">Client *</Label>
-                      <Select value={editingWorker.clientId} onValueChange={(value) => setEditingWorker(prev => prev ? { ...prev, clientId: value } : null)}>
+                      <Label htmlFor="edit-clientProfileId">Client *</Label>
+                      <Select value={editingWorker.clientProfileId} onValueChange={(value) => setEditingWorker(prev => prev ? { ...prev, clientProfileId: value } : null)}>
                         <SelectTrigger data-testid="select-edit-worker-client">
                           <SelectValue placeholder="Select client" />
                         </SelectTrigger>
