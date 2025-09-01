@@ -318,6 +318,7 @@ function WorkflowManagement() {
   // Create mutations
   const createWorkflowMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log('Creating workflow with data:', data);
       const response = await apiRequest('/api/workflow-templates', 'POST', data);
       return response;
     },
@@ -330,10 +331,11 @@ function WorkflowManagement() {
       setShowCreateWorkflow(false);
       setCreateWorkflowData({});
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Workflow creation error:', error);
       toast({
         title: "Error",
-        description: "Failed to create workflow template.",
+        description: error?.message || "Failed to create workflow template.",
         variant: "destructive"
       });
     }
@@ -1134,7 +1136,15 @@ function WorkflowManagement() {
             </div>
             <div className="flex items-center gap-2">
               <Button 
-                onClick={() => createWorkflowMutation.mutate(createWorkflowData)}
+                onClick={() => {
+                  const workflowData = {
+                    ...createWorkflowData,
+                    estimatedDurationDays: createWorkflowData.estimatedDurationDays ? 
+                      parseInt(createWorkflowData.estimatedDurationDays) : 30,
+                    executionType: createWorkflowData.executionType?.toLowerCase() || 'sequential'
+                  };
+                  createWorkflowMutation.mutate(workflowData);
+                }}
                 disabled={createWorkflowMutation.isPending || !createWorkflowData.name}
                 className="flex-1"
               >
