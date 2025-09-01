@@ -1267,12 +1267,16 @@ function WorkflowManagement() {
               <Button 
                 onClick={() => {
                   const stageData = {
-                    ...createStageData,
                     workflowTemplateId: selectedWorkflow?.id,
-                    order: createStageData.order ? parseInt(createStageData.order) : 1,
+                    name: createStageData.name,
+                    description: createStageData.description || '',
+                    stepType: createStageData.stepType,
+                    assignedRole: createStageData.assignedRole,
                     estimatedDays: createStageData.estimatedDays ? parseInt(createStageData.estimatedDays) : 1,
                     isRequired: createStageData.isRequired !== undefined ? createStageData.isRequired : true,
-                    requiresApproval: createStageData.requiresApproval || false
+                    requiresApproval: createStageData.requiresApproval || false,
+                    approverRole: createStageData.approverRole || null,
+                    dependencies: createStageData.dependencies || null
                   };
                   createStageMutation.mutate(stageData);
                 }}
