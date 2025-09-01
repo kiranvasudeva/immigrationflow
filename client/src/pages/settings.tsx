@@ -344,7 +344,7 @@ function WorkflowManagement() {
   const createStageMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log('🚀 MUTATION TRIGGERED - Creating stage with data:', data);
-      const endpoint = `/api/workflow-templates/${data.workflowTemplateId}/steps`;
+      const endpoint = `/api/workflow-steps`;
       console.log('🔍 Making API request to', endpoint);
       try {
         const response = await apiRequest('POST', endpoint, data);
@@ -1289,6 +1289,20 @@ function WorkflowManagement() {
                   console.log('🔵 Selected workflow:', selectedWorkflow?.id);
                   console.log('🔵 Form data:', createStageData);
                   
+                  // Parse position data for backend
+                  let insertPosition = undefined;
+                  let targetStepId = undefined;
+                  
+                  if (createStageData.position && createStageData.position !== 'end') {
+                    if (createStageData.position.startsWith('after-')) {
+                      insertPosition = 'after';
+                      targetStepId = createStageData.position.replace('after-', '');
+                    } else if (createStageData.position.startsWith('before-')) {
+                      insertPosition = 'before';
+                      targetStepId = createStageData.position.replace('before-', '');
+                    }
+                  }
+                  
                   const stageData = {
                     workflowTemplateId: selectedWorkflow?.id,
                     name: createStageData.name,
@@ -1298,9 +1312,10 @@ function WorkflowManagement() {
                     estimatedDays: createStageData.estimatedDays ? parseInt(createStageData.estimatedDays) : 1,
                     isRequired: createStageData.isRequired !== undefined ? createStageData.isRequired : true,
                     requiresApproval: createStageData.requiresApproval || false,
-                    approverRole: createStageData.approverRole || null,
-                    dependencies: createStageData.dependencies || null,
-                    position: createStageData.position || 'end'
+                    ...(createStageData.approverRole && { approverRole: createStageData.approverRole }),
+                    ...(createStageData.dependencies && Array.isArray(createStageData.dependencies) && { dependencies: createStageData.dependencies }),
+                    ...(insertPosition && { insertPosition }),
+                    ...(targetStepId && { targetStepId })
                   };
                   
                   console.log('🔵 Prepared stage data:', stageData);
