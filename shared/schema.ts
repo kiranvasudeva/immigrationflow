@@ -1048,6 +1048,17 @@ export type ClientProfile = typeof clientProfiles.$inferSelect;
 export type InsertClientProfile = z.infer<typeof insertClientProfileSchema>;
 export type Worker = typeof workers.$inferSelect;
 export type InsertWorker = z.infer<typeof insertWorkerSchema>;
+
+// Employee aliases for frontend consistency (refers to workers table)
+export type Employee = Worker;
+export type InsertEmployee = InsertWorker;
+export type EmployeeWorkflowProgress = WorkerWorkflowProgress; 
+export type InsertEmployeeWorkflowProgress = InsertWorkerWorkflowProgress;
+export type EmployeeStepProgress = WorkerStepProgress;
+export type InsertEmployeeStepProgress = InsertWorkerStepProgress;
+
+// Table alias for consistency
+export const employees = workers;
 export type Stage = typeof stages.$inferSelect;
 export type Requirement = typeof requirements.$inferSelect;
 export type InsertRequirement = z.infer<typeof insertRequirementSchema>;

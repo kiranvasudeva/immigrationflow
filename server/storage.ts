@@ -363,13 +363,13 @@ export class DatabaseStorage implements IStorage {
 
   // Employee operations
   async getEmployee(id: string): Promise<Employee | undefined> {
-    const [worker] = await db.select().from(employees).where(eq(employees.id, id));
+    const [worker] = await db.select().from(workers).where(eq(workers.id, id));
     return worker;
   }
 
   async getEmployeeWithDetails(id: string): Promise<any> {
     // Get the worker basic info
-    const [worker] = await db.select().from(employees).where(eq(employees.id, id));
+    const [worker] = await db.select().from(workers).where(eq(workers.id, id));
     if (!worker) return undefined;
 
     // Get the client profile info
@@ -436,31 +436,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEmployeesByClientId(clientId: string): Promise<Employee[]> {
-    return await db.select().from(employees).where(eq(employees.clientProfileId, clientId));
+    return await db.select().from(workers).where(eq(workers.clientProfileId, clientId));
   }
 
   async createEmployee(worker: InsertEmployee): Promise<Employee> {
-    const [newEmployee] = await db.insert(employees).values(worker).returning();
+    const [newEmployee] = await db.insert(workers).values(worker).returning();
     return newEmployee;
   }
 
   async updateEmployee(id: string, updates: Partial<InsertEmployee>): Promise<Employee> {
     const [updated] = await db
-      .update(employees)
+      .update(workers)
       .set(updates)
-      .where(eq(employees.id, id))
+      .where(eq(workers.id, id))
       .returning();
     return updated;
   }
 
   async getAllEmployees(): Promise<Employee[]> {
-    return await db.select().from(employees);
+    return await db.select().from(workers);
+  }
+
+  // Legacy worker method aliases for API compatibility
+  async getAllWorkers(): Promise<Worker[]> {
+    return await db.select().from(workers);
+  }
+
+  async getWorkersByClientId(clientId: string): Promise<Worker[]> {
+    return await db.select().from(workers).where(eq(workers.clientProfileId, clientId));
   }
 
   async deleteEmployee(id: string): Promise<boolean> {
     const result = await db
-      .delete(employees)
-      .where(eq(employees.id, id));
+      .delete(workers)
+      .where(eq(workers.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
