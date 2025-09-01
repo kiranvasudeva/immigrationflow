@@ -45,7 +45,7 @@ export default function AdminHealthPage() {
   const consoleRef = useRef<HTMLDivElement>(null);
 
   // Get available health tests
-  const { data: healthTests = [], isLoading: loadingTests } = useQuery({
+  const { data: healthTests = [], isLoading: loadingTests } = useQuery<HealthTest[]>({
     queryKey: ['/api/admin/health/tests'],
     enabled: true
   });

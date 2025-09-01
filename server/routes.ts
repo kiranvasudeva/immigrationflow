@@ -1586,6 +1586,17 @@ async function performSystemWideFixes(issues: string[]) {
         fixes.push(`Cleaned up ${orphanedAssignments.rows.length} orphaned assignment records`);
       }
       
+      // Remove orphaned audit logs (critical issue fix)
+      const orphanedAuditResult = await db.execute(sql`
+        DELETE FROM audit_logs 
+        WHERE user_id NOT IN (SELECT id FROM users) 
+        AND user_id IS NOT NULL
+      `);
+      
+      if (orphanedAuditResult.rowCount && orphanedAuditResult.rowCount > 0) {
+        fixes.push(`Removed ${orphanedAuditResult.rowCount} orphaned audit log entries`);
+      }
+      
       fixes.push('Database integrity verified and repaired');
     } catch (error) {
       errors.push(`Database repair failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -1658,15 +1669,21 @@ async function performSystemWideFixes(issues: string[]) {
       
       // Ensure each requirement has corresponding templates
       for (const requirement of documentRequirements) {
+        // Map requirement type to template type - different enums!
+        // requirement.type is 'STANDARD' or 'CUSTOM'
+        // template.type needs to be 'FORM', 'DOCUMENT', or 'CERTIFICATE'
+        const templateType = requirement.type === 'STANDARD' ? 'DOCUMENT' : 
+                           requirement.type === 'CUSTOM' ? 'FORM' : 'DOCUMENT';
+        
         const hasTemplate = documentTemplates.some(t => 
-          t.type === requirement.type
+          t.type === templateType
         );
         
         if (!hasTemplate) {
           // Create missing document template
           await storage.createDocumentTemplate({
             name: `Auto-generated template for ${requirement.type}`,
-            type: requirement.type,
+            type: templateType,
             description: `System-generated template for ${requirement.type} documents`,
             templateData: JSON.stringify({
               fields: [
