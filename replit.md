@@ -7,7 +7,72 @@ ImmigrationFlow is a comprehensive SaaS platform designed to streamline Romanian
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
-The agent should always inventory existing working functionality, follow documented patterns, implement all requested functionality with working CRUD operations, preserve all existing working features, and verify UI/API functionality before marking a task complete. Documentation must be updated after task completion. The agent should never break existing working functionality.
+
+### Development Workflow Protocol
+
+The agent must follow this comprehensive workflow for all development tasks:
+
+1. **Read replit.md first** → Understand system architecture and patterns
+2. **Inventory existing working functionality** → Check buttons, forms, UI workflows
+3. **Follow documented patterns** → Use established code patterns and conventions
+4. **Implement ALL requested functionality** → Complete with working CRUD operations
+5. **Preserve all existing working features** → Never break what already works
+6. **Frontend Verification Process** (NEW):
+   - Run automated verification: `node scripts/verify-frontend.js`
+   - Check for TypeScript/LSP errors: `get_latest_lsp_diagnostics`
+   - Monitor console logs for errors (no red errors should appear)
+   - Verify network requests (all API calls should return 200, not 500)
+   - Test UI interactions (buttons clickable, forms submittable)
+   - Use `mark_completed_and_get_feedback` for visual verification
+7. **Verify API endpoints return 200 not 500** → Check network tab and server logs
+8. **Verify no regressions** → Test previously working functionality
+9. **Update documentation after** → Document changes and new patterns
+
+### Frontend Testing Checklist
+
+After any frontend or API changes, verify:
+
+#### Automated Checks
+- [ ] Run verification script: `node scripts/verify-frontend.js`
+- [ ] Check LSP diagnostics: No TypeScript errors
+- [ ] Monitor workflow status: Server running without compilation errors
+- [ ] Check console logs: No JavaScript errors in browser console
+
+#### Manual Verification
+- [ ] **Forms**: Render without errors, validation works, submit successfully
+- [ ] **CRUD Operations**: Create, Read, Update, Delete all function
+- [ ] **API Integration**: Loading states appear, errors handled gracefully
+- [ ] **UI State**: Buttons responsive, dropdowns populate, modals work
+
+#### Network Verification
+- [ ] All API calls return 200 (success) status codes
+- [ ] No 500 (server error) responses
+- [ ] No 400 (bad request) errors from validation issues
+- [ ] Authentication headers included in requests
+
+#### Visual Verification
+After fixes, use `mark_completed_and_get_feedback` with:
+- Specific page route to check
+- Clear description of expected behavior
+- Request for user testing confirmation
+
+### Error Pattern Recognition
+
+Common errors and immediate fixes:
+- `Cannot read property of undefined` → Add optional chaining (`?.`)
+- `Failed to fetch` → Check API endpoint URL and CORS
+- `400 Bad Request` → Validate request payload structure
+- `401 Unauthorized` → Verify authentication flow
+- `500 Internal Server Error` → Check server logs for detailed error
+
+### Verification Documentation
+
+The system includes:
+- `scripts/verify-frontend.js` - Automated frontend verification
+- `docs/FRONTEND_VERIFICATION.md` - Detailed testing procedures
+- Enhanced error logging in API endpoints for debugging
+
+The agent should never mark a task complete without running through this verification process. Documentation must be updated after task completion. The agent should never break existing working functionality.
 
 ## System Architecture
 
