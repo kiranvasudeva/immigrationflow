@@ -474,13 +474,13 @@ export default function SettingsPage() {
                   <div className="text-center py-4">Loading workflow templates...</div>
                 )}
                 
-                {workflows.length === 0 && !loadingWorkflows && (
+                {(!workflowTemplates || workflowTemplates.length === 0) && !loadingWorkflows && (
                   <div className="text-center py-8 text-gray-500">
                     No workflow templates found. Create your first workflow template to get started.
                   </div>
                 )}
 
-                {workflows.map((workflow) => (
+                {(workflowTemplates || []).map((workflow) => (
                   <div key={workflow.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-4">
                       <div>
