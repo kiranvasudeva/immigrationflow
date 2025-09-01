@@ -410,7 +410,7 @@ export default function SettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             General
@@ -422,6 +422,10 @@ export default function SettingsPage() {
           <TabsTrigger value="documents" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Documents
+          </TabsTrigger>
+          <TabsTrigger value="permissions" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Permissions
           </TabsTrigger>
           <TabsTrigger value="payments" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
@@ -591,6 +595,198 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <p>Payment settings content goes here.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="permissions" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Role Permissions Configuration
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Admin Role */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="destructive">ADMIN</Badge>
+                    <span className="text-sm text-gray-600">Full System Access</span>
+                  </div>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Manage all clients and workers</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Configure system settings</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Access all documents and workflows</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Approve workflow stages</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Generate reports and analytics</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Client Owner Role */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="default">OWNER</Badge>
+                    <span className="text-sm text-gray-600">Client Management</span>
+                  </div>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Manage own workers and assignments</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>View own workflow progress</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Upload and access own documents</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Submit required documentation</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <XCircle className="h-4 w-4 text-red-600" />
+                      <span>Cannot access other clients' data</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Worker Role */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">WORKER</Badge>
+                    <span className="text-sm text-gray-600">Case Processing</span>
+                  </div>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Process assigned workflow stages</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Submit institutional documents</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Update case progress and notes</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span>Access assigned case documents</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <XCircle className="h-4 w-4 text-red-600" />
+                      <span>Cannot access unassigned cases</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Document Access Configuration</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="client-document-access">Client Document Access</Label>
+                    <Select defaultValue="own-only">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select access level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="own-only">Own Documents Only</SelectItem>
+                        <SelectItem value="assigned-workers">Own + Assigned Workers</SelectItem>
+                        <SelectItem value="all-clients">All Client Documents</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="worker-document-access">Worker Document Access</Label>
+                    <Select defaultValue="assigned-only">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select access level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="assigned-only">Assigned Cases Only</SelectItem>
+                        <SelectItem value="team-cases">Team Cases</SelectItem>
+                        <SelectItem value="all-cases">All Cases</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Workflow Stage Permissions</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Document Collection</h4>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="default" className="text-xs">OWNER</Badge>
+                        <span>Upload personal documents</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">WORKER</Badge>
+                        <span>Review and approve documents</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Institutional Submission</h4>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">WORKER</Badge>
+                        <span>Submit to government agencies</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="destructive" className="text-xs">ADMIN</Badge>
+                        <span>Override submission status</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Final Approval</h4>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="destructive" className="text-xs">ADMIN</Badge>
+                        <span>Final case approval</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="default" className="text-xs">OWNER</Badge>
+                        <span>Accept completed case</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Permission Settings
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

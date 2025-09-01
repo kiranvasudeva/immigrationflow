@@ -307,6 +307,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Creating workflow template with data:', templateData);
       const template = await storage.createWorkflowTemplate(templateData);
+      
+      // Create workflow steps if provided
+      if (req.body.steps && Array.isArray(req.body.steps)) {
+        for (const step of req.body.steps) {
+          const stepData = {
+            workflowTemplateId: template.id,
+            name: step.name,
+            description: step.description || '',
+            stepType: step.stepType,
+            assignedRole: step.assignedRole,
+            order: step.order,
+            estimatedDays: step.estimatedDays || 1,
+            isRequired: step.isRequired !== undefined ? step.isRequired : true,
+            requiresApproval: step.requiresApproval || false,
+            approverRole: step.approverRole || null,
+            dependencies: step.dependencies || null
+          };
+          
+          // Create the workflow step
+          const createdStep = await storage.createWorkflowStep(stepData);
+          
+          // Create document requirements if provided
+          if (step.documentRequirements && Array.isArray(step.documentRequirements)) {
+            for (const req of step.documentRequirements) {
+              await storage.createDocumentRequirement({
+                workflowStepId: createdStep.id,
+                title: req.title,
+                description: req.description || '',
+                isRequired: req.isRequired !== undefined ? req.isRequired : true,
+                submittedBy: req.submittedBy || 'OWNER',
+                acceptedFileTypes: req.acceptedFileTypes || ['pdf'],
+                order: req.order || 1
+              });
+            }
+          }
+          
+          // Create checklist items if provided
+          if (step.checklistItems && Array.isArray(step.checklistItems)) {
+            for (const item of step.checklistItems) {
+              await storage.createChecklistItem({
+                workflowStepId: createdStep.id,
+                title: item.title,
+                description: item.description || '',
+                isRequired: item.isRequired !== undefined ? item.isRequired : true,
+                assignedRole: item.assignedRole || 'ADMIN',
+                order: item.order || 1
+              });
+            }
+          }
+        }
+      }
+      
+      // Return the created template - the frontend will refetch complete data
       res.status(201).json(template);
     } catch (error) {
       console.error('Error creating workflow template:', error);
