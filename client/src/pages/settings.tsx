@@ -90,13 +90,13 @@ function SettingsPage() {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="workflows">Workflows</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          {isAdmin && <TabsTrigger value="system">System</TabsTrigger>}
-          <TabsTrigger value="assignments">Assignments</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 lg:grid-cols-6">
+          <TabsTrigger value="general" className="text-xs lg:text-sm">General</TabsTrigger>
+          <TabsTrigger value="workflows" className="text-xs lg:text-sm">Workflows</TabsTrigger>
+          <TabsTrigger value="notifications" className="text-xs lg:text-sm">Notifications</TabsTrigger>
+          <TabsTrigger value="documents" className="text-xs lg:text-sm">Documents</TabsTrigger>
+          {isAdmin && <TabsTrigger value="system" className="text-xs lg:text-sm">System</TabsTrigger>}
+          <TabsTrigger value="assignments" className="text-xs lg:text-sm">Assignments</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-6">
@@ -189,7 +189,9 @@ function WorkflowManagement() {
               <SelectValue placeholder="Choose a workflow to manage..." />
             </SelectTrigger>
             <SelectContent>
-              {workflows?.map((workflow: any) => (
+              {workflows?.filter((workflow: any, index: number, self: any[]) => 
+                index === self.findIndex((w: any) => w.name === workflow.name)
+              ).map((workflow: any) => (
                 <SelectItem key={workflow.id} value={workflow.id}>
                   {workflow.name} ({workflow.estimatedDurationDays} days)
                 </SelectItem>
@@ -307,7 +309,15 @@ function WorkflowManagement() {
                                             <span className="font-medium">Submitted by:</span> {doc.submittedBy}
                                           </div>
                                           <div>
-                                            <span className="font-medium">File types:</span> {JSON.parse(doc.acceptedFileTypes || '["PDF"]').join(', ')}
+                                            <span className="font-medium">File types:</span> {
+                                              (() => {
+                                                try {
+                                                  return JSON.parse(doc.acceptedFileTypes || '["PDF"]').join(', ');
+                                                } catch {
+                                                  return doc.acceptedFileTypes || 'PDF';
+                                                }
+                                              })()
+                                            }
                                           </div>
                                         </div>
                                       </div>
