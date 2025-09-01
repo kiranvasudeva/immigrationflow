@@ -1296,7 +1296,7 @@ function WorkflowManagement() {
                   console.log('🔵 Calling mutation...');
                   createStageMutation.mutate(stageData);
                 }}
-                disabled={createStageMutation.isPending || !createStageData.name || !selectedWorkflow?.id || !createStageData.stepType || !createStageData.assignedRole}
+                disabled={false}
                 className="flex-1"
               >
                 Create Stage
