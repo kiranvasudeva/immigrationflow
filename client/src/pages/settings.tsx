@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { queryClient } from '@/lib/queryClient';
+import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/contexts/I18nProvider';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Settings, 
@@ -2021,16 +2022,103 @@ function ChecklistItemForm({ item, onSubmit, onCancel }: {
 function WorkflowManagement() {
   const [selectedWorkflow, setSelectedWorkflow] = useState(null);
   const [expandedStage, setExpandedStage] = useState(null);
+  const [editingDocument, setEditingDocument] = useState(null);
+  const [editingChecklist, setEditingChecklist] = useState(null);
+  const [showAddDocument, setShowAddDocument] = useState(null);
+  const [showAddChecklist, setShowAddChecklist] = useState(null);
+  const { toast } = useToast();
   
   const { data: workflows, isLoading } = useQuery({
     queryKey: ['/api/workflow-templates'],
     enabled: true
   });
 
-  const { data: completeWorkflow } = useQuery({
+  const { data: completeWorkflow, refetch: refetchWorkflow } = useQuery({
     queryKey: ['/api/workflow-templates', selectedWorkflow?.id, 'complete'],
     enabled: !!selectedWorkflow?.id
   });
+
+  // Add document requirement
+  const handleAddDocument = async (stageId, documentData) => {
+    try {
+      await apiRequest(`/api/workflow-documents`, {
+        method: 'POST',
+        body: JSON.stringify({ stageId, ...documentData })
+      });
+      await refetchWorkflow();
+      setShowAddDocument(null);
+      toast({ title: "Success", description: "Document requirement added successfully" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to add document requirement", variant: "destructive" });
+    }
+  };
+
+  // Edit document requirement  
+  const handleEditDocument = async (documentId, documentData) => {
+    try {
+      await apiRequest(`/api/workflow-documents/${documentId}`, {
+        method: 'PUT',
+        body: JSON.stringify(documentData)
+      });
+      await refetchWorkflow();
+      setEditingDocument(null);
+      toast({ title: "Success", description: "Document requirement updated successfully" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update document requirement", variant: "destructive" });
+    }
+  };
+
+  // Delete document requirement
+  const handleDeleteDocument = async (documentId) => {
+    try {
+      await apiRequest(`/api/workflow-documents/${documentId}`, { method: 'DELETE' });
+      await refetchWorkflow();
+      toast({ title: "Success", description: "Document requirement deleted successfully" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete document requirement", variant: "destructive" });
+    }
+  };
+
+  // Add checklist item
+  const handleAddChecklist = async (stageId, checklistData) => {
+    try {
+      await apiRequest(`/api/workflow-checklists`, {
+        method: 'POST',
+        body: JSON.stringify({ stageId, ...checklistData })
+      });
+      await refetchWorkflow();
+      setShowAddChecklist(null);
+      toast({ title: "Success", description: "Checklist item added successfully" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to add checklist item", variant: "destructive" });
+    }
+  };
+
+  // Edit checklist item
+  const handleEditChecklist = async (checklistId, checklistData) => {
+    try {
+      await apiRequest(`/api/workflow-checklists/${checklistId}`, {
+        method: 'PUT',
+        body: JSON.stringify(checklistData)
+      });
+      await refetchWorkflow();
+      setEditingChecklist(null);
+      toast({ title: "Success", description: "Checklist item updated successfully" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update checklist item", variant: "destructive" });
+    }
+  };
+
+  // Delete checklist item
+  const handleDeleteChecklist = async (checklistId) => {
+    try {
+      await apiRequest(`/api/workflow-checklists/${checklistId}`, { method: 'DELETE' });
+      await refetchWorkflow();
+      toast({ title: "Success", description: "Checklist item deleted successfully" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete checklist item", variant: "destructive" });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -2129,66 +2217,202 @@ function WorkflowManagement() {
                         <div className="grid md:grid-cols-2 gap-6">
                           {/* Document Requirements */}
                           <div className="space-y-3">
-                            <h5 className="font-medium flex items-center gap-2">
-                              <FileText className="w-4 h-4" />
-                              Document Requirements ({stage.documentRequirements?.length || 0})
-                            </h5>
+                            <div className="flex items-center justify-between">
+                              <h5 className="font-medium flex items-center gap-2">
+                                <FileText className="w-4 h-4" />
+                                Document Requirements ({stage.documentRequirements?.length || 0})
+                              </h5>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => setShowAddDocument(stage.id)}
+                                data-testid={`button-add-document-${stage.id}`}
+                              >
+                                <Plus className="w-3 h-3 mr-1" />
+                                Add Document
+                              </Button>
+                            </div>
+                            
                             {stage.documentRequirements?.length > 0 ? (
                               <div className="space-y-2">
                                 {stage.documentRequirements
                                   .sort((a, b) => a.order - b.order)
                                   .map((doc) => (
                                   <div key={doc.id} className="border rounded p-3 space-y-2">
-                                    <div className="flex items-start justify-between">
-                                      <div className="flex-1">
-                                        <div className="font-medium text-sm">{doc.title}</div>
-                                        <div className="text-xs text-muted-foreground">{doc.description}</div>
-                                      </div>
-                                      {doc.isRequired && (
-                                        <Badge variant="destructive" className="text-xs ml-2">Required</Badge>
-                                      )}
-                                    </div>
-                                    <div className="flex justify-between text-xs text-muted-foreground">
-                                      <span>Submitted by: <strong>{doc.submittedBy}</strong></span>
-                                      <span>Types: {JSON.parse(doc.acceptedFileTypes || '[]').join(', ')}</span>
-                                    </div>
+                                    {editingDocument === doc.id ? (
+                                      <DocumentEditForm 
+                                        document={doc}
+                                        onSave={(data) => handleEditDocument(doc.id, data)}
+                                        onCancel={() => setEditingDocument(null)}
+                                      />
+                                    ) : (
+                                      <>
+                                        <div className="flex items-start justify-between">
+                                          <div className="flex-1">
+                                            <div className="font-medium text-sm">{doc.title}</div>
+                                            <div className="text-xs text-muted-foreground">{doc.description}</div>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            {doc.isRequired && (
+                                              <Badge variant="destructive" className="text-xs">Required</Badge>
+                                            )}
+                                            <Button 
+                                              size="sm" 
+                                              variant="ghost"
+                                              onClick={() => setEditingDocument(doc.id)}
+                                              data-testid={`button-edit-document-${doc.id}`}
+                                            >
+                                              <Edit className="w-3 h-3" />
+                                            </Button>
+                                            <Button 
+                                              size="sm" 
+                                              variant="ghost"
+                                              onClick={() => handleDeleteDocument(doc.id)}
+                                              data-testid={`button-delete-document-${doc.id}`}
+                                            >
+                                              <Trash2 className="w-3 h-3" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                        <div className="flex justify-between text-xs text-muted-foreground">
+                                          <span>Submitted by: <strong>{doc.submittedBy}</strong></span>
+                                          <span>Types: {JSON.parse(doc.acceptedFileTypes || '[]').join(', ')}</span>
+                                        </div>
+                                      </>
+                                    )}
                                   </div>
                                 ))}
                               </div>
                             ) : (
-                              <p className="text-sm text-muted-foreground">No document requirements defined</p>
+                              <div className="text-center p-4 border border-dashed rounded-lg">
+                                <FileText className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                                <p className="text-sm text-muted-foreground">No document requirements defined</p>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="mt-2"
+                                  onClick={() => setShowAddDocument(stage.id)}
+                                  data-testid={`button-add-first-document-${stage.id}`}
+                                >
+                                  <Plus className="w-3 h-3 mr-1" />
+                                  Add First Document
+                                </Button>
+                              </div>
+                            )}
+
+                            {/* Add Document Form */}
+                            {showAddDocument === stage.id && (
+                              <Card className="border-primary">
+                                <CardHeader>
+                                  <CardTitle className="text-sm">Add Document Requirement</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <DocumentEditForm 
+                                    onSave={(data) => handleAddDocument(stage.id, data)}
+                                    onCancel={() => setShowAddDocument(null)}
+                                  />
+                                </CardContent>
+                              </Card>
                             )}
                           </div>
 
                           {/* Checklist Items */}
                           <div className="space-y-3">
-                            <h5 className="font-medium flex items-center gap-2">
-                              <CheckSquare className="w-4 h-4" />
-                              Checklist Items ({stage.checklistItems?.length || 0})
-                            </h5>
+                            <div className="flex items-center justify-between">
+                              <h5 className="font-medium flex items-center gap-2">
+                                <CheckSquare className="w-4 h-4" />
+                                Checklist Items ({stage.checklistItems?.length || 0})
+                              </h5>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => setShowAddChecklist(stage.id)}
+                                data-testid={`button-add-checklist-${stage.id}`}
+                              >
+                                <Plus className="w-3 h-3 mr-1" />
+                                Add Checklist
+                              </Button>
+                            </div>
+                            
                             {stage.checklistItems?.length > 0 ? (
                               <div className="space-y-2">
                                 {stage.checklistItems
                                   .sort((a, b) => a.order - b.order)
                                   .map((item) => (
                                   <div key={item.id} className="border rounded p-3 space-y-2">
-                                    <div className="flex items-start justify-between">
-                                      <div className="flex-1">
-                                        <div className="font-medium text-sm">{item.title}</div>
-                                        <div className="text-xs text-muted-foreground">{item.description}</div>
-                                      </div>
-                                      {item.isRequired && (
-                                        <Badge variant="destructive" className="text-xs ml-2">Required</Badge>
-                                      )}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">
-                                      Assigned to: <strong>{item.assignedRole}</strong>
-                                    </div>
+                                    {editingChecklist === item.id ? (
+                                      <ChecklistEditForm 
+                                        checklist={item}
+                                        onSave={(data) => handleEditChecklist(item.id, data)}
+                                        onCancel={() => setEditingChecklist(null)}
+                                      />
+                                    ) : (
+                                      <>
+                                        <div className="flex items-start justify-between">
+                                          <div className="flex-1">
+                                            <div className="font-medium text-sm">{item.title}</div>
+                                            <div className="text-xs text-muted-foreground">{item.description}</div>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            {item.isRequired && (
+                                              <Badge variant="destructive" className="text-xs">Required</Badge>
+                                            )}
+                                            <Button 
+                                              size="sm" 
+                                              variant="ghost"
+                                              onClick={() => setEditingChecklist(item.id)}
+                                              data-testid={`button-edit-checklist-${item.id}`}
+                                            >
+                                              <Edit className="w-3 h-3" />
+                                            </Button>
+                                            <Button 
+                                              size="sm" 
+                                              variant="ghost"
+                                              onClick={() => handleDeleteChecklist(item.id)}
+                                              data-testid={`button-delete-checklist-${item.id}`}
+                                            >
+                                              <Trash2 className="w-3 h-3" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                          Assigned to: <strong>{item.assignedRole}</strong>
+                                        </div>
+                                      </>
+                                    )}
                                   </div>
                                 ))}
                               </div>
                             ) : (
-                              <p className="text-sm text-muted-foreground">No checklist items defined</p>
+                              <div className="text-center p-4 border border-dashed rounded-lg">
+                                <CheckSquare className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                                <p className="text-sm text-muted-foreground">No checklist items defined</p>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="mt-2"
+                                  onClick={() => setShowAddChecklist(stage.id)}
+                                  data-testid={`button-add-first-checklist-${stage.id}`}
+                                >
+                                  <Plus className="w-3 h-3 mr-1" />
+                                  Add First Checklist
+                                </Button>
+                              </div>
+                            )}
+
+                            {/* Add Checklist Form */}
+                            {showAddChecklist === stage.id && (
+                              <Card className="border-primary">
+                                <CardHeader>
+                                  <CardTitle className="text-sm">Add Checklist Item</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <ChecklistEditForm 
+                                    onSave={(data) => handleAddChecklist(stage.id, data)}
+                                    onCancel={() => setShowAddChecklist(null)}
+                                  />
+                                </CardContent>
+                              </Card>
                             )}
                           </div>
                         </div>
@@ -2214,5 +2438,225 @@ function WorkflowManagement() {
         </div>
       )}
     </div>
+  );
+}
+
+// Document Edit Form Component
+function DocumentEditForm({ document = null, onSave, onCancel }) {
+  const [formData, setFormData] = useState({
+    title: document?.title || '',
+    description: document?.description || '',
+    isRequired: document?.isRequired || false,
+    submittedBy: document?.submittedBy || 'WORKER',
+    acceptedFileTypes: document?.acceptedFileTypes ? JSON.parse(document.acceptedFileTypes) : ['PDF'],
+    order: document?.order || 1
+  });
+
+  const fileTypes = ['PDF', 'DOC', 'DOCX', 'JPG', 'PNG', 'XLS', 'XLSX'];
+  const roles = ['ADMIN', 'OWNER', 'WORKER', 'VIEWER'];
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.title.trim()) return;
+    
+    onSave({
+      ...formData,
+      acceptedFileTypes: JSON.stringify(formData.acceptedFileTypes)
+    });
+  };
+
+  const toggleFileType = (type) => {
+    setFormData(prev => ({
+      ...prev,
+      acceptedFileTypes: prev.acceptedFileTypes.includes(type)
+        ? prev.acceptedFileTypes.filter(t => t !== type)
+        : [...prev.acceptedFileTypes, type]
+    }));
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="title">Document Title *</Label>
+          <Input
+            id="title"
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            placeholder="Enter document title"
+            required
+            data-testid="input-document-title"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="submittedBy">Submitted By *</Label>
+          <Select value={formData.submittedBy} onValueChange={(value) => setFormData(prev => ({ ...prev, submittedBy: value }))}>
+            <SelectTrigger data-testid="select-document-role">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {roles.map(role => (
+                <SelectItem key={role} value={role}>{role}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="Enter document description"
+          rows={2}
+          data-testid="textarea-document-description"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Accepted File Types</Label>
+        <div className="flex flex-wrap gap-2">
+          {fileTypes.map(type => (
+            <div key={type} className="flex items-center space-x-2">
+              <Checkbox
+                id={type}
+                checked={formData.acceptedFileTypes.includes(type)}
+                onCheckedChange={() => toggleFileType(type)}
+                data-testid={`checkbox-filetype-${type}`}
+              />
+              <Label htmlFor={type} className="text-sm">{type}</Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="isRequired"
+            checked={formData.isRequired}
+            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isRequired: checked }))}
+            data-testid="checkbox-document-required"
+          />
+          <Label htmlFor="isRequired">Required Document</Label>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="order">Order</Label>
+          <Input
+            id="order"
+            type="number"
+            value={formData.order}
+            onChange={(e) => setFormData(prev => ({ ...prev, order: parseInt(e.target.value) || 1 }))}
+            min="1"
+            data-testid="input-document-order"
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel} data-testid="button-cancel-document">
+          Cancel
+        </Button>
+        <Button type="submit" data-testid="button-save-document">
+          {document ? 'Update' : 'Add'} Document
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+// Checklist Edit Form Component
+function ChecklistEditForm({ checklist = null, onSave, onCancel }) {
+  const [formData, setFormData] = useState({
+    title: checklist?.title || '',
+    description: checklist?.description || '',
+    isRequired: checklist?.isRequired || false,
+    assignedRole: checklist?.assignedRole || 'ADMIN',
+    order: checklist?.order || 1
+  });
+
+  const roles = ['ADMIN', 'OWNER', 'WORKER', 'VIEWER'];
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.title.trim()) return;
+    onSave(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="title">Checklist Title *</Label>
+          <Input
+            id="title"
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            placeholder="Enter checklist title"
+            required
+            data-testid="input-checklist-title"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="assignedRole">Assigned To *</Label>
+          <Select value={formData.assignedRole} onValueChange={(value) => setFormData(prev => ({ ...prev, assignedRole: value }))}>
+            <SelectTrigger data-testid="select-checklist-role">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {roles.map(role => (
+                <SelectItem key={role} value={role}>{role}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="Enter checklist description"
+          rows={2}
+          data-testid="textarea-checklist-description"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="isRequired"
+            checked={formData.isRequired}
+            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isRequired: checked }))}
+            data-testid="checkbox-checklist-required"
+          />
+          <Label htmlFor="isRequired">Required Task</Label>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="order">Order</Label>
+          <Input
+            id="order"
+            type="number"
+            value={formData.order}
+            onChange={(e) => setFormData(prev => ({ ...prev, order: parseInt(e.target.value) || 1 }))}
+            min="1"
+            data-testid="input-checklist-order"
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel} data-testid="button-cancel-checklist">
+          Cancel
+        </Button>
+        <Button type="submit" data-testid="button-save-checklist">
+          {checklist ? 'Update' : 'Add'} Checklist
+        </Button>
+      </div>
+    </form>
   );
 }
