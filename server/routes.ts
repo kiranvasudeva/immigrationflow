@@ -819,15 +819,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/workflow-templates/:templateId/steps', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
       const { templateId } = req.params;
-      const { name, description, stepType, assignedRole, order, estimatedDays, isRequired, position } = req.body;
+      const { name, description, stepType, assignedRole, estimatedDays, isRequired, position } = req.body;
       
-      // Adjust order of existing steps if inserting in middle or beginning
-      if (position && position !== 'end') {
-        const steps = await storage.getWorkflowSteps(templateId);
-        for (const step of steps) {
-          if (step.order >= order) {
-            await storage.updateWorkflowStep(step.id, { order: step.order + 1 });
+      // Calculate order based on position
+      let order = 1;
+      const existingSteps = await storage.getWorkflowSteps(templateId);
+      
+      if (position === 'start') {
+        order = 1;
+        // Update existing steps to make room
+        for (const step of existingSteps) {
+          await storage.updateWorkflowStep(step.id, { order: step.order + 1 });
+        }
+      } else if (position === 'end' || !position) {
+        order = existingSteps.length + 1;
+      } else if (position.startsWith('after-')) {
+        const targetStepId = position.replace('after-', '');
+        const targetStep = existingSteps.find(s => s.id === targetStepId);
+        if (targetStep) {
+          order = targetStep.order + 1;
+          // Update subsequent steps to make room
+          for (const step of existingSteps) {
+            if (step.order >= order) {
+              await storage.updateWorkflowStep(step.id, { order: step.order + 1 });
+            }
           }
+        } else {
+          order = existingSteps.length + 1;
         }
       }
       
@@ -837,7 +855,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: description || '',
         stepType,
         assignedRole,
-        order: order || 1,
+        order,
         estimatedDays: estimatedDays || 1,
         isRequired: isRequired !== undefined ? isRequired : true,
         requiresApproval: false,

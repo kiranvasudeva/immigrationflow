@@ -344,9 +344,10 @@ function WorkflowManagement() {
   const createStageMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log('🚀 MUTATION TRIGGERED - Creating stage with data:', data);
-      console.log('🔍 Making API request to /api/workflow-steps');
+      const endpoint = `/api/workflow-templates/${data.workflowTemplateId}/steps`;
+      console.log('🔍 Making API request to', endpoint);
       try {
-        const response = await apiRequest('POST', '/api/workflow-steps', data);
+        const response = await apiRequest('POST', endpoint, data);
         console.log('✅ API response received:', response.status);
         const result = await response.json();
         console.log('✅ Response data:', result);
@@ -1298,7 +1299,8 @@ function WorkflowManagement() {
                     isRequired: createStageData.isRequired !== undefined ? createStageData.isRequired : true,
                     requiresApproval: createStageData.requiresApproval || false,
                     approverRole: createStageData.approverRole || null,
-                    dependencies: createStageData.dependencies || null
+                    dependencies: createStageData.dependencies || null,
+                    position: createStageData.position || 'end'
                   };
                   
                   console.log('🔵 Prepared stage data:', stageData);
