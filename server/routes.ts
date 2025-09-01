@@ -493,7 +493,7 @@ async function testDatabaseConnection() {
     });
     
     // Test 2: Schema validation - check all required tables exist
-    const requiredTables = ['users', 'client_profiles', 'workers', 'assignments', 'workflow_stages', 'documents', 'audit_logs'];
+    const requiredTables = ['users', 'client_profiles', 'workers', 'assignments', 'stages', 'document_files', 'audit_logs'];
     const tableCheckResults = [];
     
     for (const table of requiredTables) {
@@ -709,14 +709,14 @@ async function testDataConsistency() {
         name: 'assignments_stage_fk',
         query: sql`SELECT a.id as assignment_id, a."currentStageId" as stage_id 
                    FROM assignments a 
-                   LEFT JOIN workflow_stages ws ON a."currentStageId" = ws.id 
+                   LEFT JOIN stages ws ON a."currentStageId" = ws.id 
                    WHERE a."currentStageId" IS NOT NULL AND ws.id IS NULL`,
         description: 'Assignments with invalid stage references'
       },
       {
         name: 'documents_assignment_fk',
         query: sql`SELECT d.id as document_id, d."assignmentId" as assignment_id 
-                   FROM documents d 
+                   FROM document_files d 
                    LEFT JOIN assignments a ON d."assignmentId" = a.id 
                    WHERE d."assignmentId" IS NOT NULL AND a.id IS NULL`,
         description: 'Documents with invalid assignment references'
@@ -1054,7 +1054,7 @@ async function testWorkflowTemplates() {
           COUNT(DISTINCT "order") as unique_orders,
           MAX("order") as max_order,
           MIN("order") as min_order
-        FROM workflow_stages
+        FROM stages
       `);
       
       const stats = stageValidation.rows[0];
@@ -1172,7 +1172,7 @@ async function testWorkflowTemplates() {
           ws.name,
           ws."order",
           COUNT(a.id) as assignments_in_stage
-        FROM workflow_stages ws
+        FROM stages ws
         LEFT JOIN assignments a ON ws.id = a."currentStageId"
         GROUP BY ws.id, ws.name, ws."order"
         ORDER BY ws."order"
@@ -1302,7 +1302,7 @@ async function testBackgroundServices() {
           COUNT(CASE WHEN status = 'PROCESSING' THEN 1 END) as processing_documents,
           COUNT(CASE WHEN status = 'FAILED' THEN 1 END) as failed_documents,
           COUNT(CASE WHEN "uploadedAt" < NOW() - INTERVAL '24 hours' AND status = 'PROCESSING' THEN 1 END) as stuck_documents
-        FROM documents
+        FROM document_files
       `);
       
       const stats = documentStats.rows[0];
