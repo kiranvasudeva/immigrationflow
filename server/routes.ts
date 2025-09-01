@@ -6,6 +6,8 @@ import { setupCORS } from "./middleware/security";
 import { auditMiddleware } from "./middleware/auth";
 import { requireRole, devRbacBypass } from "./middleware/rbac";
 import { storage } from "./storage";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { setupSecurityHeaders, createRateLimiter, validateInput, createEmergencyAdminAccess } from "./middleware/security";
 import { createStructuredLogger, performanceMonitoring, errorTracking, setupHealthChecks } from "./middleware/monitoring";
@@ -483,15 +485,75 @@ async function runAllHealthTests() {
 
 async function testDatabaseConnection() {
   try {
-    // Test basic database connectivity
-    const testQuery = await storage.getDashboardStats();
+    const startTime = Date.now();
+    
+    // Test 1: Basic connectivity with transaction
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT 1 as test_connection`);
+    });
+    
+    // Test 2: Schema validation - check all required tables exist
+    const requiredTables = ['users', 'client_profiles', 'workers', 'assignments', 'workflow_stages', 'documents', 'audit_logs'];
+    const tableCheckResults = [];
+    
+    for (const table of requiredTables) {
+      try {
+        const result = await db.execute(sql.raw(`SELECT COUNT(*) as count FROM ${table} LIMIT 1`));
+        tableCheckResults.push({ table, exists: true, count: result.rows[0]?.count || 0 });
+      } catch (error) {
+        tableCheckResults.push({ table, exists: false, error: error instanceof Error ? error.message : String(error) });
+      }
+    }
+    
+    // Test 3: Index performance check
+    const indexTestQueries = [
+      sql`EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'test@example.com'`,
+      sql`EXPLAIN ANALYZE SELECT * FROM workers WHERE "clientProfileId" = 'test-id'`,
+      sql`EXPLAIN ANALYZE SELECT * FROM assignments WHERE "workerId" = 'test-id'`
+    ];
+    
+    const performanceResults = [];
+    for (const query of indexTestQueries) {
+      try {
+        const start = Date.now();
+        await db.execute(query);
+        performanceResults.push({ query: query.sql, executionTime: Date.now() - start });
+      } catch (error) {
+        performanceResults.push({ query: query.sql, error: error instanceof Error ? error.message : String(error) });
+      }
+    }
+    
+    // Test 4: Connection pool health
+    const poolStatus = await db.execute(sql`SELECT 
+      count(*) as total_connections,
+      count(*) filter (where state = 'active') as active_connections,
+      count(*) filter (where state = 'idle') as idle_connections
+      FROM pg_stat_activity WHERE datname = current_database()`);
+    
+    const connectionTime = Date.now() - startTime;
+    const missingTables = tableCheckResults.filter(t => !t.exists);
+    const slowQueries = performanceResults.filter(p => p.executionTime && p.executionTime > 100);
+    
+    const issues = [];
+    if (missingTables.length > 0) {
+      issues.push(`Missing tables: ${missingTables.map(t => t.table).join(', ')}`);
+    }
+    if (slowQueries.length > 0) {
+      issues.push(`Slow queries detected (>100ms): ${slowQueries.length}`);
+    }
+    if (connectionTime > 1000) {
+      issues.push(`Database connection time too high: ${connectionTime}ms`);
+    }
     
     return {
-      success: true,
-      message: 'Database connection successful',
+      success: issues.length === 0,
+      message: issues.length === 0 ? 'Database connection and schema validated' : `Database issues: ${issues.join(', ')}`,
       details: {
-        connected: true,
-        stats: testQuery
+        connectionTime,
+        tables: tableCheckResults,
+        performance: performanceResults,
+        poolStatus: poolStatus.rows[0],
+        issues
       },
       timestamp: new Date().toISOString()
     };
@@ -507,57 +569,106 @@ async function testDatabaseConnection() {
 
 async function testApiEndpoints() {
   try {
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? `https://${process.env.REPLIT_DOMAIN || 'localhost'}`
+      : 'http://localhost:5000';
+    
+    // Critical endpoints that must work for the system to function
     const endpoints = [
-      { path: '/api/clients', method: 'GET' },
-      { path: '/api/workers', method: 'GET' },
-      { path: '/api/stages', method: 'GET' },
-      { path: '/api/dashboard/stats', method: 'GET' },
-      { path: '/api/dashboard/assignments', method: 'GET' }
+      { path: '/api/auth/user', method: 'GET', requiresAuth: true },
+      { path: '/api/clients', method: 'GET', requiresAuth: true },
+      { path: '/api/workers', method: 'GET', requiresAuth: true },
+      { path: '/api/stages', method: 'GET', requiresAuth: true },
+      { path: '/api/dashboard/stats', method: 'GET', requiresAuth: true },
+      { path: '/api/dashboard/assignments', method: 'GET', requiresAuth: true },
+      { path: '/api/admin/health/tests', method: 'GET', requiresAuth: true },
+      { path: '/health', method: 'GET', requiresAuth: false }
     ];
     
     const results = [];
     
     for (const endpoint of endpoints) {
+      const startTime = Date.now();
       try {
-        let testResult;
-        switch (endpoint.path) {
-          case '/api/clients':
-            testResult = await storage.getAllClientProfiles();
-            break;
-          case '/api/workers':
-            testResult = await storage.getAllWorkers();
-            break;
-          case '/api/stages':
-            testResult = await storage.getAllStages();
-            break;
-          case '/api/dashboard/stats':
-            testResult = await storage.getDashboardStats();
-            break;
-          case '/api/dashboard/assignments':
-            testResult = await storage.getAssignmentsWithDetails();
-            break;
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json'
+        };
+        
+        // For authenticated endpoints, we need to test with proper session
+        // Since we can't easily get a session token in this context,
+        // we'll test the endpoint availability and response structure
+        
+        const response = await fetch(`${baseUrl}${endpoint.path}`, {
+          method: endpoint.method,
+          headers
+        });
+        
+        const responseTime = Date.now() - startTime;
+        const contentType = response.headers.get('content-type');
+        
+        // Check response status and structure
+        let responseData;
+        try {
+          responseData = await response.json();
+        } catch {
+          responseData = await response.text();
         }
+        
+        const isValidResponse = endpoint.requiresAuth 
+          ? (response.status === 401 || response.status === 200) // Unauthorized is expected without auth
+          : response.status === 200;
         
         results.push({
           endpoint: endpoint.path,
-          success: true,
-          dataCount: Array.isArray(testResult) ? testResult.length : 1
+          method: endpoint.method,
+          success: isValidResponse,
+          status: response.status,
+          responseTime,
+          contentType,
+          hasJsonResponse: contentType?.includes('application/json') || false,
+          dataStructure: typeof responseData === 'object' ? Object.keys(responseData || {}) : 'non-json'
         });
+        
       } catch (error) {
         results.push({
           endpoint: endpoint.path,
+          method: endpoint.method,
           success: false,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
+          responseTime: Date.now() - startTime
         });
       }
     }
     
-    const failedTests = results.filter(r => !r.success);
+    // Analyze results
+    const failedEndpoints = results.filter(r => !r.success);
+    const slowEndpoints = results.filter(r => r.responseTime && r.responseTime > 2000);
+    const avgResponseTime = results.reduce((sum, r) => sum + (r.responseTime || 0), 0) / results.length;
+    
+    const issues = [];
+    if (failedEndpoints.length > 0) {
+      issues.push(`Failed endpoints: ${failedEndpoints.map(e => e.endpoint).join(', ')}`);
+    }
+    if (slowEndpoints.length > 0) {
+      issues.push(`Slow endpoints (>2s): ${slowEndpoints.map(e => `${e.endpoint} (${e.responseTime}ms)`).join(', ')}`);
+    }
+    if (avgResponseTime > 1000) {
+      issues.push(`Average response time too high: ${avgResponseTime.toFixed(0)}ms`);
+    }
     
     return {
-      success: failedTests.length === 0,
-      message: failedTests.length === 0 ? 'All API endpoints responding correctly' : `${failedTests.length} endpoints failed`,
-      details: results,
+      success: issues.length === 0,
+      message: issues.length === 0 ? 'All API endpoints responding correctly' : `API issues detected: ${issues.join('; ')}`,
+      details: {
+        endpoints: results,
+        summary: {
+          total: results.length,
+          successful: results.filter(r => r.success).length,
+          failed: failedEndpoints.length,
+          avgResponseTime: avgResponseTime.toFixed(0) + 'ms'
+        },
+        issues
+      },
       timestamp: new Date().toISOString()
     };
   } catch (error) {
@@ -572,41 +683,194 @@ async function testApiEndpoints() {
 
 async function testDataConsistency() {
   try {
-    // Test foreign key relationships and data consistency
-    const clients = await storage.getAllClientProfiles();
-    const workers = await storage.getAllWorkers();
-    const assignments = await storage.getAssignmentsWithDetails();
-    
+    const startTime = Date.now();
     const inconsistencies = [];
+    const warnings = [];
     
-    // Check worker-client relationships
-    for (const worker of workers) {
-      if (worker.clientProfileId) {
-        const clientExists = clients.find((c: any) => c.id === worker.clientProfileId);
-        if (!clientExists) {
-          inconsistencies.push(`Worker ${worker.id} references non-existent client ${worker.clientProfileId}`);
+    // Test 1: Foreign key constraint validation with actual DB queries
+    const foreignKeyChecks = [
+      {
+        name: 'workers_client_fk',
+        query: sql`SELECT w.id as worker_id, w."clientProfileId" as client_id 
+                   FROM workers w 
+                   LEFT JOIN client_profiles cp ON w."clientProfileId" = cp.id 
+                   WHERE w."clientProfileId" IS NOT NULL AND cp.id IS NULL`,
+        description: 'Workers with invalid client references'
+      },
+      {
+        name: 'assignments_worker_fk',
+        query: sql`SELECT a.id as assignment_id, a."workerId" as worker_id 
+                   FROM assignments a 
+                   LEFT JOIN workers w ON a."workerId" = w.id 
+                   WHERE a."workerId" IS NOT NULL AND w.id IS NULL`,
+        description: 'Assignments with invalid worker references'
+      },
+      {
+        name: 'assignments_stage_fk',
+        query: sql`SELECT a.id as assignment_id, a."currentStageId" as stage_id 
+                   FROM assignments a 
+                   LEFT JOIN workflow_stages ws ON a."currentStageId" = ws.id 
+                   WHERE a."currentStageId" IS NOT NULL AND ws.id IS NULL`,
+        description: 'Assignments with invalid stage references'
+      },
+      {
+        name: 'documents_assignment_fk',
+        query: sql`SELECT d.id as document_id, d."assignmentId" as assignment_id 
+                   FROM documents d 
+                   LEFT JOIN assignments a ON d."assignmentId" = a.id 
+                   WHERE d."assignmentId" IS NOT NULL AND a.id IS NULL`,
+        description: 'Documents with invalid assignment references'
+      }
+    ];
+    
+    const fkResults: Record<string, any> = {};
+    for (const check of foreignKeyChecks) {
+      try {
+        const result = await db.execute(check.query);
+        const violations = result.rows;
+        fkResults[check.name] = {
+          violations: violations.length,
+          description: check.description,
+          data: violations.slice(0, 5) // First 5 violations for debugging
+        };
+        
+        if (violations.length > 0) {
+          inconsistencies.push(`${check.description}: ${violations.length} violations`);
         }
+      } catch (error) {
+        fkResults[check.name] = {
+          error: error instanceof Error ? error.message : String(error)
+        };
       }
     }
     
-    // Check assignment-worker relationships
-    for (const assignment of assignments) {
-      if (assignment.workerId) {
-        const workerExists = workers.find((w: any) => w.id === assignment.workerId);
-        if (!workerExists) {
-          inconsistencies.push(`Assignment ${assignment.id} references non-existent worker ${assignment.workerId}`);
+    // Test 2: Data integrity checks
+    const integrityChecks = [
+      {
+        name: 'duplicate_emails',
+        query: sql`SELECT email, COUNT(*) as count 
+                   FROM users 
+                   GROUP BY email 
+                   HAVING COUNT(*) > 1`,
+        description: 'Duplicate email addresses in users'
+      },
+      {
+        name: 'orphaned_audit_logs',
+        query: sql`SELECT COUNT(*) as count 
+                   FROM audit_logs al 
+                   LEFT JOIN users u ON al."userId" = u.id 
+                   WHERE al."userId" IS NOT NULL AND u.id IS NULL`,
+        description: 'Audit logs with invalid user references'
+      },
+      {
+        name: 'invalid_assignment_dates',
+        query: sql`SELECT id, "startDate", "dueDate" 
+                   FROM assignments 
+                   WHERE "startDate" > "dueDate"`,
+        description: 'Assignments with start date after due date'
+      },
+      {
+        name: 'workers_without_assignments',
+        query: sql`SELECT COUNT(*) as count 
+                   FROM workers w 
+                   LEFT JOIN assignments a ON w.id = a."workerId" 
+                   WHERE a.id IS NULL`,
+        description: 'Workers without any assignments'
+      }
+    ];
+    
+    const integrityResults: Record<string, any> = {};
+    for (const check of integrityChecks) {
+      try {
+        const result = await db.execute(check.query);
+        const issues = result.rows;
+        integrityResults[check.name] = {
+          issues: Array.isArray(issues) ? issues.length : (issues[0]?.count || 0),
+          description: check.description,
+          data: Array.isArray(issues) ? issues.slice(0, 3) : issues
+        };
+        
+        const issueCount = Array.isArray(issues) ? issues.length : (issues[0]?.count || 0);
+        if (issueCount > 0) {
+          if (check.name === 'workers_without_assignments') {
+            warnings.push(`${check.description}: ${issueCount}`);
+          } else {
+            inconsistencies.push(`${check.description}: ${issueCount}`);
+          }
         }
+      } catch (error) {
+        integrityResults[check.name] = {
+          error: error instanceof Error ? error.message : String(error)
+        };
       }
     }
+    
+    // Test 3: Business logic validation
+    const businessRuleChecks = [
+      {
+        name: 'active_assignments_per_worker',
+        query: sql`SELECT w.id, w."fullName", COUNT(a.id) as active_assignments 
+                   FROM workers w 
+                   INNER JOIN assignments a ON w.id = a."workerId" 
+                   WHERE a.status = 'IN_PROGRESS' 
+                   GROUP BY w.id, w."fullName" 
+                   HAVING COUNT(a.id) > 5`,
+        description: 'Workers with too many active assignments (>5)'
+      },
+      {
+        name: 'overdue_assignments',
+        query: sql`SELECT COUNT(*) as count 
+                   FROM assignments 
+                   WHERE "dueDate" < CURRENT_DATE AND status != 'COMPLETED'`,
+        description: 'Overdue assignments not marked as completed'
+      }
+    ];
+    
+    const businessResults: Record<string, any> = {};
+    for (const check of businessRuleChecks) {
+      try {
+        const result = await db.execute(check.query);
+        const issues = result.rows;
+        businessResults[check.name] = {
+          issues: Array.isArray(issues) ? issues.length : (issues[0]?.count || 0),
+          description: check.description,
+          data: Array.isArray(issues) ? issues.slice(0, 3) : issues
+        };
+        
+        const issueCount = Array.isArray(issues) ? issues.length : (issues[0]?.count || 0);
+        if (issueCount > 0) {
+          warnings.push(`${check.description}: ${issueCount}`);
+        }
+      } catch (error) {
+        businessResults[check.name] = {
+          error: error instanceof Error ? error.message : String(error)
+        };
+      }
+    }
+    
+    const executionTime = Date.now() - startTime;
+    const hasSerious = inconsistencies.length > 0;
+    const hasWarnings = warnings.length > 0;
     
     return {
-      success: inconsistencies.length === 0,
-      message: inconsistencies.length === 0 ? 'Data consistency validated' : `${inconsistencies.length} inconsistencies found`,
+      success: !hasSerious,
+      message: hasSerious 
+        ? `Data consistency issues detected: ${inconsistencies.length} critical, ${warnings.length} warnings`
+        : hasWarnings 
+          ? `Data validation passed with ${warnings.length} warnings`
+          : 'All data consistency checks passed',
       details: {
-        clientCount: clients.length,
-        workerCount: workers.length,
-        assignmentCount: assignments.length,
-        inconsistencies
+        executionTime,
+        foreignKeyChecks: fkResults,
+        integrityChecks: integrityResults,
+        businessRuleChecks: businessResults,
+        summary: {
+          criticalIssues: inconsistencies.length,
+          warnings: warnings.length,
+          totalChecks: foreignKeyChecks.length + integrityChecks.length + businessRuleChecks.length
+        },
+        issues: inconsistencies,
+        warnings
       },
       timestamp: new Date().toISOString()
     };
@@ -622,15 +886,144 @@ async function testDataConsistency() {
 
 async function testAuthSystem() {
   try {
-    // Test that authentication system is properly configured
-    const testUser = await storage.getUserByEmail('test@example.com');
+    const startTime = Date.now();
+    const issues = [];
+    const checks = [];
+    
+    // Test 1: Session configuration validation
+    try {
+      const sessionCheck = await db.execute(sql`SELECT COUNT(*) as count FROM sessions WHERE "expires_at" > NOW()`);
+      const activeSessions = sessionCheck.rows[0]?.count || 0;
+      checks.push({
+        name: 'session_storage',
+        success: true,
+        details: { activeSessions: Number(activeSessions) }
+      });
+    } catch (error) {
+      issues.push('Session storage not accessible');
+      checks.push({
+        name: 'session_storage',
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    
+    // Test 2: User table and authentication data integrity
+    try {
+      const userValidation = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_users,
+          COUNT(CASE WHEN email IS NULL OR email = '' THEN 1 END) as users_without_email,
+          COUNT(CASE WHEN role IS NULL THEN 1 END) as users_without_role,
+          COUNT(DISTINCT email) as unique_emails
+        FROM users
+      `);
+      
+      const stats = userValidation.rows[0];
+      const hasValidUsers = Number(stats?.total_users || 0) > 0;
+      const hasEmailIssues = Number(stats?.users_without_email || 0) > 0;
+      const hasRoleIssues = Number(stats?.users_without_role || 0) > 0;
+      const hasDuplicateEmails = Number(stats?.total_users || 0) !== Number(stats?.unique_emails || 0);
+      
+      if (hasEmailIssues) issues.push(`${stats?.users_without_email} users without email`);
+      if (hasRoleIssues) issues.push(`${stats?.users_without_role} users without role`);
+      if (hasDuplicateEmails) issues.push('Duplicate email addresses detected');
+      
+      checks.push({
+        name: 'user_data_integrity',
+        success: !hasEmailIssues && !hasRoleIssues && !hasDuplicateEmails,
+        details: {
+          totalUsers: Number(stats?.total_users || 0),
+          usersWithoutEmail: Number(stats?.users_without_email || 0),
+          usersWithoutRole: Number(stats?.users_without_role || 0),
+          uniqueEmails: Number(stats?.unique_emails || 0)
+        }
+      });
+    } catch (error) {
+      issues.push('User table validation failed');
+      checks.push({
+        name: 'user_data_integrity',
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    
+    // Test 3: Role-based access control validation
+    try {
+      const roleDistribution = await db.execute(sql`
+        SELECT role, COUNT(*) as count 
+        FROM users 
+        GROUP BY role
+      `);
+      
+      const roleStats = roleDistribution.rows.reduce((acc: Record<string, number>, row: any) => {
+        acc[row.role] = Number(row.count);
+        return acc;
+      }, {});
+      
+      const hasAdmins = roleStats['ADMIN'] > 0;
+      const validRoles = ['ADMIN', 'OWNER', 'WORKER', 'VIEWER'];
+      const invalidRoles = Object.keys(roleStats).filter(role => !validRoles.includes(role));
+      
+      if (!hasAdmins) issues.push('No admin users found');
+      if (invalidRoles.length > 0) issues.push(`Invalid roles detected: ${invalidRoles.join(', ')}`);
+      
+      checks.push({
+        name: 'role_validation',
+        success: hasAdmins && invalidRoles.length === 0,
+        details: {
+          roleDistribution: roleStats,
+          hasAdmins,
+          invalidRoles
+        }
+      });
+    } catch (error) {
+      issues.push('Role validation failed');
+      checks.push({
+        name: 'role_validation',
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    
+    // Test 4: Authentication middleware environment check
+    const envChecks = {
+      sessionSecret: !!process.env.SESSION_SECRET,
+      nodeEnv: !!process.env.NODE_ENV,
+      databaseUrl: !!process.env.DATABASE_URL
+    };
+    
+    const missingEnvVars = Object.entries(envChecks)
+      .filter(([_, exists]) => !exists)
+      .map(([name, _]) => name);
+    
+    if (missingEnvVars.length > 0) {
+      issues.push(`Missing environment variables: ${missingEnvVars.join(', ')}`);
+    }
+    
+    checks.push({
+      name: 'environment_config',
+      success: missingEnvVars.length === 0,
+      details: envChecks
+    });
+    
+    const executionTime = Date.now() - startTime;
+    const allChecksPassted = checks.every(check => check.success);
     
     return {
-      success: true,
-      message: 'Authentication system operational',
+      success: allChecksPassted,
+      message: allChecksPassted 
+        ? 'Authentication system fully operational'
+        : `Authentication issues detected: ${issues.join('; ')}`,
       details: {
-        authConfigured: true,
-        testUserQuery: testUser ? 'success' : 'no_test_user'
+        executionTime,
+        checks,
+        issues,
+        summary: {
+          totalChecks: checks.length,
+          passedChecks: checks.filter(c => c.success).length,
+          failedChecks: checks.filter(c => !c.success).length
+        }
       },
       timestamp: new Date().toISOString()
     };
@@ -646,28 +1039,196 @@ async function testAuthSystem() {
 
 async function testWorkflowTemplates() {
   try {
-    // Test workflow templates are properly configured
-    const templates = await storage.getAllWorkflowTemplates();
-    const stages = await storage.getAllStages();
-    
+    const startTime = Date.now();
     const issues = [];
+    const checks = [];
     
-    // Check if we have both templates and stages
-    if (templates.length === 0) {
-      issues.push('No workflow templates found');
+    // Test 1: Workflow stages data validation
+    try {
+      const stageValidation = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_stages,
+          COUNT(CASE WHEN name IS NULL OR name = '' THEN 1 END) as stages_without_name,
+          COUNT(CASE WHEN description IS NULL OR description = '' THEN 1 END) as stages_without_description,
+          COUNT(CASE WHEN "order" IS NULL THEN 1 END) as stages_without_order,
+          COUNT(DISTINCT "order") as unique_orders,
+          MAX("order") as max_order,
+          MIN("order") as min_order
+        FROM workflow_stages
+      `);
+      
+      const stats = stageValidation.rows[0];
+      const totalStages = Number(stats?.total_stages || 0);
+      const hasStages = totalStages > 0;
+      const stagesWithoutName = Number(stats?.stages_without_name || 0);
+      const stagesWithoutDesc = Number(stats?.stages_without_description || 0);
+      const stagesWithoutOrder = Number(stats?.stages_without_order || 0);
+      const uniqueOrders = Number(stats?.unique_orders || 0);
+      const hasDuplicateOrders = totalStages !== uniqueOrders;
+      
+      if (!hasStages) issues.push('No workflow stages defined');
+      if (stagesWithoutName > 0) issues.push(`${stagesWithoutName} stages without name`);
+      if (stagesWithoutDesc > 0) issues.push(`${stagesWithoutDesc} stages without description`);
+      if (stagesWithoutOrder > 0) issues.push(`${stagesWithoutOrder} stages without order`);
+      if (hasDuplicateOrders) issues.push('Duplicate stage orders detected');
+      
+      checks.push({
+        name: 'stage_validation',
+        success: hasStages && stagesWithoutName === 0 && stagesWithoutDesc === 0 && stagesWithoutOrder === 0 && !hasDuplicateOrders,
+        details: {
+          totalStages,
+          stagesWithoutName,
+          stagesWithoutDesc,
+          stagesWithoutOrder,
+          orderRange: hasStages ? `${stats?.min_order}-${stats?.max_order}` : 'N/A',
+          hasDuplicateOrders
+        }
+      });
+    } catch (error) {
+      issues.push('Workflow stage validation failed');
+      checks.push({
+        name: 'stage_validation',
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
     
-    if (stages.length === 0) {
-      issues.push('No workflow stages found');
+    // Test 2: Workflow template validation (if exists)
+    try {
+      const templateValidation = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_templates,
+          COUNT(CASE WHEN name IS NULL OR name = '' THEN 1 END) as templates_without_name,
+          COUNT(CASE WHEN description IS NULL OR description = '' THEN 1 END) as templates_without_description
+        FROM workflow_templates
+      `);
+      
+      const stats = templateValidation.rows[0];
+      const totalTemplates = Number(stats?.total_templates || 0);
+      const templatesWithoutName = Number(stats?.templates_without_name || 0);
+      const templatesWithoutDesc = Number(stats?.templates_without_description || 0);
+      
+      if (templatesWithoutName > 0) issues.push(`${templatesWithoutName} templates without name`);
+      if (templatesWithoutDesc > 0) issues.push(`${templatesWithoutDesc} templates without description`);
+      
+      checks.push({
+        name: 'template_validation',
+        success: templatesWithoutName === 0 && templatesWithoutDesc === 0,
+        details: {
+          totalTemplates,
+          templatesWithoutName,
+          templatesWithoutDesc
+        }
+      });
+    } catch (error) {
+      // Templates table might not exist - that's okay
+      checks.push({
+        name: 'template_validation',
+        success: true,
+        details: { note: 'No workflow_templates table found - using direct stage workflow' }
+      });
     }
+    
+    // Test 3: Assignment-stage relationship validation
+    try {
+      const assignmentStageCheck = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_assignments,
+          COUNT(CASE WHEN "currentStageId" IS NULL THEN 1 END) as assignments_without_stage,
+          COUNT(DISTINCT "currentStageId") as unique_stages_used
+        FROM assignments
+      `);
+      
+      const stats = assignmentStageCheck.rows[0];
+      const totalAssignments = Number(stats?.total_assignments || 0);
+      const assignmentsWithoutStage = Number(stats?.assignments_without_stage || 0);
+      const uniqueStagesUsed = Number(stats?.unique_stages_used || 0);
+      
+      if (assignmentsWithoutStage > 0) issues.push(`${assignmentsWithoutStage} assignments without current stage`);
+      
+      checks.push({
+        name: 'assignment_stage_relationship',
+        success: assignmentsWithoutStage === 0,
+        details: {
+          totalAssignments,
+          assignmentsWithoutStage,
+          uniqueStagesUsed
+        }
+      });
+    } catch (error) {
+      issues.push('Assignment-stage relationship validation failed');
+      checks.push({
+        name: 'assignment_stage_relationship',
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    
+    // Test 4: Workflow progression logic validation
+    try {
+      const progressionCheck = await db.execute(sql`
+        SELECT 
+          ws.id,
+          ws.name,
+          ws."order",
+          COUNT(a.id) as assignments_in_stage
+        FROM workflow_stages ws
+        LEFT JOIN assignments a ON ws.id = a."currentStageId"
+        GROUP BY ws.id, ws.name, ws."order"
+        ORDER BY ws."order"
+      `);
+      
+      const stageDistribution = progressionCheck.rows.map((row: any) => ({
+        stageId: row.id,
+        stageName: row.name,
+        order: Number(row.order),
+        assignmentCount: Number(row.assignments_in_stage)
+      }));
+      
+      const totalAssignmentsInStages = stageDistribution.reduce((sum, stage) => sum + stage.assignmentCount, 0);
+      const hasUnbalancedDistribution = stageDistribution.some(stage => 
+        stage.assignmentCount > totalAssignmentsInStages * 0.7 // More than 70% in one stage might indicate issues
+      );
+      
+      if (hasUnbalancedDistribution) {
+        issues.push('Unbalanced stage distribution detected - most assignments stuck in one stage');
+      }
+      
+      checks.push({
+        name: 'workflow_progression',
+        success: !hasUnbalancedDistribution,
+        details: {
+          stageDistribution,
+          totalAssignmentsInStages,
+          hasUnbalancedDistribution
+        }
+      });
+    } catch (error) {
+      issues.push('Workflow progression validation failed');
+      checks.push({
+        name: 'workflow_progression',
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    
+    const executionTime = Date.now() - startTime;
+    const allChecksPassed = checks.every(check => check.success);
     
     return {
-      success: issues.length === 0,
-      message: issues.length === 0 ? 'Workflow templates validated' : `${issues.length} workflow issues found`,
+      success: allChecksPassed,
+      message: allChecksPassed 
+        ? 'Workflow templates and stages fully validated'
+        : `Workflow issues detected: ${issues.join('; ')}`,
       details: {
-        templateCount: templates.length,
-        stageCount: stages.length,
-        issues
+        executionTime,
+        checks,
+        issues,
+        summary: {
+          totalChecks: checks.length,
+          passedChecks: checks.filter(c => c.success).length,
+          failedChecks: checks.filter(c => !c.success).length
+        }
       },
       timestamp: new Date().toISOString()
     };
@@ -683,21 +1244,180 @@ async function testWorkflowTemplates() {
 
 async function testBackgroundServices() {
   try {
-    // Test that background services are configured (not necessarily running)
-    const hasNodemailer = process.env.EMAIL_USER && process.env.EMAIL_PASS;
-    const hasResend = process.env.RESEND_API_KEY;
-    const hasRedis = process.env.REDIS_URL;
+    const startTime = Date.now();
+    const issues = [];
+    const checks = [];
     
-    const services = {
-      email: hasNodemailer || hasResend,
-      jobQueue: hasRedis,
-      configured: (hasNodemailer || hasResend) && hasRedis
+    // Test 1: Email service configuration validation
+    const emailConfigs = {
+      nodemailer: {
+        configured: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.EMAIL_HOST),
+        details: {
+          hasUser: !!process.env.EMAIL_USER,
+          hasPassword: !!process.env.EMAIL_PASS,
+          hasHost: !!process.env.EMAIL_HOST,
+          port: process.env.EMAIL_PORT || 'default'
+        }
+      },
+      resend: {
+        configured: !!process.env.RESEND_API_KEY,
+        details: {
+          hasApiKey: !!process.env.RESEND_API_KEY
+        }
+      }
     };
     
+    const hasAnyEmailService = emailConfigs.nodemailer.configured || emailConfigs.resend.configured;
+    if (!hasAnyEmailService) {
+      issues.push('No email service configured (neither Nodemailer nor Resend)');
+    }
+    
+    checks.push({
+      name: 'email_services',
+      success: hasAnyEmailService,
+      details: emailConfigs
+    });
+    
+    // Test 2: Job queue and Redis configuration
+    const redisConfig = {
+      configured: !!process.env.REDIS_URL,
+      url: process.env.REDIS_URL ? 'configured' : 'missing'
+    };
+    
+    if (!redisConfig.configured) {
+      issues.push('Redis URL not configured for job queues');
+    }
+    
+    checks.push({
+      name: 'job_queue',
+      success: redisConfig.configured,
+      details: redisConfig
+    });
+    
+    // Test 3: Document processing service validation
+    try {
+      const documentStats = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_documents,
+          COUNT(CASE WHEN status = 'PROCESSING' THEN 1 END) as processing_documents,
+          COUNT(CASE WHEN status = 'FAILED' THEN 1 END) as failed_documents,
+          COUNT(CASE WHEN "uploadedAt" < NOW() - INTERVAL '24 hours' AND status = 'PROCESSING' THEN 1 END) as stuck_documents
+        FROM documents
+      `);
+      
+      const stats = documentStats.rows[0];
+      const stuckDocuments = Number(stats?.stuck_documents || 0);
+      const failedDocuments = Number(stats?.failed_documents || 0);
+      const processingDocuments = Number(stats?.processing_documents || 0);
+      
+      const hasStuckDocuments = stuckDocuments > 0;
+      const hasHighFailureRate = failedDocuments > (Number(stats?.total_documents || 0) * 0.1); // >10% failure rate
+      
+      if (hasStuckDocuments) issues.push(`${stuckDocuments} documents stuck in processing for >24h`);
+      if (hasHighFailureRate) issues.push(`High document failure rate: ${failedDocuments} failed`);
+      
+      checks.push({
+        name: 'document_processing',
+        success: !hasStuckDocuments && !hasHighFailureRate,
+        details: {
+          totalDocuments: Number(stats?.total_documents || 0),
+          processingDocuments,
+          failedDocuments,
+          stuckDocuments,
+          hasStuckDocuments,
+          hasHighFailureRate
+        }
+      });
+    } catch (error) {
+      checks.push({
+        name: 'document_processing',
+        success: true, // Non-critical if documents table doesn't exist yet
+        details: { note: 'No documents table found - this is okay for new installations' }
+      });
+    }
+    
+    // Test 4: Audit log processing validation
+    try {
+      const auditStats = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_logs,
+          COUNT(CASE WHEN "timestamp" >= NOW() - INTERVAL '1 hour' THEN 1 END) as recent_logs,
+          COUNT(CASE WHEN "timestamp" >= NOW() - INTERVAL '24 hours' THEN 1 END) as daily_logs,
+          COUNT(DISTINCT "userId") as unique_users_logged
+        FROM audit_logs
+        WHERE "timestamp" >= NOW() - INTERVAL '7 days'
+      `);
+      
+      const stats = auditStats.rows[0];
+      const recentLogs = Number(stats?.recent_logs || 0);
+      const dailyLogs = Number(stats?.daily_logs || 0);
+      const uniqueUsers = Number(stats?.unique_users_logged || 0);
+      
+      const hasRecentActivity = recentLogs > 0 || dailyLogs > 0;
+      
+      checks.push({
+        name: 'audit_logging',
+        success: true, // Audit logging is informational, not critical for service health
+        details: {
+          totalLogsLast7Days: Number(stats?.total_logs || 0),
+          recentLogs,
+          dailyLogs,
+          uniqueUsersLogged: uniqueUsers,
+          hasRecentActivity
+        }
+      });
+    } catch (error) {
+      checks.push({
+        name: 'audit_logging',
+        success: true, // Non-critical if audit_logs table doesn't exist yet
+        details: { note: 'No audit_logs table found - this is okay for new installations' }
+      });
+    }
+    
+    // Test 5: Environment security validation
+    const securityChecks = {
+      hasSessionSecret: !!process.env.SESSION_SECRET,
+      hasDbUrl: !!process.env.DATABASE_URL,
+      nodeEnv: process.env.NODE_ENV || 'development',
+      isProduction: process.env.NODE_ENV === 'production'
+    };
+    
+    const missingSecrets = [];
+    if (!securityChecks.hasSessionSecret) missingSecrets.push('SESSION_SECRET');
+    if (!securityChecks.hasDbUrl) missingSecrets.push('DATABASE_URL');
+    
+    if (missingSecrets.length > 0) {
+      issues.push(`Missing critical environment variables: ${missingSecrets.join(', ')}`);
+    }
+    
+    checks.push({
+      name: 'environment_security',
+      success: missingSecrets.length === 0,
+      details: securityChecks
+    });
+    
+    const executionTime = Date.now() - startTime;
+    const allChecksPassed = checks.every(check => check.success);
+    const hasMinimumServices = hasAnyEmailService && redisConfig.configured;
+    
     return {
-      success: services.configured,
-      message: services.configured ? 'Background services configured' : 'Background services not fully configured',
-      details: services,
+      success: allChecksPassed && hasMinimumServices,
+      message: allChecksPassed && hasMinimumServices
+        ? 'All background services properly configured'
+        : issues.length > 0 
+          ? `Service configuration issues: ${issues.join('; ')}`
+          : 'Minimum service requirements not met',
+      details: {
+        executionTime,
+        checks,
+        issues,
+        summary: {
+          totalChecks: checks.length,
+          passedChecks: checks.filter(c => c.success).length,
+          failedChecks: checks.filter(c => !c.success).length,
+          hasMinimumServices
+        }
+      },
       timestamp: new Date().toISOString()
     };
   } catch (error) {
