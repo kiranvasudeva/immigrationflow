@@ -490,7 +490,7 @@ function WorkflowManagement() {
             <Select 
               value={selectedWorkflow?.id || ''} 
               onValueChange={(value) => {
-                const workflow = workflows?.find((w: any) => w.id === value);
+                const workflow = Array.isArray(workflows) ? workflows.find((w: any) => w.id === value) : undefined;
                 setSelectedWorkflow(workflow);
                 setExpandedStage(null);
                 setExpandedDocument(null);
@@ -501,13 +501,13 @@ function WorkflowManagement() {
                 <SelectValue placeholder="Choose a workflow to manage..." />
               </SelectTrigger>
               <SelectContent>
-                {workflows?.filter((workflow: any, index: number, self: any[]) => 
+                {Array.isArray(workflows) ? workflows.filter((workflow: any, index: number, self: any[]) => 
                   index === self.findIndex((w: any) => w.name === workflow.name)
                 ).map((workflow: any) => (
                   <SelectItem key={workflow.id} value={workflow.id}>
                     {workflow.name} ({workflow.estimatedDurationDays} days)
                   </SelectItem>
-                ))}
+                )) : null}
               </SelectContent>
             </Select>
             {selectedWorkflow && (
@@ -1203,13 +1203,24 @@ function WorkflowManagement() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center space-x-2 pt-6">
-                <Checkbox 
-                  id="stage-approval"
-                  checked={createStageData.requiresApproval || false}
-                  onCheckedChange={(checked) => setCreateStageData({...createStageData, requiresApproval: checked})}
-                />
-                <Label htmlFor="stage-approval" className="text-sm">Requires Approval</Label>
+              <div>
+                <Label htmlFor="stage-type">Step Type</Label>
+                <Select 
+                  value={createStageData.stepType || ''} 
+                  onValueChange={(value) => setCreateStageData({...createStageData, stepType: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DOCUMENT_COLLECTION">Document Collection</SelectItem>
+                    <SelectItem value="DOCUMENT_REVIEW">Document Review</SelectItem>
+                    <SelectItem value="FORM_COMPLETION">Form Completion</SelectItem>
+                    <SelectItem value="ADMIN_APPROVAL">Admin Approval</SelectItem>
+                    <SelectItem value="INSTITUTIONAL_SUBMISSION">Institutional Submission</SelectItem>
+                    <SelectItem value="PAYMENT">Payment</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div>
@@ -1232,6 +1243,14 @@ function WorkflowManagement() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="stage-approval"
+                checked={createStageData.requiresApproval || false}
+                onCheckedChange={(checked) => setCreateStageData({...createStageData, requiresApproval: checked})}
+              />
+              <Label htmlFor="stage-approval" className="text-sm">Requires Approval</Label>
+            </div>
             <div className="flex items-center gap-2">
               <Button 
                 onClick={() => {
@@ -1241,7 +1260,7 @@ function WorkflowManagement() {
                   };
                   createStageMutation.mutate(stageData);
                 }}
-                disabled={createStageMutation.isPending || !createStageData.name || !selectedWorkflow?.id}
+                disabled={createStageMutation.isPending || !createStageData.name || !selectedWorkflow?.id || !createStageData.stepType || !createStageData.assignedRole}
                 className="flex-1"
               >
                 Create Stage
