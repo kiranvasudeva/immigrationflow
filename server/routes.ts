@@ -508,8 +508,8 @@ async function testDatabaseConnection() {
     // Test 3: Index performance check
     const indexTestQueries = [
       sql`EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'test@example.com'`,
-      sql`EXPLAIN ANALYZE SELECT * FROM workers WHERE "clientProfileId" = 'test-id'`,
-      sql`EXPLAIN ANALYZE SELECT * FROM assignments WHERE "workerId" = 'test-id'`
+      sql`EXPLAIN ANALYZE SELECT * FROM workers WHERE "client_profile_id" = 'test-id'`,
+      sql`EXPLAIN ANALYZE SELECT * FROM assignments WHERE "worker_id" = 'test-id'`
     ];
     
     const performanceResults = [];
@@ -691,18 +691,18 @@ async function testDataConsistency() {
     const foreignKeyChecks = [
       {
         name: 'workers_client_fk',
-        query: sql`SELECT w.id as worker_id, w."clientProfileId" as client_id 
+        query: sql`SELECT w.id as worker_id, w."client_profile_id" as client_id 
                    FROM workers w 
-                   LEFT JOIN client_profiles cp ON w."clientProfileId" = cp.id 
-                   WHERE w."clientProfileId" IS NOT NULL AND cp.id IS NULL`,
+                   LEFT JOIN client_profiles cp ON w."client_profile_id" = cp.id 
+                   WHERE w."client_profile_id" IS NOT NULL AND cp.id IS NULL`,
         description: 'Workers with invalid client references'
       },
       {
         name: 'assignments_worker_fk',
-        query: sql`SELECT a.id as assignment_id, a."workerId" as worker_id 
+        query: sql`SELECT a.id as assignment_id, a."worker_id" as worker_id 
                    FROM assignments a 
-                   LEFT JOIN workers w ON a."workerId" = w.id 
-                   WHERE a."workerId" IS NOT NULL AND w.id IS NULL`,
+                   LEFT JOIN workers w ON a."worker_id" = w.id 
+                   WHERE a."worker_id" IS NOT NULL AND w.id IS NULL`,
         description: 'Assignments with invalid worker references'
       },
       {
@@ -773,7 +773,7 @@ async function testDataConsistency() {
         name: 'workers_without_assignments',
         query: sql`SELECT COUNT(*) as count 
                    FROM workers w 
-                   LEFT JOIN assignments a ON w.id = a."workerId" 
+                   LEFT JOIN assignments a ON w.id = a."worker_id" 
                    WHERE a.id IS NULL`,
         description: 'Workers without any assignments'
       }
@@ -811,7 +811,7 @@ async function testDataConsistency() {
         name: 'active_assignments_per_worker',
         query: sql`SELECT w.id, w."fullName", COUNT(a.id) as active_assignments 
                    FROM workers w 
-                   INNER JOIN assignments a ON w.id = a."workerId" 
+                   INNER JOIN assignments a ON w.id = a."worker_id" 
                    WHERE a.status = 'IN_PROGRESS' 
                    GROUP BY w.id, w."fullName" 
                    HAVING COUNT(a.id) > 5`,
