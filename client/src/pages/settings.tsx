@@ -937,9 +937,9 @@ function WorkflowManagement() {
                                                     <SelectValue />
                                                   </SelectTrigger>
                                                   <SelectContent>
-                                                    <SelectItem value="WORKER">Worker</SelectItem>
+                                                    <SelectItem value="ADMIN">Admin</SelectItem>
                                                     <SelectItem value="OWNER">Owner</SelectItem>
-
+                                                    <SelectItem value="WORKER">Worker</SelectItem>
                                                   </SelectContent>
                                                 </Select>
                                               </div>
@@ -1078,7 +1078,16 @@ function WorkflowManagement() {
           ) : (
             <div className="text-center p-8 border border-dashed rounded-lg">
               <ListChecks className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No stages defined for this workflow</p>
+              <h4 className="font-medium mb-2">No stages defined for this workflow</h4>
+              <p className="text-sm text-muted-foreground mb-4">Create stages first to organize your workflow. Documents and checklists are added within stages.</p>
+              <Button
+                onClick={() => setShowCreateStage(true)}
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Create First Stage
+              </Button>
             </div>
           )}
           </div>
