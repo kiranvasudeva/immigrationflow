@@ -530,14 +530,14 @@ async function testDatabaseConnection() {
     
     const connectionTime = Date.now() - startTime;
     const missingTables = tableCheckResults.filter(t => !t.exists);
-    const slowQueries = performanceResults.filter(p => p.executionTime && p.executionTime > 100);
+    const slowQueries = performanceResults.filter(p => p.executionTime && p.executionTime > 200);
     
     const issues = [];
     if (missingTables.length > 0) {
       issues.push(`Missing tables: ${missingTables.map(t => t.table).join(', ')}`);
     }
     if (slowQueries.length > 0) {
-      issues.push(`Slow queries detected (>100ms): ${slowQueries.length}`);
+      issues.push(`Slow queries detected (>200ms): ${slowQueries.length}`);
     }
     if (connectionTime > 2000) {
       issues.push(`Database connection time high: ${connectionTime}ms (includes web overhead)`);
