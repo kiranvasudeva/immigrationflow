@@ -40,7 +40,7 @@ export const assignmentStatusEnum = pgEnum('assignment_status', [
   'ACCEPTED',
   'REJECTED'
 ]);
-export const assignedToRoleEnum = pgEnum('assigned_to_role', ['OWNER', 'WORKER']);
+export const assignedToRoleEnum = pgEnum('assigned_to_role', ['ADMIN', 'OWNER', 'WORKER']);
 export const documentKindEnum = pgEnum('document_kind', ['USER_UPLOAD', 'ADMIN_RECEIPT', 'GENERATED_PDF']);
 export const reminderScopeEnum = pgEnum('reminder_scope', ['GLOBAL', 'CLIENT', 'STAGE']);
 export const templateTypeEnum = pgEnum('template_type', ['FORM', 'DOCUMENT', 'CERTIFICATE']);
@@ -297,7 +297,7 @@ export const documentRequirements = pgTable("document_requirements", {
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   isRequired: boolean("is_required").default(true),
-  submittedBy: assignedToRoleEnum("submitted_by").notNull(), // Who submits this document
+  submittedBy: assignedToRoleEnum("submitted_by").notNull().default('OWNER'), // Who submits this document
   acceptedFileTypes: text("accepted_file_types").array(), // ['pdf', 'jpg', 'png']
   maxFileSize: integer("max_file_size"), // in MB
   templateKey: varchar("template_key", { length: 100 }), // Reference to auto-generated template

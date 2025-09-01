@@ -725,9 +725,9 @@ function WorkflowManagement() {
                                                     <SelectValue />
                                                   </SelectTrigger>
                                                   <SelectContent>
+                                                    <SelectItem value="ADMIN">Admin</SelectItem>
                                                     <SelectItem value="OWNER">Owner</SelectItem>
                                                     <SelectItem value="WORKER">Worker</SelectItem>
-
                                                   </SelectContent>
                                                 </Select>
                                               </div>
@@ -1296,7 +1296,7 @@ function WorkflowManagement() {
                   console.log('🔵 Calling mutation...');
                   createStageMutation.mutate(stageData);
                 }}
-                disabled={false}
+                disabled={createStageMutation.isPending || !createStageData.name || !selectedWorkflow?.id || !createStageData.stepType || !createStageData.assignedRole}
                 className="flex-1"
               >
                 Create Stage
