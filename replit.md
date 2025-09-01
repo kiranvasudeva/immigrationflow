@@ -170,6 +170,23 @@ res.setHeader('X-XSS-Protection', '1; mode=block');
 
 # Recent Changes
 
+## September 1, 2025: Enhanced Employee Schema & Navigation Updates
+- **Menu Restructure**: Changed "Clients & Workers" → "Clients & Employees" in sidebar navigation for consistent terminology
+- **Enhanced Worker Schema**: Expanded worker table with 50+ comprehensive immigration data fields including:
+  - Personal information (birth place, country, middle name, gender, marital status)
+  - Extended contact details (emergency contacts)
+  - Dual address support (home country and Romanian addresses with counties)
+  - Comprehensive passport details (issuing authority, place of issue)
+  - Education & qualifications (university, degree, certifications, language skills)
+  - Detailed employment information (salary, work location, contract details)
+  - Immigration history (previous visas, rejections, criminal record)
+  - Health & insurance information
+  - Complete family details (spouse, children, Romanian family connections)
+  - Financial information (bank details, proof of funds)
+  - Legal identifiers (CNP, tax ID, social security)
+  - Document status tracking and missing document arrays
+- **Schema Validation Update**: Updated insertWorkerSchema to include all 50+ new immigration process fields
+
 ## August 31, 2025: Comprehensive Codebase Cleanup
 - **Migration Complete**: Successfully migrated from mock data to real workflow data from settings across all components
 - **Internationalization Consolidation**: Removed client/src/i18n.js and consolidated to single TypeScript-based I18nProvider

@@ -81,19 +81,102 @@ export const clientProfiles = pgTable("client_profiles", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Worker table (referred to as workers in frontend)
+// Worker table (referred to as employees in frontend)
 export const workers = pgTable("workers", {
   id: uuid("id").primaryKey().defaultRandom(),
   clientProfileId: uuid("client_profile_id").notNull(),
+  
+  // Personal Information
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
+  middleName: varchar("middle_name", { length: 100 }),
   dob: timestamp("dob"),
+  placeOfBirth: varchar("place_of_birth", { length: 255 }),
+  countryOfBirth: varchar("country_of_birth", { length: 100 }),
   nationality: varchar("nationality", { length: 50 }).notNull(),
-  passportNumber: varchar("passport_number", { length: 50 }).notNull(),
-  passportExpiry: timestamp("passport_expiry"),
+  gender: varchar("gender", { length: 10 }), // M/F/Other
+  maritalStatus: varchar("marital_status", { length: 20 }), // Single/Married/Divorced/Widowed
+  
+  // Contact Information
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 20 }),
+  emergencyContact: varchar("emergency_contact", { length: 255 }),
+  emergencyPhone: varchar("emergency_phone", { length: 20 }),
+  
+  // Address Information
+  homeAddress: text("home_address"),
+  homeCity: varchar("home_city", { length: 100 }),
+  homeCountry: varchar("home_country", { length: 100 }),
+  homePostalCode: varchar("home_postal_code", { length: 20 }),
+  romanianAddress: text("romanian_address"),
+  romanianCity: varchar("romanian_city", { length: 100 }),
+  romanianCounty: varchar("romanian_county", { length: 100 }),
+  romanianPostalCode: varchar("romanian_postal_code", { length: 20 }),
+  
+  // Passport & Travel Documents
+  passportNumber: varchar("passport_number", { length: 50 }).notNull(),
+  passportIssueDate: timestamp("passport_issue_date"),
+  passportExpiry: timestamp("passport_expiry"),
+  passportIssuingAuthority: varchar("passport_issuing_authority", { length: 255 }),
+  passportPlaceOfIssue: varchar("passport_place_of_issue", { length: 255 }),
+  
+  // Education & Professional Qualifications
+  educationLevel: varchar("education_level", { length: 100 }),
+  universityName: varchar("university_name", { length: 255 }),
+  degreeField: varchar("degree_field", { length: 255 }),
+  graduationYear: integer("graduation_year"),
+  professionalCertifications: text("professional_certifications"),
+  languageSkills: jsonb("language_skills"), // JSON array of {language, level}
+  
+  // Work Experience & Employment
+  jobTitle: varchar("job_title", { length: 255 }),
+  workExperience: text("work_experience"),
+  previousEmployers: jsonb("previous_employers"), // JSON array of employer details
+  monthlyGrossSalary: integer("monthly_gross_salary"), // in RON cents
+  workLocation: varchar("work_location", { length: 255 }),
+  workSchedule: varchar("work_schedule", { length: 100 }),
+  contractType: varchar("contract_type", { length: 50 }), // Individual/Determinat/etc
+  contractStartDate: timestamp("contract_start_date"),
+  contractEndDate: timestamp("contract_end_date"),
+  
+  // Immigration Status & History
+  previousRomanianVisa: boolean("previous_romanian_visa").default(false),
+  previousVisaDetails: text("previous_visa_details"),
+  previousRejections: boolean("previous_rejections").default(false),
+  rejectionDetails: text("rejection_details"),
+  criminalRecord: boolean("criminal_record").default(false),
+  criminalRecordDetails: text("criminal_record_details"),
+  
+  // Health & Insurance
+  healthInsurance: varchar("health_insurance", { length: 255 }),
+  medicalConditions: text("medical_conditions"),
+  vaccinationRecord: jsonb("vaccination_record"),
+  
+  // Family Information
+  spouseName: varchar("spouse_name", { length: 255 }),
+  spouseNationality: varchar("spouse_nationality", { length: 100 }),
+  children: jsonb("children"), // JSON array of children details
+  familyInRomania: boolean("family_in_romania").default(false),
+  familyInRomaniaDetails: text("family_in_romania_details"),
+  
+  // Financial Information
+  bankAccountDetails: text("bank_account_details"),
+  financialSupport: text("financial_support"),
+  proofOfFunds: varchar("proof_of_funds", { length: 255 }),
+  
+  // Legal & Administrative
+  personalNumericalCode: varchar("personal_numerical_code", { length: 20 }), // CNP if applicable
+  taxIdentificationNumber: varchar("tax_identification_number", { length: 50 }),
+  socialSecurityNumber: varchar("social_security_number", { length: 50 }),
+  
+  // Document Status Tracking
+  documentStatus: varchar("document_status", { length: 50 }).default('INCOMPLETE'),
+  missingDocuments: jsonb("missing_documents"), // Array of missing document types
+  
+  // System Fields
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Stage table
@@ -721,12 +804,68 @@ export const insertWorkerSchema = createInsertSchema(workers).pick({
   clientProfileId: true,
   firstName: true,
   lastName: true,
+  middleName: true,
   dob: true,
+  placeOfBirth: true,
+  countryOfBirth: true,
   nationality: true,
-  passportNumber: true,
-  passportExpiry: true,
+  gender: true,
+  maritalStatus: true,
   email: true,
   phone: true,
+  emergencyContact: true,
+  emergencyPhone: true,
+  homeAddress: true,
+  homeCity: true,
+  homeCountry: true,
+  homePostalCode: true,
+  romanianAddress: true,
+  romanianCity: true,
+  romanianCounty: true,
+  romanianPostalCode: true,
+  passportNumber: true,
+  passportIssueDate: true,
+  passportExpiry: true,
+  passportIssuingAuthority: true,
+  passportPlaceOfIssue: true,
+  educationLevel: true,
+  universityName: true,
+  degreeField: true,
+  graduationYear: true,
+  professionalCertifications: true,
+  languageSkills: true,
+  jobTitle: true,
+  workExperience: true,
+  previousEmployers: true,
+  monthlyGrossSalary: true,
+  workLocation: true,
+  workSchedule: true,
+  contractType: true,
+  contractStartDate: true,
+  contractEndDate: true,
+  previousRomanianVisa: true,
+  previousVisaDetails: true,
+  previousRejections: true,
+  rejectionDetails: true,
+  criminalRecord: true,
+  criminalRecordDetails: true,
+  healthInsurance: true,
+  medicalConditions: true,
+  vaccinationRecord: true,
+  spouseName: true,
+  spouseNationality: true,
+  children: true,
+  familyInRomania: true,
+  familyInRomaniaDetails: true,
+  bankAccountDetails: true,
+  financialSupport: true,
+  proofOfFunds: true,
+  personalNumericalCode: true,
+  taxIdentificationNumber: true,
+  socialSecurityNumber: true,
+  documentStatus: true,
+  missingDocuments: true,
+  notes: true,
 });
 
 export const insertAssignmentSchema = createInsertSchema(assignments).pick({
