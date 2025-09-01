@@ -263,17 +263,16 @@ export default function AdminHealthPage() {
         </div>
         
         <div className="flex items-center gap-3">
-          {hasFailedTests && !isRunning && (
-            <Button 
-              variant="secondary" 
-              onClick={performSystemWideFixes}
-              disabled={fixIssuesMutation.isPending}
-              data-testid="button-fix-issues"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              {fixIssuesMutation.isPending ? 'Fixing...' : 'Auto-Fix Issues'}
-            </Button>
-          )}
+          <Button 
+            variant="secondary" 
+            onClick={performSystemWideFixes}
+            disabled={fixIssuesMutation.isPending || (!hasFailedTests && results.length === 0)}
+            data-testid="button-fix-issues"
+            title={!hasFailedTests && results.length === 0 ? "Run tests first to identify issues to fix" : "Automatically fix detected system issues"}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            {fixIssuesMutation.isPending ? 'Fixing...' : 'Auto-Fix Issues'}
+          </Button>
           
           {isPaused ? (
             <Button 
