@@ -241,6 +241,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // General worker create endpoint - for use from workers page
+  app.post('/api/workers', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const workerData = req.body;
+      
+      // Validate required fields
+      if (!workerData.firstName || !workerData.lastName || !workerData.email || !workerData.clientId) {
+        return res.status(400).json({ 
+          message: "Missing required fields", 
+          required: ['firstName', 'lastName', 'email', 'clientId']
+        });
+      }
+
+      // Set clientProfileId from clientId for database consistency
+      const workerDataWithProfile = {
+        ...workerData,
+        clientProfileId: workerData.clientId
+      };
+
+      const worker = await storage.createWorker(workerDataWithProfile);
+      res.status(201).json(worker);
+    } catch (error) {
+      console.error('Error creating worker:', error);
+      res.status(500).json({ message: "Failed to create worker", error: (error as Error).message });
+    }
+  });
+
+  // General worker update endpoint - for use from workers page
+  app.put('/api/workers/:workerId', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const { workerId } = req.params;
+      const workerData = req.body;
+
+      // If clientId is provided, set clientProfileId for database consistency
+      if (workerData.clientId) {
+        workerData.clientProfileId = workerData.clientId;
+      }
+
+      const updatedWorker = await storage.updateWorker(workerId, workerData);
+      if (!updatedWorker) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+      res.json(updatedWorker);
+    } catch (error) {
+      console.error('Error updating worker:', error);
+      res.status(500).json({ message: "Failed to update worker", error: (error as Error).message });
+    }
+  });
+
   // Clients API endpoint - only ADMIN and OWNER can view all clients
   app.get('/api/clients', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
