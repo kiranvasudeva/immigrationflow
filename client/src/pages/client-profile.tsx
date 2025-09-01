@@ -993,9 +993,10 @@ export default function ClientProfile() {
 
       {/* Worker Creation Dialog */}
       <Dialog open={isAddingWorker} onOpenChange={setIsAddingWorker}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px]" aria-describedby="worker-creation-description">
           <DialogHeader>
             <DialogTitle>Add New Worker</DialogTitle>
+            <p id="worker-creation-description" className="sr-only">Fill in the form below to add a new worker to this client</p>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
