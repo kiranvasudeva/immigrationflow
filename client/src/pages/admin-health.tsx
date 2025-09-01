@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,6 +42,7 @@ export default function AdminHealthPage() {
   const [results, setResults] = useState<TestResult[]>([]);
   const [logs, setLogs] = useState<TestLog[]>([]);
   const [progress, setProgress] = useState(0);
+  const consoleRef = useRef<HTMLDivElement>(null);
 
   // Get available health tests
   const { data: healthTests = [], isLoading: loadingTests } = useQuery({
@@ -96,6 +97,13 @@ export default function AdminHealthPage() {
     };
     setLogs(prev => [...prev, log]);
   };
+
+  // Auto-scroll console to bottom when new logs are added
+  useEffect(() => {
+    if (consoleRef.current) {
+      consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
+    }
+  }, [logs]);
 
   const runSingleTest = async (test: HealthTest) => {
     if (isPaused) return;
@@ -206,22 +214,49 @@ export default function AdminHealthPage() {
     const failedTests = results.filter(r => !r.success);
     const issues = failedTests.map(r => r.message);
     
-    addLog('system', 'Performing system-wide fixes...', 'info');
+    addLog('system', '🔧 Starting automatic system repair...', 'info');
+    addLog('system', `Found ${failedTests.length} failed tests to repair`, 'info');
     
     try {
       const fixResult = await fixIssuesMutation.mutateAsync(issues);
+      
       if (fixResult.success) {
-        addLog('system', 'System fixes completed successfully', 'success');
+        addLog('system', '✅ System repairs completed successfully!', 'success');
+        if (fixResult.fixes && fixResult.fixes.length > 0) {
+          fixResult.fixes.forEach((fix: string) => {
+            addLog('system', `  ✓ ${fix}`, 'success');
+          });
+        }
         // Clear results to allow re-running tests
         setResults([]);
         setCurrentTestIndex(0);
         setProgress(0);
       } else {
-        addLog('system', `Fix attempt failed: ${fixResult.message}`, 'error');
+        addLog('system', `❌ Fix attempt failed: ${fixResult.message}`, 'error');
+        
+        // Show detailed error information
+        if (fixResult.errors && fixResult.errors.length > 0) {
+          addLog('system', '📋 Detailed error breakdown:', 'warning');
+          fixResult.errors.forEach((error: string, index: number) => {
+            addLog('system', `  ${index + 1}. ${error}`, 'error');
+          });
+        }
+        
+        if (fixResult.fixes && fixResult.fixes.length > 0) {
+          addLog('system', '✅ Partial fixes applied:', 'warning');
+          fixResult.fixes.forEach((fix: string) => {
+            addLog('system', `  ✓ ${fix}`, 'success');
+          });
+        }
+        
+        if (fixResult.summary) {
+          addLog('system', `📊 Summary: ${fixResult.summary.totalFixes} fixes, ${fixResult.summary.totalErrors} errors, ${fixResult.summary.repairTime}`, 'info');
+        }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      addLog('system', `Fix error: ${errorMessage}`, 'error');
+      addLog('system', `💥 Critical fix error: ${errorMessage}`, 'error');
+      addLog('system', 'Try running individual tests to identify specific issues', 'warning');
     }
   };
 
@@ -346,81 +381,85 @@ export default function AdminHealthPage() {
         </Card>
       )}
 
-      {/* Test Execution Grid */}
-      <div className="space-y-4">
-        {healthTests.map((test: HealthTest, index: number) => {
-          const status = index < currentTestIndex ? getTestStatus(test.id) : 
-                        index === currentTestIndex && isRunning ? 'running' : 'pending';
-          const testResult = results.find(r => r.testId === test.id);
-          const testLogs = logs.filter(log => log.testId === test.id || log.testId === 'system');
-          const hasErrors = testResult && !testResult.success;
-          
-          return (
-            <Card 
-              key={test.id}
-              className={`${hasErrors ? 'border-red-200 bg-red-50' : ''}`}
-              data-testid={`test-card-${test.id}`}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {getCategoryIcon(test.category)}
-                    <div>
-                      <CardTitle className="text-lg">{test.name}</CardTitle>
-                      <CardDescription>{test.description}</CardDescription>
+      {/* New Layout: Tests List + Unified Console */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Tests List (Left Side) */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">System Tests</CardTitle>
+              <CardDescription>Click on any test to view details</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {healthTests.map((test: HealthTest, index: number) => {
+                const status = index < currentTestIndex ? getTestStatus(test.id) : 
+                              index === currentTestIndex && isRunning ? 'running' : 'pending';
+                const testResult = results.find(r => r.testId === test.id);
+                const hasErrors = testResult && !testResult.success;
+                
+                return (
+                  <div 
+                    key={test.id}
+                    className={`p-3 border rounded-lg cursor-pointer transition-colors hover:bg-gray-50 ${
+                      hasErrors ? 'border-red-200 bg-red-50' : 
+                      testResult?.success ? 'border-green-200 bg-green-50' : 
+                      'border-gray-200'
+                    }`}
+                    data-testid={`test-item-${test.id}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {getCategoryIcon(test.category)}
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm truncate">{test.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{test.description}</p>
+                        </div>
+                      </div>
+                      <div className="ml-2">
+                        {getStatusBadge(status)}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">{test.category}</Badge>
-                    {getStatusBadge(status)}
-                  </div>
-                </div>
-              </CardHeader>
-              
-              <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* Test Details and Actions */}
-                  <div className="space-y-3">
+                    
                     {testResult && (
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-sm">Test Result:</h4>
-                        <div className={`p-3 rounded-lg ${testResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                          <p className="text-sm">{testResult.message}</p>
-                          {testResult.error && (
-                            <p className="text-xs mt-1 font-mono">{testResult.error}</p>
-                          )}
+                      <div className="mt-2">
+                        <div className={`p-2 rounded text-xs ${
+                          testResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {testResult.message}
                         </div>
                         
                         {hasErrors && (
-                          <div className="flex gap-2">
+                          <div className="flex gap-1 mt-2">
                             <Button 
                               size="sm"
                               variant="outline"
+                              className="h-6 text-xs px-2"
                               onClick={() => runSingleTest(test)}
                               disabled={isRunning}
                               data-testid={`button-retry-${test.id}`}
                             >
                               <RefreshCw className="h-3 w-3 mr-1" />
-                              Retry Test
+                              Retry
                             </Button>
                             <Button 
                               size="sm"
+                              className="h-6 text-xs px-2"
                               onClick={() => performSystemWideFixes()}
                               disabled={fixIssuesMutation.isPending}
                               data-testid={`button-fix-${test.id}`}
                             >
                               <Settings className="h-3 w-3 mr-1" />
-                              {fixIssuesMutation.isPending ? 'Fixing...' : 'Auto-Fix'}
+                              Fix
                             </Button>
                           </div>
                         )}
                         
                         {testResult.details && (
-                          <details className="text-xs">
-                            <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                              View Technical Details
+                          <details className="mt-2">
+                            <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+                              Technical Details
                             </summary>
-                            <pre className="mt-2 p-2 bg-gray-100 rounded overflow-auto text-xs">
+                            <pre className="mt-1 p-2 bg-gray-100 rounded overflow-auto text-xs max-h-32">
                               {JSON.stringify(testResult.details, null, 2)}
                             </pre>
                           </details>
@@ -429,61 +468,92 @@ export default function AdminHealthPage() {
                     )}
                     
                     {!testResult && status === 'pending' && (
-                      <div className="p-3 bg-gray-100 rounded-lg">
-                        <p className="text-sm text-muted-foreground">
-                          Test will run when you click "Run All Tests" or when previous tests complete.
-                        </p>
-                        <Button 
-                          size="sm"
-                          variant="outline"
-                          className="mt-2"
-                          onClick={() => runSingleTest(test)}
-                          disabled={isRunning}
-                          data-testid={`button-run-single-${test.id}`}
-                        >
-                          <Play className="h-3 w-3 mr-1" />
-                          Run This Test
-                        </Button>
-                      </div>
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-xs px-2 mt-2"
+                        onClick={() => runSingleTest(test)}
+                        disabled={isRunning}
+                        data-testid={`button-run-single-${test.id}`}
+                      >
+                        <Play className="h-3 w-3 mr-1" />
+                        Run
+                      </Button>
                     )}
                   </div>
-                  
-                  {/* Test Logs */}
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Test Logs:</h4>
-                    <ScrollArea className="h-[200px] w-full border rounded-lg p-2">
-                      <div className="space-y-1">
-                        {testLogs.length === 0 ? (
-                          <div className="text-center text-muted-foreground py-4 text-xs">
-                            No logs for this test yet
-                          </div>
-                        ) : (
-                          testLogs.map((log, logIndex) => (
-                            <div 
-                              key={`${log.id}-${logIndex}`}
-                              className="text-xs space-y-1"
-                              data-testid={`log-entry-${test.id}-${logIndex}`}
-                            >
-                              <div className="flex items-start gap-2">
-                                <span className="text-muted-foreground min-w-[50px]">
-                                  {new Date(log.timestamp).toLocaleTimeString()}
-                                </span>
-                                <span className={`flex-1 ${getLogLevelColor(log.level)}`}>
-                                  {log.message}
-                                </span>
-                              </div>
-                              {logIndex < testLogs.length - 1 && <Separator className="my-1" />}
-                            </div>
-                          ))
-                        )}
+                );
+              })}
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Unified Console (Right Side) */}
+        <div className="lg:col-span-2">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Monitor className="h-5 w-5" />
+                System Console
+              </CardTitle>
+              <CardDescription>Real-time output from all tests and system operations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[600px] w-full border rounded-lg p-4">
+                <div ref={consoleRef} className="space-y-2">
+                  {logs.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-8">
+                      <Monitor className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                      <p className="text-sm">No console output yet</p>
+                      <p className="text-xs">Run tests to see detailed execution logs</p>
+                    </div>
+                  ) : (
+                    logs.map((log, logIndex) => (
+                      <div 
+                        key={`${log.id}-${logIndex}`}
+                        className="font-mono text-sm border-l-2 pl-3 py-1 transition-colors hover:bg-gray-50"
+                        style={{
+                          borderLeftColor: 
+                            log.level === 'success' ? '#22c55e' :
+                            log.level === 'error' ? '#ef4444' :
+                            log.level === 'warning' ? '#f59e0b' : '#6b7280'
+                        }}
+                        data-testid={`console-log-${logIndex}`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="text-muted-foreground text-xs min-w-[80px]">
+                            {new Date(log.timestamp).toLocaleTimeString()}
+                          </span>
+                          <span className="text-xs text-muted-foreground min-w-[80px]">
+                            [{log.testId === 'system' ? 'SYSTEM' : log.testId.toUpperCase()}]
+                          </span>
+                          <span className={`flex-1 ${getLogLevelColor(log.level)}`}>
+                            {log.message}
+                          </span>
+                        </div>
                       </div>
-                    </ScrollArea>
-                  </div>
+                    ))
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+              </ScrollArea>
+              
+              {logs.length > 0 && (
+                <div className="flex justify-between items-center mt-4 pt-4 border-t">
+                  <span className="text-xs text-muted-foreground">
+                    {logs.length} log entries
+                  </span>
+                  <Button 
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setLogs([])}
+                    data-testid="button-clear-console"
+                  >
+                    Clear Console
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
     </div>
