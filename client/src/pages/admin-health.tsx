@@ -332,131 +332,146 @@ export default function AdminHealthPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Test List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Health Tests</CardTitle>
-            <CardDescription>
-              System validation and integrity checks
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {healthTests.map((test: HealthTest, index: number) => {
-                const status = index < currentTestIndex ? getTestStatus(test.id) : 
-                              index === currentTestIndex && isRunning ? 'running' : 'pending';
-                
-                return (
-                  <div 
-                    key={test.id}
-                    className="flex items-center justify-between p-3 border rounded-lg"
-                    data-testid={`test-item-${test.id}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {getCategoryIcon(test.category)}
-                      <div>
-                        <div className="font-medium">{test.name}</div>
-                        <div className="text-sm text-muted-foreground">{test.description}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">{test.category}</Badge>
-                      {getStatusBadge(status)}
+      {/* Test Execution Grid */}
+      <div className="space-y-4">
+        {healthTests.map((test: HealthTest, index: number) => {
+          const status = index < currentTestIndex ? getTestStatus(test.id) : 
+                        index === currentTestIndex && isRunning ? 'running' : 'pending';
+          const testResult = results.find(r => r.testId === test.id);
+          const testLogs = logs.filter(log => log.testId === test.id || log.testId === 'system');
+          const hasErrors = testResult && !testResult.success;
+          
+          return (
+            <Card 
+              key={test.id}
+              className={`${hasErrors ? 'border-red-200 bg-red-50' : ''}`}
+              data-testid={`test-card-${test.id}`}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {getCategoryIcon(test.category)}
+                    <div>
+                      <CardTitle className="text-lg">{test.name}</CardTitle>
+                      <CardDescription>{test.description}</CardDescription>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Test Logs */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Test Logs</CardTitle>
-            <CardDescription>
-              Real-time test execution and system feedback
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[400px] w-full">
-              <div className="space-y-2">
-                {logs.length === 0 ? (
-                  <div className="text-center text-muted-foreground py-8">
-                    No test logs yet. Click "Run All Tests" to begin.
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">{test.category}</Badge>
+                    {getStatusBadge(status)}
                   </div>
-                ) : (
-                  logs.map((log) => (
-                    <div 
-                      key={log.id} 
-                      className="text-sm space-y-1"
-                      data-testid={`log-entry-${log.testId}`}
-                    >
-                      <div className="flex items-start gap-2">
-                        <span className="text-xs text-muted-foreground min-w-[60px]">
-                          {new Date(log.timestamp).toLocaleTimeString()}
-                        </span>
-                        <span className={`flex-1 ${getLogLevelColor(log.level)}`}>
-                          {log.message}
-                        </span>
+                </div>
+              </CardHeader>
+              
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Test Details and Actions */}
+                  <div className="space-y-3">
+                    {testResult && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm">Test Result:</h4>
+                        <div className={`p-3 rounded-lg ${testResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          <p className="text-sm">{testResult.message}</p>
+                          {testResult.error && (
+                            <p className="text-xs mt-1 font-mono">{testResult.error}</p>
+                          )}
+                        </div>
+                        
+                        {hasErrors && (
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm"
+                              variant="outline"
+                              onClick={() => runSingleTest(test)}
+                              disabled={isRunning}
+                              data-testid={`button-retry-${test.id}`}
+                            >
+                              <RefreshCw className="h-3 w-3 mr-1" />
+                              Retry Test
+                            </Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => performSystemWideFixes()}
+                              disabled={fixIssuesMutation.isPending}
+                              data-testid={`button-fix-${test.id}`}
+                            >
+                              <Settings className="h-3 w-3 mr-1" />
+                              {fixIssuesMutation.isPending ? 'Fixing...' : 'Auto-Fix'}
+                            </Button>
+                          </div>
+                        )}
+                        
+                        {testResult.details && (
+                          <details className="text-xs">
+                            <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                              View Technical Details
+                            </summary>
+                            <pre className="mt-2 p-2 bg-gray-100 rounded overflow-auto text-xs">
+                              {JSON.stringify(testResult.details, null, 2)}
+                            </pre>
+                          </details>
+                        )}
                       </div>
-                      {log !== logs[logs.length - 1] && <Separator className="my-1" />}
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+                    )}
+                    
+                    {!testResult && status === 'pending' && (
+                      <div className="p-3 bg-gray-100 rounded-lg">
+                        <p className="text-sm text-muted-foreground">
+                          Test will run when you click "Run All Tests" or when previous tests complete.
+                        </p>
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          className="mt-2"
+                          onClick={() => runSingleTest(test)}
+                          disabled={isRunning}
+                          data-testid={`button-run-single-${test.id}`}
+                        >
+                          <Play className="h-3 w-3 mr-1" />
+                          Run This Test
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Test Logs */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Test Logs:</h4>
+                    <ScrollArea className="h-[200px] w-full border rounded-lg p-2">
+                      <div className="space-y-1">
+                        {testLogs.length === 0 ? (
+                          <div className="text-center text-muted-foreground py-4 text-xs">
+                            No logs for this test yet
+                          </div>
+                        ) : (
+                          testLogs.map((log, logIndex) => (
+                            <div 
+                              key={`${log.id}-${logIndex}`}
+                              className="text-xs space-y-1"
+                              data-testid={`log-entry-${test.id}-${logIndex}`}
+                            >
+                              <div className="flex items-start gap-2">
+                                <span className="text-muted-foreground min-w-[50px]">
+                                  {new Date(log.timestamp).toLocaleTimeString()}
+                                </span>
+                                <span className={`flex-1 ${getLogLevelColor(log.level)}`}>
+                                  {log.message}
+                                </span>
+                              </div>
+                              {logIndex < testLogs.length - 1 && <Separator className="my-1" />}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Test Results Summary */}
-      {results.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Test Results Summary</CardTitle>
-            <CardDescription>
-              Detailed results from completed health checks
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {results.map((result) => {
-                const test = healthTests.find((t: HealthTest) => t.id === result.testId);
-                return (
-                  <div 
-                    key={result.testId}
-                    className={`p-4 border rounded-lg ${result.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}
-                    data-testid={`result-${result.testId}`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium">{test?.name || result.testId}</h4>
-                      {result.success ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-red-600" />
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">{result.message}</p>
-                    {result.error && (
-                      <p className="text-xs text-red-600 bg-red-100 p-2 rounded">{result.error}</p>
-                    )}
-                    {result.details && (
-                      <details className="text-xs mt-2">
-                        <summary className="cursor-pointer text-muted-foreground">View Details</summary>
-                        <pre className="mt-1 p-2 bg-gray-100 rounded overflow-auto">
-                          {JSON.stringify(result.details, null, 2)}
-                        </pre>
-                      </details>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
