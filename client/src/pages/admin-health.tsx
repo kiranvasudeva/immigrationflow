@@ -42,6 +42,7 @@ export default function AdminHealthPage() {
   const [results, setResults] = useState<TestResult[]>([]);
   const [logs, setLogs] = useState<TestLog[]>([]);
   const [progress, setProgress] = useState(0);
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
   const consoleRef = useRef<HTMLDivElement>(null);
 
   // Get available health tests
@@ -97,6 +98,11 @@ export default function AdminHealthPage() {
     };
     setLogs(prev => [...prev, log]);
   };
+
+  // Filter logs based on selected test
+  const filteredLogs = selectedTestId 
+    ? logs.filter(log => log.testId === selectedTestId)
+    : logs;
 
   // Auto-scroll console to bottom when new logs are added
   useEffect(() => {
@@ -401,10 +407,12 @@ export default function AdminHealthPage() {
                   <div 
                     key={test.id}
                     className={`p-3 border rounded-lg cursor-pointer transition-colors hover:bg-gray-50 ${
+                      selectedTestId === test.id ? 'ring-2 ring-blue-500 border-blue-300' :
                       hasErrors ? 'border-red-200 bg-red-50' : 
                       testResult?.success ? 'border-green-200 bg-green-50' : 
                       'border-gray-200'
                     }`}
+                    onClick={() => setSelectedTestId(test.id)}
                     data-testid={`test-item-${test.id}`}
                   >
                     <div className="flex items-center justify-between">
@@ -498,16 +506,41 @@ export default function AdminHealthPage() {
               <CardDescription>Real-time output from all tests and system operations</CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm text-muted-foreground">
+                  {selectedTestId 
+                    ? `Showing logs for: ${healthTests.find(t => t.id === selectedTestId)?.name || 'Unknown test'}`
+                    : 'Showing all test logs'
+                  }
+                </div>
+                {selectedTestId && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedTestId(null)}
+                    className="text-xs"
+                  >
+                    Show All Logs
+                  </Button>
+                )}
+              </div>
               <ScrollArea className="h-[600px] w-full border rounded-lg p-4">
                 <div ref={consoleRef} className="space-y-2">
-                  {logs.length === 0 ? (
+                  {filteredLogs.length === 0 ? (
                     <div className="text-center text-muted-foreground py-8">
                       <Monitor className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                      <p className="text-sm">No console output yet</p>
-                      <p className="text-xs">Run tests to see detailed execution logs</p>
+                      <p className="text-sm">
+                        {selectedTestId ? 'No logs for this test yet' : 'No console output yet'}
+                      </p>
+                      <p className="text-xs">
+                        {selectedTestId 
+                          ? 'Run this test to see its execution logs'
+                          : 'Run tests to see detailed execution logs'
+                        }
+                      </p>
                     </div>
                   ) : (
-                    logs.map((log, logIndex) => (
+                    filteredLogs.map((log, logIndex) => (
                       <div 
                         key={`${log.id}-${logIndex}`}
                         className="font-mono text-sm border-l-2 pl-3 py-1 transition-colors hover:bg-gray-50"
