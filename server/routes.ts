@@ -359,21 +359,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         {
           name: 'AJOFM Labor Market Test',
           description: 'Romanian Employment Agency labor market testing for foreign workers',
-          stepType: 'DOCUMENT_PREPARATION',
+          stepType: 'DOCUMENT_COLLECTION',
           assignedRole: 'OWNER',
           estimatedDuration: 14,
           order: 1,
           documentRequirements: [
             {
-              title: 'AJOFM Application Form',
-              description: 'Completed Form F090 for labor market testing',
+              title: 'AJOFM Application Form F090',
+              description: 'Completed Form F090 for labor market testing at Romanian Employment Agency',
               isRequired: true,
               submittedBy: 'OWNER',
               acceptedFileTypes: ['pdf']
             },
             {
-              title: 'Job Description',
-              description: 'Detailed job description with requirements and responsibilities',
+              title: 'Detailed Job Description',
+              description: 'Complete job description with requirements and responsibilities',
               isRequired: true,
               submittedBy: 'OWNER',
               acceptedFileTypes: ['pdf', 'doc', 'docx']
@@ -391,7 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               title: 'Verify job posting requirements',
               description: 'Ensure job meets Romanian labor law requirements for foreign workers',
               isRequired: true,
-              assignedRole: 'ADMIN'
+              assignedRole: 'OWNER'
             },
             {
               title: 'Submit to local AJOFM office',
@@ -404,7 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         {
           name: 'Work Permit Application (IGI)',
           description: 'Romanian Immigration Office work permit application',
-          stepType: 'INSTITUTIONAL_SUBMISSION',
+          stepType: 'FORM_COMPLETION',
           assignedRole: 'OWNER',
           estimatedDuration: 30,
           order: 2,
@@ -443,7 +443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               title: 'Verify all documents are apostilled',
               description: 'Ensure foreign documents have proper apostille or legalization',
               isRequired: true,
-              assignedRole: 'ADMIN'
+              assignedRole: 'OWNER'
             },
             {
               title: 'Submit to IGI',
@@ -501,14 +501,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
               title: 'Prepare visa interview',
               description: 'Review documents and prepare for consulate interview',
               isRequired: true,
-              assignedRole: 'ADMIN'
+              assignedRole: 'OWNER'
             }
           ]
         },
         {
           name: 'Entry to Romania',
           description: 'Worker entry to Romania and initial registration',
-          stepType: 'DOCUMENT_COLLECTION',
+          stepType: 'DOCUMENT_REVIEW',
           assignedRole: 'WORKER',
           estimatedDuration: 7,
           order: 4,
