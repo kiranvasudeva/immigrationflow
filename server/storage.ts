@@ -97,14 +97,14 @@ export interface IStorage {
   deleteClientProfile(id: string): Promise<boolean>;
   getAllClientProfiles(): Promise<ClientProfile[]>;
   
-  // Employee operations
-  getEmployee(id: string): Promise<Employee | undefined>;
-  getEmployeeWithDetails(id: string): Promise<any>;
-  getEmployeesByClientId(clientId: string): Promise<Employee[]>;
-  getAllEmployees(): Promise<Employee[]>;
-  createEmployee(worker: InsertEmployee): Promise<Employee>;
-  updateEmployee(id: string, updates: Partial<InsertEmployee>): Promise<Employee>;
-  deleteEmployee(id: string): Promise<boolean>;
+  // Worker operations (referred to as workers in frontend)
+  getWorker(id: string): Promise<Worker | undefined>;
+  getWorkerWithDetails(id: string): Promise<any>;
+  getWorkersByClientId(clientId: string): Promise<Worker[]>;
+  getAllWorkers(): Promise<Worker[]>;
+  createWorker(worker: InsertWorker): Promise<Worker>;
+  updateWorker(id: string, updates: Partial<InsertWorker>): Promise<Worker>;
+  deleteWorker(id: string): Promise<boolean>;
   
   // Stage operations
   getAllStages(): Promise<Stage[]>;
@@ -125,7 +125,7 @@ export interface IStorage {
   getAssignment(id: string): Promise<Assignment | undefined>;
   getAllAssignments(): Promise<Assignment[]>;
   getAssignmentsByClient(clientId: string): Promise<Assignment[]>;
-  getAssignmentsByEmployee(employeeId: string): Promise<Assignment[]>;
+  getAssignmentsByWorker(workerId: string): Promise<Assignment[]>;
   getAssignmentsByStatus(status: string): Promise<Assignment[]>;
   createAssignment(assignment: InsertAssignment): Promise<Assignment>;
   updateAssignment(id: string, updates: Partial<InsertAssignment>): Promise<Assignment>;
@@ -154,7 +154,7 @@ export interface IStorage {
   verifyExtractedData(id: string, verifiedByUserId: string): Promise<ExtractedDocumentData>;
   
   // Search operations
-  searchClientsAndEmployees(query: string): Promise<{clients: ClientProfile[], employees: Employee[]}>;
+  searchClientsAndWorkers(query: string): Promise<{clients: ClientProfile[], workers: Worker[]}>;
   
   // Audit operations
   createAuditLog(log: Omit<AuditLog, 'id' | 'createdAt'>): Promise<AuditLog>;
@@ -205,8 +205,8 @@ export interface IStorage {
   // Dashboard statistics
   getDashboardStats(): Promise<{
     totalClients: number;
-    totalEmployees: number;
-    activeEmployees: number;
+    totalWorkers: number;
+    activeWorkers: number;
     pendingActions: number;
     completedThisMonth: number;
     totalWorkflowTemplates: number;
@@ -229,7 +229,7 @@ export interface IStorage {
   getAssignmentsWithDetails(): Promise<Array<Assignment & {
     requirement: Requirement;
     clientProfile: ClientProfile;
-    worker?: Employee;
+    worker?: Worker;
     stage: Stage;
   }>>;
   
@@ -256,33 +256,33 @@ export interface IStorage {
   updateChecklistItem(id: string, updates: Partial<InsertChecklistItem>): Promise<ChecklistItem>;
   deleteChecklistItem(id: string): Promise<boolean>;
   
-  // Employee Workflow Progress operations
-  getEmployeeWorkflowProgress(employeeId: string, templateId: string): Promise<EmployeeWorkflowProgress | undefined>;
-  createEmployeeWorkflowProgress(progress: InsertEmployeeWorkflowProgress): Promise<EmployeeWorkflowProgress>;
-  updateEmployeeWorkflowProgress(id: string, updates: Partial<InsertEmployeeWorkflowProgress>): Promise<EmployeeWorkflowProgress>;
-  getEmployeeStepProgress(progressId: string): Promise<EmployeeStepProgress[]>;
-  createEmployeeStepProgress(progress: InsertEmployeeStepProgress): Promise<EmployeeStepProgress>;
-  updateEmployeeStepProgress(id: string, updates: Partial<InsertEmployeeStepProgress>): Promise<EmployeeStepProgress>;
+  // Worker Workflow Progress operations
+  getWorkerWorkflowProgress(workerId: string, templateId: string): Promise<WorkerWorkflowProgress | undefined>;
+  createWorkerWorkflowProgress(progress: InsertWorkerWorkflowProgress): Promise<WorkerWorkflowProgress>;
+  updateWorkerWorkflowProgress(id: string, updates: Partial<InsertWorkerWorkflowProgress>): Promise<WorkerWorkflowProgress>;
+  getWorkerStepProgress(progressId: string): Promise<WorkerStepProgress[]>;
+  createWorkerStepProgress(progress: InsertWorkerStepProgress): Promise<WorkerStepProgress>;
+  updateWorkerStepProgress(id: string, updates: Partial<InsertWorkerStepProgress>): Promise<WorkerStepProgress>;
   
   // Document Submission operations
-  getDocumentSubmissions(requirementId: string, employeeId: string): Promise<DocumentSubmission[]>;
+  getDocumentSubmissions(requirementId: string, workerId: string): Promise<DocumentSubmission[]>;
   createDocumentSubmission(submission: InsertDocumentSubmission): Promise<DocumentSubmission>;
   updateDocumentSubmission(id: string, updates: Partial<InsertDocumentSubmission>): Promise<DocumentSubmission>;
   
   // Checklist Completion operations
-  getChecklistCompletions(itemId: string, employeeId: string): Promise<ChecklistCompletion[]>;
+  getChecklistCompletions(itemId: string, workerId: string): Promise<ChecklistCompletion[]>;
   createChecklistCompletion(completion: InsertChecklistCompletion): Promise<ChecklistCompletion>;
   updateChecklistCompletion(id: string, updates: Partial<InsertChecklistCompletion>): Promise<ChecklistCompletion>;
   
-  // Employee workflow linking operations
-  linkEmployeeToWorkflow(employeeId: string, templateId: string): Promise<EmployeeWorkflowProgress>;
-  unlinkEmployeeFromWorkflow(employeeId: string, templateId: string): Promise<boolean>;
-  getEmployeesForWorkflow(templateId: string): Promise<Employee[]>;
-  getWorkflowsForEmployee(employeeId: string): Promise<WorkflowTemplate[]>;
+  // Worker workflow linking operations
+  linkWorkerToWorkflow(workerId: string, templateId: string): Promise<WorkerWorkflowProgress>;
+  unlinkWorkerFromWorkflow(workerId: string, templateId: string): Promise<boolean>;
+  getWorkersForWorkflow(templateId: string): Promise<Worker[]>;
+  getWorkflowsForWorker(workerId: string): Promise<WorkflowTemplate[]>;
 
   // RBAC helper methods
-  getEmployeeAssignments(employeeId: string): Promise<Assignment[]>;
-  getEmployeeProfile(employeeId: string): Promise<Employee | undefined>;
+  getWorkerAssignments(workerId: string): Promise<Assignment[]>;
+  getWorkerProfile(workerId: string): Promise<Worker | undefined>;
   getClientsByOwner(ownerId: string): Promise<ClientProfile[]>;
   getDocument(documentId: string): Promise<DocumentFile | undefined>;
   getTemplate(templateId: string): Promise<DocumentTemplate | undefined>;
@@ -361,13 +361,13 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(clientProfiles).orderBy(clientProfiles.legalName);
   }
 
-  // Employee operations
-  async getEmployee(id: string): Promise<Employee | undefined> {
+  // Worker operations
+  async getWorker(id: string): Promise<Worker | undefined> {
     const [worker] = await db.select().from(workers).where(eq(workers.id, id));
     return worker;
   }
 
-  async getEmployeeWithDetails(id: string): Promise<any> {
+  async getWorkerWithDetails(id: string): Promise<any> {
     // Get the worker basic info
     const [worker] = await db.select().from(workers).where(eq(workers.id, id));
     if (!worker) return undefined;
@@ -391,7 +391,7 @@ export class DatabaseStorage implements IStorage {
       .from(assignments)
       .leftJoin(requirements, eq(assignments.requirementId, requirements.id))
       .leftJoin(stages, eq(requirements.stageId, stages.id))
-      .where(eq(assignments.employeeId, id));
+      .where(eq(assignments.workerId, id));
 
     // Get document files for each assignment
     const assignmentIds = assignmentsData.map((a: any) => a.assignment.id);
@@ -435,16 +435,16 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getEmployeesByClientId(clientId: string): Promise<Employee[]> {
+  async getWorkersByClientId(clientId: string): Promise<Worker[]> {
     return await db.select().from(workers).where(eq(workers.clientProfileId, clientId));
   }
 
-  async createEmployee(worker: InsertEmployee): Promise<Employee> {
-    const [newEmployee] = await db.insert(workers).values(worker).returning();
-    return newEmployee;
+  async createWorker(worker: InsertWorker): Promise<Worker> {
+    const [newWorker] = await db.insert(workers).values(worker).returning();
+    return newWorker;
   }
 
-  async updateEmployee(id: string, updates: Partial<InsertEmployee>): Promise<Employee> {
+  async updateWorker(id: string, updates: Partial<InsertWorker>): Promise<Worker> {
     const [updated] = await db
       .update(workers)
       .set(updates)
@@ -453,7 +453,7 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async getAllEmployees(): Promise<Employee[]> {
+  async getAllWorkers(): Promise<Worker[]> {
     return await db.select().from(workers);
   }
 
@@ -466,7 +466,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(workers).where(eq(workers.clientProfileId, clientId));
   }
 
-  async deleteEmployee(id: string): Promise<boolean> {
+  async deleteWorker(id: string): Promise<boolean> {
     const result = await db
       .delete(workers)
       .where(eq(workers.id, id));
@@ -553,8 +553,8 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(assignments).where(eq(assignments.clientProfileId, clientId));
   }
 
-  async getAssignmentsByEmployee(employeeId: string): Promise<Assignment[]> {
-    return await db.select().from(assignments).where(eq(assignments.employeeId, employeeId));
+  async getAssignmentsByWorker(workerId: string): Promise<Assignment[]> {
+    return await db.select().from(assignments).where(eq(assignments.workerId, workerId));
   }
 
   async getAssignmentsByStatus(status: string): Promise<Assignment[]> {
@@ -699,7 +699,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Search operations
-  async searchClientsAndEmployees(query: string): Promise<{clients: ClientProfile[], employees: Employee[]}> {
+  async searchClientsAndWorkers(query: string): Promise<{clients: ClientProfile[], workers: Worker[]}> {
     const searchQuery = `%${query}%`;
     
     const clients = await db
@@ -713,19 +713,19 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    const employeesResult = await db
+    const workersResult = await db
       .select()
-      .from(employees)
+      .from(workers)
       .where(
         or(
-          like(employees.firstName, searchQuery),
-          like(employees.lastName, searchQuery),
-          like(employees.passportNumber, searchQuery),
-          like(employees.email, searchQuery)
+          like(workers.firstName, searchQuery),
+          like(workers.lastName, searchQuery),
+          like(workers.passportNumber, searchQuery),
+          like(workers.email, searchQuery)
         )
       );
 
-    return { clients, employees: employeesResult };
+    return { clients, workers: workersResult };
   }
 
   // Audit operations
@@ -745,8 +745,8 @@ export class DatabaseStorage implements IStorage {
   // Dashboard statistics
   async getDashboardStats(): Promise<{
     totalClients: number;
-    totalEmployees: number;
-    activeEmployees: number;
+    totalWorkers: number;
+    activeWorkers: number;
     pendingActions: number;
     completedThisMonth: number;
     totalWorkflowTemplates: number;
@@ -755,14 +755,14 @@ export class DatabaseStorage implements IStorage {
     // Get total clients
     const totalClients = await db.select({ count: count() }).from(clientProfiles);
     
-    // Get total employees
-    const totalEmployees = await db.select({ count: count() }).from(employees);
+    // Get total workers
+    const totalWorkers = await db.select({ count: count() }).from(workers);
     
-    // Get active employees (employees with assignments in progress)
-    const activeEmployeesResult = await db
-      .selectDistinct({ employeeId: assignments.employeeId })
+    // Get active workers (workers with assignments in progress)
+    const activeWorkersResult = await db
+      .selectDistinct({ workerId: assignments.workerId })
       .from(assignments)
-      .innerJoin(employees, eq(assignments.employeeId, employees.id))
+      .innerJoin(workers, eq(assignments.workerId, workers.id))
       .where(
         or(
           eq(assignments.status, 'AWAITING_UPLOAD'),
@@ -819,8 +819,8 @@ export class DatabaseStorage implements IStorage {
     
     return {
       totalClients: totalClients[0]?.count ?? 0,
-      totalEmployees: totalEmployees[0]?.count ?? 0,
-      activeEmployees: activeEmployeesResult.length,
+      totalWorkers: totalWorkers[0]?.count ?? 0,
+      activeWorkers: activeWorkersResult.length,
       pendingActions: pendingActionsResult[0]?.count ?? 0,
       completedThisMonth: completedThisMonthResult[0]?.count ?? 0,
       totalWorkflowTemplates: totalWorkflowTemplatesResult[0]?.count ?? 0,
@@ -839,7 +839,7 @@ export class DatabaseStorage implements IStorage {
 
     await db.delete(requirements).where(sql`${requirements.title} LIKE 'Test %'`);
     await db.delete(stages).where(sql`${stages.title} LIKE 'Test %'`);
-    await db.delete(employees).where(sql`${employees.firstName} LIKE 'Test %'`);
+    await db.delete(workers).where(sql`${workers.firstName} LIKE 'Test %'`);
     await db.delete(clientProfiles).where(sql`${clientProfiles.legalName} LIKE 'Test %'`);
     await db.delete(users).where(sql`${users.firstName} LIKE 'Test %'`);
   }
@@ -946,7 +946,7 @@ export class DatabaseStorage implements IStorage {
   async getAssignmentsWithDetails(): Promise<Array<Assignment & {
     requirement: Requirement;
     clientProfile: ClientProfile;
-    worker?: Employee;
+    worker?: Worker;
     stage: Stage;
   }>> {
     const result = await db
@@ -954,7 +954,7 @@ export class DatabaseStorage implements IStorage {
       .from(assignments)
       .leftJoin(requirements, eq(assignments.requirementId, requirements.id))
       .leftJoin(clientProfiles, eq(assignments.clientProfileId, clientProfiles.id))
-      .leftJoin(employees, eq(assignments.employeeId, employees.id))
+      .leftJoin(workers, eq(assignments.workerId, workers.id))
       .leftJoin(stages, eq(requirements.stageId, stages.id))
       .orderBy(desc(assignments.updatedAt));
     
@@ -962,7 +962,7 @@ export class DatabaseStorage implements IStorage {
       ...row.assignments,
       requirement: row.requirements!,
       clientProfile: row.client_profiles!,
-      worker: row.employees || undefined,
+      worker: row.workers || undefined,
       stage: row.stages!,
     }));
   }
@@ -1166,12 +1166,12 @@ export class DatabaseStorage implements IStorage {
   }
   
   // RBAC helper methods
-  async getEmployeeAssignments(employeeId: string): Promise<Assignment[]> {
-    return await db.select().from(assignments).where(eq(assignments.employeeId, employeeId));
+  async getWorkerAssignments(workerId: string): Promise<Assignment[]> {
+    return await db.select().from(assignments).where(eq(assignments.workerId, workerId));
   }
 
-  async getEmployeeProfile(employeeId: string): Promise<Employee | undefined> {
-    const [worker] = await db.select().from(employees).where(eq(employees.id, employeeId));
+  async getWorkerProfile(workerId: string): Promise<Worker | undefined> {
+    const [worker] = await db.select().from(workers).where(eq(workers.id, workerId));
     return worker;
   }
 
@@ -1376,41 +1376,41 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount > 0;
   }
 
-  // Employee Workflow Progress operations
-  async getEmployeeWorkflowProgress(employeeId: string, templateId: string): Promise<EmployeeWorkflowProgress | undefined> {
+  // Worker Workflow Progress operations
+  async getWorkerWorkflowProgress(workerId: string, templateId: string): Promise<WorkerWorkflowProgress | undefined> {
     const [progress] = await db.select().from(workerWorkflowProgress)
-      .where(and(eq(workerWorkflowProgress.employeeId, employeeId), eq(workerWorkflowProgress.workflowTemplateId, templateId)));
+      .where(and(eq(workerWorkflowProgress.workerId, workerId), eq(workerWorkflowProgress.workflowTemplateId, templateId)));
     return progress;
   }
 
-  async createEmployeeWorkflowProgress(progress: InsertEmployeeWorkflowProgress): Promise<EmployeeWorkflowProgress> {
+  async createWorkerWorkflowProgress(progress: InsertWorkerWorkflowProgress): Promise<WorkerWorkflowProgress> {
     const result = await db.insert(workerWorkflowProgress).values(progress).returning();
     return result[0];
   }
 
-  async updateEmployeeWorkflowProgress(id: string, updates: Partial<InsertEmployeeWorkflowProgress>): Promise<EmployeeWorkflowProgress> {
+  async updateWorkerWorkflowProgress(id: string, updates: Partial<InsertWorkerWorkflowProgress>): Promise<WorkerWorkflowProgress> {
     const result = await db.update(workerWorkflowProgress).set(updates).where(eq(workerWorkflowProgress.id, id)).returning();
     return result[0];
   }
 
-  async getEmployeeStepProgress(progressId: string): Promise<EmployeeStepProgress[]> {
+  async getWorkerStepProgress(progressId: string): Promise<WorkerStepProgress[]> {
     return await db.select().from(workerStepProgress).where(eq(workerStepProgress.workerWorkflowProgressId, progressId));
   }
 
-  async createEmployeeStepProgress(progress: InsertEmployeeStepProgress): Promise<EmployeeStepProgress> {
+  async createWorkerStepProgress(progress: InsertWorkerStepProgress): Promise<WorkerStepProgress> {
     const result = await db.insert(workerStepProgress).values(progress).returning();
     return result[0];
   }
 
-  async updateEmployeeStepProgress(id: string, updates: Partial<InsertEmployeeStepProgress>): Promise<EmployeeStepProgress> {
+  async updateWorkerStepProgress(id: string, updates: Partial<InsertWorkerStepProgress>): Promise<WorkerStepProgress> {
     const result = await db.update(workerStepProgress).set(updates).where(eq(workerStepProgress.id, id)).returning();
     return result[0];
   }
 
   // Document Submission operations
-  async getDocumentSubmissions(requirementId: string, employeeId: string): Promise<DocumentSubmission[]> {
+  async getDocumentSubmissions(requirementId: string, workerId: string): Promise<DocumentSubmission[]> {
     return await db.select().from(documentSubmissions)
-      .where(and(eq(documentSubmissions.requirementId, requirementId), eq(documentSubmissions.employeeId, employeeId)))
+      .where(and(eq(documentSubmissions.requirementId, requirementId), eq(documentSubmissions.workerId, workerId)))
       .orderBy(desc(documentSubmissions.submittedAt));
   }
 
@@ -1425,9 +1425,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Checklist Completion operations
-  async getChecklistCompletions(itemId: string, employeeId: string): Promise<ChecklistCompletion[]> {
+  async getChecklistCompletions(itemId: string, workerId: string): Promise<ChecklistCompletion[]> {
     return await db.select().from(checklistCompletions)
-      .where(and(eq(checklistCompletions.itemId, itemId), eq(checklistCompletions.employeeId, employeeId)))
+      .where(and(eq(checklistCompletions.itemId, itemId), eq(checklistCompletions.workerId, workerId)))
       .orderBy(desc(checklistCompletions.completedAt));
   }
 
@@ -1441,17 +1441,17 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  // Employee workflow linking operations
-  async linkEmployeeToWorkflow(employeeId: string, templateId: string): Promise<EmployeeWorkflowProgress> {
+  // Worker workflow linking operations
+  async linkWorkerToWorkflow(workerId: string, templateId: string): Promise<WorkerWorkflowProgress> {
     // Check if already linked
-    const existing = await this.getEmployeeWorkflowProgress(employeeId, templateId);
+    const existing = await this.getWorkerWorkflowProgress(workerId, templateId);
     if (existing) {
       return existing;
     }
     
     // Create new workflow progress
-    const progress: InsertEmployeeWorkflowProgress = {
-      employeeId,
+    const progress: InsertWorkerWorkflowProgress = {
+      workerId,
       templateId,
       status: 'not_started',
       startedAt: new Date(),
@@ -1459,11 +1459,11 @@ export class DatabaseStorage implements IStorage {
       notes: null
     };
     
-    return await this.createEmployeeWorkflowProgress(progress);
+    return await this.createWorkerWorkflowProgress(progress);
   }
 
-  async unlinkEmployeeFromWorkflow(employeeId: string, templateId: string): Promise<boolean> {
-    const progress = await this.getEmployeeWorkflowProgress(employeeId, templateId);
+  async unlinkWorkerFromWorkflow(workerId: string, templateId: string): Promise<boolean> {
+    const progress = await this.getWorkerWorkflowProgress(workerId, templateId);
     if (!progress) {
       return false;
     }
@@ -1476,20 +1476,20 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount > 0;
   }
 
-  async getEmployeesForWorkflow(templateId: string): Promise<Employee[]> {
-    const result = await db.select({ worker: employees })
+  async getWorkersForWorkflow(templateId: string): Promise<Worker[]> {
+    const result = await db.select({ worker: workers })
       .from(workerWorkflowProgress)
-      .innerJoin(employees, eq(workerWorkflowProgress.employeeId, employees.id))
+      .innerJoin(workers, eq(workerWorkflowProgress.workerId, workers.id))
       .where(eq(workerWorkflowProgress.templateId, templateId));
     
     return result.map(r => r.worker);
   }
 
-  async getWorkflowsForEmployee(employeeId: string): Promise<WorkflowTemplate[]> {
+  async getWorkflowsForWorker(workerId: string): Promise<WorkflowTemplate[]> {
     const result = await db.select({ template: workflowTemplates })
       .from(workerWorkflowProgress)
       .innerJoin(workflowTemplates, eq(workerWorkflowProgress.workflowTemplateId, workflowTemplates.id))
-      .where(eq(workerWorkflowProgress.employeeId, employeeId));
+      .where(eq(workerWorkflowProgress.workerId, workerId));
     
     return result.map(r => r.template);
   }

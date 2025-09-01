@@ -179,6 +179,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create worker for specific client
+  app.post('/api/clients/:clientId/workers', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const { clientId } = req.params;
+      const workerData = { ...req.body, clientProfileId: clientId };
+      
+      const worker = await storage.createWorker(workerData);
+      res.status(201).json(worker);
+    } catch (error) {
+      console.error('Error creating worker:', error);
+      res.status(500).json({ message: "Failed to create worker" });
+    }
+  });
+
+  // Update worker for specific client
+  app.put('/api/clients/:clientId/workers/:workerId', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const { workerId } = req.params;
+      
+      const updatedWorker = await storage.updateWorker(workerId, req.body);
+      if (!updatedWorker) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+      res.json(updatedWorker);
+    } catch (error) {
+      console.error('Error updating worker:', error);
+      res.status(500).json({ message: "Failed to update worker" });
+    }
+  });
+
+  // Delete worker for specific client
+  app.delete('/api/clients/:clientId/workers/:workerId', isAuthenticated, requireRole('ADMIN'), async (req: any, res) => {
+    try {
+      const { workerId } = req.params;
+      
+      const success = await storage.deleteWorker(workerId);
+      if (!success) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+      res.json({ message: "Worker deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting worker:', error);
+      res.status(500).json({ message: "Failed to delete worker" });
+    }
+  });
+
+  // Get single worker
+  app.get('/api/clients/:clientId/workers/:workerId', isAuthenticated, requireRole('ADMIN', 'OWNER', 'WORKER'), async (req: any, res) => {
+    try {
+      const { workerId } = req.params;
+      
+      const worker = await storage.getWorker(workerId);
+      if (!worker) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+      res.json(worker);
+    } catch (error) {
+      console.error('Error fetching worker:', error);
+      res.status(500).json({ message: "Failed to fetch worker" });
+    }
+  });
+
   // Clients API endpoint - only ADMIN and OWNER can view all clients
   app.get('/api/clients', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
