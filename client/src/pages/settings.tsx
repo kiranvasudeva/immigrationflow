@@ -478,13 +478,13 @@ export default function SettingsPage() {
                   <div className="text-center py-4">Loading workflow templates...</div>
                 )}
                 
-                {(!workflowTemplates || workflowTemplates.length === 0) && !loadingWorkflows && (
+                {(!workflowTemplates || (workflowTemplates as any[]).length === 0) && !loadingWorkflows && (
                   <div className="text-center py-8 text-gray-500">
                     No workflow templates found. Create your first workflow template to get started.
                   </div>
                 )}
 
-                {(workflowTemplates || []).map((workflow) => (
+                {((workflowTemplates as any[]) || []).map((workflow: any) => (
                   <div key={workflow.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-4">
                       <div>
@@ -520,7 +520,7 @@ export default function SettingsPage() {
                       </div>
                       
                       {workflow.stages && workflow.stages.length > 0 ? (
-                        workflow.stages.map((stage, index) => (
+                        workflow.stages.map((stage: any, index: number) => (
                           <div key={stage.id} className="ml-4 pl-4 border-l-2 border-gray-200">
                             <div className="flex items-center justify-between">
                               <h4 className="font-medium">{stage.name}</h4>
@@ -532,7 +532,7 @@ export default function SettingsPage() {
                               <div className="mt-2">
                                 <p className="text-xs font-medium text-gray-700">Document Requirements:</p>
                                 <ul className="text-xs text-gray-600 ml-4">
-                                  {stage.documentRequirements.map((req) => (
+                                  {stage.documentRequirements.map((req: any) => (
                                     <li key={req.id} className="flex items-center gap-1">
                                       <span>• {req.title}</span>
                                       {req.required && <span className="text-red-500">*</span>}
