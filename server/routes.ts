@@ -332,6 +332,366 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Seed Romanian workflow data endpoint
+  app.post('/api/seed-romanian-workflow', isAuthenticated, requireRole('ADMIN'), async (req: any, res) => {
+    try {
+      const userId = req.user.id || req.user.claims?.sub || 'dev-user';
+      
+      // First, find or create the Romanian Work Permit workflow template
+      let workflowTemplate = await storage.getAllWorkflowTemplates();
+      let romanianTemplate = workflowTemplate.find(t => t.name.includes('Romanian Work Permit'));
+      
+      if (!romanianTemplate) {
+        // Create the Romanian Work Permit template
+        romanianTemplate = await storage.createWorkflowTemplate({
+          name: 'Romanian Work Permit Process',
+          description: 'Complete Romanian immigration workflow from AJOFM labor market test through residence permit',
+          isActive: true,
+          order: 1,
+          executionType: 'sequential',
+          estimatedDurationDays: 180,
+          createdByUserId: userId
+        });
+      }
+
+      // Define comprehensive Romanian workflow stages with real documents and checklists
+      const workflowStages = [
+        {
+          name: 'AJOFM Labor Market Test',
+          description: 'Romanian Employment Agency labor market testing for foreign workers',
+          stepType: 'DOCUMENT_PREPARATION',
+          assignedRole: 'OWNER',
+          estimatedDuration: 14,
+          order: 1,
+          documentRequirements: [
+            {
+              title: 'AJOFM Application Form',
+              description: 'Completed Form F090 for labor market testing',
+              isRequired: true,
+              submittedBy: 'OWNER',
+              acceptedFileTypes: ['pdf']
+            },
+            {
+              title: 'Job Description',
+              description: 'Detailed job description with requirements and responsibilities',
+              isRequired: true,
+              submittedBy: 'OWNER',
+              acceptedFileTypes: ['pdf', 'doc', 'docx']
+            },
+            {
+              title: 'Company Registration Certificate',
+              description: 'Valid company registration certificate from ONRC',
+              isRequired: true,
+              submittedBy: 'OWNER',
+              acceptedFileTypes: ['pdf']
+            }
+          ],
+          checklistItems: [
+            {
+              title: 'Verify job posting requirements',
+              description: 'Ensure job meets Romanian labor law requirements for foreign workers',
+              isRequired: true,
+              assignedRole: 'ADMIN'
+            },
+            {
+              title: 'Submit to local AJOFM office',
+              description: 'Submit application to the relevant county AJOFM office',
+              isRequired: true,
+              assignedRole: 'OWNER'
+            }
+          ]
+        },
+        {
+          name: 'Work Permit Application (IGI)',
+          description: 'Romanian Immigration Office work permit application',
+          stepType: 'INSTITUTIONAL_SUBMISSION',
+          assignedRole: 'OWNER',
+          estimatedDuration: 30,
+          order: 2,
+          documentRequirements: [
+            {
+              title: 'AJOFM Approval Notice',
+              description: 'Official approval from AJOFM for labor market test',
+              isRequired: true,
+              submittedBy: 'OWNER',
+              acceptedFileTypes: ['pdf']
+            },
+            {
+              title: 'IGI Work Permit Application',
+              description: 'Completed work permit application form for IGI',
+              isRequired: true,
+              submittedBy: 'OWNER',
+              acceptedFileTypes: ['pdf']
+            },
+            {
+              title: 'Employment Contract',
+              description: 'Signed individual employment contract in Romanian',
+              isRequired: true,
+              submittedBy: 'OWNER',
+              acceptedFileTypes: ['pdf']
+            },
+            {
+              title: 'Worker Passport Copy',
+              description: 'Clear copy of worker passport (all pages)',
+              isRequired: true,
+              submittedBy: 'WORKER',
+              acceptedFileTypes: ['pdf', 'jpg', 'png']
+            }
+          ],
+          checklistItems: [
+            {
+              title: 'Verify all documents are apostilled',
+              description: 'Ensure foreign documents have proper apostille or legalization',
+              isRequired: true,
+              assignedRole: 'ADMIN'
+            },
+            {
+              title: 'Submit to IGI',
+              description: 'Submit complete application package to Romanian Immigration Office',
+              isRequired: true,
+              assignedRole: 'OWNER'
+            }
+          ]
+        },
+        {
+          name: 'Consulate Visa Application',
+          description: 'Long-stay visa application at Romanian consulate',
+          stepType: 'INSTITUTIONAL_SUBMISSION',
+          assignedRole: 'WORKER',
+          estimatedDuration: 21,
+          order: 3,
+          documentRequirements: [
+            {
+              title: 'IGI Work Permit',
+              description: 'Approved work permit from Romanian Immigration Office',
+              isRequired: true,
+              submittedBy: 'OWNER',
+              acceptedFileTypes: ['pdf']
+            },
+            {
+              title: 'Visa Application Form',
+              description: 'Completed long-stay visa application form',
+              isRequired: true,
+              submittedBy: 'WORKER',
+              acceptedFileTypes: ['pdf']
+            },
+            {
+              title: 'Medical Certificate',
+              description: 'Medical certificate from approved medical center',
+              isRequired: true,
+              submittedBy: 'WORKER',
+              acceptedFileTypes: ['pdf']
+            },
+            {
+              title: 'Criminal Background Check',
+              description: 'Apostilled criminal background check from country of origin',
+              isRequired: true,
+              submittedBy: 'WORKER',
+              acceptedFileTypes: ['pdf']
+            }
+          ],
+          checklistItems: [
+            {
+              title: 'Schedule consulate appointment',
+              description: 'Book appointment at Romanian consulate in worker country',
+              isRequired: true,
+              assignedRole: 'WORKER'
+            },
+            {
+              title: 'Prepare visa interview',
+              description: 'Review documents and prepare for consulate interview',
+              isRequired: true,
+              assignedRole: 'ADMIN'
+            }
+          ]
+        },
+        {
+          name: 'Entry to Romania',
+          description: 'Worker entry to Romania and initial registration',
+          stepType: 'DOCUMENT_COLLECTION',
+          assignedRole: 'WORKER',
+          estimatedDuration: 7,
+          order: 4,
+          documentRequirements: [
+            {
+              title: 'Entry Stamp',
+              description: 'Passport entry stamp at Romanian border',
+              isRequired: true,
+              submittedBy: 'WORKER',
+              acceptedFileTypes: ['jpg', 'png', 'pdf']
+            },
+            {
+              title: 'Accommodation Proof',
+              description: 'Proof of accommodation in Romania (rental contract or hotel)',
+              isRequired: true,
+              submittedBy: 'WORKER',
+              acceptedFileTypes: ['pdf']
+            }
+          ],
+          checklistItems: [
+            {
+              title: 'Register with local police',
+              description: 'Report residence to local police within 30 days of arrival',
+              isRequired: true,
+              assignedRole: 'WORKER'
+            },
+            {
+              title: 'Open Romanian bank account',
+              description: 'Open bank account for salary payments',
+              isRequired: false,
+              assignedRole: 'WORKER'
+            }
+          ]
+        },
+        {
+          name: 'Residence Permit Application',
+          description: 'Temporary residence permit application at IGI',
+          stepType: 'INSTITUTIONAL_SUBMISSION',
+          assignedRole: 'WORKER',
+          estimatedDuration: 30,
+          order: 5,
+          documentRequirements: [
+            {
+              title: 'Residence Permit Application',
+              description: 'Completed temporary residence permit application form',
+              isRequired: true,
+              submittedBy: 'WORKER',
+              acceptedFileTypes: ['pdf']
+            },
+            {
+              title: 'Proof of Accommodation',
+              description: 'Valid rental contract or property ownership documents',
+              isRequired: true,
+              submittedBy: 'WORKER',
+              acceptedFileTypes: ['pdf']
+            },
+            {
+              title: 'Health Insurance Proof',
+              description: 'Valid health insurance coverage in Romania',
+              isRequired: true,
+              submittedBy: 'WORKER',
+              acceptedFileTypes: ['pdf']
+            },
+            {
+              title: 'Income Proof',
+              description: 'Employment contract and salary confirmation',
+              isRequired: true,
+              submittedBy: 'OWNER',
+              acceptedFileTypes: ['pdf']
+            }
+          ],
+          checklistItems: [
+            {
+              title: 'Schedule IGI appointment',
+              description: 'Book appointment at local IGI office for residence permit',
+              isRequired: true,
+              assignedRole: 'WORKER'
+            },
+            {
+              title: 'Pay residence permit fees',
+              description: 'Pay required government fees for residence permit processing',
+              isRequired: true,
+              assignedRole: 'WORKER'
+            }
+          ]
+        },
+        {
+          name: 'Residence Card Issuance',
+          description: 'Collection of temporary residence card',
+          stepType: 'ADMIN_APPROVAL',
+          assignedRole: 'WORKER',
+          estimatedDuration: 14,
+          order: 6,
+          documentRequirements: [
+            {
+              title: 'Residence Card',
+              description: 'Physical temporary residence card from IGI',
+              isRequired: true,
+              submittedBy: 'WORKER',
+              acceptedFileTypes: ['jpg', 'png', 'pdf']
+            },
+            {
+              title: 'Collection Receipt',
+              description: 'Official receipt for residence card collection',
+              isRequired: true,
+              submittedBy: 'WORKER',
+              acceptedFileTypes: ['pdf', 'jpg']
+            }
+          ],
+          checklistItems: [
+            {
+              title: 'Verify card information',
+              description: 'Check all information on residence card is correct',
+              isRequired: true,
+              assignedRole: 'WORKER'
+            },
+            {
+              title: 'Update employer records',
+              description: 'Provide copy of residence card to employer HR department',
+              isRequired: true,
+              assignedRole: 'WORKER'
+            }
+          ]
+        }
+      ];
+
+      // Create workflow steps with their requirements and checklists
+      for (const stageData of workflowStages) {
+        // Create the workflow step
+        const step = await storage.createWorkflowStep({
+          workflowTemplateId: romanianTemplate.id,
+          name: stageData.name,
+          description: stageData.description,
+          stepType: stageData.stepType,
+          assignedRole: stageData.assignedRole,
+          estimatedDuration: stageData.estimatedDuration,
+          order: stageData.order,
+          isRequired: true,
+          approvalRequired: false
+        });
+
+        // Create document requirements for this step
+        for (let i = 0; i < stageData.documentRequirements.length; i++) {
+          const req = stageData.documentRequirements[i];
+          await storage.createDocumentRequirement({
+            workflowStepId: step.id,
+            title: req.title,
+            description: req.description,
+            isRequired: req.isRequired,
+            submittedBy: req.submittedBy,
+            acceptedFileTypes: req.acceptedFileTypes,
+            order: i + 1
+          });
+        }
+
+        // Create checklist items for this step
+        for (let i = 0; i < stageData.checklistItems.length; i++) {
+          const item = stageData.checklistItems[i];
+          await storage.createChecklistItem({
+            workflowStepId: step.id,
+            title: item.title,
+            description: item.description,
+            isRequired: item.isRequired,
+            assignedRole: item.assignedRole,
+            order: i + 1
+          });
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Romanian workflow stages and documents populated successfully',
+        workflowTemplateId: romanianTemplate.id,
+        stagesCreated: workflowStages.length
+      });
+    } catch (error) {
+      console.error('Error seeding Romanian workflow:', error);
+      res.status(500).json({ 
+        message: "Failed to seed Romanian workflow", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
