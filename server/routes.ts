@@ -767,6 +767,184 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Workflow Steps CRUD API endpoints
+  app.get('/api/workflow-templates/:id/steps', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const steps = await storage.getWorkflowSteps(req.params.id);
+      res.json(steps);
+    } catch (error) {
+      console.error('Error fetching workflow steps:', error);
+      res.status(500).json({ message: "Failed to fetch workflow steps" });
+    }
+  });
+
+  app.post('/api/workflow-templates/:id/steps', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const stepData = {
+        workflowTemplateId: req.params.id,
+        ...req.body
+      };
+      const step = await storage.createWorkflowStep(stepData);
+      res.json(step);
+    } catch (error) {
+      console.error('Error creating workflow step:', error);
+      res.status(500).json({ message: "Failed to create workflow step" });
+    }
+  });
+
+  app.put('/api/workflow-steps/:id', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const step = await storage.updateWorkflowStep(req.params.id, req.body);
+      res.json(step);
+    } catch (error) {
+      console.error('Error updating workflow step:', error);
+      res.status(500).json({ message: "Failed to update workflow step" });
+    }
+  });
+
+  app.delete('/api/workflow-steps/:id', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const success = await storage.deleteWorkflowStep(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Workflow step not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting workflow step:', error);
+      res.status(500).json({ message: "Failed to delete workflow step" });
+    }
+  });
+
+  // Document Requirements CRUD API endpoints
+  app.get('/api/workflow-steps/:id/documents', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const documents = await storage.getDocumentRequirements(req.params.id);
+      res.json(documents);
+    } catch (error) {
+      console.error('Error fetching document requirements:', error);
+      res.status(500).json({ message: "Failed to fetch document requirements" });
+    }
+  });
+
+  app.post('/api/workflow-steps/:id/documents', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const docData = {
+        workflowStepId: req.params.id,
+        ...req.body
+      };
+      const document = await storage.createDocumentRequirement(docData);
+      res.json(document);
+    } catch (error) {
+      console.error('Error creating document requirement:', error);
+      res.status(500).json({ message: "Failed to create document requirement" });
+    }
+  });
+
+  app.put('/api/document-requirements/:id', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const document = await storage.updateDocumentRequirement(req.params.id, req.body);
+      res.json(document);
+    } catch (error) {
+      console.error('Error updating document requirement:', error);
+      res.status(500).json({ message: "Failed to update document requirement" });
+    }
+  });
+
+  app.delete('/api/document-requirements/:id', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const success = await storage.deleteDocumentRequirement(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Document requirement not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting document requirement:', error);
+      res.status(500).json({ message: "Failed to delete document requirement" });
+    }
+  });
+
+  // Checklist Items CRUD API endpoints
+  app.get('/api/workflow-steps/:id/checklist', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const checklist = await storage.getChecklistItems(req.params.id);
+      res.json(checklist);
+    } catch (error) {
+      console.error('Error fetching checklist items:', error);
+      res.status(500).json({ message: "Failed to fetch checklist items" });
+    }
+  });
+
+  app.post('/api/workflow-steps/:id/checklist', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const checklistData = {
+        workflowStepId: req.params.id,
+        ...req.body
+      };
+      const item = await storage.createChecklistItem(checklistData);
+      res.json(item);
+    } catch (error) {
+      console.error('Error creating checklist item:', error);
+      res.status(500).json({ message: "Failed to create checklist item" });
+    }
+  });
+
+  app.put('/api/checklist-items/:id', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const item = await storage.updateChecklistItem(req.params.id, req.body);
+      res.json(item);
+    } catch (error) {
+      console.error('Error updating checklist item:', error);
+      res.status(500).json({ message: "Failed to update checklist item" });
+    }
+  });
+
+  app.delete('/api/checklist-items/:id', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const success = await storage.deleteChecklistItem(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Checklist item not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting checklist item:', error);
+      res.status(500).json({ message: "Failed to delete checklist item" });
+    }
+  });
+
+  // Get complete workflow with all stages, documents, and checklists
+  app.get('/api/workflow-templates/:id/complete', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const template = await storage.getWorkflowTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ message: "Workflow template not found" });
+      }
+
+      const steps = await storage.getWorkflowSteps(req.params.id);
+      
+      // Get documents and checklists for each step
+      const stepsWithDetails = await Promise.all(steps.map(async (step) => {
+        const [documents, checklist] = await Promise.all([
+          storage.getDocumentRequirements(step.id),
+          storage.getChecklistItems(step.id)
+        ]);
+        
+        return {
+          ...step,
+          documentRequirements: documents,
+          checklistItems: checklist
+        };
+      }));
+
+      res.json({
+        ...template,
+        steps: stepsWithDetails
+      });
+    } catch (error) {
+      console.error('Error fetching complete workflow:', error);
+      res.status(500).json({ message: "Failed to fetch complete workflow" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

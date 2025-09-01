@@ -410,7 +410,7 @@ export default function SettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             General
@@ -434,6 +434,10 @@ export default function SettingsPage() {
           <TabsTrigger value="company" className="flex items-center gap-2">
             <Building className="h-4 w-4" />
             Company
+          </TabsTrigger>
+          <TabsTrigger value="workflow-management" className="flex items-center gap-2">
+            <ListChecks className="h-4 w-4" />
+            Workflow Management
           </TabsTrigger>
         </TabsList>
 
@@ -986,6 +990,35 @@ export default function SettingsPage() {
               <p>Company information content goes here.</p>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Workflow Management Tab */}
+        <TabsContent value="workflow-management" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium">Workflow Management</h3>
+              <p className="text-sm text-muted-foreground">
+                Manage workflow templates, stages, documents, and checklist items with task ownership assignments.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Workflow className="w-5 h-5" />
+                  Workflow Templates
+                </CardTitle>
+                <CardDescription>
+                  Configure immigration workflow processes with detailed stages and requirements
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <WorkflowManagement />
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -1980,5 +2013,205 @@ function ChecklistItemForm({ item, onSubmit, onCancel }: {
         </Button>
       </div>
     </form>
+  );
+}
+
+// Workflow Management Component  
+function WorkflowManagement() {
+  const [selectedWorkflow, setSelectedWorkflow] = useState(null);
+  const [expandedStage, setExpandedStage] = useState(null);
+  
+  const { data: workflows, isLoading } = useQuery({
+    queryKey: ['/api/workflow-templates'],
+    enabled: true
+  });
+
+  const { data: completeWorkflow } = useQuery({
+    queryKey: ['/api/workflow-templates', selectedWorkflow?.id, 'complete'],
+    enabled: !!selectedWorkflow?.id
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center space-y-2">
+          <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-sm text-muted-foreground">Loading workflows...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Workflow Selection */}
+      <div className="grid gap-4">
+        <Label>Select Workflow Template</Label>
+        <Select 
+          value={selectedWorkflow?.id || ''} 
+          onValueChange={(value) => {
+            const workflow = workflows?.find(w => w.id === value);
+            setSelectedWorkflow(workflow);
+            setExpandedStage(null);
+          }}
+        >
+          <SelectTrigger data-testid="select-workflow">
+            <SelectValue placeholder="Choose a workflow to manage..." />
+          </SelectTrigger>
+          <SelectContent>
+            {workflows?.map((workflow) => (
+              <SelectItem key={workflow.id} value={workflow.id}>
+                {workflow.name} ({workflow.estimatedDurationDays} days)
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Selected Workflow Details */}
+      {selectedWorkflow && completeWorkflow && (
+        <div className="space-y-6">
+          <div className="border rounded-lg p-4 bg-muted/50">
+            <h4 className="font-medium">{completeWorkflow.name}</h4>
+            <p className="text-sm text-muted-foreground mt-1">{completeWorkflow.description}</p>
+            <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+              <span>Duration: {completeWorkflow.estimatedDurationDays} days</span>
+              <span>Stages: {completeWorkflow.steps?.length || 0}</span>
+              <span>Type: {completeWorkflow.executionType}</span>
+            </div>
+          </div>
+
+          {/* Workflow Stages */}
+          <div className="space-y-4">
+            <h4 className="font-medium flex items-center gap-2">
+              <ListChecks className="w-4 h-4" />
+              Workflow Stages
+            </h4>
+            
+            {completeWorkflow.steps?.length > 0 ? (
+              <div className="space-y-2">
+                {completeWorkflow.steps
+                  .sort((a, b) => a.order - b.order)
+                  .map((stage, index) => (
+                  <Card key={stage.id} className="border-l-4 border-l-blue-500">
+                    <CardHeader 
+                      className="pb-3 cursor-pointer"
+                      onClick={() => setExpandedStage(expandedStage === stage.id ? null : stage.id)}
+                      data-testid={`stage-header-${stage.id}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <CardTitle className="text-base">{stage.name}</CardTitle>
+                            <CardDescription className="text-sm">
+                              {stage.description} • {stage.estimatedDays} days • Assigned to: {stage.assignedRole}
+                            </CardDescription>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {stage.requiresApproval && (
+                            <Badge variant="secondary" className="text-xs">
+                              <Shield className="w-3 h-3 mr-1" />
+                              Requires Approval
+                            </Badge>
+                          )}
+                          <ChevronDown className={`w-4 h-4 transition-transform ${expandedStage === stage.id ? 'rotate-180' : ''}`} />
+                        </div>
+                      </div>
+                    </CardHeader>
+
+                    {expandedStage === stage.id && (
+                      <CardContent className="pt-0">
+                        <div className="grid md:grid-cols-2 gap-6">
+                          {/* Document Requirements */}
+                          <div className="space-y-3">
+                            <h5 className="font-medium flex items-center gap-2">
+                              <FileText className="w-4 h-4" />
+                              Document Requirements ({stage.documentRequirements?.length || 0})
+                            </h5>
+                            {stage.documentRequirements?.length > 0 ? (
+                              <div className="space-y-2">
+                                {stage.documentRequirements
+                                  .sort((a, b) => a.order - b.order)
+                                  .map((doc) => (
+                                  <div key={doc.id} className="border rounded p-3 space-y-2">
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <div className="font-medium text-sm">{doc.title}</div>
+                                        <div className="text-xs text-muted-foreground">{doc.description}</div>
+                                      </div>
+                                      {doc.isRequired && (
+                                        <Badge variant="destructive" className="text-xs ml-2">Required</Badge>
+                                      )}
+                                    </div>
+                                    <div className="flex justify-between text-xs text-muted-foreground">
+                                      <span>Submitted by: <strong>{doc.submittedBy}</strong></span>
+                                      <span>Types: {JSON.parse(doc.acceptedFileTypes || '[]').join(', ')}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">No document requirements defined</p>
+                            )}
+                          </div>
+
+                          {/* Checklist Items */}
+                          <div className="space-y-3">
+                            <h5 className="font-medium flex items-center gap-2">
+                              <CheckSquare className="w-4 h-4" />
+                              Checklist Items ({stage.checklistItems?.length || 0})
+                            </h5>
+                            {stage.checklistItems?.length > 0 ? (
+                              <div className="space-y-2">
+                                {stage.checklistItems
+                                  .sort((a, b) => a.order - b.order)
+                                  .map((item) => (
+                                  <div key={item.id} className="border rounded p-3 space-y-2">
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <div className="font-medium text-sm">{item.title}</div>
+                                        <div className="text-xs text-muted-foreground">{item.description}</div>
+                                      </div>
+                                      {item.isRequired && (
+                                        <Badge variant="destructive" className="text-xs ml-2">Required</Badge>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      Assigned to: <strong>{item.assignedRole}</strong>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">No checklist items defined</p>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center p-8 border border-dashed rounded-lg">
+                <ListChecks className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No stages defined for this workflow</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!selectedWorkflow && (
+        <div className="text-center p-8 border border-dashed rounded-lg">
+          <Workflow className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">Select a workflow template to view and manage its stages</p>
+        </div>
+      )}
+    </div>
   );
 }
