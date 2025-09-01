@@ -8,7 +8,7 @@ import { requireRole, devRbacBypass } from "./middleware/rbac";
 import { storage } from "./storage";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
-import { users, clientProfiles, workers, stages, assignments } from "../shared/schema";
+import { users, clientProfiles, workers, stages, assignments, sessions, requirements, documentFiles, auditLogs } from "../shared/schema";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { setupSecurityHeaders, createRateLimiter, validateInput, createEmergencyAdminAccess } from "./middleware/security";
 import { createStructuredLogger, performanceMonitoring, errorTracking, setupHealthChecks } from "./middleware/monitoring";
@@ -788,19 +788,19 @@ async function testDataConsistency() {
         description: 'Assignments with invalid worker references'
       },
       {
-        name: 'assignments_stage_fk',
-        query: sql`SELECT a.id as assignment_id, a."currentStageId" as stage_id 
+        name: 'assignments_requirement_fk',
+        query: sql`SELECT a.id as assignment_id, a."requirement_id" as requirement_id 
                    FROM assignments a 
-                   LEFT JOIN stages ws ON a."currentStageId" = ws.id 
-                   WHERE a."currentStageId" IS NOT NULL AND ws.id IS NULL`,
-        description: 'Assignments with invalid stage references'
+                   LEFT JOIN requirements r ON a."requirement_id" = r.id 
+                   WHERE a."requirement_id" IS NOT NULL AND r.id IS NULL`,
+        description: 'Assignments with invalid requirement references'
       },
       {
         name: 'documents_assignment_fk',
-        query: sql`SELECT d.id as document_id, d."assignmentId" as assignment_id 
+        query: sql`SELECT d.id as document_id, d."assignment_id" as assignment_id 
                    FROM document_files d 
-                   LEFT JOIN assignments a ON d."assignmentId" = a.id 
-                   WHERE d."assignmentId" IS NOT NULL AND a.id IS NULL`,
+                   LEFT JOIN assignments a ON d."assignment_id" = a.id 
+                   WHERE d."assignment_id" IS NOT NULL AND a.id IS NULL`,
         description: 'Documents with invalid assignment references'
       }
     ];
@@ -840,16 +840,17 @@ async function testDataConsistency() {
         name: 'orphaned_audit_logs',
         query: sql`SELECT COUNT(*) as count 
                    FROM audit_logs al 
-                   LEFT JOIN users u ON al."userId" = u.id 
-                   WHERE al."userId" IS NOT NULL AND u.id IS NULL`,
+                   LEFT JOIN users u ON al."user_id" = u.id 
+                   WHERE al."user_id" IS NOT NULL AND u.id IS NULL`,
         description: 'Audit logs with invalid user references'
       },
       {
         name: 'invalid_assignment_dates',
-        query: sql`SELECT id, "startDate", "dueDate" 
+        query: sql`SELECT id, "submitted_at", "approved_at" 
                    FROM assignments 
-                   WHERE "startDate" > "dueDate"`,
-        description: 'Assignments with start date after due date'
+                   WHERE "submitted_at" IS NOT NULL AND "approved_at" IS NOT NULL 
+                   AND "submitted_at" > "approved_at"`,
+        description: 'Assignments with submission date after approval date'
       },
       {
         name: 'workers_without_assignments',
@@ -891,11 +892,11 @@ async function testDataConsistency() {
     const businessRuleChecks = [
       {
         name: 'active_assignments_per_worker',
-        query: sql`SELECT w.id, w."fullName", COUNT(a.id) as active_assignments 
+        query: sql`SELECT w.id, CONCAT(w."first_name", ' ', w."last_name") as full_name, COUNT(a.id) as active_assignments 
                    FROM workers w 
                    INNER JOIN assignments a ON w.id = a."worker_id" 
-                   WHERE a.status = 'IN_PROGRESS' 
-                   GROUP BY w.id, w."fullName" 
+                   WHERE a.status = 'ACCEPTED' 
+                   GROUP BY w.id, w."first_name", w."last_name" 
                    HAVING COUNT(a.id) > 5`,
         description: 'Workers with too many active assignments (>5)'
       },
@@ -903,7 +904,8 @@ async function testDataConsistency() {
         name: 'overdue_assignments',
         query: sql`SELECT COUNT(*) as count 
                    FROM assignments 
-                   WHERE "dueDate" < CURRENT_DATE AND status != 'COMPLETED'`,
+                   WHERE "submitted_at" IS NOT NULL AND "approved_at" IS NULL 
+                   AND "submitted_at" < (CURRENT_DATE - INTERVAL '30 days')`,
         description: 'Overdue assignments not marked as completed'
       }
     ];
@@ -974,7 +976,7 @@ async function testAuthSystem() {
     
     // Test 1: Session configuration validation
     try {
-      const sessionCheck = await db.execute(sql`SELECT COUNT(*) as count FROM sessions WHERE "expires_at" > NOW()`);
+      const sessionCheck = await db.execute(sql`SELECT COUNT(*) as count FROM sessions WHERE "expire" > NOW()`);
       const activeSessions = sessionCheck.rows[0]?.count || 0;
       checks.push({
         name: 'session_storage',
@@ -1130,7 +1132,7 @@ async function testWorkflowTemplates() {
       const stageValidation = await db.execute(sql`
         SELECT 
           COUNT(*) as total_stages,
-          COUNT(CASE WHEN name IS NULL OR name = '' THEN 1 END) as stages_without_name,
+          COUNT(CASE WHEN title IS NULL OR title = '' THEN 1 END) as stages_without_name,
           COUNT(CASE WHEN description IS NULL OR description = '' THEN 1 END) as stages_without_description,
           COUNT(CASE WHEN "order" IS NULL THEN 1 END) as stages_without_order,
           COUNT(DISTINCT "order") as unique_orders,
@@ -1216,8 +1218,8 @@ async function testWorkflowTemplates() {
       const assignmentStageCheck = await db.execute(sql`
         SELECT 
           COUNT(*) as total_assignments,
-          COUNT(CASE WHEN "currentStageId" IS NULL THEN 1 END) as assignments_without_stage,
-          COUNT(DISTINCT "currentStageId") as unique_stages_used
+          COUNT(CASE WHEN "requirement_id" IS NULL THEN 1 END) as assignments_without_requirement,
+          COUNT(DISTINCT "requirement_id") as unique_requirements_used
         FROM assignments
       `);
       
@@ -1226,7 +1228,8 @@ async function testWorkflowTemplates() {
       const assignmentsWithoutStage = Number(stats?.assignments_without_stage || 0);
       const uniqueStagesUsed = Number(stats?.unique_stages_used || 0);
       
-      if (assignmentsWithoutStage > 0) issues.push(`${assignmentsWithoutStage} assignments without current stage`);
+      const assignmentsWithoutRequirement = Number(stats?.assignments_without_requirement || 0);
+      if (assignmentsWithoutRequirement > 0) issues.push(`${assignmentsWithoutRequirement} assignments without requirement`);
       
       checks.push({
         name: 'assignment_stage_relationship',
@@ -1251,18 +1254,19 @@ async function testWorkflowTemplates() {
       const progressionCheck = await db.execute(sql`
         SELECT 
           ws.id,
-          ws.name,
+          ws.title,
           ws."order",
           COUNT(a.id) as assignments_in_stage
         FROM stages ws
-        LEFT JOIN assignments a ON ws.id = a."currentStageId"
-        GROUP BY ws.id, ws.name, ws."order"
+        LEFT JOIN requirements r ON ws.id = r."stage_id"
+        LEFT JOIN assignments a ON r.id = a."requirement_id"
+        GROUP BY ws.id, ws.title, ws."order"
         ORDER BY ws."order"
       `);
       
       const stageDistribution = progressionCheck.rows.map((row: any) => ({
         stageId: row.id,
-        stageName: row.name,
+        stageName: row.title,
         order: Number(row.order),
         assignmentCount: Number(row.assignments_in_stage)
       }));
@@ -1330,50 +1334,128 @@ async function testBackgroundServices() {
     const issues = [];
     const checks = [];
     
-    // Test 1: Email service configuration validation
-    const emailConfigs = {
-      nodemailer: {
-        configured: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.EMAIL_HOST),
-        details: {
-          hasUser: !!process.env.EMAIL_USER,
-          hasPassword: !!process.env.EMAIL_PASS,
-          hasHost: !!process.env.EMAIL_HOST,
-          port: process.env.EMAIL_PORT || 'default'
-        }
-      },
-      resend: {
-        configured: !!process.env.RESEND_API_KEY,
-        details: {
-          hasApiKey: !!process.env.RESEND_API_KEY
+    // Test 1: REAL Email service testing - Actually attempt to send a test email
+    let emailServiceWorking = false;
+    let emailTestResults = { error: 'No email service configured' };
+    
+    try {
+      // Test actual email sending capability
+      if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        const nodemailer = await import('nodemailer');
+        const transporter = nodemailer.createTransporter({
+          host: process.env.EMAIL_HOST,
+          port: parseInt(process.env.EMAIL_PORT || '587'),
+          secure: process.env.EMAIL_PORT === '465',
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+          },
+          connectionTimeout: 5000,
+          greetingTimeout: 5000,
+          socketTimeout: 5000
+        });
+        
+        // Actually verify the connection
+        await transporter.verify();
+        emailServiceWorking = true;
+        emailTestResults = { 
+          service: 'nodemailer', 
+          host: process.env.EMAIL_HOST,
+          verified: true,
+          responseTime: Date.now() - startTime 
+        };
+      } else if (process.env.RESEND_API_KEY) {
+        // Test Resend API connectivity
+        const response = await fetch('https://api.resend.com/domains', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          emailServiceWorking = true;
+          emailTestResults = { 
+            service: 'resend', 
+            verified: true,
+            responseTime: response.headers.get('x-response-time') || 'unknown'
+          };
+        } else {
+          emailTestResults = { 
+            service: 'resend', 
+            verified: false, 
+            error: `API returned ${response.status}` 
+          };
         }
       }
-    };
+    } catch (error) {
+      emailTestResults = { 
+        verified: false, 
+        error: error instanceof Error ? error.message : String(error) 
+      };
+    }
     
-    const hasAnyEmailService = emailConfigs.nodemailer.configured || emailConfigs.resend.configured;
-    if (!hasAnyEmailService) {
-      issues.push('No email service configured (neither Nodemailer nor Resend)');
+    if (!emailServiceWorking) {
+      issues.push('Email service connectivity test failed');
     }
     
     checks.push({
       name: 'email_services',
-      success: hasAnyEmailService,
-      details: emailConfigs
+      success: emailServiceWorking,
+      details: emailTestResults
     });
     
-    // Test 2: Job queue and Redis configuration
-    const redisConfig = {
-      configured: !!process.env.REDIS_URL,
-      url: process.env.REDIS_URL ? 'configured' : 'missing'
-    };
+    // Test 2: REAL Redis connectivity testing - Actually connect to Redis
+    let redisWorking = false;
+    let redisTestResults = { error: 'Redis URL not configured' };
     
-    if (!redisConfig.configured) {
-      issues.push('Redis URL not configured for job queues');
+    try {
+      if (process.env.REDIS_URL) {
+        const Redis = await import('ioredis');
+        const redis = new Redis.default(process.env.REDIS_URL, {
+          connectTimeout: 5000,
+          lazyConnect: true
+        });
+        
+        // Actually test Redis connection with a real operation
+        const testKey = `health_check_${Date.now()}`;
+        await redis.connect();
+        await redis.set(testKey, 'test_value', 'EX', 60); // Set with 60s expiry
+        const retrievedValue = await redis.get(testKey);
+        await redis.del(testKey); // Clean up
+        await redis.disconnect();
+        
+        if (retrievedValue === 'test_value') {
+          redisWorking = true;
+          redisTestResults = { 
+            connected: true, 
+            testOperation: 'successful',
+            responseTime: Date.now() - startTime 
+          };
+        } else {
+          redisTestResults = { 
+            connected: true, 
+            testOperation: 'failed',
+            error: 'Could not retrieve test value' 
+          };
+        }
+      }
+    } catch (error) {
+      redisTestResults = { 
+        connected: false, 
+        error: error instanceof Error ? error.message : String(error) 
+      };
+    }
+    
+    if (!redisWorking) {
+      issues.push('Redis connectivity test failed');
     }
     
     checks.push({
       name: 'job_queue',
-      success: redisConfig.configured,
-      details: redisConfig
+      success: redisWorking,
+      details: redisTestResults
     });
     
     // Test 3: Document processing service validation
@@ -1381,9 +1463,9 @@ async function testBackgroundServices() {
       const documentStats = await db.execute(sql`
         SELECT 
           COUNT(*) as total_documents,
-          COUNT(CASE WHEN status = 'PROCESSING' THEN 1 END) as processing_documents,
-          COUNT(CASE WHEN status = 'FAILED' THEN 1 END) as failed_documents,
-          COUNT(CASE WHEN "uploadedAt" < NOW() - INTERVAL '24 hours' AND status = 'PROCESSING' THEN 1 END) as stuck_documents
+          COUNT(CASE WHEN status = 'PENDING' THEN 1 END) as processing_documents,
+          COUNT(CASE WHEN status = 'REJECTED' THEN 1 END) as failed_documents,
+          COUNT(CASE WHEN "created_at" < NOW() - INTERVAL '24 hours' AND status = 'PENDING' THEN 1 END) as stuck_documents
         FROM document_files
       `);
       
@@ -1423,11 +1505,11 @@ async function testBackgroundServices() {
       const auditStats = await db.execute(sql`
         SELECT 
           COUNT(*) as total_logs,
-          COUNT(CASE WHEN "timestamp" >= NOW() - INTERVAL '1 hour' THEN 1 END) as recent_logs,
-          COUNT(CASE WHEN "timestamp" >= NOW() - INTERVAL '24 hours' THEN 1 END) as daily_logs,
-          COUNT(DISTINCT "userId") as unique_users_logged
+          COUNT(CASE WHEN "created_at" >= NOW() - INTERVAL '1 hour' THEN 1 END) as recent_logs,
+          COUNT(CASE WHEN "created_at" >= NOW() - INTERVAL '24 hours' THEN 1 END) as daily_logs,
+          COUNT(DISTINCT "user_id") as unique_users_logged
         FROM audit_logs
-        WHERE "timestamp" >= NOW() - INTERVAL '7 days'
+        WHERE "created_at" >= NOW() - INTERVAL '7 days'
       `);
       
       const stats = auditStats.rows[0];
@@ -1480,7 +1562,7 @@ async function testBackgroundServices() {
     
     const executionTime = Date.now() - startTime;
     const allChecksPassed = checks.every(check => check.success);
-    const hasMinimumServices = hasAnyEmailService && redisConfig.configured;
+    const hasMinimumServices = emailServiceWorking && redisWorking;
     
     return {
       success: allChecksPassed && hasMinimumServices,
