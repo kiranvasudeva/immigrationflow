@@ -1128,6 +1128,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Health Check Routes
+  app.get('/api/health-check/status', async (req, res) => {
+    try {
+      const { HealthCheckOrchestrator } = await import('./healthCheckOrchestrator');
+      const orchestrator = new HealthCheckOrchestrator();
+      const status = await orchestrator.runQuickCheck();
+      res.json(status);
+    } catch (error) {
+      console.error('Health check status error:', error);
+      res.status(500).json({ 
+        status: 'error', 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+
+  app.post('/api/health-check/run-all', async (req, res) => {
+    try {
+      const { HealthCheckOrchestrator } = await import('./healthCheckOrchestrator');
+      const orchestrator = new HealthCheckOrchestrator();
+      await orchestrator.runAllTests(res);
+    } catch (error) {
+      console.error('Health check run error:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          error: error instanceof Error ? error.message : 'Failed to run health checks' 
+        });
+      }
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

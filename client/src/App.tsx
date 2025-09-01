@@ -31,6 +31,7 @@ import PaymentsPage from "@/pages/payments";
 import WorkersPage from "@/pages/workers";
 import ClientsPage from "@/pages/clients";
 import WorkflowAssignmentsPage from "@/pages/workflow-assignments";
+import HealthCheckPage from "@/pages/health-check";
 import { User } from "@shared/schema";
 
 function Router() {
@@ -94,6 +95,7 @@ function Router() {
                 <Route path="/payments" component={PaymentsPage} />
                 <Route path="/deadlines" component={DeadlinesPage} />
                 <Route path="/settings" component={SettingsPage} />
+                <Route path="/health-check" component={HealthCheckPage} />
                 <Route component={NotFound} />
               </Switch>
             </SidebarInset>
