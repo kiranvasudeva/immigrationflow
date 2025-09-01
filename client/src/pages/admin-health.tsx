@@ -144,7 +144,12 @@ export default function AdminHealthPage() {
 
     if (!isPaused) {
       setProgress(100);
-      addLog('system', 'All health checks completed successfully!', 'success');
+      const hasAnyFailures = results.some(r => !r.success);
+      if (hasAnyFailures) {
+        addLog('system', 'Health checks completed with issues detected.', 'warning');
+      } else {
+        addLog('system', 'All health checks completed successfully!', 'success');
+      }
     }
     
     setIsRunning(false);
@@ -160,7 +165,12 @@ export default function AdminHealthPage() {
       runRemainingTests(remainingTests);
     } else {
       setIsRunning(false);
-      addLog('system', 'All tests completed.', 'info');
+      const hasAnyFailures = results.some(r => !r.success);
+      if (hasAnyFailures) {
+        addLog('system', 'All tests completed with issues detected.', 'warning');
+      } else {
+        addLog('system', 'All tests completed successfully!', 'success');
+      }
     }
   };
 
@@ -181,7 +191,12 @@ export default function AdminHealthPage() {
 
     if (!isPaused) {
       setProgress(100);
-      addLog('system', 'All health checks completed!', 'success');
+      const hasAnyFailures = results.some(r => !r.success);
+      if (hasAnyFailures) {
+        addLog('system', 'Remaining health checks completed with issues detected.', 'warning');
+      } else {
+        addLog('system', 'All remaining health checks completed successfully!', 'success');
+      }
     }
     
     setIsRunning(false);
