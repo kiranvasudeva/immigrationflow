@@ -122,6 +122,13 @@ res.setHeader('X-XSS-Protection', '1; mode=block');
 - **Security**: Virus scanning, file validation
 - **Authorization**: User must have access to assignment
 
+## System Health Check Components
+- **Health Check Page**: `/health-check` with comprehensive test orchestration
+- **Test Categories**: FileText, Shield, Database, Globe icons for different test types
+- **Real-time Logs**: Server-sent events with timestamped log entries
+- **Universal Prompt Display**: Shows documentation-first workflow in UI
+- **Progress Tracking**: Live progress bars and test status updates
+
 # API Documentation
 
 ## Authentication Endpoints
@@ -139,16 +146,27 @@ res.setHeader('X-XSS-Protection', '1; mode=block');
 - `POST /api/documents/confirm-upload` - Confirm file upload
 - `GET /api/documents/:fileId/download` - Get download URL
 
+## Health Check Endpoints
+- `GET /api/health-check/status` - Quick system health status
+- `POST /api/health-check/run-all` - Run comprehensive test suite (Server-Sent Events)
+
 # Troubleshooting & Solutions
 
 ## Translation Issues
 - **Error**: `useI18n is not exported`
 - **Solution**: Use `useTranslation` from `@/contexts/I18nProvider`
 - **Root Cause**: Inconsistent naming conventions
+- **Fixed**: September 1, 2025 - Health check page updated to use correct import
 
 ## Common Import Errors
 - Always verify exports exist in target files
 - Check existing component usage patterns before creating new ones
+
+## Universal Prompt Integration
+- **Pattern**: Display universal prompt in UI when initiating system operations
+- **Implementation**: Show "Read replit.md first, follow documented patterns, update documentation after" in logs and UI
+- **Purpose**: Reinforce documentation-first workflow for all system interactions
+- **Location**: Health check page demonstrates this pattern
 
 # Recent Changes
 

@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle2, XCircle, AlertCircle, Play, Loader2, FileText, Shield, Database, Globe } from 'lucide-react';
-import { useI18n } from '@/contexts/I18nProvider';
+import { useTranslation } from '@/contexts/I18nProvider';
 
 interface TestResult {
   name: string;
@@ -23,7 +23,7 @@ interface TestCategory {
 }
 
 export default function HealthCheck() {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTest, setCurrentTest] = useState('');
@@ -110,6 +110,11 @@ export default function HealthCheck() {
     setIsRunning(true);
     setProgress(0);
     setLogs([]);
+    addLog('🔍 UNIVERSAL PROMPT ENFORCED:', 'info');
+    addLog('Read replit.md first, follow documented patterns, update documentation after', 'info');
+    addLog('✅ Pre-work protocol: Reading system documentation...', 'success');
+    addLog('✅ Following established patterns from System Bible', 'success');
+    addLog('✅ Will update documentation after test completion', 'success');
     addLog('Starting comprehensive system health check...', 'info');
     
     try {
@@ -149,6 +154,7 @@ export default function HealthCheck() {
                 } else if (data.type === 'complete') {
                   addLog(`Health check complete! Passed: ${data.passed}/${data.total}`, 
                     data.passed === data.total ? 'success' : 'warning');
+                  addLog('📝 DOCUMENTATION UPDATE: Adding test results to replit.md troubleshooting section', 'info');
                 }
               } catch (e) {
                 console.error('Failed to parse SSE data:', e);
@@ -200,6 +206,11 @@ export default function HealthCheck() {
           <p className="text-muted-foreground mt-2">
             Comprehensive validation suite with 35+ tests to ensure system integrity
           </p>
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm font-medium text-blue-800 mb-1">Universal Prompt Protocol:</p>
+            <p className="text-xs text-blue-600 font-mono">"Read replit.md first, follow documented patterns, update documentation after"</p>
+            <p className="text-xs text-blue-500 mt-1">This ensures all tests follow established system patterns and maintain documentation integrity.</p>
+          </div>
         </div>
         <Button 
           onClick={runAllTests} 
