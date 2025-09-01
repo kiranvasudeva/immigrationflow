@@ -345,7 +345,7 @@ function WorkflowManagement() {
     mutationFn: async (data: any) => {
       console.log('Creating stage with data:', data);
       const response = await apiRequest('POST', '/api/workflow-steps', data);
-      return response;
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/workflow-templates', selectedWorkflow?.id, 'complete'] });
