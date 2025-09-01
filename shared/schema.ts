@@ -871,7 +871,7 @@ export const insertWorkerSchema = createInsertSchema(workers).pick({
 export const insertAssignmentSchema = createInsertSchema(assignments).pick({
   requirementId: true,
   clientProfileId: true,
-  employeeId: true,
+  workerId: true,
   assignedToRole: true,
   status: true,
   institution: true,
@@ -917,7 +917,7 @@ export const insertTemplateFieldSchema = createInsertSchema(templateFields).pick
 
 export const insertPaymentSchema = createInsertSchema(payments).pick({
   clientProfileId: true,
-  employeeId: true,
+  workerId: true,
   amount: true,
   currency: true,
   description: true,
@@ -944,7 +944,7 @@ export const insertInvitationSchema = createInsertSchema(invitations).pick({
   email: true,
   role: true,
   invitedByUserId: true,
-  employeeId: true,
+  workerId: true,
   clientProfileId: true,
   expiresAt: true,
 });
@@ -1001,7 +1001,7 @@ export const insertChecklistItemSchema = createInsertSchema(checklistItems).pick
 });
 
 export const insertWorkerWorkflowProgressSchema = createInsertSchema(workerWorkflowProgress).pick({
-  employeeId: true,
+  workerId: true,
   workflowTemplateId: true,
   currentStepId: true,
   status: true,

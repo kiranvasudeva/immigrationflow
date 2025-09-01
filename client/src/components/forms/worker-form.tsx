@@ -71,12 +71,12 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
       degreeField: initialData?.degreeField || "",
       graduationYear: initialData?.graduationYear || undefined,
       professionalCertifications: initialData?.professionalCertifications || "",
-      languageSkills: initialData?.languageSkills || "",
+      languageSkills: initialData?.languageSkills ? JSON.stringify(initialData.languageSkills) : "",
       
       // Employment Information
       jobTitle: initialData?.jobTitle || "",
       workExperience: initialData?.workExperience || "",
-      previousEmployers: initialData?.previousEmployers || "",
+      previousEmployers: initialData?.previousEmployers ? JSON.stringify(initialData.previousEmployers) : "",
       monthlyGrossSalary: initialData?.monthlyGrossSalary || undefined,
       workLocation: initialData?.workLocation || "",
       workSchedule: initialData?.workSchedule || "",
@@ -124,7 +124,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
   });
 
   // Handle date inputs - convert Date to string for input fields
-  const formatDateForInput = (date: Date | undefined) => {
+  const formatDateForInput = (date: Date | null | undefined) => {
     return date ? new Date(date).toISOString().split('T')[0] : '';
   };
 
@@ -711,7 +711,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
                     <FormItem>
                       <FormLabel>Language Skills</FormLabel>
                       <FormControl>
-                        <Textarea {...field} value={field.value || ''} placeholder="e.g., English (Native), Spanish (Fluent), French (Basic)" data-testid="textarea-language-skills" />
+                        <Textarea {...field} value={typeof field.value === 'string' ? field.value : (field.value ? JSON.stringify(field.value) : '')} placeholder="e.g., English (Native), Spanish (Fluent), French (Basic)" data-testid="textarea-language-skills" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -880,7 +880,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
                     <FormItem>
                       <FormLabel>Previous Employers</FormLabel>
                       <FormControl>
-                        <Textarea {...field} value={field.value || ''} placeholder="List previous employers" data-testid="textarea-previous-employers" />
+                        <Textarea {...field} value={typeof field.value === 'string' ? field.value : (field.value ? JSON.stringify(field.value) : '')} placeholder="List previous employers" data-testid="textarea-previous-employers" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -906,7 +906,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
                           <Checkbox
-                            checked={field.value}
+                            checked={field.value ?? false}
                             onCheckedChange={field.onChange}
                             data-testid="checkbox-previous-romanian-visa"
                           />
@@ -925,7 +925,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
                           <Checkbox
-                            checked={field.value}
+                            checked={field.value ?? false}
                             onCheckedChange={field.onChange}
                             data-testid="checkbox-previous-rejections"
                           />
@@ -974,7 +974,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
                           <Checkbox
-                            checked={field.value}
+                            checked={field.value ?? false}
                             onCheckedChange={field.onChange}
                             data-testid="checkbox-criminal-record"
                           />
@@ -1110,7 +1110,7 @@ export default function WorkerForm({ onSubmit, isLoading = false, initialData, c
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                       <FormControl>
                         <Checkbox
-                          checked={field.value}
+                          checked={field.value ?? false}
                           onCheckedChange={field.onChange}
                           data-testid="checkbox-family-in-romania"
                         />
