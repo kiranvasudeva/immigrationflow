@@ -11,6 +11,7 @@ import {
   Filter, 
   Eye, 
   Edit,
+  Trash2,
   ChevronDown,
   ChevronRight,
   Users,
@@ -26,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import WorkerList from '@/components/workers/worker-list';
 import { WorkerWorkflowDisplay } from '@/components/shared/WorkerWorkflowDisplay';
 import ClientWorkersDisplay from '@/components/clients/ClientWorkersDisplay';
@@ -172,6 +174,31 @@ export default function ClientsPage() {
       toast({
         title: "Error",
         description: "Failed to update client",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete client mutation (for ADMIN users only)
+  const deleteClientMutation = useMutation({
+    mutationFn: async (clientId: string) => {
+      const response = await fetch(`/api/clients/${clientId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete client');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
+      toast({
+        title: "Success",
+        description: "Client deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete client",
         variant: "destructive",
       });
     },
@@ -389,27 +416,63 @@ export default function ClientsPage() {
                         {showClientWorkers[client.id] ? 'Hide Workers' : 'View Workers'}
                       </Button>
                       {user?.role === 'ADMIN' && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            setEditClientForm({
-                              legalName: client.legalName,
-                              registrationNumber: client.registrationNumber,
-                              cui: client.cui,
-                              legalAddress: client.legalAddress,
-                              adminName: client.adminName,
-                              contactEmail: client.contactEmail,
-                              phoneNumber: client.phoneNumber,
-                              bankIban: client.bankIban,
-                              caen: client.caen
-                            });
-                            setEditingClient(client.id);
-                          }}
-                          data-testid={`button-edit-client-${client.id}`}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        <>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setEditClientForm({
+                                legalName: client.legalName,
+                                registrationNumber: client.registrationNumber,
+                                cui: client.cui,
+                                legalAddress: client.legalAddress,
+                                adminName: client.adminName,
+                                contactEmail: client.contactEmail,
+                                phoneNumber: client.phoneNumber,
+                                bankIban: client.bankIban,
+                                caen: client.caen
+                              });
+                              setEditingClient(client.id);
+                            }}
+                            data-testid={`button-edit-client-${client.id}`}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                data-testid={`button-delete-client-${client.id}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Client</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{client.legalName}"? This action cannot be undone.
+                                  All associated workers and assignments will also be deleted.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel data-testid={`button-cancel-delete-client-${client.id}`}>
+                                  Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => deleteClientMutation.mutate(client.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                  disabled={deleteClientMutation.isPending}
+                                  data-testid={`button-confirm-delete-client-${client.id}`}
+                                >
+                                  {deleteClientMutation.isPending ? 'Deleting...' : 'Delete'}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
                       )}
                     </div>
                   </div>

@@ -159,7 +159,7 @@ export default function ClientWorkersDisplay({
   };
 
   // Filter workers based on search term
-  const filteredWorkers = workers.filter((worker: Worker) => {
+  const filteredWorkers = (workers as Worker[]).filter((worker: Worker) => {
     if (!workerSearchTerm) return true;
     const searchLower = workerSearchTerm.toLowerCase();
     return (

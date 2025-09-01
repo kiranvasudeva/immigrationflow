@@ -252,6 +252,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create new client profile - only ADMIN and OWNER can create clients
+  app.post('/api/clients', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const clientData = req.body;
+      const client = await storage.createClientProfile(clientData);
+      res.status(201).json(client);
+    } catch (error) {
+      console.error('Error creating client:', error);
+      res.status(500).json({ message: "Failed to create client" });
+    }
+  });
+
+  // Update existing client profile - only ADMIN and OWNER can update clients
+  app.put('/api/clients/:clientId', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const { clientId } = req.params;
+      const clientData = req.body;
+      const updatedClient = await storage.updateClientProfile(clientId, clientData);
+      if (!updatedClient) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      res.json(updatedClient);
+    } catch (error) {
+      console.error('Error updating client:', error);
+      res.status(500).json({ message: "Failed to update client" });
+    }
+  });
+
+  // Delete client profile - only ADMIN can delete clients
+  app.delete('/api/clients/:clientId', isAuthenticated, requireRole('ADMIN'), async (req: any, res) => {
+    try {
+      const { clientId } = req.params;
+      const success = await storage.deleteClientProfile(clientId);
+      if (!success) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      res.json({ message: "Client deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      res.status(500).json({ message: "Failed to delete client" });
+    }
+  });
+
   // Dashboard stats API endpoint - only ADMIN and OWNER can view dashboard stats
   app.get('/api/dashboard/stats', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
