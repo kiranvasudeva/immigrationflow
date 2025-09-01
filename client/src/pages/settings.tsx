@@ -343,9 +343,18 @@ function WorkflowManagement() {
 
   const createStageMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log('Creating stage with data:', data);
-      const response = await apiRequest('POST', '/api/workflow-steps', data);
-      return response.json();
+      console.log('🚀 MUTATION TRIGGERED - Creating stage with data:', data);
+      console.log('🔍 Making API request to /api/workflow-steps');
+      try {
+        const response = await apiRequest('POST', '/api/workflow-steps', data);
+        console.log('✅ API response received:', response.status);
+        const result = await response.json();
+        console.log('✅ Response data:', result);
+        return result;
+      } catch (error) {
+        console.error('❌ API request failed:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/workflow-templates', selectedWorkflow?.id, 'complete'] });
@@ -1266,6 +1275,10 @@ function WorkflowManagement() {
             <div className="flex items-center gap-2">
               <Button 
                 onClick={() => {
+                  console.log('🔵 BUTTON CLICKED - Create Stage button pressed');
+                  console.log('🔵 Selected workflow:', selectedWorkflow?.id);
+                  console.log('🔵 Form data:', createStageData);
+                  
                   const stageData = {
                     workflowTemplateId: selectedWorkflow?.id,
                     name: createStageData.name,
@@ -1278,6 +1291,9 @@ function WorkflowManagement() {
                     approverRole: createStageData.approverRole || null,
                     dependencies: createStageData.dependencies || null
                   };
+                  
+                  console.log('🔵 Prepared stage data:', stageData);
+                  console.log('🔵 Calling mutation...');
                   createStageMutation.mutate(stageData);
                 }}
                 disabled={createStageMutation.isPending || !createStageData.name || !selectedWorkflow?.id || !createStageData.stepType || !createStageData.assignedRole}
