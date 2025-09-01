@@ -185,6 +185,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { clientId } = req.params;
       const workerData = { ...req.body, clientProfileId: clientId };
       
+      // Convert date strings to Date objects if they exist
+      if (workerData.dob) {
+        workerData.dob = new Date(workerData.dob);
+      }
+      if (workerData.passportExpiry) {
+        workerData.passportExpiry = new Date(workerData.passportExpiry);
+      }
+      if (workerData.passportIssueDate) {
+        workerData.passportIssueDate = new Date(workerData.passportIssueDate);
+      }
+      if (workerData.contractStartDate) {
+        workerData.contractStartDate = new Date(workerData.contractStartDate);
+      }
+      if (workerData.contractEndDate) {
+        workerData.contractEndDate = new Date(workerData.contractEndDate);
+      }
+      
       const worker = await storage.createWorker(workerData);
       res.status(201).json(worker);
     } catch (error: any) {
