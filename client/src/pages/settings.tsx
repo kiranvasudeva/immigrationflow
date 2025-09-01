@@ -269,8 +269,8 @@ export default function SettingsPage() {
         documentTypeId: template.id,
         isActive: template.isActive,
         executionType: 'sequential' as const,
-        stageOrder: template.steps?.map((step: any) => step.id) || [],
-        stages: template.steps?.map((step: any, index: number) => ({
+        stageOrder: template.stages?.map((step: any) => step.id) || [],
+        stages: template.stages?.map((step: any, index: number) => ({
           id: step.id,
           name: step.name,
           description: step.description || '',
