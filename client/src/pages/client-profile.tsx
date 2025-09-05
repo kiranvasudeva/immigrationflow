@@ -610,16 +610,40 @@ export default function ClientProfile() {
                                 <p className="text-xs text-gray-500">
                                   Expires: {new Date(worker.passportExpiry).toLocaleDateString()}
                                 </p>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => {
-                                    setSelectedWorkerId(worker.id);
-                                  }}
-                                  data-testid={`button-view-worker-${worker.id}`}
-                                >
-                                  View Details
-                                </Button>
+                                <div className="flex space-x-2">
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => {
+                                      setSelectedWorkerId(worker.id);
+                                      // Auto-enable edit mode when selecting worker
+                                      setTimeout(() => {
+                                        setIsEditingWorker(true);
+                                        const workerDataForEdit = {
+                                          ...worker,
+                                          dob: worker.dob ? new Date(worker.dob).toISOString().split('T')[0] : '',
+                                          passportExpiry: worker.passportExpiry ? new Date(worker.passportExpiry).toISOString().split('T')[0] : ''
+                                        };
+                                        setEditedWorkerData(workerDataForEdit);
+                                      }, 100);
+                                    }}
+                                    data-testid={`button-edit-worker-${worker.id}`}
+                                  >
+                                    <Edit className="h-4 w-4 mr-1" />
+                                    Edit
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setSelectedWorkerId(worker.id);
+                                    }}
+                                    data-testid={`button-view-worker-${worker.id}`}
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    View
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           ))}
