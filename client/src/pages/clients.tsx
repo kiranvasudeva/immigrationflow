@@ -423,18 +423,21 @@ export default function ClientsPage() {
                             variant="outline" 
                             size="sm"
                             onClick={() => {
+                              console.log('Edit button clicked for client:', client.id);
+                              console.log('Client data:', client);
                               setEditClientForm({
-                                legalName: client.legalName,
-                                registrationNumber: client.registrationNumber,
-                                cui: client.cui,
-                                legalAddress: client.legalAddress,
-                                adminName: client.adminName,
-                                contactEmail: client.contactEmail,
-                                phoneNumber: client.phoneNumber,
-                                bankIban: client.bankIban,
-                                caen: client.caen
+                                legalName: client.legalName || '',
+                                registrationNumber: client.registrationNumber || '',
+                                cui: client.cui || '',
+                                legalAddress: client.legalAddress || '',
+                                adminName: client.adminName || '',
+                                contactEmail: client.contactEmail || '',
+                                phoneNumber: client.phoneNumber || '',
+                                bankIban: client.bankIban || '',
+                                caen: client.caen || ''
                               });
                               setEditingClient(client.id);
+                              console.log('Edit form state set, editingClient:', client.id);
                             }}
                             data-testid={`button-edit-client-${client.id}`}
                           >
@@ -527,10 +530,11 @@ export default function ClientsPage() {
 
 
         {/* Edit Client Form */}
+        {console.log('Render: editingClient state:', editingClient)}
         {editingClient && (
           <Card className="border-2 border-blue-200 bg-blue-50">
             <CardHeader>
-              <CardTitle className="text-lg text-blue-800">Edit Client</CardTitle>
+              <CardTitle className="text-lg text-blue-800">Edit Client (ID: {editingClient})</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={(e) => {
