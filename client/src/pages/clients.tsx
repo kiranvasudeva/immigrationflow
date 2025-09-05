@@ -423,8 +423,18 @@ export default function ClientsPage() {
                             variant="outline" 
                             size="sm"
                             onClick={() => {
-                              console.log('Navigating to client profile:', `/clients/${client.id}`);
-                              setLocation(`/clients/${client.id}`);
+                              setEditClientForm({
+                                legalName: client.legalName,
+                                registrationNumber: client.registrationNumber,
+                                cui: client.cui,
+                                legalAddress: client.legalAddress,
+                                adminName: client.adminName,
+                                contactEmail: client.contactEmail,
+                                phoneNumber: client.phoneNumber,
+                                bankIban: client.bankIban,
+                                caen: client.caen
+                              });
+                              setEditingClient(client.id);
                             }}
                             data-testid={`button-edit-client-${client.id}`}
                           >
