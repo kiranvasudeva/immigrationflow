@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -51,6 +52,7 @@ export default function ClientsPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const [, setLocation] = useLocation();
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [showNewClientForm, setShowNewClientForm] = useState(false);
   const [editingClient, setEditingClient] = useState<string | null>(null);
@@ -421,18 +423,8 @@ export default function ClientsPage() {
                             variant="outline" 
                             size="sm"
                             onClick={() => {
-                              setEditClientForm({
-                                legalName: client.legalName,
-                                registrationNumber: client.registrationNumber,
-                                cui: client.cui,
-                                legalAddress: client.legalAddress,
-                                adminName: client.adminName,
-                                contactEmail: client.contactEmail,
-                                phoneNumber: client.phoneNumber,
-                                bankIban: client.bankIban,
-                                caen: client.caen
-                              });
-                              setEditingClient(client.id);
+                              console.log('Navigating to client profile:', `/clients/${client.id}`);
+                              setLocation(`/clients/${client.id}`);
                             }}
                             data-testid={`button-edit-client-${client.id}`}
                           >
