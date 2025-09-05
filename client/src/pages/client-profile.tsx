@@ -741,11 +741,12 @@ export default function ClientProfile() {
                                 size="sm"
                                 onClick={() => {
                                   if (editedWorkerData) {
-                                    // Convert date strings to Date objects for API
+                                    // Send date strings as-is, backend will handle conversion
+                                    console.log('Sending worker data:', editedWorkerData);
                                     const dataToSend = {
                                       ...editedWorkerData,
-                                      dob: editedWorkerData.dob ? new Date(editedWorkerData.dob) : undefined,
-                                      passportExpiry: editedWorkerData.passportExpiry ? new Date(editedWorkerData.passportExpiry) : undefined
+                                      dob: editedWorkerData.dob || undefined,
+                                      passportExpiry: editedWorkerData.passportExpiry || undefined
                                     };
                                     updateWorkerMutation.mutate(dataToSend);
                                   }

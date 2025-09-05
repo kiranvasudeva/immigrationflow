@@ -311,6 +311,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { workerId } = req.params;
       const workerData = { ...req.body };
+      
+      console.log('Raw worker data received:', JSON.stringify(workerData, null, 2));
 
       // If clientId is provided, set clientProfileId for database consistency
       if (workerData.clientId) {
@@ -319,20 +321,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Convert date strings to Date objects if they exist
       if (workerData.dob) {
-        workerData.dob = new Date(workerData.dob);
+        if (typeof workerData.dob === 'string') {
+          workerData.dob = new Date(workerData.dob);
+          console.log('Converted dob from string to Date:', workerData.dob);
+        }
       }
       if (workerData.passportExpiry) {
-        workerData.passportExpiry = new Date(workerData.passportExpiry);
+        if (typeof workerData.passportExpiry === 'string') {
+          workerData.passportExpiry = new Date(workerData.passportExpiry);
+          console.log('Converted passportExpiry from string to Date:', workerData.passportExpiry);
+        }
       }
       if (workerData.passportIssueDate) {
-        workerData.passportIssueDate = new Date(workerData.passportIssueDate);
+        if (typeof workerData.passportIssueDate === 'string') {
+          workerData.passportIssueDate = new Date(workerData.passportIssueDate);
+        }
       }
       if (workerData.contractStartDate) {
-        workerData.contractStartDate = new Date(workerData.contractStartDate);
+        if (typeof workerData.contractStartDate === 'string') {
+          workerData.contractStartDate = new Date(workerData.contractStartDate);
+        }
       }
       if (workerData.contractEndDate) {
-        workerData.contractEndDate = new Date(workerData.contractEndDate);
+        if (typeof workerData.contractEndDate === 'string') {
+          workerData.contractEndDate = new Date(workerData.contractEndDate);
+        }
       }
+      
+      console.log('Worker data after date conversion:', JSON.stringify(workerData, null, 2));
 
       const updatedWorker = await storage.updateWorker(workerId, workerData);
       if (!updatedWorker) {
@@ -341,6 +357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedWorker);
     } catch (error) {
       console.error('Error updating worker:', error);
+      console.error('Error details:', (error as Error).message);
       res.status(500).json({ message: "Failed to update worker", error: (error as Error).message });
     }
   });
