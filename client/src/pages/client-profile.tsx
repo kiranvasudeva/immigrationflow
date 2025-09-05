@@ -253,7 +253,14 @@ export default function ClientProfile() {
   }, [client]);
 
   const handleSave = async () => {
-    await updateClientMutation.mutateAsync(formData);
+    try {
+      console.log('Saving client data:', formData);
+      await updateClientMutation.mutateAsync(formData);
+      setIsEditing(false);
+      console.log('Client save successful');
+    } catch (error) {
+      console.error('Client save error:', error);
+    }
   };
 
   const handleCancel = () => {
@@ -332,7 +339,10 @@ export default function ClientProfile() {
                 <div className="flex items-center space-x-2">
                   {!isEditing ? (
                     <Button
-                      onClick={() => setIsEditing(true)}
+                      onClick={() => {
+                        console.log('Edit Client button clicked');
+                        setIsEditing(true);
+                      }}
                       disabled={clientLoading}
                       data-testid="button-edit-client"
                     >
