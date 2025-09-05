@@ -709,7 +709,13 @@ export default function ClientProfile() {
                               size="sm"
                               onClick={() => {
                                 setIsEditingWorker(true);
-                                setEditedWorkerData({ ...selectedWorker });
+                                // Format dates for input fields when starting edit
+                                const workerDataForEdit = {
+                                  ...selectedWorker,
+                                  dob: selectedWorker.dob ? new Date(selectedWorker.dob).toISOString().split('T')[0] : '',
+                                  passportExpiry: selectedWorker.passportExpiry ? new Date(selectedWorker.passportExpiry).toISOString().split('T')[0] : ''
+                                };
+                                setEditedWorkerData(workerDataForEdit);
                               }}
                               data-testid="button-edit-worker"
                             >
@@ -735,7 +741,13 @@ export default function ClientProfile() {
                                 size="sm"
                                 onClick={() => {
                                   if (editedWorkerData) {
-                                    updateWorkerMutation.mutate(editedWorkerData);
+                                    // Convert date strings to Date objects for API
+                                    const dataToSend = {
+                                      ...editedWorkerData,
+                                      dob: editedWorkerData.dob ? new Date(editedWorkerData.dob) : undefined,
+                                      passportExpiry: editedWorkerData.passportExpiry ? new Date(editedWorkerData.passportExpiry) : undefined
+                                    };
+                                    updateWorkerMutation.mutate(dataToSend);
                                   }
                                 }}
                                 disabled={updateWorkerMutation.isPending}
@@ -826,12 +838,21 @@ export default function ClientProfile() {
                                   <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Date of Birth
                                   </label>
-                                  <div className="flex items-center space-x-2">
-                                    <Calendar className="h-4 w-4 text-gray-500" />
-                                    <p className="text-gray-900" data-testid="text-worker-dob">
-                                      {new Date(selectedWorker.dob).toLocaleDateString()}
-                                    </p>
-                                  </div>
+                                  {isEditingWorker && editedWorkerData ? (
+                                    <Input
+                                      type="date"
+                                      value={editedWorkerData.dob}
+                                      onChange={(e) => setEditedWorkerData({ ...editedWorkerData, dob: e.target.value })}
+                                      data-testid="input-worker-dob"
+                                    />
+                                  ) : (
+                                    <div className="flex items-center space-x-2">
+                                      <Calendar className="h-4 w-4 text-gray-500" />
+                                      <p className="text-gray-900" data-testid="text-worker-dob">
+                                        {new Date(selectedWorker.dob).toLocaleDateString()}
+                                      </p>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
