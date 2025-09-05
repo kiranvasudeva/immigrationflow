@@ -4,8 +4,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -300,15 +298,8 @@ export default function ClientProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex h-screen">
-        <Sidebar userRole={user.role} onSectionChange={() => {}} />
-        
-        <div className="flex-1 flex flex-col min-w-0">
-          <Header title="Client Profile" subtitle="Manage client information" />
-          
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-4xl mx-auto space-y-6">
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="max-w-4xl mx-auto space-y-6">
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
@@ -1090,9 +1081,6 @@ export default function ClientProfile() {
                 </div>
               )}
             </div>
-          </main>
-        </div>
-      </div>
 
       {/* Worker Creation Dialog */}
       <Dialog open={isAddingWorker} onOpenChange={setIsAddingWorker}>
