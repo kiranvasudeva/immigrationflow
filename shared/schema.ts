@@ -866,6 +866,13 @@ export const insertWorkerSchema = createInsertSchema(workers).pick({
   documentStatus: true,
   missingDocuments: true,
   notes: true,
+}).extend({
+  // Override date fields to accept strings and convert to Date objects
+  dob: z.union([z.date(), z.string().transform(str => str ? new Date(str) : undefined)]).optional(),
+  passportIssueDate: z.union([z.date(), z.string().transform(str => str ? new Date(str) : undefined)]).optional(),
+  passportExpiry: z.union([z.date(), z.string().transform(str => str ? new Date(str) : undefined)]).optional(),
+  contractStartDate: z.union([z.date(), z.string().transform(str => str ? new Date(str) : undefined)]).optional(),
+  contractEndDate: z.union([z.date(), z.string().transform(str => str ? new Date(str) : undefined)]).optional(),
 });
 
 export const insertAssignmentSchema = createInsertSchema(assignments).pick({
