@@ -340,14 +340,16 @@ export default function ClientProfile() {
                   {!isEditing ? (
                     <Button
                       onClick={() => {
-                        console.log('Edit Client button clicked');
+                        console.log('🔥 EDIT CLIENT BUTTON CLICKED!');
+                        console.log('Current isEditing state:', isEditing);
                         setIsEditing(true);
+                        console.log('Set isEditing to TRUE');
                       }}
                       disabled={clientLoading}
                       data-testid="button-edit-client"
                     >
                       <Edit className="h-4 w-4 mr-2" />
-                      Edit Client
+                      Edit Client {isEditing ? '(EDITING)' : '(VIEW)'}
                     </Button>
                   ) : (
                     <>
