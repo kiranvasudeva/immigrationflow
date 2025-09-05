@@ -217,8 +217,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/clients/:clientId/workers/:workerId', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
       const { workerId } = req.params;
+      const workerData = { ...req.body };
       
-      const updatedWorker = await storage.updateWorker(workerId, req.body);
+      // Convert date strings to Date objects if they exist
+      if (workerData.dob) {
+        workerData.dob = new Date(workerData.dob);
+      }
+      if (workerData.passportExpiry) {
+        workerData.passportExpiry = new Date(workerData.passportExpiry);
+      }
+      if (workerData.passportIssueDate) {
+        workerData.passportIssueDate = new Date(workerData.passportIssueDate);
+      }
+      if (workerData.contractStartDate) {
+        workerData.contractStartDate = new Date(workerData.contractStartDate);
+      }
+      if (workerData.contractEndDate) {
+        workerData.contractEndDate = new Date(workerData.contractEndDate);
+      }
+      
+      const updatedWorker = await storage.updateWorker(workerId, workerData);
       if (!updatedWorker) {
         return res.status(404).json({ message: "Worker not found" });
       }
@@ -292,11 +310,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/workers/:workerId', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
       const { workerId } = req.params;
-      const workerData = req.body;
+      const workerData = { ...req.body };
 
       // If clientId is provided, set clientProfileId for database consistency
       if (workerData.clientId) {
         workerData.clientProfileId = workerData.clientId;
+      }
+
+      // Convert date strings to Date objects if they exist
+      if (workerData.dob) {
+        workerData.dob = new Date(workerData.dob);
+      }
+      if (workerData.passportExpiry) {
+        workerData.passportExpiry = new Date(workerData.passportExpiry);
+      }
+      if (workerData.passportIssueDate) {
+        workerData.passportIssueDate = new Date(workerData.passportIssueDate);
+      }
+      if (workerData.contractStartDate) {
+        workerData.contractStartDate = new Date(workerData.contractStartDate);
+      }
+      if (workerData.contractEndDate) {
+        workerData.contractEndDate = new Date(workerData.contractEndDate);
       }
 
       const updatedWorker = await storage.updateWorker(workerId, workerData);

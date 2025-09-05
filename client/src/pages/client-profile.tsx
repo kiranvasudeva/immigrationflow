@@ -77,6 +77,7 @@ export default function ClientProfile() {
     passportNumber: '',
     passportExpiry: ''
   });
+  const [editedWorkerData, setEditedWorkerData] = useState<any>(null);
   
   // Extract client ID from URL
   const clientId = location.split('/clients/')[1];
@@ -134,6 +135,36 @@ export default function ClientProfile() {
 
 
 
+
+  // Update worker mutation
+  const updateWorkerMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PUT", `/api/workers/${selectedWorkerId}`, data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update worker");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workers', selectedWorkerId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/clients', clientId, 'workers'] });
+      setIsEditingWorker(false);
+      setEditedWorkerData(null);
+      toast({
+        title: "Success",
+        description: "Worker updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating worker:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update worker",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Create worker mutation
   const createWorkerMutation = useMutation({
@@ -676,7 +707,10 @@ export default function ClientProfile() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => setIsEditingWorker(true)}
+                              onClick={() => {
+                                setIsEditingWorker(true);
+                                setEditedWorkerData({ ...selectedWorker });
+                              }}
                               data-testid="button-edit-worker"
                             >
                               <Edit className="h-4 w-4 mr-2" />
@@ -687,7 +721,11 @@ export default function ClientProfile() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setIsEditingWorker(false)}
+                                onClick={() => {
+                                  setIsEditingWorker(false);
+                                  setEditedWorkerData(null);
+                                }}
+                                disabled={updateWorkerMutation.isPending}
                                 data-testid="button-cancel-worker-edit"
                               >
                                 <X className="h-4 w-4 mr-2" />
@@ -695,10 +733,16 @@ export default function ClientProfile() {
                               </Button>
                               <Button
                                 size="sm"
+                                onClick={() => {
+                                  if (editedWorkerData) {
+                                    updateWorkerMutation.mutate(editedWorkerData);
+                                  }
+                                }}
+                                disabled={updateWorkerMutation.isPending}
                                 data-testid="button-save-worker"
                               >
                                 <Save className="h-4 w-4 mr-2" />
-                                Save Changes
+                                {updateWorkerMutation.isPending ? 'Saving...' : 'Save Changes'}
                               </Button>
                             </>
                           )}
@@ -730,9 +774,10 @@ export default function ClientProfile() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                       First Name
                                     </label>
-                                    {isEditingWorker ? (
+                                    {isEditingWorker && editedWorkerData ? (
                                       <Input
-                                        value={selectedWorker.firstName}
+                                        value={editedWorkerData.firstName}
+                                        onChange={(e) => setEditedWorkerData({ ...editedWorkerData, firstName: e.target.value })}
                                         data-testid="input-worker-first-name"
                                       />
                                     ) : (
@@ -745,9 +790,10 @@ export default function ClientProfile() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                       Last Name
                                     </label>
-                                    {isEditingWorker ? (
+                                    {isEditingWorker && editedWorkerData ? (
                                       <Input
-                                        value={selectedWorker.lastName}
+                                        value={editedWorkerData.lastName}
+                                        onChange={(e) => setEditedWorkerData({ ...editedWorkerData, lastName: e.target.value })}
                                         data-testid="input-worker-last-name"
                                       />
                                     ) : (
@@ -761,9 +807,10 @@ export default function ClientProfile() {
                                   <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Nationality
                                   </label>
-                                  {isEditingWorker ? (
+                                  {isEditingWorker && editedWorkerData ? (
                                     <Input
-                                      value={selectedWorker.nationality}
+                                      value={editedWorkerData.nationality}
+                                      onChange={(e) => setEditedWorkerData({ ...editedWorkerData, nationality: e.target.value })}
                                       data-testid="input-worker-nationality"
                                     />
                                   ) : (
@@ -796,9 +843,11 @@ export default function ClientProfile() {
                                   <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Email
                                   </label>
-                                  {isEditingWorker ? (
+                                  {isEditingWorker && editedWorkerData ? (
                                     <Input
-                                      value={selectedWorker.email}
+                                      type="email"
+                                      value={editedWorkerData.email}
+                                      onChange={(e) => setEditedWorkerData({ ...editedWorkerData, email: e.target.value })}
                                       data-testid="input-worker-email"
                                     />
                                   ) : (
@@ -814,9 +863,10 @@ export default function ClientProfile() {
                                   <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Phone
                                   </label>
-                                  {isEditingWorker ? (
+                                  {isEditingWorker && editedWorkerData ? (
                                     <Input
-                                      value={selectedWorker.phone}
+                                      value={editedWorkerData.phone}
+                                      onChange={(e) => setEditedWorkerData({ ...editedWorkerData, phone: e.target.value })}
                                       data-testid="input-worker-phone"
                                     />
                                   ) : (
