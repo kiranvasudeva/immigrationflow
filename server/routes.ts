@@ -7,7 +7,7 @@ import { auditMiddleware } from "./middleware/auth";
 import { requireRole, devRbacBypass } from "./middleware/rbac";
 import { storage } from "./storage";
 import { db } from "./db";
-import { handleQABridge } from "./qa-bridge";
+import { handleQABridge, qaBridgeAuth } from "./routes/qaBridge";
 import { sql, eq, like, count, isNotNull } from "drizzle-orm";
 import { users, clientProfiles, workers, stages, assignments, sessions, requirements, documentFiles, auditLogs, workflowStepTypeEnum, assignedToRoleEnum } from "../shared/schema";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -231,7 +231,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: 'Not authenticated' });
       }
 
-      const user = await storage.getUser(req.user.id || req.user.claims?.sub);
+      const userId = req.user.id || req.user.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'No user ID found' });
+      }
+      const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
@@ -255,8 +259,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ ok: true });
   });
 
-  // QA Bridge endpoint - DEV ONLY, NO SECURITY
-  app.post('/qa/bridge', express.json({ limit: '50mb' }), handleQABridge);
+  // QA Bridge endpoint - Secure token-gated control API
+  app.post('/qa/bridge', express.json({ limit: '10mb' }), qaBridgeAuth, handleQABridge);
 
   // GDPR Data Export (stub)
   app.get('/gdpr/export', async (req: any, res) => {

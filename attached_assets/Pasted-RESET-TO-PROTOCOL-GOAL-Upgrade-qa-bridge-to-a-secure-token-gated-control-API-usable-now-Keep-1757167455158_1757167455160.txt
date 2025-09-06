@@ -1,0 +1,43 @@
+RESET TO PROTOCOL.
+
+GOAL
+Upgrade /qa/bridge to a secure, token-gated control API usable now. Keep existing features working.
+
+SECURITY REQUIREMENTS
+- Enabled only when QA_MODE=true.
+- Require header: Authorization: Bearer ${BRIDGE_TOKEN}
+- Add replay protection:
+  - Require X-Timestamp (unix ms) and X-Nonce (uuid).
+  - Reject if |now - timestamp| > BRIDGE_CLOCK_SKEW_SEC.
+  - Maintain in-memory nonce cache with TTL=BRIDGE_NONCE_TTL_SEC; reject reused nonces.
+- Add simple rate limit per IP/token (BRIDGE_RATE per minute).
+- Log to qa_bridge_audit.log: timestamp, ip (hashed), action, ok/err. Never log secrets or PII.
+
+ALLOWED ACTIONS (same shape as now, no mocks):
+- listFiles
+- readFile { path }
+- writeFile { path, content }        // keep overwrite; prevent .env* and secrets
+- listRoutes
+- queryDB { table, limit?, where? }  // SELECT only; block raw SQL
+- runCommand { name }                // whitelist: ["npm run build","npx prisma migrate status","npx prisma db pull"]
+- qaTests {}                         // existing integrated QA checks
+- getLogs { type }                   // recent server or qa logs (tail last N)
+
+HARDENING
+- For writeFile: reject paths matching /\.env|secrets|node_modules|\.git/ .
+- For readFile: mask secrets if reading config files.
+- Truncate large outputs to 200KB per response with “…[truncated]”.
+- JSON error contract: { ok:false, error:{ code, message } }.
+
+DELIVERABLES
+- server/routes/qaBridge.ts updated with guards and actions.
+- server/services/rateLimit.ts, server/services/replayGuard.ts (lightweight in-memory).
+- Updated mounting in server entry.
+- replit.md: how to call securely (headers + examples).
+
+VERIFY
+- With QA_MODE=true and correct headers, POST /qa/bridge { action:"listFiles" } returns tree.
+- Invalid token → 401; missing nonce/timestamp → 400; replayed nonce → 409; over limit → 429.
+- writeFile blocks .env and secrets.
+- No regressions to existing app routes.
+STOP on any failure and report BLOCKER with file paths.

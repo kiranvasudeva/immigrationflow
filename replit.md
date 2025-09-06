@@ -76,48 +76,105 @@ The agent should never mark a task complete without running through this verific
 
 ## QA Bridge API
 
-The system includes a development-only control bridge at `/qa/bridge` that provides external agents full access to inspect and control the project for debugging and stabilization.
+The system includes a secure, token-gated control bridge at `/qa/bridge` that provides external agents controlled access to inspect and debug the project.
 
 ### Endpoint: POST /qa/bridge
 
-Accepts JSON payloads with `{ action, params }` structure.
+**Security Requirements:**
+- Enabled only when `QA_MODE=true` environment variable is set
+- Requires `Authorization: Bearer ${BRIDGE_TOKEN}` header
+- Requires `X-Timestamp` (unix milliseconds) and `X-Nonce` (UUID) headers
+- Rate limited per IP/token (default: 10 requests per minute)
+- Replay protection with configurable clock skew and nonce TTL
+
+**Environment Variables:**
+```bash
+QA_MODE=true                    # Enable QA Bridge
+BRIDGE_TOKEN=your-secret-token  # Authentication token
+BRIDGE_RATE=10                  # Requests per minute (optional, default: 10)
+BRIDGE_CLOCK_SKEW_SEC=30        # Timestamp tolerance (optional, default: 30)
+BRIDGE_NONCE_TTL_SEC=300        # Nonce cache TTL (optional, default: 300)
+```
 
 **Supported Actions:**
 
 - `listFiles` - Returns full directory tree
-- `readFile` - Returns raw contents of any file (params: `{path}`)
-- `writeFile` - Overwrites file content (params: `{path, content}`)
+- `readFile` - Returns file contents (masks secrets in config files, params: `{path}`)
+- `writeFile` - Overwrites file content (blocks .env, secrets, node_modules, .git, params: `{path, content}`)
 - `listRoutes` - Scans and returns all frontend/backend routes
-- `queryDB` - Executes safe SELECT queries (params: `{table, limit?, where?}`)
-- `runCommand` - Runs allowlisted shell commands (params: `{command}`)
-- `runAI` - Placeholder for AI integration (params: `{prompt}`)
-- `getLogs` - Returns recent logs (params: `{type}` - 'qa' or 'server')
-- `qaTests` - Runs automated QA checks for auth, DB, and workflows
+- `queryDB` - Executes safe SELECT queries (blocks SQL injection, params: `{table, limit?, where?}`)
+- `runCommand` - Runs allowlisted commands (params: `{name}` - only "npm run build", "npx prisma migrate status", "npx prisma db pull")
+- `getLogs` - Returns recent QA audit logs (params: `{type}` - 'qa' only)
+- `qaTests` - Runs automated QA checks for health and database connectivity
 
 **Usage Examples:**
 ```bash
+# Set environment variables first
+export QA_MODE=true
+export BRIDGE_TOKEN="your-secret-token"
+
+# Generate timestamp and nonce
+TIMESTAMP=$(date +%s%3N)
+NONCE=$(uuidgen)
+
 # List all files
-curl -X POST /qa/bridge -d '{"action":"listFiles"}' -H "Content-Type: application/json"
+curl -X POST http://localhost:5000/qa/bridge \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $BRIDGE_TOKEN" \
+  -H "X-Timestamp: $TIMESTAMP" \
+  -H "X-Nonce: $NONCE" \
+  -d '{"action":"listFiles"}'
 
-# Read specific file
-curl -X POST /qa/bridge -d '{"action":"readFile","params":{"path":"client/src/pages/clients.tsx"}}' -H "Content-Type: application/json"
+# Read specific file (secrets will be masked)
+TIMESTAMP=$(date +%s%3N)
+NONCE=$(uuidgen)
+curl -X POST http://localhost:5000/qa/bridge \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $BRIDGE_TOKEN" \
+  -H "X-Timestamp: $TIMESTAMP" \
+  -H "X-Nonce: $NONCE" \
+  -d '{"action":"readFile","params":{"path":"client/src/pages/clients.tsx"}}'
 
-# Query database with WHERE clause
-curl -X POST /qa/bridge -d '{"action":"queryDB","params":{"table":"users","limit":5,"where":"role='\''ADMIN'\''"}}' -H "Content-Type: application/json"
-
-# Get recent QA logs
-curl -X POST /qa/bridge -d '{"action":"getLogs","params":{"type":"qa"}}' -H "Content-Type: application/json"
+# Query database safely
+TIMESTAMP=$(date +%s%3N)
+NONCE=$(uuidgen)
+curl -X POST http://localhost:5000/qa/bridge \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $BRIDGE_TOKEN" \
+  -H "X-Timestamp: $TIMESTAMP" \
+  -H "X-Nonce: $NONCE" \
+  -d '{"action":"queryDB","params":{"table":"users","limit":5,"where":"role='\''ADMIN'\''"}}' 
 
 # Run QA tests
-curl -X POST /qa/bridge -d '{"action":"qaTests"}' -H "Content-Type: application/json"
-
-# Execute allowed commands
-curl -X POST /qa/bridge -d '{"action":"runCommand","params":{"command":"npm run build"}}' -H "Content-Type: application/json"
+TIMESTAMP=$(date +%s%3N)
+NONCE=$(uuidgen)
+curl -X POST http://localhost:5000/qa/bridge \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $BRIDGE_TOKEN" \
+  -H "X-Timestamp: $TIMESTAMP" \
+  -H "X-Nonce: $NONCE" \
+  -d '{"action":"qaTests"}'
 ```
 
-**Logging:** All actions are logged to `qa_bridge.log` with timestamps.
+**Security Features:**
+- **Authentication:** Bearer token validation
+- **Replay Protection:** Timestamp + nonce validation prevents replay attacks
+- **Rate Limiting:** Configurable per-IP/token limits with retry-after headers
+- **Path Blocking:** writeFile blocks sensitive files (.env, secrets, node_modules, .git)
+- **Secret Masking:** readFile masks secrets in configuration files
+- **SQL Injection Protection:** queryDB blocks raw SQL and injection attempts
+- **Command Allowlisting:** runCommand only allows safe, predefined commands
+- **Audit Logging:** All actions logged to `qa_bridge_audit.log` with hashed IPs
+- **Response Truncation:** Large responses truncated to 200KB with indicators
 
-**Security:** Currently has NO authentication or restrictions - development only.
+**Error Responses:**
+- `401` - Invalid or missing token
+- `400` - Missing required headers (timestamp/nonce)
+- `409` - Replay detected (nonce reused)
+- `429` - Rate limit exceeded
+- `403` - Blocked action (sensitive files, SQL injection, etc.)
+
+**Logging:** All actions are logged to `qa_bridge_audit.log` with timestamps and hashed IP addresses. No secrets or PII are logged.
 
 ## System Architecture
 
