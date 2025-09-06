@@ -1,0 +1,94 @@
+RESET TO PROTOCOL.
+
+GOAL
+Make /qa/live render reliably (never blank), and surface any runtime errors visibly. Diagnose first, then fix with minimal diffs. Add a plain fallback page to isolate React issues.
+
+STEP 1 — AUDIT (NO EDITS)
+Frontend:
+- Print router registration for /qa/live (file + Route snippet) and confirm the component import path and DEFAULT export name.
+- Open client/src/pages/qa-live.tsx:
+  • Show top 40 lines (imports), component definition (first 80 lines), and the export line.
+  • Confirm it is NOT a lazy() import without a Suspense fallback.
+- Show client/src/main.tsx (or App root) to see if an ErrorBoundary wraps RouterProvider.
+- Dump browser console errors for /qa/live (last 200 lines).
+- List network calls when opening /qa/live (URLs, status, content-type, first 150 chars of body).
+- Confirm any i18n provider loads before /qa/live renders (to rule out i18n crash).
+
+Backend:
+- Confirm handlers exist and return JSON:
+  • POST /qa/run  • GET /qa/last-report  • GET /qa/public
+- Confirm API routers mount BEFORE the SPA catch-all.
+- Print the code that reads qa_bridge_audit.log used by /qa/live.
+
+Summarize likely root cause (choose any that apply):
+- Route import/export mismatch
+- Component throws during render/effect
+- Lazy route without Suspense fallback
+- Non-JSON fetch (HTML) causing JSON.parse crash
+- i18n provider crash early
+- CSS hides content (white-on-white)
+
+STOP and await plan.
+
+STEP 2 — PLAN (MINIMAL DIFFS)
+Apply only what matches the audit:
+
+A) Route/export safety
+- Ensure /qa/live route points to a component with a DEFAULT export.
+- If the page is lazy-loaded, add <Suspense fallback={<div className="p-4">Loading…</div>}> around it.
+
+B) Global ErrorBoundary
+- Create client/src/components/dev/ErrorBoundary.tsx and wrap <RouterProvider/> (or the App shell) with it in client/src/main.tsx.
+- ErrorBoundary should render a red panel with:
+  • “Runtime error on this page” + error.message
+  • A “Copy stack” button
+  • A “Reload” button
+
+C) Page-level hardening (qa-live.tsx)
+- Add a top-of-file “I mounted” console marker and a `const [mounted,setMounted]=useState(false); useEffect(()=>setMounted(true),[])` and render a tiny “mounted” badge so we can see if it mounts.
+- Wrap all fetches in try/catch and NEVER leave the page blank:
+  • Always render: title, buttons row, and a status area.
+  • If /qa/last-report is 404, show “No report yet” with a big “Run QA Tests” button (NO spinner loop).
+  • If any non-404 error, show a visible red banner with status+first 120 chars.
+
+- Add a DEV debug panel toggled by `?debug=1` in the URL that shows:
+  • mounted flag
+  • last fetch status codes
+  • last error string (if any)
+  • current query state (isLoading/isFetching/isError) and timestamps
+  • First 1KB of last JSON response
+
+D) Plain fallback page (server-rendered, no React)
+- Add GET /qa/live-plain that serves a minimal HTML page (no app shell) with:
+  • 3 buttons that call /qa/run, /qa/last-report, /qa/public via fetch
+  • A <pre id="out"> that prints status + first 2KB of responses
+- This isolates whether React or data is the issue. This page must work even if the React app crashes.
+
+E) Prevent JSON/HTML confusion
+- Add a guard in the qa-live fetcher: check response.headers.get("content-type") startsWith("application/json"); if not, read text and throw Error("Non-JSON response: " + snippet). Show that snippet in the error banner.
+- Ensure server endpoints explicitly set Content-Type: application/json.
+
+F) CSS visibility sanity
+- Ensure the page root has a visible background (e.g., className="min-h-screen bg-background text-foreground") so white-on-white doesn’t hide content.
+- Make sure no parent container sets display:none for the route outlet.
+
+STEP 3 — IMPLEMENT & VERIFY
+- Implement only the needed fixes above based on the audit.
+- Wrap RouterProvider with ErrorBoundary.
+- Add Suspense fallback if route is lazy.
+- Add debug panel in qa-live.tsx behind ?debug=1.
+- Add /qa/live-plain.
+
+VERIFY:
+- Open /qa/live?debug=1: the page shows title, buttons, and either:
+  • “No report yet” + Run button, or
+  • PASS/FAIL with JSON, or
+  • A red error panel with a useful message (no blank screen).
+- Click “Run QA Tests” → it completes; table + JSON appear.
+- Open /qa/live-plain → all three endpoint buttons work; responses visible.
+- Browser console: no uncaught exceptions. Network: QA endpoints return JSON (no <!DOCTYPE).
+- No regressions on /dashboard, /clients, /workers.
+
+OUTPUT
+- List files changed and the exact fixes applied (ErrorBoundary, Suspense, fetcher guard, debug panel, plain page).
+- If still blank, STOP and paste: the first 50 lines of qa-live.tsx, the router snippet for /qa/live, and the last 50 lines of the browser console.
