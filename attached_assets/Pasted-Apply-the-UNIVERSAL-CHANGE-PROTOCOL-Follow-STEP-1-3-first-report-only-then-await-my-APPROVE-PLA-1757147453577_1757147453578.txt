@@ -1,0 +1,61 @@
+Apply the UNIVERSAL CHANGE PROTOCOL. Follow STEP 1–3 first (report only), then await my “APPROVE PLAN”.
+
+=== GOAL ===
+Implement GDPR-aware authentication & role-based access (ADMIN / OWNER / WORKER) using httpOnly cookies (JWT), add basic security hardening, and create a controlled test-data seeding flow (dev-only) that writes TEST_CREDENTIALS.md with shareable staging accounts. Do not expose real data. Do not log PII.
+
+=== REQUIREMENTS ===
+SECURITY & AUTH
+- Auth model: Stateless JWT (access 10–15 min) + refresh token (7–30 days) in httpOnly, Secure, SameSite=Lax cookies.
+- Passwords: Argon2id (preferred) or bcrypt with strong cost factor. Never log raw passwords.
+- RBAC: Enforce ADMIN/OWNER/WORKER on server routes with middleware. Include /whoami for quick checks.
+- Session endpoints:
+  - POST /auth/login (email, password) → sets cookies; returns minimal profile (id, email, role).
+  - POST /auth/refresh → rotates refresh token family; returns new access token cookie.
+  - POST /auth/logout → clears cookies; revokes refresh token family in DB.
+- CSRF/CORS:
+  - CORS: allow Vite origin in dev, production domain otherwise.
+  - CSRF: use SameSite=Lax cookies; for unsafe methods also accept a CSRF header (X-CSRF-Token) tied to a per-session token in a non-httpOnly cookie. Implement minimal double-submit protection.
+
+GDPR & PRIVACY
+- Logging: No PII in logs. Mask emails (e.g., j***@domain). Log only event type and ids.
+- Audit log: write events (login, logout, refresh, failed login, file upload, step verify) with userId, timestamp, ip hash.
+- Data Subject endpoints (dev-only stub now, wire later):
+  - GET /gdpr/export (user-scope) → JSON bundle of their records.
+  - POST /gdpr/delete (user-scope) → queue deletion request (mark for admin review).
+- Privacy & Cookies:
+  - Add “/privacy” and “/cookies” static pages with placeholder content.
+  - Add cookie banner component (client) gated behind env flag PRIVACY_BANNER=true.
+
+STORAGE
+- File uploads must not persist on Replit FS. Ensure current upload flow uses S3/Backblaze or returns 501 if not configured. Validate MIME/size on server.
+
+RATE LIMIT
+- Add rate limiting on /auth/*: e.g., 10 req/min/ip, exponential backoff on consecutive login failures.
+
+DEV-ONLY TEST SEED
+- Seeder script (npm run seed:test) that inserts ONLY test accounts (if not present) with hashed passwords:
+  1) admin@demo.law / Demo!2345  → role: ADMIN
+  2) client@demo.law / Demo!2345 → role: OWNER
+  3) worker@demo.law / Demo!2345 → role: WORKER
+- Create 2 demo clients + 3–5 demo workers linked.
+- Create 1–2 workflow_templates with 4–5 sequential steps (some require uploads + admin verification).
+- Create worker_workflow_progress + worker_step_progress for at least one worker.
+- After seeding, generate a file at repo root: TEST_CREDENTIALS.md with the seeded emails/roles (do NOT print passwords to server logs; include them only inside TEST_CREDENTIALS.md). For visibility, also print the absolute path to this file once.
+- Add a dev-only endpoint GET /dev/test-credentials that serves TEST_CREDENTIALS.md as text **only if** NODE_ENV=development and a header X-Dev-Secret matches process.env.DEV_SEED_SECRET. Do NOT expose in production.
+
+DX & VERIFY
+- Implement /healthz → { ok: true, version, uptime }.
+- Implement /whoami → { id, role, email masked } when authenticated; 401 otherwise.
+- Add minimal Postman-like README block in TEST_CREDENTIALS.md with URL paths to test.
+- Update docs: replit.md with auth flows, cookie settings, RBAC usage, and how to rotate refresh tokens.
+- After implementation, run:
+  - node scripts/verify-frontend.js (must pass)
+  - TypeScript/LSP diagnostics (0 errors)
+  - Manual smoke: login/logout/refresh; role-gated API (admin route denies non-admin); /whoami returns masked email; cookie flags set: httpOnly, Secure, SameSite=Lax.
+
+=== STEP 1–3 (REPORT ONLY) ===
+1) Read replit.md and list current auth, cookies, roles, and any existing endpoints.
+2) Inventory DB tables for users, roles, refresh tokens, audit logs (or equivalents). If missing, propose minimal Drizzle/Prisma models.
+3) Plan the exact file list to modify/create (server routes, middleware, services, seed script, docs; client components for banner & privacy pages). No code changes yet. Confirm: no mock data beyond explicit test seed; no PII in logs.
+
+STOP after the PLAN and wait for “APPROVE PLAN”.
