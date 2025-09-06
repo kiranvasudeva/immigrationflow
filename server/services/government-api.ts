@@ -170,31 +170,37 @@ export class GovernmentStatusService {
 
   // Helper methods for mapping internal data to government status formats
   private mapStepStatusToIgiStatus(status: string): IgiStatusResponse['status'] {
+    // Using database schema stepStatusEnum values: PENDING, IN_PROGRESS, COMPLETED, REJECTED, SKIPPED
     switch (status) {
-      case 'NOT_STARTED': return 'SUBMITTED';
+      case 'PENDING': return 'SUBMITTED';
       case 'IN_PROGRESS': return 'IN_REVIEW';
       case 'COMPLETED': return 'APPROVED';
       case 'REJECTED': return 'REJECTED';
+      case 'SKIPPED': return 'APPROVED'; // Treat skipped as approved
       default: return 'SUBMITTED';
     }
   }
 
   private mapStepStatusToAjofmStatus(status: string): AjofmStatusResponse['laborMarketTestStatus'] {
+    // Using database schema stepStatusEnum values: PENDING, IN_PROGRESS, COMPLETED, REJECTED, SKIPPED
     switch (status) {
-      case 'NOT_STARTED': return 'PENDING';
+      case 'PENDING': return 'PENDING';
       case 'IN_PROGRESS': return 'IN_PROGRESS';
       case 'COMPLETED': return 'APPROVED';
       case 'REJECTED': return 'REJECTED';
+      case 'SKIPPED': return 'APPROVED'; // Treat skipped as approved
       default: return 'PENDING';
     }
   }
 
   private mapStepStatusToConsulateStatus(status: string): ConsulateStatusResponse['status'] {
+    // Using database schema stepStatusEnum values: PENDING, IN_PROGRESS, COMPLETED, REJECTED, SKIPPED
     switch (status) {
-      case 'NOT_STARTED': return 'SCHEDULED';
+      case 'PENDING': return 'SCHEDULED';
       case 'IN_PROGRESS': return 'SCHEDULED';
       case 'COMPLETED': return 'COMPLETED';
       case 'REJECTED': return 'CANCELLED';
+      case 'SKIPPED': return 'COMPLETED'; // Treat skipped as completed
       default: return 'SCHEDULED';
     }
   }
@@ -209,8 +215,9 @@ export class GovernmentStatusService {
   }
 
   private getNextStepsForStatus(status: string): string[] {
+    // Using database schema stepStatusEnum values: PENDING, IN_PROGRESS, COMPLETED, REJECTED, SKIPPED
     switch (status) {
-      case 'NOT_STARTED':
+      case 'PENDING':
         return ['Submit required documents', 'Complete application form'];
       case 'IN_PROGRESS':
         return ['Monitor application status', 'Respond to any requests'];
@@ -218,6 +225,8 @@ export class GovernmentStatusService {
         return ['Collect documents', 'Proceed to next step'];
       case 'REJECTED':
         return ['Review rejection reasons', 'Resubmit application'];
+      case 'SKIPPED':
+        return ['Proceed to next step'];
       default:
         return [];
     }
