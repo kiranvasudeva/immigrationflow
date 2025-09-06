@@ -110,7 +110,7 @@ export default function AnalyticsPage() {
 
   // Client performance data
   const clientData = (assignments as any[]).reduce((acc: any[], assignment: any) => {
-    const clientName = assignment.clientProfile?.companyName || 'Unknown';
+    const clientName = assignment.clientProfile?.legalName || 'Unknown';
     const existing = acc.find(item => item.client === clientName);
     if (existing) {
       existing.total += 1;

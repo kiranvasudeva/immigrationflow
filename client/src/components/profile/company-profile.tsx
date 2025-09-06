@@ -21,7 +21,7 @@ export default function CompanyProfile({ profile }: CompanyProfileProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
-            <p className="text-gray-900 font-medium" data-testid="text-company-name">{profile.companyName}</p>
+            <p className="text-gray-900 font-medium" data-testid="text-company-name">{profile.legalName}</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">CUI</label>
@@ -33,7 +33,7 @@ export default function CompanyProfile({ profile }: CompanyProfileProps) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-            <p className="text-gray-900" data-testid="text-company-address">{profile.address}</p>
+            <p className="text-gray-900" data-testid="text-company-address">{profile.legalAddress}</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
@@ -41,7 +41,7 @@ export default function CompanyProfile({ profile }: CompanyProfileProps) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">ONRC</label>
-            <p className="text-gray-900 font-mono" data-testid="text-company-onrc">{profile.onrc || 'Not provided'}</p>
+            <p className="text-gray-900 font-mono" data-testid="text-company-onrc">{profile.registrationNumber || 'Not provided'}</p>
           </div>
         </div>
       </CardContent>

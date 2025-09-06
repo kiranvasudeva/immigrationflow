@@ -5,7 +5,7 @@ interface Assignment {
     title: string;
   };
   clientProfile: {
-    companyName: string;
+    legalName: string;
   };
   worker?: {
     firstName: string;
@@ -54,7 +54,7 @@ export default function WorkflowKanban({ assignments = [] }: WorkflowKanbanProps
       color: "gray",
       items: [...(groupedAssignments['PENDING'] || [])].map(assignment => ({
         id: assignment.id,
-        client: assignment.clientProfile.companyName,
+        client: assignment.clientProfile.legalName,
         worker: `${assignment.worker?.firstName || 'N/A'} ${assignment.worker?.lastName || ''} - ${assignment.requirement.title}`,
         dueInfo: "Awaiting action",
         type: "warning"
@@ -65,7 +65,7 @@ export default function WorkflowKanban({ assignments = [] }: WorkflowKanbanProps
       color: "blue", 
       items: [...(groupedAssignments['IN_PROGRESS'] || [])].map(assignment => ({
         id: assignment.id,
-        client: assignment.clientProfile.companyName,
+        client: assignment.clientProfile.legalName,
         worker: `${assignment.worker?.firstName || 'N/A'} ${assignment.worker?.lastName || ''} - ${assignment.requirement.title}`,
         dueInfo: "Currently processing",
         type: "info"
@@ -76,7 +76,7 @@ export default function WorkflowKanban({ assignments = [] }: WorkflowKanbanProps
       color: "green",
       items: [...(groupedAssignments['COMPLETED'] || [])].map(assignment => ({
         id: assignment.id,
-        client: assignment.clientProfile.companyName,
+        client: assignment.clientProfile.legalName,
         worker: `${assignment.worker?.firstName || 'N/A'} ${assignment.worker?.lastName || ''} - ${assignment.requirement.title}`,
         dueInfo: "Completed",
         type: "success"
@@ -87,7 +87,7 @@ export default function WorkflowKanban({ assignments = [] }: WorkflowKanbanProps
       color: "red",
       items: [...(groupedAssignments['REJECTED'] || [])].map(assignment => ({
         id: assignment.id,
-        client: assignment.clientProfile.companyName,
+        client: assignment.clientProfile.legalName,
         worker: `${assignment.worker?.firstName || 'N/A'} ${assignment.worker?.lastName || ''} - ${assignment.requirement.title}`,
         dueInfo: "Rejected",
         type: "error"
