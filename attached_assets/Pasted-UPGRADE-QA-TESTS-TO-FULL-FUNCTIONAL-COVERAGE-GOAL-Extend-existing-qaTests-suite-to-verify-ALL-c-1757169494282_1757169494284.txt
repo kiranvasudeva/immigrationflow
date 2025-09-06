@@ -1,0 +1,69 @@
+UPGRADE QA TESTS TO FULL FUNCTIONAL COVERAGE
+
+GOAL:
+Extend existing qaTests suite to verify ALL core app functionality end-to-end.
+
+IMPLEMENT:
+1. Update server/services/qaTests.ts:
+   Add these checks and include them in the JSON report:
+
+   **Authentication Tests**
+   - Read TEST_CREDENTIALS.md for seeded ADMIN, OWNER, WORKER accounts.
+   - POST /auth/login for each → expect 200 + set-cookie.
+   - GET /whoami after login → verify correct role.
+
+   **Clients & Workers**
+   - GET /api/clients → expect ≥2 seeded clients with proper fields:
+     legalName, cui, registrationNumber, legalAddress, contactEmail, phoneNumber.
+   - Ensure no legacy fields (companyName, onrc, fiscalCode).
+   - For one client, GET /api/workers?clientId=... → expect ≥1 worker linked to that client.
+
+   **Workflow Templates**
+   - GET /api/workflows/templates → expect ≥1 template.
+   - Validate each template has ≥1 step with required metadata:
+     stepOrder, name, requiresUpload, requiresVerification.
+
+   **Worker Workflows**
+   - For a seeded worker:
+     - Fetch assigned workflows.
+     - Verify step progression:
+       - step[N+1] status cannot be COMPLETED if step[N] is PENDING.
+     - Verify correct statuses: PENDING, IN_PROGRESS, COMPLETED, REJECTED.
+
+   **Document Uploads**
+   - For a workflow step requiring upload:
+     - Preflight POST to /api/documents/upload with sample file metadata.
+     - Expect 200 or 501 if feature not configured.
+
+   **Checklist Verification**
+   - If a step has checklist items:
+     - Toggle verification flag via PATCH.
+     - Re-fetch checklist to confirm state change.
+
+   **Mock Data Detection**
+   - Scan all API responses for placeholder values like:
+     "Test Worker", "Test Construction Company", "Test AJOFM Application Form".
+   - If found → mark FAIL.
+
+   **UI Hydration Sanity Check**
+   - Fetch HTML for /dashboard, /clients, /workers.
+   - Ensure only one sidebar instance is rendered.
+   - Ensure no untranslated i18n keys appear.
+
+2. JSON Report:
+   Structure = {
+     timestamp,
+     totalTests,
+     passed,
+     failed,
+     tests: [
+       { name, status, details }
+     ]
+   }
+
+3. Cache last report in memory for /qa/live and /qa/public.
+
+VERIFY:
+- POST /qa/bridge { action:"qaTests" } returns detailed JSON.
+- Run once via `/qa/live` → confirm PASS/FAIL per area.
+- No existing features break.

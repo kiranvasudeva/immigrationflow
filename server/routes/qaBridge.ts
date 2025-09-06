@@ -409,54 +409,30 @@ export async function handleQABridge(req: Request, res: Response) {
         break;
         
       case 'qaTests':
-        const tests: any[] = [];
-        
-        // Test health endpoint
         try {
-          const healthResponse = await fetch('http://localhost:5000/healthz');
-          tests.push({
-            name: 'Health Check',
-            status: healthResponse.ok ? 'PASS' : 'FAIL',
-            details: `Status: ${healthResponse.status}`
-          });
-        } catch (error) {
-          tests.push({
-            name: 'Health Check',
-            status: 'FAIL',
-            details: `Error: ${error}`
-          });
-        }
-        
-        // Test database connectivity
-        try {
-          const dbTest = await db.execute(sql`SELECT 1 as test`);
-          tests.push({
-            name: 'Database Connectivity',
-            status: 'PASS',
-            details: `Query successful: ${JSON.stringify(dbTest.rows)}`
-          });
-        } catch (error) {
-          tests.push({
-            name: 'Database Connectivity',
-            status: 'FAIL',
-            details: `Error: ${error}`
-          });
-        }
-        
-        result = {
-          timestamp: new Date().toISOString(),
-          totalTests: tests.length,
-          passed: tests.filter(t => t.status === 'PASS').length,
-          failed: tests.filter(t => t.status === 'FAIL').length,
-          tests
-        };
+          // Import and run comprehensive QA tests
+          const { comprehensiveQA } = await import('../services/qaTests');
+          result = await comprehensiveQA.runFullSuite();
 
-        // Cache the report for the live dashboard
-        try {
-          const { qaReportCache } = await import('../services/qaReportCache');
-          qaReportCache.setReport(result);
-        } catch (cacheError) {
-          console.warn('Failed to cache QA report:', cacheError);
+          // Cache the report for the live dashboard
+          try {
+            const { qaReportCache } = await import('../services/qaReportCache');
+            qaReportCache.setReport(result);
+          } catch (cacheError) {
+            console.warn('Failed to cache QA report:', cacheError);
+          }
+        } catch (error) {
+          result = {
+            timestamp: new Date().toISOString(),
+            totalTests: 1,
+            passed: 0,
+            failed: 1,
+            tests: [{
+              name: 'QA Tests Execution',
+              status: 'FAIL',
+              details: `Failed to execute comprehensive QA tests: ${error}`
+            }]
+          };
         }
         break;
         
