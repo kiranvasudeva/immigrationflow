@@ -265,14 +265,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // QA helper endpoints for dashboard
   app.get('/qa/last-report', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
     const report = qaReportCache.getReport();
     if (!report) {
-      return res.status(404).json({ error: 'No QA report available' });
+      return res.status(404).json({ ok: false, reason: 'NoReport' });
     }
     res.json(report);
   });
 
   app.get('/qa/public', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
     const report = qaReportCache.getReport();
     if (!report) {
       return res.status(404).json({ ok: false, error: 'No cached report available' });
@@ -281,6 +283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post('/qa/run', async (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
     try {
       // Use internal bridge token to run QA tests
       const bridgeToken = process.env.BRIDGE_TOKEN;

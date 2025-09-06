@@ -1,0 +1,43 @@
+APPROVE PLAN — IMPLEMENT & VERIFY (MINIMAL DIFFS ONLY).
+
+FIXES (apply only those that match the audit):
+1) Route mounting
+- If /qa/live route is missing or mis-typed, add the correct Route entry.
+- Ensure the page component has a default export and correct import path.
+
+2) Runtime safety in the QA page
+- Wrap all async fetches (qaTests + lastReport) in try/catch.
+- Add visible UI states:
+  - "Loading…" skeleton
+  - "No report yet" empty state
+  - "Error: <message>" error banner (include HTTP status and a short hint)
+- Never leave the page blank; always render at least the banner + buttons.
+
+3) Backend JSON & endpoints
+- Ensure POST /qa/bridge reads JSON body and replies with JSON and header `Content-Type: application/json`.
+- Ensure GET /qa/last-report returns JSON when cache exists; otherwise { ok:false, reason:"NoReport" } with 404.
+- Ensure GET /qa/public mirrors last-report (read-only) with JSON; 404 when empty.
+- Move API router mounts ABOVE any SPA catch-all that returns HTML so API paths never serve <!DOCTYPE>.
+- Add a JSON 404 handler for unknown /api/* paths to avoid HTML fallback.
+
+4) Feature flags (temporary)
+- If QA_MODE gating hides UI, bypass it for now in the client so /qa/live always renders in dev.
+- Do NOT add security yet per user request, but leave TODO comments.
+
+5) Resilience & dev tools
+- Add a "Test endpoints" panel on /qa/live with buttons:
+  - “Ping Health” → GET /healthz
+  - “Fetch Last Report” → GET /qa/last-report
+  - “Run QA Tests” → POST /qa/bridge { action:"qaTests" }
+- Display response status + truncated JSON preview (first 2KB), never blank.
+
+VERIFY
+- Open /qa/live → page renders with header, buttons, and either last report or “No report yet”.
+- Click “Run QA Tests” → see PASS/FAIL table and raw JSON area populated.
+- Open /qa/public → returns JSON (200) after a test run; 404 before first run is acceptable.
+- Browser console: no unhandled errors; Network: QA calls return application/json (no <!DOCTYPE).
+- No regressions on /dashboard, /clients, /workers.
+
+OUTPUT
+- List files changed and a short summary of what was fixed.
+- If anything still blocks rendering, STOP and report the exact file + line and the thrown error text.

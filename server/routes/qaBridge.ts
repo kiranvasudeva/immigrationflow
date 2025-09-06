@@ -446,6 +446,7 @@ export async function handleQABridge(req: Request, res: Response) {
     
     auditLog(clientIP, action, 'ok');
     const truncatedResult = truncateResponse({ ok: true, data: result });
+    res.setHeader('Content-Type', 'application/json');
     res.json(truncatedResult);
     
   } catch (error) {

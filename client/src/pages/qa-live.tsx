@@ -30,21 +30,25 @@ interface AuditEntry {
 
 export default function QALivePage() {
   const [isRunning, setIsRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch last QA report
-  const { data: qaReport, refetch: refetchReport, isLoading: reportLoading } = useQuery<QAReport>({
+  const { data: qaReport, refetch: refetchReport, isLoading: reportLoading, error: reportError } = useQuery<QAReport>({
     queryKey: ['/qa/last-report'],
     refetchInterval: 30000, // Auto-refresh every 30 seconds
+    retry: 1, // Only retry once on failure
   });
 
   // Fetch audit logs
-  const { data: auditLogs, refetch: refetchAudit, isLoading: auditLoading } = useQuery<AuditEntry[]>({
+  const { data: auditLogs, refetch: refetchAudit, isLoading: auditLoading, error: auditError } = useQuery<AuditEntry[]>({
     queryKey: ['/qa/audit-logs'],
     refetchInterval: 15000, // Auto-refresh every 15 seconds
+    retry: 1, // Only retry once on failure
   });
 
   const runQATests = async () => {
     setIsRunning(true);
+    setError(null);
     try {
       const response = await fetch('/qa/run', {
         method: 'POST',
@@ -57,10 +61,12 @@ export default function QALivePage() {
         // Refresh both report and audit logs
         await Promise.all([refetchReport(), refetchAudit()]);
       } else {
-        console.error('Failed to run QA tests:', response.statusText);
+        const errorText = await response.text();
+        setError(`Failed to run tests (${response.status}): ${errorText}`);
       }
     } catch (error) {
       console.error('Error running QA tests:', error);
+      setError(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsRunning(false);
     }
@@ -96,6 +102,16 @@ export default function QALivePage() {
         </Button>
       </div>
 
+      {/* Error Banner */}
+      {(error || reportError || auditError) && (
+        <Alert className="border-red-500 bg-red-50 dark:bg-red-950">
+          <AlertTriangle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800 dark:text-red-200">
+            {error || reportError?.message || auditError?.message || 'Unknown error occurred'}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* QA Report Section */}
         <Card>
@@ -107,6 +123,10 @@ export default function QALivePage() {
               <div className="flex items-center space-x-2">
                 <RefreshCw className="h-4 w-4 animate-spin" />
                 <span>Loading report...</span>
+              </div>
+            ) : reportError ? (
+              <div className="text-red-600">
+                Error loading report: {reportError.message}
               </div>
             ) : qaReport ? (
               <div className="space-y-4">
@@ -145,11 +165,73 @@ export default function QALivePage() {
                 </details>
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No QA report available</p>
-                <p className="text-sm">Run QA tests to generate a report</p>
+              <div className="text-gray-500 text-center py-8">
+                <div className="text-lg font-medium mb-2">No QA Report Yet</div>
+                <div className="text-sm">Click "Run QA Tests" above to generate your first report.</div>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Test Endpoints Panel */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Test Endpoints</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full justify-start"
+              onClick={async () => {
+                try {
+                  const response = await fetch('/health');
+                  const data = await response.json();
+                  alert(`Health Check (${response.status}): ${JSON.stringify(data).slice(0, 200)}`);
+                } catch (err) {
+                  alert(`Health Check Failed: ${err}`);
+                }
+              }}
+            >
+              Ping Health → GET /health
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full justify-start"
+              onClick={async () => {
+                try {
+                  const response = await fetch('/qa/last-report');
+                  const text = await response.text();
+                  alert(`Last Report (${response.status}): ${text.slice(0, 200)}`);
+                } catch (err) {
+                  alert(`Last Report Failed: ${err}`);
+                }
+              }}
+            >
+              Fetch Last Report → GET /qa/last-report
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full justify-start"
+              onClick={async () => {
+                try {
+                  // TODO: Add proper authentication headers when security is implemented
+                  const response = await fetch('/qa/bridge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'qaTests' })
+                  });
+                  const text = await response.text();
+                  alert(`QA Bridge (${response.status}): ${text.slice(0, 200)}`);
+                } catch (err) {
+                  alert(`QA Bridge Failed: ${err}`);
+                }
+              }}
+            >
+              Run QA Tests → POST /qa/bridge
+            </Button>
           </CardContent>
         </Card>
 
