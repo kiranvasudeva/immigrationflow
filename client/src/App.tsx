@@ -75,10 +75,9 @@ function Router() {
             <AppSidebar userRole={user?.role || 'VIEWER'} />
             <SidebarInset>
               {/* Mobile menu trigger */}
-              <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-                <div className="flex items-center gap-2 px-4">
-                  <SidebarTrigger className="-ml-1" />
-                </div>
+              <header className="flex h-16 shrink-0 items-center gap-2 px-4 border-b border-border bg-background">
+                <SidebarTrigger className="h-8 w-8 hover:bg-accent hover:text-accent-foreground rounded-md" data-testid="button-mobile-menu" />
+                <div className="flex-1" />
               </header>
               <Switch>
                 <Route path="/" component={RoleBasedDashboard} />
