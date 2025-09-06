@@ -99,10 +99,11 @@ The agent should never mark a task complete without running through this verific
 - **Cache Layer**: Redis for job queues and temporary data caching.
 
 ### Authentication & Authorization
-- **Primary Auth**: Replit Auth with OpenID Connect integration.
-- **Session Management**: Server-side sessions stored in PostgreSQL via `connect-pg-simple`.
-- **Access Control**: Role-based permissions are strictly enforced: ADMIN (full access), OWNER (manages own clients/workers), WORKER (views assignments, uploads documents), VIEWER (read-only).
-- **Security**: Utilizes HTTP-only cookies, CSRF protection, and comprehensive audit logging.
+- **Dual Authentication Mode**: Feature flag (AUTH_MODE) supports both password-based authentication and Replit Auth (OIDC)
+- **Password Authentication**: Argon2id hashing with JWT access/refresh token management and refresh token family rotation
+- **Session Management**: Server-side sessions with PostgreSQL via `connect-pg-simple`, secure httpOnly cookies
+- **Access Control**: Role-based permissions strictly enforced: ADMIN (full access), OWNER (manages own clients/workers), WORKER (views assignments, uploads documents), VIEWER (read-only)
+- **Security**: CSRF protection via double-submit cookies, rate limiting on auth routes, comprehensive audit logging, secure token handling
 
 ### Document Management
 - **PDF Generation**: Server-side PDF creation using PDFKit, with auto-population of predefined Romanian immigration templates.
@@ -119,6 +120,26 @@ The agent should never mark a task complete without running through this verific
 - **Assignment Status Tracking**: Detailed status flow from `NOT_STARTED` to `ACCEPTED/REJECTED`.
 - **Enhanced Worker Schema**: Stores over 50 fields of comprehensive immigration data, including personal, contact, passport, education, employment, immigration history, health, family, and financial details.
 - **System Health Checks**: Dedicated `/health-check` endpoint with orchestrated tests (FileText, Shield, Database, Globe) and real-time logs via Server-Sent Events.
+- **GDPR Compliance Suite**: Cookie banner with granular consent, privacy/cookie policies, data export/deletion endpoints, and comprehensive user rights management.
+- **Security-First Design**: Enterprise-grade authentication, CSRF protection, rate limiting, secure session management, and comprehensive audit logging.
+
+### New Authentication Endpoints
+- `/auth/login` - Password-based login with JWT tokens
+- `/auth/refresh` - Token refresh with family rotation
+- `/auth/logout` - Secure logout with token revocation
+- `/whoami` - User information with masked email
+- `/healthz` - System health and feature status
+- `/gdpr/export` - Personal data export (GDPR Article 20)
+- `/gdpr/delete` - Data deletion request (GDPR Article 17)
+- `/dev/test-credentials` - Development test account information
+
+### Test Data
+Demo accounts available via seeding script:
+- `admin@demo.law` - System Administrator (ADMIN role)
+- `client@demo.law` - Client Owner (OWNER role)  
+- `worker@demo.law` - Worker (WORKER role)
+- `viewer@demo.law` - Read-only access (VIEWER role)
+- Default password: `Demo!2345`
 
 ## External Dependencies
 
