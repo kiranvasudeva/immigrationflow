@@ -46,5 +46,11 @@
   },
   "clientProfile": "Profil Client & Management",
   "workersManagement": "Management Lucrători & Atribuire",
-  "workflowTracking": "Urmărire Workflow Imigrație"
+  "workflowTracking": "Urmărire Workflow Imigrație",
+  "tabs": {
+    "workers": "Workers",
+    "workflows": "Workflows"
+  },
+  "noWorkers": "No Workers",
+  "addWorkersFirst": "Add Workers First"
 }

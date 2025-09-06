@@ -973,17 +973,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Transform to expected QA format with proper step metadata
         const sortedSteps = steps
           .sort((a, b) => a.order - b.order)
-          .map(step => ({
+          .map((step, index) => ({
             id: step.id,
-            stepOrder: step.order, // Map 'order' to 'stepOrder' 
-            name: step.name,
-            requiresUpload: step.stepType === 'DOCUMENT_COLLECTION' || step.stepType === 'DOCUMENT_REVIEW',
-            requiresVerification: step.requiresApproval || step.stepType === 'APPROVAL',
+            stepOrder: Number(step.order ?? index + 1), // Defensive: ensure stepOrder is always a number
+            name: String(step.name || ''), // Defensive: ensure name is always a string
+            requiresUpload: Boolean(step.stepType === 'DOCUMENT_COLLECTION' || step.stepType === 'DOCUMENT_REVIEW'), // Explicit boolean
+            requiresVerification: Boolean(step.requiresApproval || step.stepType === 'APPROVAL'), // Explicit boolean
             stepType: step.stepType,
             assignedRole: step.assignedRole,
             description: step.description,
             isRequired: step.isRequired
-          }));
+          }))
+          .filter(step => step.name.trim().length > 0); // Remove empty name steps
 
         return {
           id: template.id,

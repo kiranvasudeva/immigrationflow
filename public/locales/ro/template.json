@@ -1,0 +1,24 @@
+{
+  "fieldKey": "Field Key",
+  "fieldType": "Field Type",
+  "fieldTypes": {
+    "text": "Text",
+    "date": "Date",
+    "number": "Number",
+    "checkbox": "Checkbox",
+    "dropdown": "Dropdown",
+    "signature": "Signature",
+    "photo": "Photo"
+  },
+  "information": "Information",
+  "types": {
+    "form": "Form",
+    "document": "Document",
+    "certificate": "Certificate"
+  },
+  "fields": {
+    "title": "Title"
+  },
+  "noFields": "No Fields",
+  "preview": "Preview"
+}

@@ -1,0 +1,105 @@
+RESET TO PROTOCOL.
+
+GOAL
+Turn the last two QA reds green:
+1) Template Step Metadata — FAIL: 1/7 templates has malformed/missing step fields.
+2) UI Hydration Sanity — FAIL: untranslated i18n keys detected on /dashboard, /clients, /workers.
+
+GUARDRAILS
+- Minimal diffs; list files you’ll edit before changes.
+- Preserve all working features.
+- All API responses must be JSON with correct Content-Type.
+- STOP and report a BLOCKER with file path + exact error if any step fails.
+
+STEP 1 — AUDIT (NO EDITS)
+
+A) TEMPLATE STEP METADATA
+- Print the exact JSON (single example) for each of the 7 templates from GET /api/workflows/templates, focusing on the one that fails the QA check.
+- For each step of the failing template, show the raw DB columns and values used to map:
+  - order / step_order / position → stepOrder (number)
+  - title / name → name (string)
+  - requires_upload / needs_upload → requiresUpload (boolean)
+  - requires_verification / needs_verification → requiresVerification (boolean)
+- Identify which field is missing or wrong type (e.g., null, string "true", 0/1).
+
+B) I18N / HYDRATION
+- List all i18n JSON files (en, ro, etc.) and their top-level namespaces (if any).
+- Show the exact keys flagged by QA as untranslated on /dashboard, /clients, /workers (collect from QA test or console).
+- Print the i18n initialization: where missing keys are handled. Do we fall back to English, or do we render raw keys?
+- Confirm there is only ONE i18n provider at the app root and that translations are preloaded before first render.
+
+STOP and summarize:
+- Which template/step fields are malformed and how.
+- Which i18n keys are missing and in which files.
+
+STEP 2 — PLAN (MINIMAL DIFFS)
+- Fix the templates endpoint mapping and normalization so ALL templates conform strictly to:
+  steps: [{ id, stepOrder:number, name:string, requiresUpload:boolean, requiresVerification:boolean }]
+  - Order steps ASC by stepOrder.
+  - Coerce legacy values (0/1, "true"/"false", null) to boolean defaults:
+    requiresUpload: !!numeric_or_boolean_value (default false if null/undefined)
+    requiresVerification: !!numeric_or_boolean_value (default false)
+- Add a defensive mapper in the API handler so malformed DB data doesn’t leak to clients.
+- Add a one-time data repair (non-destructive) in the loader: if stepOrder is null, default to index+1 (only for the API response; do not mutate DB).
+
+- For i18n:
+  - Implement a missing key extractor script that scans client/src/**/*.{ts,tsx} for t('...') usage and outputs missing keys.
+  - Auto-insert any missing keys into en.json with the key as the English fallback (value = humanized key or same key if unknown).
+  - For ro.json, insert the same keys with value = English for now (so UI never shows raw keys), and mark them with a "__TODO_RO": true flag or add a comment if supported.
+  - Add runtime missingKey handler (i18next or your i18n lib) to always fall back to English and log to console.warn (dev only), NEVER render raw keys.
+  - Ensure only ONE i18n provider at the root keeps preloaded resources to avoid hydration mismatches.
+
+STEP 3 — IMPLEMENT
+
+A) SERVER — TEMPLATE STEP NORMALIZATION
+- Edit the handler for GET /api/workflows/templates:
+  - Map DB → canonical JSON:
+    {
+      id, name, description,
+      steps: steps
+        .map(s => ({
+          id: s.id,
+          stepOrder: Number(s.step_order ?? s.order ?? s.position ?? index+1),
+          name: String(s.name ?? s.title ?? ""),
+          requiresUpload: Boolean(
+            s.requires_upload ?? s.needs_upload ?? (typeof s.requiresUpload === "string" ? s.requiresUpload === "true" : s.requiresUpload) ?? false
+          ),
+          requiresVerification: Boolean(
+            s.requires_verification ?? s.needs_verification ?? (typeof s.requiresVerification === "string" ? s.requiresVerification === "true" : s.requiresVerification) ?? false
+          )
+        }))
+        .filter(s => s.name.trim().length > 0)
+        .sort((a,b) => a.stepOrder - b.stepOrder)
+    }
+  - Always `res.status(200).json(templates)` and set `Content-Type: application/json`.
+
+B) CLIENT — I18N HARDENING & MISSING KEYS
+- Add scripts/i18n-extract.mjs:
+  - Scan client/src for t('key') and collect keys.
+  - Compare with en.json and ro.json.
+  - Append missing keys to en.json with value = humanized key (or same key).
+  - Append missing keys to ro.json with English fallback value and mark them for later translation.
+- Wire an npm script: `"i18n:extract": "node scripts/i18n-extract.mjs"`
+- Update i18n init:
+  - Add a missingKey handler (or equivalent) that returns English fallback and console.warns in dev.
+  - Ensure resources are loaded before first render (await init in main.tsx if needed).
+- Ensure there is only ONE i18n provider at app root; remove/disable any duplicates.
+- Replace any raw i18n key renderings with proper `t('...')` calls.
+
+STEP 4 — VERIFY
+- Run: `npm run i18n:extract` (or the equivalent command added) → expect en.json, ro.json updated with missing keys.
+- Restart app (if needed).
+- Open /qa/live → Run QA Tests.
+- Expect:
+  - Template Step Metadata → PASS (7/7 ok).
+  - UI Hydration Sanity → PASS (no raw keys; one sidebar; stable keys).
+- Confirm other tests remain green.
+- Output:
+  - Files changed summary.
+  - Count of templates/steps returned and a sample of one corrected template.
+  - List of i18n keys added (count only if too many).
+
+If any still fail, STOP and report:
+- failing test name,
+- for metadata: the exact template id/name and the malformed field,
+- for i18n: which key(s) still render raw and on which page.

@@ -3,7 +3,7 @@
   "clients": "Clients",
   "clientList": "Client List",
   "allClients": "All Clients",
-  "activeClients": "Active Clients", 
+  "activeClients": "Active Clients",
   "inactiveClients": "Inactive Clients",
   "allStatuses": "All Statuses",
   "pending": "Pending",
@@ -112,12 +112,11 @@
       },
       "documents": {
         "title": "Document Categories & Types",
-        "description": "Configure document categories and types for workflows",
+        "description": "Description",
         "addCategory": "Add Category",
         "addType": "Add Document Type",
         "categoryName": "Category Name",
         "typeName": "Document Type Name",
-        "description": "Description",
         "requiredFields": "Required Fields",
         "templateRequired": "Template Required"
       },
@@ -370,13 +369,13 @@
     "headers": {
       "actions": "Actions",
       "document": "Document",
-      "dueDate": "Due Date", 
+      "dueDate": "Due Date",
       "stage": "Stage",
       "status": "Status"
     }
   },
   "save": "Save",
-  "cancel": "Cancel", 
+  "cancel": "Cancel",
   "edit": "Edit",
   "delete": "Delete",
   "add": "Add",
@@ -416,5 +415,18 @@
     "myDocuments": "My Documents",
     "nextSteps": "Next Steps",
     "urgentActions": "Urgent Actions"
-  }
+  },
+  "role": "Role",
+  "2d": "2d",
+  "canvas": "Canvas",
+  "blob": "Blob",
+  "a": "A",
+  "steps": "Steps",
+  "current": "Current",
+  "/": "/",
+  "content-type": "Content-type",
+  "Health Check Failed: ${err}": " Health  Check  Failed: ${err}",
+  "Last Report Failed: ${err}": " Last  Report  Failed: ${err}",
+  "QA Bridge Failed: ${err}": " Q A  Bridge  Failed: ${err}",
+  "/workers/": "/workers/"
 }

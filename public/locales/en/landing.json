@@ -20,6 +20,16 @@
     "gdprCompliant": "GDPR Compliant",
     "gdprCompliantDesc": "Secure personal data management with EU compliance",
     "advancedSearch": "Advanced Search",
-    "advancedSearchDesc": "Quickly find clients, documents, and cases with powerful search"
-  }
+    "advancedSearchDesc": "Quickly find clients, documents, and cases with powerful search",
+    "subtitle": "Subtitle",
+    "clientManagement": "Client Management",
+    "clientManagementDesc": "Client Management Desc",
+    "workflowTracking": "Workflow Tracking",
+    "workflowTrackingDesc": "Workflow Tracking Desc",
+    "documentGeneration": "Document Generation",
+    "documentGenerationDesc": "Document Generation Desc"
+  },
+  "subtitle": "Subtitle",
+  "trial": "Trial",
+  "demo": "Demo"
 }

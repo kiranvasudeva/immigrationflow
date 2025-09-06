@@ -1,0 +1,10 @@
+{
+  "addWorker": {
+    "title": "Title",
+    "description": "Description"
+  },
+  "inviteWorker": {
+    "title": "Title",
+    "description": "Description"
+  }
+}

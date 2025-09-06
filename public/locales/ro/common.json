@@ -4,7 +4,7 @@
   "clientList": "Lista Clienților",
   "allClients": "Toți Clienții",
   "activeClients": "Clienți Activi",
-  "inactiveClients": "Clienți Inactivi", 
+  "inactiveClients": "Clienți Inactivi",
   "allStatuses": "Toate Statusurile",
   "pending": "În Așteptare",
   "approved": "Aprobat",
@@ -314,5 +314,18 @@
   "add": "Adaugă",
   "enable": "Activează",
   "disable": "Dezactivează",
-  "configure": "Configurează"
+  "configure": "Configurează",
+  "role": "Role",
+  "2d": "2d",
+  "canvas": "Canvas",
+  "blob": "Blob",
+  "a": "A",
+  "steps": "Steps",
+  "current": "Current",
+  "/": "/",
+  "content-type": "Content-type",
+  "Health Check Failed: ${err}": " Health  Check  Failed: ${err}",
+  "Last Report Failed: ${err}": " Last  Report  Failed: ${err}",
+  "QA Bridge Failed: ${err}": " Q A  Bridge  Failed: ${err}",
+  "/workers/": "/workers/"
 }

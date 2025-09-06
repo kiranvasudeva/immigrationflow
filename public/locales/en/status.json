@@ -1,0 +1,12 @@
+{
+  "completed": "Completed",
+  "urgent": "Urgent",
+  "dueSoon": "Due Soon",
+  "upcoming": "Upcoming",
+  "scheduled": "Scheduled",
+  "unknown": "Unknown",
+  "accepted": "Accepted",
+  "submitted": "Submitted",
+  "pendingUpload": "Pending Upload",
+  "rejected": "Rejected"
+}

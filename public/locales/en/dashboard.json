@@ -46,5 +46,11 @@
   },
   "clientProfile": "Client Profile & Management",
   "workersManagement": "Workers Management & Assignment",
-  "workflowTracking": "Immigration Workflow Tracking"
+  "workflowTracking": "Immigration Workflow Tracking",
+  "tabs": {
+    "workers": "Workers",
+    "workflows": "Workflows"
+  },
+  "noWorkers": "No Workers",
+  "addWorkersFirst": "Add Workers First"
 }

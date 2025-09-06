@@ -23,5 +23,7 @@
   "saveTemplate": "Salvează Șablon",
   "uploadDocument": "Încarcă Document",
   "uploadFirstDocument": "Încarcă Primul Document",
-  "view": "Vizualizează"
+  "view": "Vizualizează",
+  "takeAction": "Take Action",
+  "download": "Download"
 }

@@ -1,0 +1,7 @@
+{
+  "workerAdded": "Worker Added",
+  "workerAddFailed": "Worker Add Failed",
+  "invitationSent": "Invitation Sent",
+  "invitationFailed": "Invitation Failed",
+  "tryAgainLater": "Try Again Later"
+}

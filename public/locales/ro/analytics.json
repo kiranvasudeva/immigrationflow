@@ -1,0 +1,22 @@
+{
+  "placeholders": {
+    "allClients": "All Clients",
+    "period": "Period"
+  },
+  "options": {
+    "allClients": "All Clients"
+  },
+  "headers": {
+    "totalClients": "Total Clients",
+    "activeWorkers": "Active Workers",
+    "pendingActions": "Pending Actions",
+    "statusDistribution": "Status Distribution",
+    "stageProgress": "Stage Progress",
+    "monthlyTrend": "Monthly Trend",
+    "clientPerformance": "Client Performance",
+    "recentActivity": "Recent Activity"
+  },
+  "completed": {
+    "month": "Month"
+  }
+}

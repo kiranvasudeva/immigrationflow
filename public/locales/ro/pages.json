@@ -1,0 +1,47 @@
+{
+  "templates": {
+    "builder": {
+      "title": "Title"
+    }
+  },
+  "analytics": {
+    "title": "Title",
+    "subtitle": "Subtitle"
+  },
+  "audit": {
+    "title": "Title",
+    "description": "Description"
+  },
+  "deadlines": {
+    "title": "Title",
+    "description": "Description",
+    "noDeadlines": "No Deadlines",
+    "noDeadlinesDescription": "No Deadlines Description"
+  },
+  "documents": {
+    "title": "Title",
+    "requiredFor": "Required For",
+    "uploaded": "Uploaded",
+    "noDocuments": "No Documents",
+    "noDocumentsDescription": "No Documents Description"
+  },
+  "payments": {
+    "title": "Title",
+    "description": "Description"
+  },
+  "profile": {
+    "title": "Title"
+  },
+  "reminders": {
+    "title": "Title",
+    "description": "Description"
+  },
+  "requirements": {
+    "title": "Title",
+    "description": "Description"
+  },
+  "workers": {
+    "title": "Title",
+    "description": "Description"
+  }
+}

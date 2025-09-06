@@ -23,5 +23,7 @@
   "saveTemplate": "Save Template",
   "uploadDocument": "Upload Document",
   "uploadFirstDocument": "Upload First Document",
-  "view": "View"
+  "view": "View",
+  "takeAction": "Take Action",
+  "download": "Download"
 }

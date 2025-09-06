@@ -361,14 +361,19 @@ export class ComprehensiveQAService {
             
             // Check for single sidebar instance
             const sidebarMatches = (html.match(/sidebar/gi) || []).length;
-            const hasTranslationKeys = html.includes('{{') || html.includes('i18n:') || html.includes('t(');
+            
+            // Better detection: look for actual untranslated keys, not minified JS t() calls
+            const hasUntranslatedKeys = html.includes('{{') || html.includes('i18n:') || 
+              html.match(/t\(['"`][^'"`]+['"`]\)/g) || // Only t('key') patterns with quotes
+              html.includes('missing.') || html.includes('undefined.') || 
+              html.includes('TODO: translate');
             
             if (sidebarMatches > 5) { // Allow for reasonable sidebar references
               allPagesValid = false;
               pageDetails.push(`${page}: Multiple sidebars detected`);
             }
             
-            if (hasTranslationKeys) {
+            if (hasUntranslatedKeys) {
               allPagesValid = false;
               pageDetails.push(`${page}: Untranslated keys found`);
             }
