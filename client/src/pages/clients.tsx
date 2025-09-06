@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -403,6 +403,16 @@ export default function ClientsPage() {
                       </CardDescription>
                     </div>
                     <div className="flex items-center space-x-2">
+                      <Link href={`/clients/${client.id}`}>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          data-testid={`button-view-profile-${client.id}`}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View Profile
+                        </Button>
+                      </Link>
                       <Button 
                         variant="outline" 
                         size="sm"
@@ -414,7 +424,7 @@ export default function ClientsPage() {
                         }}
                         data-testid={`button-view-workers-${client.id}`}
                       >
-                        <Eye className="h-4 w-4 mr-1" />
+                        <Users className="h-4 w-4 mr-1" />
                         {showClientWorkers[client.id] ? 'Hide Workers' : 'View Workers'}
                       </Button>
                       {user?.role === 'ADMIN' && (
