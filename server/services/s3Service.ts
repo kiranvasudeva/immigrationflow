@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, CreateBucketCommand, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export class S3Service {
@@ -110,9 +110,31 @@ export class S3Service {
   }
 
   async ensureBucketExists(): Promise<void> {
-    // In a production environment, you might want to create the bucket if it doesn't exist
-    // For now, we assume the bucket is already created
-    console.log(`Using S3 bucket: ${this.bucket}`);
+    try {
+      // Check if bucket exists
+      const headCommand = new HeadBucketCommand({
+        Bucket: this.bucket,
+      });
+      await this.s3Client.send(headCommand);
+      console.log(`✓ S3 bucket exists: ${this.bucket}`);
+    } catch (error: any) {
+      if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
+        try {
+          // Create bucket if it doesn't exist
+          const createCommand = new CreateBucketCommand({
+            Bucket: this.bucket,
+          });
+          await this.s3Client.send(createCommand);
+          console.log(`✓ S3 bucket created: ${this.bucket}`);
+        } catch (createError) {
+          console.warn(`⚠️  Could not create bucket ${this.bucket}:`, createError);
+          // Continue anyway - bucket might exist but we don't have HeadBucket permission
+        }
+      } else {
+        console.warn(`⚠️  Could not verify bucket ${this.bucket}:`, error.message);
+        // Continue anyway - bucket might exist but we don't have HeadBucket permission
+      }
+    }
   }
 }
 
