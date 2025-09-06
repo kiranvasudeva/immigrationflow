@@ -1453,6 +1453,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Worker workflow linking operations
+  async getWorkerWorkflowsProgress(workerId: string): Promise<any[]> {
+    const progressData = await db.select().from(workerWorkflowProgress)
+      .leftJoin(workflowTemplates, eq(workerWorkflowProgress.workflowTemplateId, workflowTemplates.id))
+      .where(eq(workerWorkflowProgress.workerId, workerId));
+    
+    return progressData.map(row => ({
+      id: row.worker_workflow_progress?.id,
+      workerId: row.worker_workflow_progress?.workerId,
+      workflowTemplateId: row.worker_workflow_progress?.workflowTemplateId,
+      status: row.worker_workflow_progress?.status,
+      workflowName: row.workflow_templates?.name,
+      workflowDescription: row.workflow_templates?.description,
+      steps: [], // Will be populated separately if needed
+    }));
+  }
+
   async linkWorkerToWorkflow(workerId: string, templateId: string): Promise<WorkerWorkflowProgress> {
     // Check if already linked
     const existing = await this.getWorkerWorkflowProgress(workerId, templateId);

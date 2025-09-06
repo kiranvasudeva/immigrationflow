@@ -1392,6 +1392,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get workflow progress for a specific worker
+  app.get('/api/workers/:workerId/workflow-progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const { workerId } = req.params;
+      
+      if (!workerId) {
+        return res.status(400).json({ message: "Worker ID is required" });
+      }
+
+      const progress = await storage.getWorkerWorkflowsProgress(workerId);
+      res.json(progress);
+    } catch (error) {
+      console.error('Error fetching worker workflow progress:', error);
+      res.status(500).json({ message: "Failed to fetch worker workflow progress", error: (error as Error).message });
+    }
+  });
+
   // Worker workflow linking endpoints
   app.post('/api/workers/:workerId/workflows/:templateId/link', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
     try {
