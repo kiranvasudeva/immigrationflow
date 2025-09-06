@@ -251,16 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Health check endpoint
   app.get('/healthz', (req, res) => {
-    res.json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      version: '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
-      features: {
-        authMode: process.env.AUTH_MODE || 'oidc',
-        privacyBanner: process.env.PRIVACY_BANNER === 'true',
-      }
-    });
+    res.json({ ok: true });
   });
 
   // GDPR Data Export (stub)

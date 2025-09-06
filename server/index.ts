@@ -103,17 +103,13 @@ app.use(httpMetricsMiddleware());
     }
 
     // ALWAYS serve the app on the port specified in the environment variable PORT
-    // Other ports are firewalled. Default to 5000 if not specified.
+    // Other ports are firewalled. Default to 3000 if not specified.
     // this serves both the API and the client.
     // It is the only port that is not firewalled.
-    const port = parseInt(process.env.PORT || '5000', 10);
+    const PORT = Number(process.env.PORT || 3000);
     
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      logInfo(`Server successfully started and listening on host 0.0.0.0:${port}`);
+    server.listen(PORT, "0.0.0.0", () => {
+      logInfo(`Server listening on PORT=${PORT} HOST=0.0.0.0`);
       logInfo(`Environment: ${process.env.NODE_ENV || 'development'}`);
       logInfo(`Health check available at /health`);
       logInfo(`Database health check available at /health/db`);
@@ -122,7 +118,7 @@ app.use(httpMetricsMiddleware());
     // Handle server startup errors
     server.on('error', (error: any) => {
       if (error.code === 'EADDRINUSE') {
-        logError(`Port ${port} is already in use. Server startup failed.`);
+        logError(`Port ${PORT} is already in use. Server startup failed.`);
         process.exit(1);
       } else {
         logError('Server error', error);
