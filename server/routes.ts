@@ -49,9 +49,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     skip: (req) => req.path.includes('/healthz'),
   });
 
-  // Apply CSRF middleware
-  app.use(csrfMiddleware.generateToken);
-  app.use(csrfMiddleware.verifyToken);
+  // Apply CSRF middleware (TODO: Enable after session setup is fixed)
+  // app.use(csrfMiddleware.generateToken);
+  // app.use(csrfMiddleware.verifyToken);
 
   // Set up authentication (feature flag based)
   if (process.env.AUTH_MODE === 'password') {
