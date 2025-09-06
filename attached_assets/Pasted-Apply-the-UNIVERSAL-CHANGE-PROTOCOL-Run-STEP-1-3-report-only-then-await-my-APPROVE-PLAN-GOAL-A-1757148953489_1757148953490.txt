@@ -1,0 +1,77 @@
+Apply the UNIVERSAL CHANGE PROTOCOL. Run STEP 1–3 (report only), then await my APPROVE PLAN.
+
+GOAL
+Add an in-app QA/Smoke Test Dashboard (admin-only) that validates end-to-end flows using the seeded accounts and DB data—no mocks. It should produce a single PASS/FAIL report I can read.
+
+REQUIREMENTS
+
+Access & Security
+- Route: GET /qa (client) visible only to role ADMIN.
+- Server route: GET /api/qa/smoke that executes checks server-side and returns a JSON report.
+- Never expose secrets or PII. Use masked emails in output.
+- QA features enabled only when NODE_ENV=development or QA_MODE=true.
+
+Auth assumptions
+- Use the seeded accounts created earlier (admin@demo.law, client@demo.law, worker@demo.law).
+- The QA runner assumes the admin is already logged in (httpOnly cookies).
+- Provide quick “impersonate” endpoints admin-only: POST /admin/impersonate { userId } and POST /admin/unimpersonate to swap session identity safely in dev (toggle a server-side flag; log audit entry). These endpoints must be gated by ADMIN and QA_MODE=true.
+
+QA Server Checks (no browser automation; API-level + minimal SSR sanity)
+Implement /api/qa/smoke to run these steps and aggregate results:
+
+1) Health & Auth
+   - GET /healthz → ok: true
+   - GET /whoami as ADMIN → {id, role: ADMIN, emailMasked}
+   - Rate-limit sanity: 1–2 login attempts succeed; throttling not triggered.
+
+2) Clients
+   - GET /api/clients → ≥ 2 clients (from seed), each with legalName, cui, registrationNumber, legalAddress.
+   - Validate no legacy fields: companyName/address/onrc/fiscalCode must not appear.
+
+3) Workers
+   - GET /api/workers?clientId=… → workers exist, fields match schema.
+   - Each worker has clientProfileId and emailMasked in report.
+
+4) Workflows (template-driven)
+   - GET /api/workers/:id/workflows (or equivalent) → returns assigned workflow template, steps in correct order.
+   - GET step progress → statuses only in {PENDING, IN_PROGRESS, COMPLETED, REJECTED}.
+   - Enforce sequential rule: no step N+1 COMPLETED if step N not COMPLETED.
+
+5) Documents
+   - For at least one step requiring upload, list document requirements.
+   - Check that upload config is S3/Backblaze (not local FS). If not configured, endpoint returns 501 as required.
+
+6) RBAC
+   - Impersonate OWNER: owner cannot access /admin routes or /qa.
+   - Impersonate WORKER: worker sees only own data; forbidden on /qa and admin-only endpoints.
+   - Unimpersonate back to ADMIN.
+
+7) UI parity (lightweight)
+   - Fetch HTML for Dashboard, Clients, Workers pages; confirm single sidebar marker (no duplicate).
+   - Confirm i18n keys render as text (no raw “translation.key” output) for a few core labels.
+
+Return a JSON report:
+{
+  ok: boolean,
+  checks: [{name, ok, details?}],
+  errors: [{name, reason, path?}],
+  summary: { passed, failed, timestamp }
+}
+
+Client QA Dashboard
+- Page: /qa displays the report in a table (name, status badge, details).
+- “Run tests” button re-calls /api/qa/smoke.
+- “Impersonate” controls (admin-only in dev): dropdown of seeded users (owner/worker) → call /admin/impersonate then open a new tab to the respective dashboard; show a clear banner “IMPERSONATING”.
+- “Stop impersonation” button calls /admin/unimpersonate.
+
+Docs & Visibility
+- Add QA section to replit.md: how to enable QA_MODE, how to run /qa, what the checks do, how to read the report, and impersonation safety.
+- Ensure QA routes/components are hidden unless QA_MODE=true or NODE_ENV=development.
+
+Verification
+- Run node scripts/verify-frontend.js → PASS
+- TS/LSP diagnostics → 0 errors
+- Manual: As ADMIN, open /qa → press “Run tests” → see PASS/FAIL per check.
+- Confirm /qa not accessible as OWNER/WORKER (403) and when QA_MODE=false in production.
+
+STOP after plan; await my APPROVE PLAN before implementation.
