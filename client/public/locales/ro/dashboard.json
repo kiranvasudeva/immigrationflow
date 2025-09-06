@@ -1,0 +1,33 @@
+{
+  "title": "Panou de Control",
+  "overview": "Prezentare generală",
+  "statistics": "Statistici",
+  "recentActivity": "Activitate recentă",
+  "pendingTasks": "Sarcini în așteptare",
+  "activeWorkflows": "Fluxuri de lucru active",
+  "totalClients": "Total clienți",
+  "totalWorkers": "Total angajați",
+  "documentsGenerated": "Documente generate",
+  "workflowsCompleted": "Fluxuri de lucru finalizate",
+  "upcomingDeadlines": "Termene limită apropiate",
+  "quickActions": "Acțiuni rapide",
+  "addClient": "Adaugă client",
+  "addWorker": "Adaugă angajat",
+  "generateReport": "Generează raport",
+  "stages": {
+    "ajofm": "Test piața muncii AJOFM",
+    "workPermit": "Permis de muncă (IGI)",
+    "visa": "Cerere viză",
+    "residence": "Permis de ședere"
+  },
+  "action": {
+    "newClient": "Client nou"
+  },
+  "client": {
+    "subtitle": "Gestionarea profilurilor de clienți",
+    "title": "Profil client"
+  },
+  "clientProfile": "Profil client și gestionare",
+  "workersManagement": "Gestionarea angajaților și atribuiri",
+  "workflowTracking": "Urmărirea fluxului de imigrare"
+}

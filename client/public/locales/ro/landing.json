@@ -1,0 +1,24 @@
+{
+  "login": "Autentificare",
+  "title": "Simplifică fluxurile de imigrare românești",
+  "subtitle": "Fluxuri de imigrare",
+  "description": "Platformă SaaS completă pentru gestionarea permiselor de muncă, aplicațiilor de viză și permiselor de ședere. De la testele pieței muncii AJOFM la aprobările finale IGI.",
+  "trial": "Începe trial gratuit",
+  "demo": "Programează demo",
+  "features": {
+    "title": "Funcționalități puternice",
+    "subtitle": "Tot ce ai nevoie pentru a gestiona eficient fluxurile de imigrare din România",
+    "clientManagement": "Gestionarea clienților",
+    "clientManagementDesc": "Organizează și urmărește toți clienții cu gestionarea completă a profilurilor",
+    "workflowTracking": "Urmărirea fluxului de lucru",
+    "workflowTrackingDesc": "Monitorizează progresul prin procesele AJOFM, IGI și consulat",
+    "documentGeneration": "Generarea documentelor",
+    "documentGenerationDesc": "Generează automat formulare de imigrare românești cu date precompletate",
+    "smartReminders": "Mementouri inteligente",
+    "smartRemindersDesc": "Notificări automate pentru termene și reînnoiri de documente",
+    "gdprCompliant": "Conform GDPR",
+    "gdprCompliantDesc": "Gestionarea securizată a datelor personale cu conformitatea UE",
+    "advancedSearch": "Căutare avansată",
+    "advancedSearchDesc": "Găsește rapid clienți, documente și cazuri cu căutare puternică"
+  }
+}
