@@ -58,8 +58,13 @@ export default function QALivePage() {
       });
       
       if (response.ok) {
-        // Refresh both report and audit logs
-        await Promise.all([refetchReport(), refetchAudit()]);
+        const result = await response.json();
+        if (result.ok && result.report) {
+          // Update cache directly and refresh views
+          await Promise.all([refetchReport(), refetchAudit()]);
+        } else {
+          setError('QA tests completed but returned unexpected format');
+        }
       } else {
         const errorText = await response.text();
         setError(`Failed to run tests (${response.status}): ${errorText}`);

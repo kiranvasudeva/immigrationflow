@@ -1,0 +1,47 @@
+RESET TO PROTOCOL.
+
+GOAL
+Fix the QA Dashboard “Run QA Tests” so it works reliably:
+- 409 on /qa/bridge should no longer block tests.
+- Add a server-side runner that bypasses bridge token/nonce in dev.
+- Ensure last report is cached and available at /qa/last-report and /qa/public.
+- Keep minimal diffs and no regressions.
+
+STEP 1 — AUDIT (NO EDITS)
+- Show server file implementing POST /qa/bridge and list all guards (token, nonce, rate limit). Show exact conditions that return 409.
+- Show the qaTests executor function (server/services/qaTests.ts). Does it use a single-flight lock or running flag that can cause 409 if already in progress?
+- Show where the last-report cache is stored (in-memory variable/module). Confirm that it is updated only after qaTests completes.
+- Show client page for /qa/live and the handler wired to “Run QA Tests”. Confirm whether it calls /qa/bridge directly without headers.
+- Show definitions for GET /qa/last-report and GET /qa/public and their 404 logic.
+
+STOP and summarize root cause (likely: dashboard calls secured bridge without headers and/or single-flight 409).
+
+STEP 2 — PLAN (MINIMAL DIFFS)
+- Add a new server endpoint: POST /qa/run (DEV-ONLY for now) that:
+  - Calls the same qaTests executor directly WITHOUT bridge token/nonce/rate limit.
+  - Updates the last-report cache.
+  - Returns { ok:true, report } with JSON content-type and 200.
+  - If a run is already in progress, either queue or await; do NOT return 409. Use a simple mutex/promise to serialize runs.
+
+- Update /qa/live page:
+  - Change “Run QA Tests” button to call POST /qa/run instead of /qa/bridge.
+  - Keep the “Fetch Last Report” button wired to GET /qa/last-report.
+  - Display any errors visibly (status + message) instead of blank space.
+
+- Keep /qa/bridge as-is (secured) for power actions. We only use /qa/run for the dashboard’s test trigger.
+
+- Ensure after any successful qaTests run:
+  - Cache is updated.
+  - GET /qa/last-report returns 200 + report JSON.
+  - GET /qa/public mirrors the same (200 after the first successful run; 404 prior is acceptable).
+
+VERIFY
+- Open /qa/live, click “Run QA Tests” → Expect PASS/FAIL matrix and Raw JSON.
+- Refresh /qa/public → now returns the latest JSON (200).
+- Re-run tests twice in a row → NO 409; second waits or queues, then returns 200.
+- All JSON responses have Content-Type: application/json.
+- No regressions on /dashboard, /clients, /workers.
+
+OUTPUT
+- List files changed and a short summary of fixes.
+- If anything fails, STOP and report BLOCKER with file path + exact error text.

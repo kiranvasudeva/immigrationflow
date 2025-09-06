@@ -282,43 +282,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ ok: true, data: report });
   });
 
+  // Simple mutex for QA test serialization
+  let qaTestRunning = false;
+  let qaTestQueue: Array<{ resolve: Function, reject: Function }> = [];
+
   app.post('/qa/run', async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     try {
-      // Use internal bridge token to run QA tests
-      const bridgeToken = process.env.BRIDGE_TOKEN;
-      if (!bridgeToken || process.env.QA_MODE !== 'true') {
-        return res.status(503).json({ error: 'QA mode not enabled' });
+      // DEV-ONLY check
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({ ok: false, error: 'QA runner disabled in production' });
       }
 
-      const timestamp = Date.now().toString();
-      const nonce = `internal-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${process.pid}`;
+      // If already running, queue the request
+      if (qaTestRunning) {
+        await new Promise((resolve, reject) => {
+          qaTestQueue.push({ resolve, reject });
+        });
+      }
 
-      const response = await fetch(`http://localhost:5000/qa/bridge`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${bridgeToken}`,
-          'X-Timestamp': timestamp,
-          'X-Nonce': nonce,
-        },
-        body: JSON.stringify({ action: 'qaTests' })
-      });
+      // Set running flag and process
+      qaTestRunning = true;
+      
+      try {
+        // Import and run QA tests directly (bypass bridge)
+        const { comprehensiveQA } = await import('./services/qaTests');
+        const report = await comprehensiveQA.runFullSuite();
 
-      if (response.ok) {
-        const result = await response.json();
-        if (result.ok && result.data) {
-          qaReportCache.setReport(result.data);
-          res.json(result.data);
-        } else {
-          res.status(500).json({ error: 'QA test failed' });
-        }
-      } else {
-        res.status(response.status).json({ error: 'Failed to run QA tests' });
+        // Update cache
+        qaReportCache.setReport(report);
+
+        // Process any queued requests
+        const queued = qaTestQueue.splice(0);
+        queued.forEach(q => q.resolve());
+
+        res.json({ ok: true, report });
+      } catch (error) {
+        // Process any queued requests with error
+        const queued = qaTestQueue.splice(0);
+        queued.forEach(q => q.reject(error));
+        
+        res.status(500).json({ 
+          ok: false, 
+          error: `QA tests failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+        });
       }
     } catch (error) {
-      console.error('Error running QA tests:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      console.error('QA run error:', error);
+      res.status(500).json({ ok: false, error: 'Internal server error' });
+    } finally {
+      qaTestRunning = false;
     }
   });
 
