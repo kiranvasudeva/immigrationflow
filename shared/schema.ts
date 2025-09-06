@@ -52,7 +52,7 @@ export const workflowStatusEnum = pgEnum('workflow_status', ['NOT_STARTED', 'IN_
 export const checklistTypeEnum = pgEnum('checklist_type', ['VERIFICATION', 'APPROVAL', 'QUALITY_CHECK', 'COMPLIANCE']);
 export const documentStatusEnum = pgEnum('document_status', ['PENDING', 'VERIFIED', 'REJECTED', 'REQUIRES_CHANGES']);
 
-// User table (required for Replit Auth)
+// User table (supports both Replit Auth and password auth)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
@@ -61,9 +61,33 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   role: userRoleEnum("role").notNull().default('OWNER'),
   invitedById: varchar("invited_by_id"),
+  // Password authentication fields (for AUTH_MODE=password)
+  passwordHash: varchar("password_hash"),
+  passwordSalt: varchar("password_salt"),
+  lastLoginAt: timestamp("last_login_at"),
+  failedLoginAttempts: integer("failed_login_attempts").default(0),
+  lockedUntil: timestamp("locked_until"),
+  // GDPR compliance
+  dataExportRequestedAt: timestamp("data_export_requested_at"),
+  dataDeletionRequestedAt: timestamp("data_deletion_requested_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// Refresh Tokens table (for JWT refresh token family management)
+export const refreshTokens = pgTable("refresh_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  tokenFamily: varchar("token_family").notNull(), // Family ID for rotation
+  tokenHash: varchar("token_hash").notNull(), // Hashed refresh token
+  isRevoked: boolean("is_revoked").default(false),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_refresh_tokens_user_id").on(table.userId),
+  index("idx_refresh_tokens_family").on(table.tokenFamily),
+  index("idx_refresh_tokens_expires").on(table.expiresAt),
+]);
 
 // Client Profile table
 export const clientProfiles = pgTable("client_profiles", {

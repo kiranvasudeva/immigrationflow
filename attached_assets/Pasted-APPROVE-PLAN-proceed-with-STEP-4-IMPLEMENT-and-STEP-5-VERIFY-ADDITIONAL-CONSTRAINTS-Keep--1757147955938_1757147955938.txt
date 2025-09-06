@@ -1,0 +1,65 @@
+APPROVE PLAN — proceed with STEP 4 (IMPLEMENT) and STEP 5 (VERIFY).
+
+ADDITIONAL CONSTRAINTS:
+- Keep all current features working. No regressions. No duplicate files.
+- Implement new email/password auth BEHIND a feature flag so we can switch back if needed:
+  - ENV: AUTH_MODE=password  (fallback to existing Replit Auth when AUTH_MODE=oidc or missing)
+  - Do NOT delete current Replit Auth; keep both paths, gated by AUTH_MODE.
+- Dev-only seed: ONLY when NODE_ENV=development. Never expose in production.
+- No PII in logs. Mask emails in logs. Never log passwords.
+- File uploads must continue to use S3/Backblaze; if not configured, return 501 (don’t write to Replit FS).
+
+ENV VARS TO ADD (Replit Secrets):
+- AUTH_MODE=password
+- JWT_ACCESS_TTL=15m
+- JWT_REFRESH_TTL=30d
+- JWT_SECRET=<generate a long random string>
+- REFRESH_TOKEN_SECRET=<generate another long random string>
+- CSRF_SECRET=<random string>
+- DEV_SEED_SECRET=letmein-123
+- COOKIE_DOMAIN=<your replit domain>  # or leave unset for default
+- PRIVACY_BANNER=true
+- NODE_ENV=development
+
+DELIVERABLES:
+- DB: refresh_tokens table, any user password fields, GDPR fields.
+- Server:
+  - POST /auth/login, /auth/refresh, /auth/logout  (httpOnly+Secure+SameSite=Lax cookies)
+  - GET /whoami (masked email), GET /healthz
+  - CSRF middleware (double-submit via X-CSRF-Token + non-httpOnly cookie)
+  - Rate limit on /auth/* (10 req/min/IP + backoff on failed logins)
+  - GDPR stubs: GET /gdpr/export, POST /gdpr/delete
+  - Dev-only: GET /dev/test-credentials  (requires header X-Dev-Secret = DEV_SEED_SECRET and NODE_ENV=development)
+- Client:
+  - Cookie banner component gated by PRIVACY_BANNER
+  - /privacy and /cookies static pages
+- Seed:
+  - npm script: "seed:test"
+  - Inserts ONLY these accounts (create if missing):
+    - admin@demo.law / Demo!2345  → role ADMIN
+    - client@demo.law / Demo!2345 → role OWNER
+    - worker@demo.law / Demo!2345 → role WORKER
+  - 2 demo clients, 3–5 workers linked, 1–2 workflow templates (4–5 steps), progress for at least one worker
+  - Writes TEST_CREDENTIALS.md at repo root with the emails, roles, and passwords (do NOT log passwords to console)
+- Docs:
+  - Update replit.md with AUTH_MODE switch, cookie flags, RBAC, refresh rotation, CSRF, rate limit, GDPR stubs, seed usage.
+
+VERIFICATION (must pass before you report success):
+1) Run seed: npm run seed:test
+2) Print the absolute path to TEST_CREDENTIALS.md
+3) node scripts/verify-frontend.js → PASS
+4) TypeScript/LSP diagnostics → 0 errors
+5) Manual smoke:
+   - Login admin@demo.law / Demo!2345 → receives httpOnly+Secure+SameSite=Lax cookies
+   - /whoami returns masked email + role
+   - /auth/refresh rotates refresh cookie
+   - /auth/logout clears cookies
+   - /dev/test-credentials returns TEST_CREDENTIALS.md ONLY with header X-Dev-Secret=letmein-123
+   - Rate limiting works on /auth/login (simulate >10 attempts/min)
+6) No PII in server logs (emails masked), no 401/500 on happy path, no console errors.
+
+STOP if any step fails and report BLOCKER with file paths. Otherwise, output:
+- Exact path of TEST_CREDENTIALS.md
+- All endpoints list
+- Any files modified/created
+- Short usage note for staging credentials
