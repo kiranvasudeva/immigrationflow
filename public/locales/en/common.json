@@ -369,20 +369,20 @@
   "table": {
     "headers": {
       "actions": "Actions",
+      "document": "Document",
+      "dueDate": "Due Date", 
+      "stage": "Stage",
+      "status": "Status"
+    }
+  },
   "save": "Save",
-  "cancel": "Cancel",
+  "cancel": "Cancel", 
   "edit": "Edit",
   "delete": "Delete",
   "add": "Add",
   "enable": "Enable",
   "disable": "Disable",
   "configure": "Configure",
-      "document": "Document",
-      "dueDate": "Due Date",
-      "stage": "Stage",
-      "status": "Status"
-    }
-  },
   "template": {
     "fieldKey": "Field Key",
     "fieldType": "Field Type",

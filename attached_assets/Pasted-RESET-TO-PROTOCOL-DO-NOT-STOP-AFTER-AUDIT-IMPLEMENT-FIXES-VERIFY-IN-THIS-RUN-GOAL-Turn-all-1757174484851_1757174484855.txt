@@ -1,0 +1,105 @@
+RESET TO PROTOCOL — DO NOT STOP AFTER AUDIT. IMPLEMENT FIXES & VERIFY IN THIS RUN.
+
+GOAL
+Turn all QA reds green:
+1) Template Step Metadata — FAIL
+2) Worker Assignments API — FAIL
+3) Document Upload Preflight — FAIL
+4) UI Hydration Sanity — FAIL
+5) QA Dashboard audit log read — 500
+
+GUARDRAILS
+- Minimal diffs; list files before editing.
+- Preserve all working features.
+- All API responses must be JSON with correct Content-Type.
+- If a step fails, STOP and report BLOCKER with file path + exact error.
+
+STEP 1 — QUICK AUDIT (NO EDITS)
+- Show handlers (file+lines) for:
+  a) GET /api/workflows/templates
+  b) GET /api/workers/:workerId/workflows (or the endpoint the QA calls)
+  c) POST /api/documents/upload (or preflight endpoint)
+- Show DB columns for workflow_steps: stepOrder, name, requiresUpload, requiresVerification (or equivalents).
+- Show how worker_step_progress is shaped (status enum) and how overall worker workflow is computed.
+- Show SPA catch-all location; confirm API router is mounted BEFORE it.
+- Show client i18n provider(s) and where translations are preloaded.
+- Show QA Dashboard code that reads qa_bridge_audit.log and the exact fs path it uses.
+
+=== IMPLEMENT FIXES ===
+
+STEP 2 — TEMPLATE STEP METADATA (fix)
+If metadata fields are missing/renamed:
+- Ensure GET /api/workflows/templates returns JSON like:
+[
+  {
+    "id": "...",
+    "name": "...",
+    "description": "...",
+    "steps": [
+      { "id":"...", "stepOrder":1, "name":"...", "requiresUpload":true, "requiresVerification":false }
+    ]
+  }
+]
+- If DB uses different column names, map them here.
+- Add ORDER BY stepOrder ASC at source.
+- Verify Content-Type: application/json.
+
+STEP 3 — WORKER ASSIGNMENTS API (fix)
+- Implement/repair GET /api/workers/:workerId/workflows to return:
+[
+  {
+    "workflowTemplateId":"...",
+    "name":"...",
+    "progress":{
+      "overallStatus":"PENDING"|"IN_PROGRESS"|"COMPLETED"|"REJECTED",
+      "steps":[
+        { "stepId":"...","stepOrder":1,"name":"...","status":"PENDING"|"IN_PROGRESS"|"COMPLETED"|"REJECTED" }
+      ]
+    }
+  }
+]
+- Enforce sequential rule server-side:
+  For ordered steps, if step N != COMPLETED then status of step N+1 cannot be COMPLETED; coerce to PENDING or IN_PROGRESS.
+- Ensure API mount is BEFORE any SPA catch-all so it never returns HTML.
+- Update any frontend/QA caller paths to this canonical endpoint.
+
+STEP 4 — DOCUMENT UPLOAD PREFLIGHT (fix)
+- Make POST /api/documents/upload robust:
+  - If storage configured (S3/Backblaze), return 200 JSON { ok:true, storage:"s3", maxSizeMB:XX }.
+  - If not configured, return 501 JSON { ok:false, reason:"StorageNotConfigured" }.
+- Include CORS headers for dev if needed; accept JSON body even if empty.
+- Ensure QA test hits this exact path.
+
+STEP 5 — UI HYDRATION & I18N (fix)
+- Ensure a single i18n provider (e.g., I18nProvider) is mounted once at app root (client/src/main.tsx or root layout). Remove/disable duplicate contexts.
+- Preload the active locale translations BEFORE first render; provide an English fallback. Missing keys must render fallback text, not the raw key.
+- Add missing i18n entries for labels used on /dashboard, /clients, /workers so QA doesn’t see raw keys.
+- Hydration stability:
+  - Render a Skeleton/placeholder while data loads; no mock arrays as initial state.
+  - Sidebar/Layout mounted once (no duplicate sidebars).
+  - Lists use stable keys (id), not array index/random.
+
+STEP 6 — QA DASHBOARD LOG READER (fix)
+- Wrap audit log read in try/catch; if file missing or ENOENT → return empty list [] instead of 500.
+- Use a safe, absolute path for qa_bridge_audit.log, and cap read size (e.g., last 200 lines / 200KB).
+- Update /qa/live to show “No recent activity” on empty; never crash.
+
+STEP 7 — HARDEN API JSON
+- Add a JSON 404 for unknown /api/*: { ok:false, error:"NotFound" } to prevent HTML/<!DOCTYPE returns.
+- Confirm all the fixed endpoints set Content-Type: application/json.
+
+STEP 8 — VERIFY
+- Re-run QA from /qa/live (“Run QA Tests” via /qa/run).
+- Expect the following to PASS:
+  - Template Step Metadata
+  - Worker Assignments API
+  - Document Upload Preflight (200 or 501 with proper JSON, both acceptable)
+  - UI Hydration Sanity (no raw i18n keys, one sidebar)
+- Confirm dashboard “Recent Bridge Activity” no longer throws 500; shows entries or clean empty state.
+- Print a brief summary: files changed, endpoints affected, and counts of templates/steps returned.
+
+If any verification fails, STOP and report:
+- failing test name,
+- response status/body (for API),
+- file+line of thrown error (for UI).
+
