@@ -368,7 +368,14 @@ export default function ClientProfile() {
               ) : clientError ? (
                 <Card>
                   <CardContent className="p-6 text-center">
-                    <p className="text-red-600">Failed to load client data</p>
+                    <p className="text-red-600">Failed to load client data: {clientError?.message || 'Unknown error'}</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-3" 
+                      onClick={() => queryClient.refetchQueries({ queryKey: ['/api/clients', clientId] })}
+                    >
+                      Retry
+                    </Button>
                   </CardContent>
                 </Card>
               ) : (
