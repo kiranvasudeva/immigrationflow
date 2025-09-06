@@ -1,0 +1,33 @@
+{
+  "title": "Dashboard",
+  "overview": "Overview",
+  "statistics": "Statistics",
+  "recentActivity": "Recent Activity",
+  "pendingTasks": "Pending Tasks",
+  "activeWorkflows": "Active Workflows",
+  "totalClients": "Total Clients",
+  "totalWorkers": "Total Workers",
+  "documentsGenerated": "Documents Generated",
+  "workflowsCompleted": "Workflows Completed",
+  "upcomingDeadlines": "Upcoming Deadlines",
+  "quickActions": "Quick Actions",
+  "addClient": "Add Client",
+  "addWorker": "Add Worker",
+  "generateReport": "Generate Report",
+  "stages": {
+    "ajofm": "AJOFM Labor Market Test",
+    "workPermit": "Work Permit (IGI)",
+    "visa": "Visa Application",
+    "residence": "Residence Permit"
+  },
+  "action": {
+    "newClient": "New Client"
+  },
+  "client": {
+    "subtitle": "Client profile management",
+    "title": "Client Profile"
+  },
+  "clientProfile": "Client profile and management",
+  "workersManagement": "Workers management and assignments",
+  "workflowTracking": "Immigration workflow tracking"
+}

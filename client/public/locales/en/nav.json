@@ -1,0 +1,19 @@
+{
+  "dashboard": "Dashboard",
+  "clients": "Clients",
+  "workers": "Workers",
+  "documents": "Documents",
+  "templates": "Templates",
+  "analytics": "Analytics",
+  "deadlines": "Deadlines",
+  "audit": "Audit Logs",
+  "settings": "Settings",
+  "profile": "Profile",
+  "requirements": "Requirements",
+  "reminders": "Reminders",
+  "payments": "Payments",
+  "logout": "Logout",
+  "features": "Features",
+  "pricing": "Pricing",
+  "support": "Support"
+}

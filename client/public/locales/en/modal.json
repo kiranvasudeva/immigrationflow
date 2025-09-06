@@ -1,0 +1,14 @@
+{
+  "login": {
+    "title": "ImmigrationFlow Access",
+    "subtitle": "Sign in to your account",
+    "adminTitle": "For Administrators",
+    "adminDesc": "If you're new, registering will automatically give you admin access to manage immigration workflows.",
+    "adminButton": "Admin Login / Register",
+    "workerTitle": "For Workers",
+    "workerDesc": "If you have an invitation link from your employer, use it to access your immigration progress.",
+    "invitationText": "Check your email for an invitation link",
+    "supportText": "Need help? Contact your administrator or",
+    "supportLink": "support team"
+  }
+}

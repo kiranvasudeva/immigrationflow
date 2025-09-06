@@ -32,7 +32,7 @@ export function I18nProvider({ children }: I18nProviderProps) {
       let namespace = 'common'; // Default namespace
       let translationKey = key;
       
-      if (parts.length > 1 && ['common', 'nav', 'actions', 'dashboard'].includes(parts[0])) {
+      if (parts.length > 1 && ['common', 'nav', 'actions', 'dashboard', 'landing', 'modal'].includes(parts[0])) {
         namespace = parts[0]; // Use the first part as namespace
         translationKey = parts.slice(1).join('.'); // Use remaining parts as key
       }

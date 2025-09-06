@@ -34,7 +34,7 @@ i18n
 
     // Configure multiple namespaces
     defaultNS: 'common',
-    ns: ['common', 'nav', 'dashboard', 'actions'],
+    ns: ['common', 'nav', 'dashboard', 'actions', 'landing', 'modal'],
 
     // Wait for resources to load
     initImmediate: false,
