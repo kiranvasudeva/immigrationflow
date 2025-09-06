@@ -195,26 +195,79 @@ export class ComprehensiveQAService {
 
       this.addTest('Workflow Templates', 'PASS', `Found ${templates.length} workflow templates`);
 
-      // Validate template steps
+      // Validate template steps with detailed diagnostics
       let validTemplates = 0;
+      const failingTemplates: any[] = [];
+      
       for (const template of templates) {
-        if (template.steps && Array.isArray(template.steps) && template.steps.length > 0) {
-          const validSteps = template.steps.filter((step: any) => 
-            step.stepOrder !== undefined && 
-            step.name && 
-            step.hasOwnProperty('requiresUpload') && 
-            step.hasOwnProperty('requiresVerification')
-          );
-          
-          if (validSteps.length === template.steps.length) {
-            validTemplates++;
+        if (!template.steps || !Array.isArray(template.steps) || template.steps.length === 0) {
+          failingTemplates.push({
+            templateId: template.id,
+            templateName: template.name,
+            issue: "No steps array or empty steps",
+            stepCount: template.steps ? template.steps.length : 0
+          });
+          continue;
+        }
+
+        const invalidSteps: any[] = [];
+        const missingFields: string[] = [];
+        const wrongTypes: any = {};
+
+        for (let i = 0; i < template.steps.length; i++) {
+          const step = template.steps[i];
+          const stepIssues: string[] = [];
+
+          // Check stepOrder
+          if (typeof step.stepOrder !== 'number' || !Number.isFinite(step.stepOrder)) {
+            stepIssues.push('stepOrder not finite number');
+            wrongTypes.stepOrder = typeof step.stepOrder;
           }
+
+          // Check name  
+          if (typeof step.name !== 'string' || step.name.trim().length === 0) {
+            stepIssues.push('name not valid string');
+            wrongTypes.name = typeof step.name;
+          }
+
+          // Check requiresUpload
+          if (typeof step.requiresUpload !== 'boolean') {
+            stepIssues.push('requiresUpload not boolean');
+            wrongTypes.requiresUpload = typeof step.requiresUpload;
+          }
+
+          // Check requiresVerification
+          if (typeof step.requiresVerification !== 'boolean') {
+            stepIssues.push('requiresVerification not boolean');
+            wrongTypes.requiresVerification = typeof step.requiresVerification;
+          }
+
+          if (stepIssues.length > 0) {
+            invalidSteps.push({ stepIndex: i, issues: stepIssues });
+          }
+        }
+
+        if (invalidSteps.length > 0) {
+          failingTemplates.push({
+            templateId: template.id,
+            templateName: template.name,
+            stepCount: template.steps.length,
+            invalidSteps: invalidSteps.slice(0, 5), // Limit to 5 steps
+            wrongTypes
+          });
+        } else {
+          validTemplates++;
         }
       }
 
+      const isPass = validTemplates === templates.length;
+      const details = isPass 
+        ? `${validTemplates}/${templates.length} templates have properly structured steps`
+        : `${validTemplates}/${templates.length} valid. Failing: ${failingTemplates.slice(0, 3).map(f => `${f.templateName}(${f.issue || 'invalid steps'})`).join(', ')}`;
+
       this.addTest('Template Step Metadata', 
-        validTemplates === templates.length ? 'PASS' : 'FAIL',
-        `${validTemplates}/${templates.length} templates have properly structured steps`);
+        isPass ? 'PASS' : 'FAIL',
+        details);
 
     } catch (error) {
       this.addTest('Workflow Templates Tests', 'FAIL', `Failed: ${error}`);
@@ -359,26 +412,55 @@ export class ComprehensiveQAService {
           if (pageResponse.status === 200) {
             const html = await pageResponse.text();
             
-            // Check for single sidebar instance
-            const sidebarMatches = (html.match(/sidebar/gi) || []).length;
+            // Strip script tags to avoid false positives from minified JavaScript
+            const htmlWithoutScripts = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
             
-            // Better detection: look for actual untranslated keys, not minified JS t() calls
-            const hasUntranslatedKeys = html.includes('{{') || html.includes('i18n:') || 
-              html.match(/t\(['"`][^'"`]+['"`]\)/g) || // Only t('key') patterns with quotes
-              html.includes('missing.') || html.includes('undefined.') || 
-              html.includes('TODO: translate');
+            // Check for single sidebar instance
+            const sidebarMatches = (htmlWithoutScripts.match(/sidebar/gi) || []).length;
+            
+            // More precise detection: look for actual untranslated keys, not minified JS
+            const translationIssues: string[] = [];
+            
+            // Look for handlebars-style keys
+            if (htmlWithoutScripts.includes('{{')) {
+              translationIssues.push('handlebars {{}} keys');
+            }
+            
+            // Look for i18n namespace keys
+            if (htmlWithoutScripts.includes('i18n:')) {
+              translationIssues.push('i18n: namespace keys');
+            }
+            
+            // Look for missing translation indicators
+            if (htmlWithoutScripts.includes('missing.')) {
+              translationIssues.push('missing. prefixes');
+            }
+            
+            // Look for undefined keys
+            if (htmlWithoutScripts.includes('undefined.')) {
+              translationIssues.push('undefined. prefixes');
+            }
+            
+            // Look for TODO translate comments
+            if (htmlWithoutScripts.includes('TODO: translate')) {
+              translationIssues.push('TODO translate comments');
+            }
+            
+            // Look for t() function calls in HTML (not minified JS)
+            const tFunctionMatches = htmlWithoutScripts.match(/\bt\(['"`][^'"`]+['"`]\)/g);
+            if (tFunctionMatches && tFunctionMatches.length > 0) {
+              translationIssues.push(`t() calls: ${tFunctionMatches.slice(0, 3).join(', ')}`);
+            }
             
             if (sidebarMatches > 5) { // Allow for reasonable sidebar references
               allPagesValid = false;
-              pageDetails.push(`${page}: Multiple sidebars detected`);
-            }
-            
-            if (hasUntranslatedKeys) {
+              pageDetails.push(`${page}: Multiple sidebars detected (${sidebarMatches})`);
+            } else if (translationIssues.length > 0) {
               allPagesValid = false;
-              pageDetails.push(`${page}: Untranslated keys found`);
+              pageDetails.push(`${page}: Translation issues - ${translationIssues.join(', ')}`);
+            } else {
+              pageDetails.push(`${page}: OK (${sidebarMatches} sidebar refs)`);
             }
-            
-            pageDetails.push(`${page}: OK`);
           } else {
             allPagesValid = false;
             pageDetails.push(`${page}: Status ${pageResponse.status}`);
