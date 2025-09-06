@@ -9,6 +9,9 @@ export interface TemplateData {
     caen: string;
     contactEmail: string;
     onrc?: string;
+    phoneNumber?: string;
+    adminName?: string;
+    legalAddress?: string;
   };
   worker?: {
     firstName: string;
@@ -17,10 +20,30 @@ export interface TemplateData {
     passportNumber: string;
     email?: string;
     phone?: string;
+    romanianAddress?: string;
+    placeOfBirth?: string;
+    dob?: string;
   };
   assignment?: {
     id: string;
     status: string;
+  };
+  employment?: {
+    jobTitle?: string;
+    workplace?: string;
+    salary?: string;
+    contractDuration?: string;
+    contractType?: string;
+    workingSchedule?: string;
+    startDate?: string;
+    benefits?: string[];
+    responsibilities?: string[];
+    requirements?: {
+      education?: string;
+      experience?: string;
+      skills?: string;
+      languages?: string;
+    };
   };
   metadata?: {
     generatedAt: Date;
@@ -66,7 +89,7 @@ export class PDFService {
       doc.fontSize(12);
       doc.text(`Nume: ${data.client?.legalName || '[COMPANY_NAME]'}`);
       doc.text(`CUI: ${data.client?.cui || '[CUI]'}`);
-      doc.text(`Adresa: ${data.client?.address || '[ADDRESS]'}`);
+      doc.text(`Adresa: ${data.client?.legalAddress || data.client?.address || '[ADDRESS]'}`);
       doc.text(`CAEN: ${data.client?.caen || '[CAEN]'}`);
       if (data.client?.onrc) {
         doc.text(`ONRC: ${data.client.onrc}`);
@@ -87,11 +110,11 @@ export class PDFService {
       // Contract terms
       doc.fontSize(14).text('PREVEDERI CONTRACTUALE:', { underline: true });
       doc.fontSize(12);
-      doc.text('1. Funcția: [JOB_TITLE]');
-      doc.text('2. Locul de muncă: [WORKPLACE]');
-      doc.text('3. Salariul de bază: [SALARY] RON');
-      doc.text('4. Durata contractului: [CONTRACT_DURATION]');
-      doc.text('5. Programul de lucru: [WORKING_SCHEDULE]');
+      doc.text(`1. Funcția: ${data.employment?.jobTitle || 'Specialist IT'}`);
+      doc.text(`2. Locul de muncă: ${data.employment?.workplace || data.client?.legalAddress || 'Sediul angajatorului'}`);
+      doc.text(`3. Salariul de bază: ${data.employment?.salary || 'conform legislației în vigoare'} RON`);
+      doc.text(`4. Durata contractului: ${data.employment?.contractDuration || 'nedeterminată'}`);
+      doc.text(`5. Programul de lucru: ${data.employment?.workingSchedule || '8 ore/zi, 40 ore/săptămână'}`);
       doc.moveDown();
 
       // Signatures
@@ -134,8 +157,8 @@ export class PDFService {
       doc.moveDown();
 
       doc.text('Prin prezenta împuternicesc pe:', { underline: true });
-      doc.text('[LEGAL_REPRESENTATIVE_NAME]');
-      doc.text('[LEGAL_REPRESENTATIVE_DETAILS]');
+      doc.text(`${data.client?.adminName || '[LEGAL_REPRESENTATIVE_NAME]'}`);
+      doc.text(`Administrator al ${data.client?.legalName || '[COMPANY_NAME]'}`);
       doc.moveDown();
 
       doc.text('Să mă reprezinte în fața autorităților române pentru:', { underline: true });
@@ -181,41 +204,51 @@ export class PDFService {
       doc.fontSize(12);
       doc.text(`Compania: ${data.client?.legalName || '[COMPANY_NAME]'}`);
       doc.text(`CUI: ${data.client?.cui || '[CUI]'}`);
-      doc.text(`Adresa: ${data.client?.address || '[ADDRESS]'}`);
+      doc.text(`Adresa: ${data.client?.legalAddress || data.client?.address || '[ADDRESS]'}`);
       doc.text(`Domeniu de activitate (CAEN): ${data.client?.caen || '[CAEN]'}`);
       doc.moveDown();
 
       // Job details
       doc.fontSize(14).text('DESCRIEREA POSTULUI:', { underline: true });
       doc.fontSize(12);
-      doc.text('Denumirea postului: [JOB_TITLE]');
-      doc.text('Locul de muncă: [WORKPLACE]');
-      doc.text('Tipul contractului: Contract individual de muncă pe durată [DURATION]');
+      doc.text(`Denumirea postului: ${data.employment?.jobTitle || 'Specialist IT'}`);
+      doc.text(`Locul de muncă: ${data.employment?.workplace || data.client?.legalAddress || 'Sediul angajatorului'}`);
+      doc.text(`Tipul contractului: Contract individual de muncă pe durată ${data.employment?.contractType || 'nedeterminată'}`);
       doc.moveDown();
 
       // Requirements
       doc.fontSize(14).text('CERINȚE PENTRU POST:', { underline: true });
       doc.fontSize(12);
-      doc.text('- Studii: [EDUCATION_REQUIREMENTS]');
-      doc.text('- Experiență: [EXPERIENCE_REQUIREMENTS]');
-      doc.text('- Competențe: [SKILLS_REQUIREMENTS]');
-      doc.text('- Limbi străine: [LANGUAGE_REQUIREMENTS]');
+      doc.text(`- Studii: ${data.employment?.requirements?.education || 'Studii superioare'}`);
+      doc.text(`- Experiență: ${data.employment?.requirements?.experience || 'Minim 1 an experiență'}`);
+      doc.text(`- Competențe: ${data.employment?.requirements?.skills || 'Competențe tehnice specifice'}`);
+      doc.text(`- Limbi străine: ${data.employment?.requirements?.languages || 'Engleza - nivel intermediar'}`);
       doc.moveDown();
 
       // Responsibilities
       doc.fontSize(14).text('RESPONSABILITĂȚI PRINCIPALE:', { underline: true });
       doc.fontSize(12);
-      doc.text('- [RESPONSIBILITY_1]');
-      doc.text('- [RESPONSIBILITY_2]');
-      doc.text('- [RESPONSIBILITY_3]');
+      if (data.employment?.responsibilities && data.employment.responsibilities.length > 0) {
+        data.employment.responsibilities.forEach(responsibility => {
+          doc.text(`- ${responsibility}`);
+        });
+      } else {
+        doc.text('- Executarea sarcinilor specifice postului');
+        doc.text('- Respectarea normelor și reglementărilor interne');
+        doc.text('- Colaborarea în cadrul echipei');
+      }
       doc.moveDown();
 
       // Conditions
       doc.fontSize(14).text('CONDIȚII DE MUNCĂ:', { underline: true });
       doc.fontSize(12);
-      doc.text('Salariul: [SALARY] RON');
-      doc.text('Programul de lucru: [WORKING_HOURS]');
-      doc.text('Beneficii: [BENEFITS]');
+      doc.text(`Salariul: ${data.employment?.salary || 'conform legislației în vigoare'} RON`);
+      doc.text(`Programul de lucru: ${data.employment?.workingSchedule || '8 ore/zi, 40 ore/săptămână'}`);
+      if (data.employment?.benefits && data.employment.benefits.length > 0) {
+        doc.text(`Beneficii: ${data.employment.benefits.join(', ')}`);
+      } else {
+        doc.text('Beneficii: conform legislației și CCM');
+      }
 
       // Watermark
       this.addWatermark(doc, data.metadata?.watermark || data.client?.contactEmail || 'PREVIEW');
@@ -260,7 +293,7 @@ export class PDFService {
       doc.fontSize(12);
       doc.text(`Compania: ${data.client?.legalName || '[COMPANY_NAME]'}`);
       doc.text(`CUI: ${data.client?.cui || '[CUI]'}`);
-      doc.text(`Adresa: ${data.client?.address || '[ADDRESS]'}`);
+      doc.text(`Adresa: ${data.client?.legalAddress || data.client?.address || '[ADDRESS]'}`);
       doc.moveDown();
 
       // Purpose
@@ -311,7 +344,7 @@ export class PDFService {
       doc.text(`Nume și prenume: ${data.worker?.firstName || '[FIRST_NAME]'} ${data.worker?.lastName || '[LAST_NAME]'}`);
       doc.text(`Cetățenie: ${data.worker?.nationality || '[NATIONALITY]'}`);
       doc.text(`Numărul pașaportului: ${data.worker?.passportNumber || '[PASSPORT_NUMBER]'}`);
-      doc.text(`Adresa de domiciliu în România: [ROMANIA_ADDRESS]`);
+      doc.text(`Adresa de domiciliu în România: ${data.worker?.romanianAddress || '[ROMANIA_ADDRESS]'}`);
       doc.moveDown();
 
       // Employment data
@@ -319,15 +352,15 @@ export class PDFService {
       doc.fontSize(12);
       doc.text(`Angajator: ${data.client?.legalName || '[COMPANY_NAME]'}`);
       doc.text(`CUI angajator: ${data.client?.cui || '[CUI]'}`);
-      doc.text(`Funcția: [JOB_TITLE]`);
-      doc.text(`Perioada contractului: [CONTRACT_PERIOD]`);
+      doc.text(`Funcția: ${data.employment?.jobTitle || 'Specialist IT'}`);
+      doc.text(`Perioada contractului: ${data.employment?.contractDuration || 'nedeterminată'}`);
       doc.moveDown();
 
       // Request
       doc.fontSize(14).text('SOLICIT:', { underline: true });
       doc.fontSize(12);
       doc.text('Acordarea permisului de ședere temporară în scop de muncă');
-      doc.text('pe teritoriul României pentru perioada [PERIOD].');
+      doc.text(`pe teritoriul României pentru perioada ${data.employment?.contractDuration || 'conform contractului de muncă'}.`);
       doc.moveDown();
 
       // Documents list
