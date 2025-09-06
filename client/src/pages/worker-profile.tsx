@@ -121,11 +121,7 @@ export default function WorkerProfile() {
     }
   });
 
-  // Fetch workflow data for this worker
-  const { data: workerWorkflowData, isLoading: workflowLoading } = useQuery<any>({
-    queryKey: ['/api/workflow/worker', workerId],
-    enabled: !!workerId && isAuthenticated,
-  });
+  // Remove old workflow query - now handled by WorkflowProgressTracker
 
   // Update worker mutation
   const updateWorkerMutation = useMutation({
@@ -204,24 +200,7 @@ export default function WorkerProfile() {
   };
 
   // Calculate workflow progress from real workflow data
-  const getWorkflowProgress = () => {
-    if (!workerWorkflowData?.stages) return { overall: 0, stages: [] };
-    
-    const stages = workerWorkflowData.stages.map((stage: any, index: number) => ({
-      key: stage.id,
-      title: stage.name,
-      order: index + 1,
-      progress: stage.status === 'completed' ? 100 : stage.status === 'in-progress' ? 50 : 0,
-      completed: stage.status === 'completed' ? 1 : 0,
-      total: 1,
-      status: stage.status === 'pending' ? 'not-started' : stage.status
-    }));
-
-    const overallProgress = stages.length > 0 ? 
-      Math.round(stages.reduce((acc: number, stage: any) => acc + stage.progress, 0) / stages.length) : 0;
-
-    return { overall: overallProgress, stages };
-  };
+  // Removed getWorkflowProgress function - now handled by WorkflowProgressTracker
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -243,7 +222,7 @@ export default function WorkerProfile() {
     }
   };
 
-  if (workerLoading || workflowLoading || !isAuthenticated) {
+  if (workerLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -262,7 +241,7 @@ export default function WorkerProfile() {
     );
   }
 
-  const { overall, stages } = getWorkflowProgress();
+  // Workflow progress now handled by WorkflowProgressTracker component
 
   return (
     <div className="min-h-screen bg-background">
@@ -528,95 +507,7 @@ export default function WorkerProfile() {
                     </Card>
                   </div>
 
-                  {/* Documents and Requirements */}
-                  <Card data-testid="card-documents">
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <FileText className="h-5 w-5 mr-2" />
-                        Documents & Requirements
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {workerWorkflowData ? (
-                        <div className="space-y-6">
-                          {/* Workflow Title */}
-                          <div className="border-b border-gray-200 pb-4">
-                            <h3 className="text-lg font-semibold text-gray-900" data-testid="workflow-title">
-                              {workerWorkflowData.name || 'No Workflow Assigned'}
-                            </h3>
-                            {workerWorkflowData.description && (
-                              <p className="text-sm text-gray-600 mt-1">{workerWorkflowData.description}</p>
-                            )}
-                            <p className="text-sm text-gray-600 mt-1">
-                              Progress: {Math.round((stages.filter((s: any) => s.status === 'completed').length / stages.length) * 100) || 0}% complete
-                            </p>
-                          </div>
-
-                          {/* Workflow Stages */}
-                          <div className="space-y-4">
-                            {stages.map((stage: any) => (
-                              <div key={stage.key} className="border rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-4">
-                                  <h3 className="font-medium text-gray-900" data-testid={`stage-title-${stage.key}`}>
-                                    {stage.title}
-                                  </h3>
-                                  <Badge 
-                                    variant={stage.status === 'completed' ? 'default' : stage.status === 'in-progress' ? 'secondary' : 'outline'}
-                                    data-testid={`stage-status-${stage.key}`}
-                                  >
-                                    {stage.status === 'completed' ? 'COMPLETED' : 
-                                     stage.status === 'in-progress' ? 'IN PROGRESS' : 'NOT STARTED'}
-                                  </Badge>
-                                </div>
-                                
-                                {/* Stage Document Requirements */}
-                                {workerWorkflowData.stages?.find((s: any) => s.id === stage.key)?.documentRequirements?.length > 0 && (
-                                  <div className="space-y-3">
-                                    <h4 className="text-sm font-medium text-gray-700">Documents</h4>
-                                    {workerWorkflowData.stages.find((s: any) => s.id === stage.key).documentRequirements.map((req: any, idx: number) => (
-                                      <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                        <div className="flex-1">
-                                          <h5 className="font-medium text-gray-900" data-testid={`document-title-${stage.key}-${idx}`}>
-                                            {req.title}
-                                          </h5>
-                                          {req.description && (
-                                            <p className="text-sm text-gray-600">{req.description}</p>
-                                          )}
-                                        </div>
-                                        <Button variant="outline" size="sm" data-testid={`upload-document-${stage.key}-${idx}`}>
-                                          <Upload className="h-4 w-4 mr-1" />
-                                          Upload Document
-                                        </Button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {/* No Documents Message */}
-                                {(!workerWorkflowData.stages?.find((s: any) => s.id === stage.key)?.documentRequirements || 
-                                  workerWorkflowData.stages.find((s: any) => s.id === stage.key)?.documentRequirements?.length === 0) && (
-                                  <div className="text-center py-4">
-                                    <p className="text-sm text-gray-500">No documents have been uploaded for this workflow stage yet.</p>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : workflowLoading ? (
-                        <div className="text-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                          <p className="text-sm text-gray-500">Loading workflow data...</p>
-                        </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">No Workflow Assigned</h3>
-                          <p className="text-sm text-gray-500">This worker has not been assigned to any workflow yet</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                  {/* Immigration Workflow Progress - Now using WorkflowProgressTracker */}
                 </div>
               )}
             </div>
