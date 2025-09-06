@@ -26,12 +26,21 @@ import { apiRequest } from '@/lib/queryClient';
 
 interface Worker {
   id: string;
+  clientProfileId: string;
   firstName: string;
   lastName: string;
   email: string | null;
   phone: string | null;
   nationality: string;
   assignedWorkflowIds: string[];
+}
+
+interface ClientProfile {
+  id: string;
+  legalName: string;
+  contactEmail: string;
+  cui: string;
+  ownerUserId: string;
 }
 
 interface WorkflowTemplate {
@@ -64,9 +73,16 @@ export default function WorkerWorkflowAssignments() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  const [selectedClient, setSelectedClient] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedWorkflow, setSelectedWorkflow] = useState<string>('');
   const [selectedWorkers, setSelectedWorkers] = useState<string[]>([]);
+
+  // Fetch clients
+  const { data: clients = [], isLoading: clientsLoading } = useQuery<ClientProfile[]>({
+    queryKey: ['/api/clients'],
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Fetch workers with workflow progress
   const { data: workers = [], isLoading: workersLoading } = useQuery<Worker[]>({
@@ -133,13 +149,34 @@ export default function WorkerWorkflowAssignments() {
     },
   });
 
-  // Filter workers based on search term
-  const filteredWorkers = Array.isArray(workers) ? workers.filter((worker: Worker) =>
-    `${worker.firstName} ${worker.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    worker.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) : [];
+  // Filter workers based on selected client and search term
+  const filteredWorkers = Array.isArray(workers) ? workers.filter((worker: Worker) => {
+    // First filter by selected client
+    if (selectedClient && worker.clientProfileId !== selectedClient) {
+      return false;
+    }
+    // Then filter by search term if there's one
+    if (searchTerm) {
+      return `${worker.firstName} ${worker.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        worker.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    }
+    return true;
+  }) : [];
+
+  // Get the selected client details
+  const getSelectedClient = () => {
+    return clients.find((client: ClientProfile) => client.id === selectedClient);
+  };
 
   const handleLinkWorkers = () => {
+    if (!selectedClient) {
+      toast({
+        title: "Error",
+        description: "Please select a client first",
+        variant: "destructive",
+      });
+      return;
+    }
     if (!selectedWorkflow || selectedWorkers.length === 0) {
       toast({
         title: "Error",
@@ -152,6 +189,13 @@ export default function WorkerWorkflowAssignments() {
     selectedWorkers.forEach(workerId => {
       linkMutation.mutate({ workerId, templateId: selectedWorkflow });
     });
+  };
+
+  // Reset selections when client changes
+  const handleClientChange = (clientId: string) => {
+    setSelectedClient(clientId);
+    setSelectedWorkers([]);
+    setSelectedWorkflow('');
   };
 
   const handleUnlinkWorker = (workerId: string, templateId: string) => {
@@ -205,7 +249,7 @@ export default function WorkerWorkflowAssignments() {
     );
   };
 
-  if (workersLoading || templatesLoading || progressLoading) {
+  if (clientsLoading || workersLoading || templatesLoading || progressLoading) {
     return (
       <div className="space-y-4">
         <div className="animate-pulse space-y-3">
@@ -228,9 +272,41 @@ export default function WorkerWorkflowAssignments() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Select Workflow Template</Label>
+          {/* Client Selection - Step 1 */}
+          <div className="space-y-2">
+            <Label>Step 1: Select Client</Label>
+            <Select value={selectedClient} onValueChange={handleClientChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a client..." />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.isArray(clients) ? clients.map((client: ClientProfile) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      <span>{client.legalName}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {client.cui}
+                      </Badge>
+                    </div>
+                  </SelectItem>
+                )) : null}
+              </SelectContent>
+            </Select>
+            {selectedClient && (
+              <div className="text-sm text-gray-600 bg-blue-50 p-2 rounded">
+                <strong>Selected:</strong> {getSelectedClient()?.legalName} ({getSelectedClient()?.cui})
+              </div>
+            )}
+          </div>
+
+          {/* Only show workflow and worker selection if client is selected */}
+          {selectedClient && (
+            <>
+              <Separator />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Step 2: Select Workflow Template</Label>
               <Select value={selectedWorkflow} onValueChange={setSelectedWorkflow}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a workflow..." />
@@ -254,7 +330,7 @@ export default function WorkerWorkflowAssignments() {
             </div>
 
             <div className="space-y-2">
-              <Label>Search Workers</Label>
+              <Label>Step 3: Search Workers for {getSelectedClient()?.legalName}</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
@@ -269,10 +345,12 @@ export default function WorkerWorkflowAssignments() {
           </div>
 
           <div className="space-y-2">
-            <Label>Select Workers</Label>
+            <Label>Step 4: Select Workers ({filteredWorkers.length} available)</Label>
             <div className="border rounded-lg p-3 max-h-48 overflow-y-auto">
               {filteredWorkers.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">No workers found</p>
+                <p className="text-sm text-gray-500 text-center py-4">
+                  {selectedClient ? 'No workers found for this client' : 'Please select a client first'}
+                </p>
               ) : (
                 <div className="space-y-2">
                   {filteredWorkers.map((worker: Worker) => (
@@ -304,16 +382,18 @@ export default function WorkerWorkflowAssignments() {
             </div>
           </div>
 
-          <div className="flex justify-end">
-            <Button 
-              onClick={handleLinkWorkers}
-              disabled={!selectedWorkflow || selectedWorkers.length === 0 || linkMutation.isPending}
-              data-testid="button-link-workers"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Link Selected Workers
-            </Button>
-          </div>
+              <div className="flex justify-end">
+                <Button 
+                  onClick={handleLinkWorkers}
+                  disabled={!selectedClient || !selectedWorkflow || selectedWorkers.length === 0 || linkMutation.isPending}
+                  data-testid="button-link-workers"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Link Selected Workers
+                </Button>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
