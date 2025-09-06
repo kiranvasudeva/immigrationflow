@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from '@/contexts/I18nProvider';
 import { apiRequest } from '@/lib/queryClient';
@@ -23,10 +25,14 @@ import {
   Square,
   User,
   FileText,
-  Calendar
+  Calendar,
+  Workflow,
+  Plus,
+  Download,
+  Eye,
+  AlertTriangle
 } from 'lucide-react';
-import { DocumentUploader } from '@/components/documents/DocumentUploader';
-import DocumentStatusTracker from '@/components/DocumentStatusTracker';
+import { WorkflowTemplate, WorkerWorkflowProgress, WorkerStepProgress, DocumentRequirement, ChecklistItem } from '@shared/schema';
 
 interface WorkflowProgressTrackerProps {
   workerId: string;
@@ -35,133 +41,143 @@ interface WorkflowProgressTrackerProps {
   showVerificationToggles?: boolean;
 }
 
-interface StepProgress {
-  id?: string;
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED' | 'SKIPPED';
-  startedAt?: string;
-  completedAt?: string;
-  notes?: string;
-  assignedToUserId?: string;
-}
-
-interface DocumentRequirement {
-  id: string;
-  title: string;
-  description: string;
-  isRequired: boolean;
-  submittedBy: 'WORKER' | 'OWNER';
-  acceptedFileTypes: string[];
-}
-
-interface ChecklistItem {
-  id: string;
-  title: string;
-  description: string;
-  isRequired: boolean;
-  assignedRole: 'WORKER' | 'OWNER';
-  isCompleted?: boolean;
-  completedAt?: string;
-  completedByUserId?: string;
-}
-
-interface WorkflowStep {
-  id: string;
-  name: string;
-  description: string;
-  stepType: string;
-  assignedRole: string;
-  order: number;
-  isRequired: boolean;
-  requiresApproval: boolean;
-  progress: StepProgress;
-  documentRequirements: DocumentRequirement[];
-  checklistItems: ChecklistItem[];
-}
-
 interface WorkflowProgressData {
-  workflow: {
+  id: string;
+  workerId: string;
+  workflowTemplateId: string;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED';
+  currentStepId: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  workflowTemplate: {
     id: string;
     name: string;
-    description: string;
+    description: string | null;
+    estimatedDays: number | null;
+    steps: {
+      id: string;
+      name: string;
+      description: string | null;
+      stepType: string;
+      assignedRole: string;
+      order: number;
+      isRequired: boolean;
+      requiresApproval: boolean;
+      documentRequirements: {
+        id: string;
+        title: string;
+        description: string | null;
+        isRequired: boolean;
+        submittedBy: 'WORKER' | 'OWNER';
+        acceptedFileTypes: string[];
+      }[];
+      checklistItems: {
+        id: string;
+        title: string;
+        description: string | null;
+        isRequired: boolean;
+        assignedRole: string;
+      }[];
+    }[];
   };
-  progress: {
+  stepProgress: {
     id: string;
-    status: string;
-    currentStepId?: string;
-  };
-  steps: WorkflowStep[];
+    stepId: string;
+    status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED' | 'SKIPPED';
+    startedAt: string | null;
+    completedAt: string | null;
+    notes: string | null;
+    assignedToUserId: string | null;
+  }[];
 }
 
-export default function WorkflowProgressTracker({ 
-  workerId, 
-  userRole, 
-  showUploadPane = true, 
-  showVerificationToggles = true 
+export default function WorkflowProgressTracker({
+  workerId,
+  userRole,
+  showUploadPane = true,
+  showVerificationToggles = true
 }: WorkflowProgressTrackerProps) {
-  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
-  const [stepNotes, setStepNotes] = useState<Record<string, string>>({});
+  const [selectedWorkflow, setSelectedWorkflow] = useState('');
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
 
-  // Fetch worker workflow progress
-  const { data: workflowData = [], isLoading, error } = useQuery<WorkflowProgressData[]>({
-    queryKey: ['/api/workers', workerId, 'workflow-progress'],
+  // Fetch worker's workflow progress
+  const { data: workerProgress, isLoading: progressLoading, error: progressError } = useQuery<WorkflowProgressData>({ 
+    queryKey: ['/api/worker-workflow-progress', workerId],
     enabled: !!workerId,
   });
 
-  // Mutation for updating step progress
-  const updateStepProgressMutation = useMutation({
-    mutationFn: async ({ progressId, stepId, status, notes }: {
-      progressId: string;
-      stepId: string;
-      status: string;
-      notes?: string;
-    }) => {
-      return apiRequest('PUT', `/api/workers/${workerId}/workflow-progress/${progressId}/steps/${stepId}`, { status, notes });
+  // Fetch available workflow templates for assignment
+  const { data: workflowTemplates, isLoading: templatesLoading } = useQuery<WorkflowTemplate[]>({
+    queryKey: ['/api/workflow-templates'],
+    enabled: !workerProgress && (userRole === 'ADMIN' || userRole === 'OWNER'),
+  });
+
+  // Assign workflow mutation
+  const assignWorkflowMutation = useMutation({
+    mutationFn: async (workflowTemplateId: string) => {
+      return apiRequest('/api/worker-workflow-progress', {
+        method: 'POST',
+        body: JSON.stringify({
+          workerId,
+          workflowTemplateId
+        })
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/workers', workerId, 'workflow-progress'] });
       toast({
-        title: t('workflow.stepUpdated') || 'Step Updated',
-        description: t('workflow.stepUpdateSuccess') || 'Step progress has been updated successfully',
+        title: "Workflow Assigned",
+        description: "The workflow has been successfully assigned to this worker."
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/worker-workflow-progress', workerId] });
+      setShowAssignDialog(false);
     },
     onError: (error: any) => {
       toast({
-        title: t('error.title') || 'Error',
-        description: error.message || 'Failed to update step progress',
-        variant: 'destructive',
+        title: "Assignment Failed",
+        description: error.message || "Failed to assign workflow to worker.",
+        variant: "destructive"
       });
     }
   });
 
-  // Mutation for updating checklist items
-  const updateChecklistMutation = useMutation({
-    mutationFn: async ({ progressId, stepId, itemId, isCompleted, notes }: {
-      progressId: string;
-      stepId: string;
-      itemId: string;
-      isCompleted: boolean;
-      notes?: string;
-    }) => {
-      return apiRequest('POST', `/api/workers/${workerId}/workflow-progress/${progressId}/steps/${stepId}/checklist/${itemId}`, { isCompleted, notes });
+  // Update step progress mutation
+  const updateStepMutation = useMutation({
+    mutationFn: async ({ stepProgressId, status, notes }: { stepProgressId: string, status: string, notes?: string }) => {
+      return apiRequest(`/api/worker-step-progress/${stepProgressId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, notes })
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/workers', workerId, 'workflow-progress'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/worker-workflow-progress', workerId] });
       toast({
-        title: t('workflow.checklistUpdated') || 'Checklist Updated',
-        description: t('workflow.checklistUpdateSuccess') || 'Checklist item has been updated successfully',
+        title: "Step Updated",
+        description: "Step progress has been updated successfully."
       });
     },
     onError: (error: any) => {
       toast({
-        title: t('error.title') || 'Error',
-        description: error.message || 'Failed to update checklist item',
-        variant: 'destructive',
+        title: "Update Failed",
+        description: error.message || "Failed to update step progress.",
+        variant: "destructive"
       });
     }
   });
+
+  // Permission helpers
+  const canUserModifyStep = (step: any, stepProgress: any) => {
+    if (userRole === 'ADMIN') return true;
+    if (userRole === 'OWNER' && (step.assignedRole === 'OWNER' || step.assignedRole === 'CLIENT')) return true;
+    if (userRole === 'WORKER' && step.assignedRole === 'WORKER') return true;
+    return false;
+  };
+
+  const canUserVerify = () => {
+    return showVerificationToggles && (userRole === 'ADMIN' || userRole === 'OWNER');
+  };
 
   const toggleStepExpansion = (stepId: string) => {
     const newExpanded = new Set(expandedSteps);
@@ -173,330 +189,349 @@ export default function WorkflowProgressTracker({
     setExpandedSteps(newExpanded);
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'COMPLETED':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'IN_PROGRESS':
-        return <Clock className="h-5 w-5 text-blue-500" />;
-      case 'REJECTED':
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
-      default:
-        return <Clock className="h-5 w-5 text-gray-400" />;
+      case 'COMPLETED': return 'default';
+      case 'IN_PROGRESS': return 'secondary';
+      case 'REJECTED': return 'destructive';
+      case 'SKIPPED': return 'outline';
+      default: return 'outline';
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      'COMPLETED': 'default',
-      'IN_PROGRESS': 'secondary',
-      'PENDING': 'outline',
-      'REJECTED': 'destructive',
-      'SKIPPED': 'outline'
-    } as const;
-
-    return (
-      <Badge variant={variants[status as keyof typeof variants] || 'outline'}>
-        {status.replace('_', ' ')}
-      </Badge>
-    );
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'COMPLETED': return <CheckCircle className="h-4 w-4" />;
+      case 'IN_PROGRESS': return <Clock className="h-4 w-4" />;
+      case 'REJECTED': return <AlertTriangle className="h-4 w-4" />;
+      default: return <Square className="h-4 w-4" />;
+    }
   };
 
-  const handleStepStatusUpdate = (progressId: string, stepId: string, newStatus: string) => {
-    const notes = stepNotes[stepId] || '';
-    updateStepProgressMutation.mutate({
-      progressId,
-      stepId,
-      status: newStatus,
-      notes
-    });
+  const calculateProgress = () => {
+    if (!workerProgress?.stepProgress) return 0;
+    const completedSteps = workerProgress.stepProgress.filter(step => step.status === 'COMPLETED').length;
+    const totalSteps = workerProgress.stepProgress.length;
+    return totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
   };
 
-  const handleChecklistToggle = (progressId: string, stepId: string, itemId: string, isCompleted: boolean) => {
-    updateChecklistMutation.mutate({
-      progressId,
-      stepId,
-      itemId,
-      isCompleted
-    });
-  };
-
-  const calculateOverallProgress = (steps: WorkflowStep[]) => {
-    if (!steps.length) return 0;
-    const completedSteps = steps.filter(step => step.progress.status === 'COMPLETED').length;
-    return Math.round((completedSteps / steps.length) * 100);
-  };
-
-  const canUserModifyStep = (step: WorkflowStep) => {
-    if (userRole === 'ADMIN') return true;
-    if (userRole === 'OWNER' && (step.assignedRole === 'OWNER' || step.assignedRole === 'CLIENT')) return true;
-    if (userRole === 'WORKER' && step.assignedRole === 'WORKER') return true;
-    return false;
-  };
-
-  const canUserVerify = (item: ChecklistItem) => {
-    return showVerificationToggles && (userRole === 'ADMIN' || userRole === 'OWNER');
-  };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="animate-pulse">
-          <div className="h-32 bg-gray-200 rounded-lg"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
+  if (progressLoading) {
     return (
       <Card>
-        <CardContent className="p-6">
-          <div className="text-center text-red-500">
-            <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-            <p>Failed to load workflow progress</p>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Workflow className="h-5 w-5" />
+            Immigration Workflow
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center p-8">
+            <div className="text-sm text-gray-500">Loading workflow progress...</div>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  if (!workflowData.length) {
+  if (progressError) {
     return (
       <Card>
-        <CardContent className="p-6">
-          <div className="text-center text-gray-500">
-            <FileText className="h-8 w-8 mx-auto mb-2" />
-            <p>{t('workflow.noAssignedWorkflows') || 'No workflows assigned to this worker'}</p>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="h-5 w-5" />
+            Error Loading Workflow
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-gray-600">
+            Failed to load workflow progress. Please try refreshing the page.
           </div>
         </CardContent>
       </Card>
     );
   }
+
+  // No workflow assigned - show assignment interface
+  if (!workerProgress) {
+    if (userRole === 'WORKER' || userRole === 'VIEWER') {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Workflow className="h-5 w-5" />
+              Immigration Workflow
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center p-8">
+              <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Workflow Assigned</h3>
+              <p className="text-sm text-gray-500">
+                This worker has not been assigned to any immigration workflow yet.
+                Please contact an administrator to assign a workflow.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Workflow className="h-5 w-5" />
+            Immigration Workflow
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center p-8">
+            <Plus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Workflow Assigned</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Assign an immigration workflow to this worker to begin tracking their progress.
+            </p>
+            <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2" data-testid="button-assign-workflow">
+                  <Plus className="h-4 w-4" />
+                  Assign Workflow
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Assign Immigration Workflow</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Select Workflow Template</Label>
+                    <Select value={selectedWorkflow} onValueChange={setSelectedWorkflow}>
+                      <SelectTrigger data-testid="select-workflow-template">
+                        <SelectValue placeholder="Choose a workflow template..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {workflowTemplates?.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            <div className="flex items-center gap-2">
+                              <Workflow className="h-4 w-4" />
+                              <span>{template.name}</span>
+                              {template.estimatedDays && (
+                                <Badge variant="outline" className="text-xs ml-2">
+                                  {template.estimatedDays} days
+                                </Badge>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAssignDialog(false)}
+                      data-testid="button-cancel-assign"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => selectedWorkflow && assignWorkflowMutation.mutate(selectedWorkflow)}
+                      disabled={!selectedWorkflow || assignWorkflowMutation.isPending}
+                      data-testid="button-confirm-assign"
+                    >
+                      {assignWorkflowMutation.isPending ? 'Assigning...' : 'Assign Workflow'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Worker has assigned workflow - show progress
+  const { workflowTemplate, stepProgress } = workerProgress;
+  const progress = calculateProgress();
 
   return (
-    <div className="space-y-6" data-testid="workflow-progress-tracker">
-      {workflowData.map((workflowItem) => {
-        const overallProgress = calculateOverallProgress(workflowItem.steps);
-        
-        return (
-          <Card key={workflowItem.workflow.id} className="border-l-4 border-l-blue-500">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg">{workflowItem.workflow.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{workflowItem.workflow.description}</p>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Workflow className="h-5 w-5" />
+          {workflowTemplate.name}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Workflow Overview */}
+        <div className="space-y-4">
+          <div className="border-b border-gray-200 pb-4">
+            {workflowTemplate.description && (
+              <p className="text-sm text-gray-600 mb-3">{workflowTemplate.description}</p>
+            )}
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">Overall Progress</span>
+                  <span className="text-sm text-gray-600">{progress}% Complete</span>
                 </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-primary">{overallProgress}%</div>
-                  <p className="text-sm text-muted-foreground">Complete</p>
-                </div>
+                <Progress value={progress} className="h-2" data-testid="progress-overall" />
               </div>
-              <Progress value={overallProgress} className="w-full" />
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              {workflowItem.steps.map((step, index) => {
+              <Badge variant={getStatusBadgeVariant(workerProgress.status)} data-testid="badge-workflow-status">
+                {workerProgress.status.replace('_', ' ')}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Workflow Steps */}
+          <div className="space-y-4">
+            {workflowTemplate.steps
+              .sort((a, b) => a.order - b.order)
+              .map((step) => {
+                const stepProgressData = stepProgress.find(sp => sp.stepId === step.id);
                 const isExpanded = expandedSteps.has(step.id);
-                const canModify = canUserModifyStep(step);
+                const canModify = stepProgressData ? canUserModifyStep(step, stepProgressData) : false;
+                const status = stepProgressData?.status || 'PENDING';
                 
                 return (
-                  <div key={step.id} className="border rounded-lg p-4">
+                  <div key={step.id} className="border rounded-lg" data-testid={`step-container-${step.id}`}>
+                    {/* Step Header */}
                     <div 
-                      className="flex items-center justify-between cursor-pointer"
+                      className="p-4 cursor-pointer hover:bg-gray-50" 
                       onClick={() => toggleStepExpansion(step.id)}
+                      data-testid={`step-header-${step.id}`}
                     >
-                      <div className="flex items-center gap-3">
-                        {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
-                          {getStatusIcon(step.progress.status)}
-                        </div>
-                        <div>
-                          <h4 className="font-medium">{step.name}</h4>
-                          <p className="text-sm text-muted-foreground">{step.description}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(step.progress.status)}
-                        <Badge variant="outline" className="text-xs">
-                          <User className="h-3 w-3 mr-1" />
-                          {step.assignedRole}
-                        </Badge>
-                        
-                        {/* Quick action buttons in collapsed view */}
-                        {canUserModifyStep(step) && (
-                          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                            {step.progress.status === 'PENDING' && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-6 px-2 text-xs"
-                                onClick={() => handleStepStatusUpdate(workflowItem.progress.id, step.id, 'IN_PROGRESS')}
-                                data-testid={`button-quick-start-${step.id}`}
-                              >
-                                <Play className="h-3 w-3 mr-1" />
-                                Start
-                              </Button>
-                            )}
-                            {step.progress.status === 'IN_PROGRESS' && (
-                              <Button
-                                size="sm"
-                                className="h-6 px-2 text-xs"
-                                onClick={() => handleStepStatusUpdate(workflowItem.progress.id, step.id, 'COMPLETED')}
-                                data-testid={`button-quick-complete-${step.id}`}
-                              >
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Complete
-                              </Button>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                            {getStatusIcon(status)}
+                          </div>
+                          <div>
+                            <h4 className="font-medium" data-testid={`step-name-${step.id}`}>{step.name}</h4>
+                            {step.description && (
+                              <p className="text-sm text-gray-600">{step.description}</p>
                             )}
                           </div>
-                        )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={getStatusBadgeVariant(status)} data-testid={`step-status-${step.id}`}>
+                            {status.replace('_', ' ')}
+                          </Badge>
+                          {step.assignedRole && (
+                            <Badge variant="outline" className="text-xs">
+                              {step.assignedRole}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
 
+                    {/* Step Details */}
                     {isExpanded && (
-                      <div className="mt-4 space-y-4">
-                        <Separator />
-                        
-                        {/* Step Controls */}
-                        {canModify && (
-                          <div className="space-y-3">
-                            <Label className="text-sm font-medium">Update Step Status</Label>
-                            <div className="flex gap-2">
-                              {step.progress.status !== 'IN_PROGRESS' && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleStepStatusUpdate(workflowItem.progress.id, step.id, 'IN_PROGRESS')}
-                                  data-testid={`button-start-step-${step.id}`}
-                                >
-                                  <Play className="h-4 w-4 mr-1" />
-                                  Start
-                                </Button>
-                              )}
-                              {step.progress.status === 'IN_PROGRESS' && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleStepStatusUpdate(workflowItem.progress.id, step.id, 'COMPLETED')}
-                                  data-testid={`button-complete-step-${step.id}`}
-                                >
-                                  <CheckCircle className="h-4 w-4 mr-1" />
-                                  Complete
-                                </Button>
-                              )}
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label htmlFor={`notes-${step.id}`}>Notes</Label>
-                              <Textarea
-                                id={`notes-${step.id}`}
-                                placeholder="Add notes about this step..."
-                                value={stepNotes[step.id] || ''}
-                                onChange={(e) => setStepNotes(prev => ({ ...prev, [step.id]: e.target.value }))}
-                                data-testid={`textarea-step-notes-${step.id}`}
-                              />
-                            </div>
-                          </div>
-                        )}
-
+                      <div className="border-t p-4 space-y-4 bg-gray-50" data-testid={`step-details-${step.id}`}>
                         {/* Document Requirements */}
                         {step.documentRequirements.length > 0 && (
                           <div className="space-y-3">
-                            <Label className="text-sm font-medium">Document Requirements</Label>
-                            <div className="space-y-2">
-                              {step.documentRequirements.map((doc) => (
-                                <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                  <div>
-                                    <p className="font-medium">{doc.title}</p>
-                                    <p className="text-sm text-muted-foreground">{doc.description}</p>
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <Badge variant="outline" className="text-xs">
-                                        {doc.submittedBy}
-                                      </Badge>
-                                      {doc.isRequired && (
-                                        <Badge variant="secondary" className="text-xs">Required</Badge>
+                            <Label className="text-sm font-medium">Required Documents</Label>
+                            {step.documentRequirements.map((docReq) => (
+                              <div key={docReq.id} className="border rounded-lg p-3 bg-white" data-testid={`document-req-${docReq.id}`}>
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <h5 className="font-medium text-sm flex items-center gap-2">
+                                      <FileText className="h-4 w-4" />
+                                      {docReq.title}
+                                      {docReq.isRequired && (
+                                        <Badge variant="destructive" className="text-xs">Required</Badge>
                                       )}
-                                    </div>
+                                    </h5>
+                                    {docReq.description && (
+                                      <p className="text-xs text-gray-600 mt-1">{docReq.description}</p>
+                                    )}
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      Submitted by: {docReq.submittedBy}
+                                    </p>
+                                    {docReq.acceptedFileTypes.length > 0 && (
+                                      <p className="text-xs text-gray-500">
+                                        Accepted formats: {docReq.acceptedFileTypes.join(', ')}
+                                      </p>
+                                    )}
                                   </div>
-                                  {showUploadPane && canModify && doc.submittedBy === (userRole === 'WORKER' ? 'WORKER' : 'OWNER') && (
-                                    <DocumentUploader
-                                      workflowStepProgressId={step.progress.id}
-                                      workerId={workerId}
-                                      onUploadComplete={() => {
-                                        // Refresh workflow progress data
-                                        queryClient.invalidateQueries({ queryKey: ['/api/workers', workerId, 'workflow-progress'] });
-                                      }}
-                                    />
+                                  {showUploadPane && canModify && (
+                                    <Button size="sm" variant="outline" data-testid={`button-upload-${docReq.id}`}>
+                                      <Upload className="h-3 w-3 mr-1" />
+                                      Upload
+                                    </Button>
                                   )}
                                 </div>
-                              ))}
-                            </div>
+                              </div>
+                            ))}
                           </div>
                         )}
 
-                        {/* Document Status Tracker */}
-                        {step.progress.id && (
-                          <div className="space-y-3">
-                            <Label className="text-sm font-medium">Uploaded Documents</Label>
-                            <DocumentStatusTracker
-                              workflowStepProgressId={step.progress.id}
-                              workerId={workerId}
-                              isReadOnly={!canModify}
-                            />
-                          </div>
-                        )}
-
-                        {/* Verification Checklist */}
+                        {/* Checklist Items */}
                         {step.checklistItems.length > 0 && (
                           <div className="space-y-3">
-                            <Label className="text-sm font-medium">Verification Checklist</Label>
-                            <div className="space-y-2">
-                              {step.checklistItems.map((item) => (
-                                <div key={item.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                                  {canUserVerify(item) ? (
-                                    <Switch
-                                      checked={item.isCompleted || false}
-                                      onCheckedChange={(checked) => handleChecklistToggle(workflowItem.progress.id, step.id, item.id, checked)}
-                                      data-testid={`switch-checklist-${item.id}`}
-                                    />
+                            <Label className="text-sm font-medium">Checklist Items</Label>
+                            {step.checklistItems.map((item) => (
+                              <div key={item.id} className="flex items-start gap-3 p-3 border rounded-lg bg-white" data-testid={`checklist-item-${item.id}`}>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  {canUserVerify() ? (
+                                    <Switch size="sm" disabled={!canModify} data-testid={`switch-checklist-${item.id}`} />
                                   ) : (
-                                    <div className="mt-1">
-                                      {item.isCompleted ? <CheckSquare className="h-4 w-4 text-green-500" /> : <Square className="h-4 w-4 text-gray-400" />}
-                                    </div>
+                                    <Square className="h-4 w-4 text-gray-400" />
                                   )}
-                                  <div className="flex-1">
-                                    <p className="font-medium">{item.title}</p>
-                                    <p className="text-sm text-muted-foreground">{item.description}</p>
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <Badge variant="outline" className="text-xs">
-                                        {item.assignedRole}
-                                      </Badge>
-                                      {item.isRequired && (
-                                        <Badge variant="secondary" className="text-xs">Required</Badge>
-                                      )}
-                                    </div>
-                                  </div>
                                 </div>
-                              ))}
-                            </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium">{item.title}</span>
+                                    {item.isRequired && (
+                                      <Badge variant="destructive" className="text-xs">Required</Badge>
+                                    )}
+                                  </div>
+                                  {item.description && (
+                                    <p className="text-xs text-gray-600 mt-1">{item.description}</p>
+                                  )}
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Assigned to: {item.assignedRole}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         )}
 
-                        {/* Step Timestamps */}
-                        {(step.progress.startedAt || step.progress.completedAt) && (
-                          <div className="text-xs text-muted-foreground space-y-1">
-                            {step.progress.startedAt && (
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                Started: {new Date(step.progress.startedAt).toLocaleDateString()}
-                              </div>
+                        {/* Step Actions */}
+                        {canModify && stepProgressData && (
+                          <div className="flex items-center gap-2 pt-2 border-t">
+                            {status === 'PENDING' && (
+                              <Button 
+                                size="sm" 
+                                onClick={() => updateStepMutation.mutate({
+                                  stepProgressId: stepProgressData.id,
+                                  status: 'IN_PROGRESS'
+                                })}
+                                disabled={updateStepMutation.isPending}
+                                data-testid={`button-start-step-${step.id}`}
+                              >
+                                <Play className="h-3 w-3 mr-1" />
+                                Start Step
+                              </Button>
                             )}
-                            {step.progress.completedAt && (
-                              <div className="flex items-center gap-1">
-                                <CheckCircle className="h-3 w-3" />
-                                Completed: {new Date(step.progress.completedAt).toLocaleDateString()}
-                              </div>
+                            {status === 'IN_PROGRESS' && (
+                              <Button 
+                                size="sm" 
+                                onClick={() => updateStepMutation.mutate({
+                                  stepProgressId: stepProgressData.id,
+                                  status: 'COMPLETED'
+                                })}
+                                disabled={updateStepMutation.isPending}
+                                data-testid={`button-complete-step-${step.id}`}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Complete Step
+                              </Button>
                             )}
                           </div>
                         )}
@@ -505,10 +540,9 @@ export default function WorkflowProgressTracker({
                   </div>
                 );
               })}
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
