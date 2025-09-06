@@ -82,6 +82,9 @@ export default function AppSidebar({ userRole, onSectionChange, currentSection }
           { icon: 'fas fa-bell', label: 'Reminders', href: '/reminders', sectionKey: 'reminders', active: isActive('/reminders', 'reminders') },
           { icon: 'fas fa-history', label: 'Audit Logs', href: '/audit', sectionKey: 'audit', active: isActive('/audit', 'audit') },
           { icon: 'fas fa-heartbeat', label: 'System Health', href: '/health-check', sectionKey: 'health', active: isActive('/health-check', 'health') },
+          ...(import.meta.env.DEV || import.meta.env.VITE_QA_MODE === 'true' ? [
+            { icon: 'fas fa-flask', label: 'QA Dashboard', href: '/qa', sectionKey: 'qa', active: isActive('/qa', 'qa') }
+          ] : []),
           { icon: 'fas fa-cog', label: 'Settings', href: '/settings', sectionKey: 'settings', active: isActive('/settings', 'settings') }
         ];
       case 'OWNER':
