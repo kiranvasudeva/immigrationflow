@@ -2021,6 +2021,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Worker Workflows API endpoint - returns structured workflow progress for a specific worker
+  app.get('/api/workers/:workerId/workflows', isAuthenticated, requireRole('ADMIN', 'OWNER', 'WORKER'), async (req: any, res) => {
+    try {
+      const { workerId } = req.params;
+      
+      // Verify worker exists
+      const worker = await storage.getWorker(workerId);
+      if (!worker) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+      
+      // Get worker's assignments
+      const assignments = await storage.getAssignmentsByWorkerId(workerId);
+      
+      // Get workflow templates for structure
+      const templates = await storage.getAllWorkflowTemplates();
+      
+      // Build workflow progress response
+      const workflows = assignments.map(assignment => {
+        const template = templates.find(t => t.id === assignment.workflowTemplateId);
+        return {
+          workflowTemplateId: assignment.workflowTemplateId,
+          name: template?.name || 'Unknown Workflow',
+          progress: {
+            overallStatus: assignment.status,
+            steps: [{
+              stepId: assignment.id,
+              stepOrder: 1,
+              name: assignment.stageName || 'Assignment Step',
+              status: assignment.status
+            }]
+          }
+        };
+      });
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.json(workflows);
+    } catch (error) {
+      console.error('Error fetching worker workflows:', error);
+      res.status(500).json({ message: "Failed to fetch worker workflows" });
+    }
+  });
+
   const httpServer = createServer(app);
   // QA/Smoke Test endpoints (dev/QA only)
   app.get('/api/qa/smoke', isAuthenticated, requireRole('ADMIN'), async (req, res) => {
