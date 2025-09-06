@@ -1391,7 +1391,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllWorkerWorkflowProgress(): Promise<WorkerWorkflowProgress[]> {
-    return await db.select().from(workerWorkflowProgress);
+    console.log('DEBUG: getAllWorkerWorkflowProgress called');
+    const result = await db.select().from(workerWorkflowProgress);
+    console.log('DEBUG: Raw database result count:', result.length);
+    if (result.length > 0) {
+      console.log('DEBUG: First record:', JSON.stringify(result[0], null, 2));
+    }
+    return result;
   }
 
   async createWorkerWorkflowProgress(progress: InsertWorkerWorkflowProgress): Promise<WorkerWorkflowProgress> {
