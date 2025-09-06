@@ -335,6 +335,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // QA status endpoint - provides baseline status and current report summary
+  app.get('/qa/status', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    const report = qaReportCache.getReport();
+    if (!report) {
+      return res.status(404).json({ 
+        ok: false, 
+        reason: 'NoReportYet',
+        baseline: 'v0.1.0-stable'
+      });
+    }
+    
+    res.json({
+      ok: true,
+      baseline: 'v0.1.0-stable',
+      tests: report.totalTests,
+      passed: report.passed,
+      failed: report.failed,
+      at: report.timestamp
+    });
+  });
+
   app.get('/qa/audit-logs', (req, res) => {
     try {
       res.setHeader('Content-Type', 'application/json');

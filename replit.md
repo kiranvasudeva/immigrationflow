@@ -1,11 +1,9 @@
 # System Bible - ImmigrationFlow
 
 ## Overview
-
-ImmigrationFlow is a comprehensive SaaS platform designed to streamline Romanian immigration workflows. It manages the entire process from labor market tests and work permits to visa applications and residence permits. The platform offers multi-role access, robust document management with PDF generation, automated reminders, audit logging, and a kanban-style workflow interface. Its vision is to provide an efficient and compliant solution for immigration management, targeting businesses and individuals navigating the complex Romanian immigration landscape.
+ImmigrationFlow is a comprehensive SaaS platform designed to streamline Romanian immigration workflows. It manages the entire process from labor market tests and work permits to visa applications and residence permits, offering multi-role access, robust document management with PDF generation, automated reminders, audit logging, and a kanban-style workflow interface. Its vision is to provide an efficient and compliant solution for immigration management, targeting businesses and individuals navigating the complex Romanian immigration landscape.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
 
 ### Development Workflow Protocol
@@ -74,140 +72,6 @@ The system includes:
 
 The agent should never mark a task complete without running through this verification process. Documentation must be updated after task completion. The agent should never break existing working functionality.
 
-## QA Bridge API
-
-The system includes a secure, token-gated control bridge at `/qa/bridge` that provides external agents controlled access to inspect and debug the project.
-
-### Endpoint: POST /qa/bridge
-
-**Security Requirements:**
-- Enabled only when `QA_MODE=true` environment variable is set
-- Requires `Authorization: Bearer ${BRIDGE_TOKEN}` header
-- Requires `X-Timestamp` (unix milliseconds) and `X-Nonce` (UUID) headers
-- Rate limited per IP/token (default: 10 requests per minute)
-- Replay protection with configurable clock skew and nonce TTL
-
-**Environment Variables:**
-```bash
-QA_MODE=true                    # Enable QA Bridge
-BRIDGE_TOKEN=your-secret-token  # Authentication token
-BRIDGE_RATE=10                  # Requests per minute (optional, default: 10)
-BRIDGE_CLOCK_SKEW_SEC=30        # Timestamp tolerance (optional, default: 30)
-BRIDGE_NONCE_TTL_SEC=300        # Nonce cache TTL (optional, default: 300)
-```
-
-**Supported Actions:**
-
-- `listFiles` - Returns full directory tree
-- `readFile` - Returns file contents (masks secrets in config files, params: `{path}`)
-- `writeFile` - Overwrites file content (blocks .env, secrets, node_modules, .git, params: `{path, content}`)
-- `listRoutes` - Scans and returns all frontend/backend routes
-- `queryDB` - Executes safe SELECT queries (blocks SQL injection, params: `{table, limit?, where?}`)
-- `runCommand` - Runs allowlisted commands (params: `{name}` - only "npm run build", "npx prisma migrate status", "npx prisma db pull")
-- `getLogs` - Returns recent QA audit logs (params: `{type}` - 'qa' only)
-- `qaTests` - Runs automated QA checks for health and database connectivity
-
-**Usage Examples:**
-```bash
-# Set environment variables first
-export QA_MODE=true
-export BRIDGE_TOKEN="your-secret-token"
-
-# Generate timestamp and nonce
-TIMESTAMP=$(date +%s%3N)
-NONCE=$(uuidgen)
-
-# List all files
-curl -X POST http://localhost:5000/qa/bridge \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $BRIDGE_TOKEN" \
-  -H "X-Timestamp: $TIMESTAMP" \
-  -H "X-Nonce: $NONCE" \
-  -d '{"action":"listFiles"}'
-
-# Read specific file (secrets will be masked)
-TIMESTAMP=$(date +%s%3N)
-NONCE=$(uuidgen)
-curl -X POST http://localhost:5000/qa/bridge \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $BRIDGE_TOKEN" \
-  -H "X-Timestamp: $TIMESTAMP" \
-  -H "X-Nonce: $NONCE" \
-  -d '{"action":"readFile","params":{"path":"client/src/pages/clients.tsx"}}'
-
-# Query database safely
-TIMESTAMP=$(date +%s%3N)
-NONCE=$(uuidgen)
-curl -X POST http://localhost:5000/qa/bridge \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $BRIDGE_TOKEN" \
-  -H "X-Timestamp: $TIMESTAMP" \
-  -H "X-Nonce: $NONCE" \
-  -d '{"action":"queryDB","params":{"table":"users","limit":5,"where":"role='\''ADMIN'\''"}}' 
-
-# Run QA tests
-TIMESTAMP=$(date +%s%3N)
-NONCE=$(uuidgen)
-curl -X POST http://localhost:5000/qa/bridge \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $BRIDGE_TOKEN" \
-  -H "X-Timestamp: $TIMESTAMP" \
-  -H "X-Nonce: $NONCE" \
-  -d '{"action":"qaTests"}'
-```
-
-**Security Features:**
-- **Authentication:** Bearer token validation
-- **Replay Protection:** Timestamp + nonce validation prevents replay attacks
-- **Rate Limiting:** Configurable per-IP/token limits with retry-after headers
-- **Path Blocking:** writeFile blocks sensitive files (.env, secrets, node_modules, .git)
-- **Secret Masking:** readFile masks secrets in configuration files
-- **SQL Injection Protection:** queryDB blocks raw SQL and injection attempts
-- **Command Allowlisting:** runCommand only allows safe, predefined commands
-- **Audit Logging:** All actions logged to `qa_bridge_audit.log` with hashed IPs
-- **Response Truncation:** Large responses truncated to 200KB with indicators
-
-**Error Responses:**
-- `401` - Invalid or missing token
-- `400` - Missing required headers (timestamp/nonce)
-- `409` - Replay detected (nonce reused)
-- `429` - Rate limit exceeded
-- `403` - Blocked action (sensitive files, SQL injection, etc.)
-
-**Logging:** All actions are logged to `qa_bridge_audit.log` with timestamps and hashed IP addresses. No secrets or PII are logged.
-
-### QA Dashboard Pages
-
-**QA Dashboard (`/qa/live`):**
-- Visual interface for running automated QA tests
-- "Run QA Tests" button calls QA Bridge directly with authentication
-- PASS/FAIL badges for each test check
-- Raw JSON report display for copy-paste
-- DEV-ONLY security warning banner
-
-**QA Public (`/qa/public`):**
-- Returns cached QA report in JSON format
-- No authentication headers required
-- Returns `{ ok: false }` with 404 if no cached report available
-- Useful for external monitoring tools
-
-**Helper Endpoints:**
-- `GET /qa/last-report` - Returns cached QA test results (raw JSON)
-- `GET /qa/public` - Returns cached report with ok/error wrapper
-- `POST /qa/run` - Server-side QA test execution (secure token handling)
-- `GET /qa/audit-logs` - Returns last 50 audit entries (sanitized, no PII)
-
-**Report Caching:**
-- QA test results are automatically cached in memory after each run
-- Cache is updated by both direct bridge calls and server-side execution
-- Cached reports include timestamp, test count, and detailed results
-
-**Usage:**
-1. Navigate to `/qa/live` for interactive dashboard
-2. Click "Run QA Tests" to execute health and database checks
-3. View PASS/FAIL badges and detailed JSON output
-4. Access `/qa/public` for programmatic report retrieval
-
 ## System Architecture
 
 ### Frontend Architecture
@@ -255,6 +119,14 @@ curl -X POST http://localhost:5000/qa/bridge \
 - **System Health Checks**: Dedicated `/health-check` endpoint with orchestrated tests and real-time logs.
 - **GDPR Compliance Suite**: Cookie banner, privacy policies, data export/deletion, user rights management.
 - **Security-First Design**: Enterprise-grade authentication, CSRF protection, rate limiting, secure session management, and comprehensive audit logging.
+
+### QA Bridge API
+The system includes a secure, token-gated control bridge at `/qa/bridge` for external agents to inspect and debug. It supports actions like `listFiles`, `readFile`, `writeFile`, `listRoutes`, `queryDB`, `runCommand`, `getLogs`, and `qaTests` with strong security measures including authentication, replay protection, rate limiting, path blocking, secret masking, SQL injection protection, and command allowlisting. All actions are audit logged.
+
+### Regression Prevention Infrastructure
+- **Baseline Snapshot**: v0.1.0-stable (2025-09-06) serves as a reference point for regression detection with 13/13 QA tests passing.
+- **Automated Regression Check**: `node scripts/regression-check.mjs` validates all QA tests pass and provides detailed failure reporting, integrated into CI/CD.
+- **Baseline Maintenance**: Provides `git checkout` commands for rolling back to stable and a feature development flow that includes type checking and regression checks. `/qa/status` endpoint provides current baseline status.
 
 ## External Dependencies
 
