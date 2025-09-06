@@ -1,0 +1,73 @@
+APPROVE PLAN — IMPLEMENT & VERIFY.
+
+IMPLEMENT — API JSON FIXES
+1) Workflow Templates API
+- Add/repair GET /api/workflows/templates → returns JSON:
+  [
+    {
+      id, name, description,
+      steps: [{ id, stepOrder, name, requiresUpload, requiresVerification }]
+    }
+  ]
+- Ensure `res.status(200).json(...)` and `Content-Type: application/json`.
+- If the app uses a prefix (e.g., /api), update the QA tests to call the correct path.
+
+2) Worker Workflows API
+- Add/repair GET /api/workers/:workerId/workflows → returns JSON:
+  [
+    {
+      workflowTemplateId, name,
+      progress: {
+        overallStatus: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED',
+        steps: [
+          { stepId, stepOrder, name, status: 'PENDING'|'IN_PROGRESS'|'COMPLETED'|'REJECTED' }
+        ]
+      }
+    }
+  ]
+- Enforce sequential rule on the server: if step N is not COMPLETED, step N+1 cannot be COMPLETED.
+- Make sure this route is not shadowed by any catch-all that returns HTML.
+
+3) Catch-all Hardening
+- Ensure API router is mounted BEFORE any `*` catch-all that serves the SPA HTML.
+- Add a defensive 404 JSON handler for unknown /api/* paths: `{ ok:false, error:"NotFound" }`.
+
+IMPLEMENT — DATA CLEANUP & SAFE SEED
+4) Remove legacy mock data and block reseeding
+- Add a one-time migration script that:
+  - Deletes rows with names like "Test Construction Company" in client_profiles.
+  - Deletes workers with name LIKE 'Test Worker%'.
+- Update the seed script to ONLY insert realistic demo entries (the Demo Legal Services SRL set you already added) and never insert “Test …” strings again.
+- Add a guard in the seed script: if a record with `name LIKE 'Test %'` exists, log a warning and delete it before inserting demo rows.
+
+IMPLEMENT — I18N & HYDRATION
+5) i18n consolidation
+- Ensure there is ONE i18n provider (e.g., `I18nProvider`) in `client/src/main.tsx` or root layout.
+- Preload translations for the active locale BEFORE first render.
+- Replace any remaining imports from legacy `LanguageContext` or duplicate i18n setups.
+- Add missing translation keys for the labels used on /dashboard, /clients, /workers.
+- If a key is missing at runtime, show the English fallback string (not the raw key).
+
+6) Hydration stability
+- For pages /dashboard, /clients, /workers:
+  - Wrap data sections with stable loading placeholders (Skeletons) until data is fetched.
+  - Remove any mock initial arrays; initial state should be empty + loading UI.
+  - Ensure Sidebar/Layout is rendered exactly once at the app root (no duplicate sidebars).
+  - Give list items stable `key`s (id), not indices or random.
+
+VERIFY — RUN QA & CHECKS
+- Re-run QA:
+  - Workflow Templates Tests → PASS (no `<!DOCTYPE`).
+  - Worker Workflows Tests → PASS (no `<!DOCTYPE`).
+  - Mock Data Detection → PASS (no “Test Construction Company” / “Test Worker” anywhere).
+  - UI Hydration Sanity → PASS (no untranslated keys; one sidebar).
+- Also verify:
+  - All API JSON responses include `Content-Type: application/json`.
+  - `/api/*` unknown paths return JSON 404, not HTML.
+
+OUTPUT
+- List files changed and a short diff summary.
+- Paste the updated API paths used by the QA tests.
+- Paste a brief summary of i18n keys added.
+- STOP if any step fails and report the exact file + error.
+

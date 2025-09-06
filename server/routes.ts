@@ -906,7 +906,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Workflow templates route - accessible to ADMIN, OWNER, WORKER (all authenticated users need workflow templates)
-  app.get('/api/workflow/templates', isAuthenticated, requireRole('ADMIN', 'OWNER', 'WORKER'), async (req: any, res) => {
+  app.get('/api/workflows/templates', isAuthenticated, requireRole('ADMIN', 'OWNER', 'WORKER'), async (req: any, res) => {
     try {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
