@@ -8,7 +8,6 @@ import { I18nProvider } from "@/contexts/I18nProvider";
 import { clientErrorReporter } from "@/lib/clientErrorReporter";
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
 import { useAuth } from "@/hooks/useAuth";
-import { DummyDataAlert } from "@/components/dummy-data-alert";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { useRoleBasedLanguage } from "@/hooks/useRoleBasedLanguage";
 import NotFound from "@/pages/not-found";
@@ -67,8 +66,6 @@ function Router() {
       {/* Development role switcher */}
       <RoleSwitcher />
       
-      {/* Show dummy data alert for authenticated users */}
-      {isAuthenticated && <DummyDataAlert />}
       
       <Switch>
         {!isAuthenticated ? (
