@@ -31,7 +31,7 @@ export default function QADashboard() {
     try {
       // Generate required headers for bridge authentication
       const timestamp = Date.now().toString();
-      const nonce = `web-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const nonce = `${crypto.randomUUID ? crypto.randomUUID() : 'web-' + Date.now() + '-' + Math.random().toString(36).substring(2, 15)}`;
       const bridgeToken = 'abcd1234'; // Using environment token
       
       const response = await fetch('/qa/bridge', {
