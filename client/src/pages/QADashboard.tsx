@@ -8,7 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Play, User, Shield, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/hooks/useAuth';
 
 interface QACheck {
   name: string;
