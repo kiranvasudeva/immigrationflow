@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,16 +28,53 @@ interface AuditEntry {
   error?: string;
 }
 
+// Safe fetcher for last-report that treats 404 as empty state
+const fetchLastReport = async (): Promise<QAReport | { ok: false; reason: string; __empty: true }> => {
+  const response = await fetch('/qa/last-report', {
+    headers: { Accept: 'application/json' }
+  });
+
+  // 404 is valid "empty" state, not an error
+  if (response.status === 404) {
+    return { ok: false, reason: "NoReport", __empty: true };
+  }
+
+  // Non-404 errors should be thrown
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`HTTP ${response.status}: ${text.slice(0, 200)}`);
+  }
+
+  // Ensure JSON response
+  const contentType = response.headers.get('content-type');
+  if (!contentType?.includes('application/json')) {
+    const text = await response.text();
+    throw new Error(`Non-JSON response: ${text.slice(0, 200)}`);
+  }
+
+  return response.json();
+};
+
 export default function QALivePage() {
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  // Fetch last QA report
-  const { data: qaReport, refetch: refetchReport, isLoading: reportLoading, error: reportError } = useQuery<QAReport>({
-    queryKey: ['/qa/last-report'],
+  // Fetch last QA report with safe fetcher
+  const { data: reportData, isLoading: reportLoading, error: reportError } = useQuery({
+    queryKey: ['qa-last-report'],
+    queryFn: fetchLastReport,
+    retry: (failureCount, error) => {
+      // Don't retry 404s (empty state), only retry other errors up to 2 times
+      return !error.message.includes('HTTP 404') && failureCount < 2;
+    },
+    staleTime: 10_000, // 10 seconds
     refetchInterval: 30000, // Auto-refresh every 30 seconds
-    retry: 1, // Only retry once on failure
   });
+
+  // Extract QA report from response (null if empty state)
+  const qaReport: QAReport | null = reportData && 'tests' in reportData ? reportData : null;
+  const isEmpty = reportData && '__empty' in reportData;
 
   // Fetch audit logs
   const { data: auditLogs, refetch: refetchAudit, isLoading: auditLoading, error: auditError } = useQuery<AuditEntry[]>({
@@ -60,8 +97,8 @@ export default function QALivePage() {
       if (response.ok) {
         const result = await response.json();
         if (result.ok && result.report) {
-          // Update cache directly and refresh views
-          await Promise.all([refetchReport(), refetchAudit()]);
+          // Invalidate and refetch the report
+          await queryClient.invalidateQueries({ queryKey: ['qa-last-report'] });
         } else {
           setError('QA tests completed but returned unexpected format');
         }
@@ -107,12 +144,12 @@ export default function QALivePage() {
         </Button>
       </div>
 
-      {/* Error Banner */}
-      {(error || reportError || auditError) && (
+      {/* Error Banner - Only show non-404 errors */}
+      {(error || (reportError && !reportError.message.includes('HTTP 404')) || auditError) && (
         <Alert className="border-red-500 bg-red-50 dark:bg-red-950">
           <AlertTriangle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-800 dark:text-red-200">
-            {error || reportError?.message || auditError?.message || 'Unknown error occurred'}
+            {error || (reportError && !reportError.message.includes('HTTP 404') ? reportError?.message : '') || auditError?.message || 'Unknown error occurred'}
           </AlertDescription>
         </Alert>
       )}
@@ -129,11 +166,28 @@ export default function QALivePage() {
                 <RefreshCw className="h-4 w-4 animate-spin" />
                 <span>Loading report...</span>
               </div>
-            ) : reportError ? (
+            ) : reportError && !reportError.message.includes('HTTP 404') ? (
               <div className="text-red-600">
                 Error loading report: {reportError.message}
               </div>
-            ) : qaReport ? (
+            ) : isEmpty || !qaReport ? (
+              <div className="text-gray-500 text-center py-8">
+                <div className="text-lg font-medium mb-4">No QA Report Yet</div>
+                <div className="text-sm mb-4">Click the button below to run your first QA test suite.</div>
+                <Button 
+                  onClick={runQATests} 
+                  disabled={isRunning}
+                  className="flex items-center gap-2"
+                >
+                  {isRunning ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                  {isRunning ? 'Running Tests...' : 'Run QA Tests'}
+                </Button>
+              </div>
+            ) : (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">
@@ -168,11 +222,6 @@ export default function QALivePage() {
                     {JSON.stringify(qaReport, null, 2)}
                   </pre>
                 </details>
-              </div>
-            ) : (
-              <div className="text-gray-500 text-center py-8">
-                <div className="text-lg font-medium mb-2">No QA Report Yet</div>
-                <div className="text-sm">Click "Run QA Tests" above to generate your first report.</div>
               </div>
             )}
           </CardContent>
@@ -281,6 +330,13 @@ export default function QALivePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dev Console - Shows last error to prevent blank page */}
+      {(error || (reportError && !reportError.message.includes('HTTP 404'))) && (
+        <div className="mt-4 p-2 bg-muted rounded text-xs text-muted-foreground border">
+          <strong>Dev Console:</strong> {error || reportError?.message || 'No errors'}
+        </div>
+      )}
     </div>
   );
 }

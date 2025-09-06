@@ -1,0 +1,53 @@
+APPROVE PLAN — IMPLEMENT & VERIFY (MINIMAL DIFFS).
+
+GOAL
+Fix /qa/live so a 404 from GET /qa/last-report is treated as an EMPTY STATE (not a retriable error), and the page never goes blank. “Run QA Tests” must call POST /qa/run, cache the report, then re-render results.
+
+CHANGES (minimal, targeted)
+1) client/src/pages/qa-live.tsx
+   - Add a SAFE fetcher for last-report:
+     • Performs fetch('/qa/last-report', { headers: { Accept: 'application/json' } })
+     • If response.status === 404 → return { ok:false, reason:"NoReport", __empty:true }
+     • If !response.ok and not 404 → read text (first 200 chars) and THROW Error(`HTTP ${status}: ${snippet}`)
+     • If content-type not application/json → read text and THROW Error("Non-JSON response")
+     • Else return parsed JSON
+   - Use TanStack Query with:
+     • queryKey: ['qa-last-report']
+     • queryFn: safe fetcher above
+     • retry: (failureCount, error) => retry ONLY when not 404 and failureCount < 2
+     • staleTime: 10_000
+   - Render branches:
+     • Loading: show skeleton
+     • Error (non-404): show red error banner with status/message
+     • Empty (data?.__empty === true or data?.reason === 'NoReport'): show “No report yet” + primary button to RUN TESTS
+     • Data present: render PASS/FAIL table + Raw JSON (collapsible)
+   - Wire “Run QA Tests” button to:
+     • POST /qa/run with Content-Type: application/json
+     • On success, invalidate/refetch ['qa-last-report']
+     • Show a small inline spinner while running; disable button
+   - Add a tiny bottom “dev console” area that displays the last error string (if any) so the page never looks blank.
+
+2) server side (confirm, adjust only if missing)
+   - POST /qa/run:
+     • Serialize concurrent runs with an in-memory mutex: if a run is in progress, await it rather than return 409
+     • After the report is produced: qaReportCache.setReport(report) BEFORE responding
+     • Return 200 JSON: { ok:true, report }
+     • Ensure Content-Type: application/json
+   - GET /qa/last-report:
+     • If cache is empty → 404 JSON { ok:false, reason:"NoReport" }
+     • Else 200 JSON (cached report)
+   - GET /qa/public mirrors /qa/last-report after first run (public read-only)
+   - Ensure API routers are mounted BEFORE any SPA catch-all, and unknown /api/* return JSON 404 (not HTML)
+
+VERIFICATION
+- Navigate to /qa/live:
+  • Before any run: see header + “No report yet” and a “Run QA Tests” button (no infinite loading)
+  • Click “Run QA Tests”: button shows running state, returns results, PASS/FAIL table + Raw JSON appear
+  • Reload /qa/public: returns cached JSON 200
+- Browser console: no uncaught exceptions; Network: all QA endpoints respond with application/json (no <!DOCTYPE)
+- No regressions on /dashboard, /clients, /workers
+
+OUTPUT
+- List the exact lines/files changed in qa-live.tsx (fetcher, query options, render branches, button handler)
+- Confirm /qa/run sets cache then responds
+- If anything fails, STOP and report the exact file + thrown error text
