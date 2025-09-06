@@ -1469,6 +1469,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all worker workflow progress data
+  app.get('/api/worker-workflow-progress', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+
+      // Get all workflow progress data
+      const allProgress = await storage.getAllWorkerWorkflowProgress();
+      
+      // Filter based on user role
+      if (user?.role === 'ADMIN') {
+        res.json(allProgress);
+      } else {
+        // For OWNER role, only return progress for workers they own
+        const filteredProgress = [];
+        for (const progress of allProgress) {
+          const worker = await storage.getWorker(progress.workerId);
+          if (worker) {
+            const client = await storage.getClientProfile(worker.clientProfileId);
+            if (client?.ownerUserId === userId) {
+              filteredProgress.push(progress);
+            }
+          }
+        }
+        res.json(filteredProgress);
+      }
+    } catch (error) {
+      console.error('Error fetching worker workflow progress:', error);
+      res.status(500).json({ message: 'Failed to fetch workflow progress' });
+    }
+  });
+
   // Worker Workflow Progress API endpoints - new template-based system
   app.get('/api/worker/:workerId/workflow-progress', isAuthenticated, requireRole('ADMIN', 'OWNER', 'WORKER'), async (req: any, res) => {
     try {

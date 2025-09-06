@@ -46,11 +46,17 @@ interface WorkflowTemplate {
 interface WorkerWorkflowProgress {
   id: string;
   workerId: string;
-  templateId: string;
-  status: 'not_started' | 'in_progress' | 'completed' | 'paused' | 'cancelled';
-  startedAt: Date;
-  completedAt: Date | null;
-  notes: string | null;
+  workflowTemplateId: string;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'PAUSED' | 'CANCELLED';
+  currentStepId?: string | null;
+  startedAt?: Date | null;
+  completedAt?: Date | null;
+  progressData?: any;
+  notes?: string | null;
+}
+
+interface WorkerWithProgress extends Worker {
+  workflowProgress?: WorkerWorkflowProgress[];
 }
 
 export default function WorkerWorkflowAssignments() {
@@ -62,10 +68,17 @@ export default function WorkerWorkflowAssignments() {
   const [selectedWorkflow, setSelectedWorkflow] = useState<string>('');
   const [selectedWorkers, setSelectedWorkers] = useState<string[]>([]);
 
-  // Fetch workers
+  // Fetch workers with workflow progress
   const { data: workers = [], isLoading: workersLoading } = useQuery({
     queryKey: ['/api/workers'],
     staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch worker workflow progress for all workers
+  const { data: workflowProgressData = [], isLoading: progressLoading } = useQuery({
+    queryKey: ['/api/worker-workflow-progress'],
+    staleTime: 5 * 60 * 1000,
+    enabled: workers.length > 0,
   });
 
   // Fetch workflow templates
@@ -85,6 +98,7 @@ export default function WorkerWorkflowAssignments() {
         description: "Worker successfully linked to workflow",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/workers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/worker-workflow-progress'] });
       setSelectedWorkers([]);
       setSelectedWorkflow('');
     },
@@ -108,6 +122,7 @@ export default function WorkerWorkflowAssignments() {
         description: "Worker successfully unlinked from workflow",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/workers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/worker-workflow-progress'] });
     },
     onError: (error: any) => {
       toast({
@@ -119,10 +134,10 @@ export default function WorkerWorkflowAssignments() {
   });
 
   // Filter workers based on search term
-  const filteredWorkers = (workers as Worker[]).filter((worker: Worker) =>
+  const filteredWorkers = Array.isArray(workers) ? workers.filter((worker: Worker) =>
     `${worker.firstName} ${worker.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     worker.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) : [];
 
   const handleLinkWorkers = () => {
     if (!selectedWorkflow || selectedWorkers.length === 0) {
@@ -147,21 +162,36 @@ export default function WorkerWorkflowAssignments() {
     return (workflowTemplates as WorkflowTemplate[]).find((template: WorkflowTemplate) => template.id === templateId);
   };
 
+  // Get workflow progress for a worker and template
+  const getWorkerProgress = (workerId: string, templateId: string) => {
+    return (workflowProgressData as WorkerWorkflowProgress[]).find(
+      progress => progress.workerId === workerId && progress.workflowTemplateId === templateId
+    );
+  };
+
+  // Get all active workflows for a worker
+  const getWorkerActiveWorkflows = (workerId: string) => {
+    return (workflowProgressData as WorkerWorkflowProgress[]).filter(
+      progress => progress.workerId === workerId && 
+      ['NOT_STARTED', 'IN_PROGRESS', 'PAUSED'].includes(progress.status)
+    );
+  };
+
   const getStatusBadge = (status: string) => {
     const statusColors = {
-      not_started: 'bg-gray-100 text-gray-800',
-      in_progress: 'bg-blue-100 text-blue-800',
-      completed: 'bg-green-100 text-green-800',
-      paused: 'bg-yellow-100 text-yellow-800',
-      cancelled: 'bg-red-100 text-red-800',
+      NOT_STARTED: 'bg-gray-100 text-gray-800',
+      IN_PROGRESS: 'bg-blue-100 text-blue-800',
+      COMPLETED: 'bg-green-100 text-green-800',
+      PAUSED: 'bg-yellow-100 text-yellow-800',
+      CANCELLED: 'bg-red-100 text-red-800',
     };
 
     const statusIcons = {
-      not_started: Clock,
-      in_progress: AlertCircle,
-      completed: CheckCircle2,
-      paused: Clock,
-      cancelled: AlertCircle,
+      NOT_STARTED: Clock,
+      IN_PROGRESS: AlertCircle,
+      COMPLETED: CheckCircle2,
+      PAUSED: Clock,
+      CANCELLED: AlertCircle,
     };
 
     const Icon = statusIcons[status as keyof typeof statusIcons] || Clock;
@@ -170,12 +200,12 @@ export default function WorkerWorkflowAssignments() {
     return (
       <Badge className={`${colorClass} gap-1`}>
         <Icon className="h-3 w-3" />
-        {status.replace('_', ' ').toUpperCase()}
+        {status.replace('_', ' ')}
       </Badge>
     );
   };
 
-  if (workersLoading || templatesLoading) {
+  if (workersLoading || templatesLoading || progressLoading) {
     return (
       <div className="space-y-4">
         <div className="animate-pulse space-y-3">
@@ -206,7 +236,7 @@ export default function WorkerWorkflowAssignments() {
                   <SelectValue placeholder="Choose a workflow..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {(workflowTemplates as WorkflowTemplate[]).map((template: WorkflowTemplate) => (
+                  {Array.isArray(workflowTemplates) ? workflowTemplates.map((template: WorkflowTemplate) => (
                     <SelectItem key={template.id} value={template.id}>
                       <div className="flex items-center gap-2">
                         <Workflow className="h-4 w-4" />
@@ -218,7 +248,7 @@ export default function WorkerWorkflowAssignments() {
                         )}
                       </div>
                     </SelectItem>
-                  ))}
+                  )) : null}
                 </SelectContent>
               </Select>
             </div>
@@ -265,7 +295,7 @@ export default function WorkerWorkflowAssignments() {
                         <div className="text-sm text-gray-500">{worker.email || 'No email'}</div>
                       </div>
                       <Badge variant="outline">
-                        {worker.assignedWorkflowIds?.length || 0} workflows
+                        {getWorkerActiveWorkflows(worker.id).length} workflows
                       </Badge>
                     </label>
                   ))}
@@ -297,10 +327,10 @@ export default function WorkerWorkflowAssignments() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {(workers as Worker[]).length === 0 ? (
+            {!Array.isArray(workers) || workers.length === 0 ? (
               <p className="text-center text-gray-500 py-8">No workers found</p>
             ) : (
-              (workers as Worker[]).map((worker: Worker) => (
+              workers.map((worker: Worker) => (
                 <Card key={worker.id} className="border-l-4 border-l-blue-500">
                   <CardContent className="pt-4">
                     <div className="flex items-start justify-between mb-3">
@@ -309,58 +339,61 @@ export default function WorkerWorkflowAssignments() {
                         <p className="text-sm text-gray-600">{worker.email || 'No email'}</p>
                       </div>
                       <Badge variant="secondary">
-                        {worker.assignedWorkflowIds?.length || 0} active workflows
+                        {getWorkerActiveWorkflows(worker.id).length} active workflows
                       </Badge>
                     </div>
 
-                    {worker.assignedWorkflowIds && worker.assignedWorkflowIds.length > 0 ? (
-                      <div className="space-y-2">
-                        <Separator />
-                        <Label className="text-sm font-medium">Assigned Workflows:</Label>
-                        <div className="grid gap-2">
-                          {worker.assignedWorkflowIds.map((templateId: string) => {
-                            const template = getWorkflowTemplate(templateId);
-                            if (!template) return null;
+                    {(() => {
+                      const activeWorkflows = getWorkerActiveWorkflows(worker.id);
+                      return activeWorkflows.length > 0 ? (
+                        <div className="space-y-2">
+                          <Separator />
+                          <Label className="text-sm font-medium">Active Workflows:</Label>
+                          <div className="grid gap-2">
+                            {activeWorkflows.map((progress: WorkerWorkflowProgress) => {
+                              const template = getWorkflowTemplate(progress.workflowTemplateId);
+                              if (!template) return null;
 
-                            return (
-                              <div key={templateId} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                  <Workflow className="h-4 w-4 text-blue-500" />
-                                  <div>
-                                    <span className="font-medium">{template.name}</span>
-                                    {template.category && (
-                                      <Badge variant="outline" className="ml-2 text-xs">
-                                        {template.category}
-                                      </Badge>
-                                    )}
-                                    {template.description && (
-                                      <p className="text-xs text-gray-600 mt-1">{template.description}</p>
-                                    )}
+                              return (
+                                <div key={progress.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                                  <div className="flex items-center gap-3">
+                                    <Workflow className="h-4 w-4 text-blue-500" />
+                                    <div>
+                                      <span className="font-medium">{template.name}</span>
+                                      {template.category && (
+                                        <Badge variant="outline" className="ml-2 text-xs">
+                                          {template.category}
+                                        </Badge>
+                                      )}
+                                      {template.description && (
+                                        <p className="text-xs text-gray-600 mt-1">{template.description}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {getStatusBadge(progress.status)}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleUnlinkWorker(worker.id, progress.workflowTemplateId)}
+                                      disabled={unlinkMutation.isPending}
+                                      data-testid={`button-unlink-${worker.id}-${progress.workflowTemplateId}`}
+                                    >
+                                      <Unlink className="h-4 w-4" />
+                                    </Button>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  {getStatusBadge('in_progress')}
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleUnlinkWorker(worker.id, templateId)}
-                                    disabled={unlinkMutation.isPending}
-                                    data-testid={`button-unlink-${worker.id}-${templateId}`}
-                                  >
-                                    <Unlink className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-4 text-gray-500">
-                        <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">No workflows assigned</p>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="text-center py-4 text-gray-500">
+                          <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">No workflows assigned</p>
+                        </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               ))
@@ -405,7 +438,7 @@ export default function WorkerWorkflowAssignments() {
                     </div>
                     
                     <div className="text-xs text-gray-500">
-                      {(workers as Worker[]).filter((w: Worker) => w.assignedWorkflowIds?.includes(template.id)).length} workers assigned
+                      {(workflowProgressData as WorkerWorkflowProgress[]).filter((p: WorkerWorkflowProgress) => p.workflowTemplateId === template.id && ['NOT_STARTED', 'IN_PROGRESS', 'PAUSED'].includes(p.status)).length} workers assigned
                     </div>
                   </div>
                 </CardContent>
