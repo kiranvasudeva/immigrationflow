@@ -1482,8 +1482,7 @@ export class DatabaseStorage implements IStorage {
       workflowTemplateId: templateId,
       status: 'NOT_STARTED',
       startedAt: new Date(),
-      completedAt: null,
-      notes: null
+      completedAt: null
     };
     
     return await this.createWorkerWorkflowProgress(progress);
