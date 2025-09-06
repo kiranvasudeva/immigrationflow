@@ -72,14 +72,10 @@ export default function RemindersPage() {
     return null;
   }
 
-  // Fetch reminder rules from API (placeholder - will use real API when available)
+  // Fetch reminder rules from API
   const { data: reminderRules = [], isLoading: remindersLoading } = useQuery({
     queryKey: ['/api/reminder-rules'],
-    enabled: isAuthenticated && ['ADMIN', 'OWNER'].includes(user?.role || ''),
-    queryFn: async () => {
-      // For now, return empty array as reminder rules API is not implemented yet
-      return [];
-    }
+    enabled: isAuthenticated && ['ADMIN', 'OWNER'].includes(user?.role || '')
   });
 
   // Filter reminders based on search criteria

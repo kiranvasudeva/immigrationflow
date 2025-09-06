@@ -280,6 +280,13 @@ export interface IStorage {
   getWorkersForWorkflow(templateId: string): Promise<Worker[]>;
   getWorkflowsForWorker(workerId: string): Promise<WorkflowTemplate[]>;
 
+  // Reminder Rules operations
+  getAllReminderRules(): Promise<ReminderRule[]>;
+  getReminderRule(id: string): Promise<ReminderRule | undefined>;
+  createReminderRule(rule: Omit<ReminderRule, 'id' | 'createdAt'>): Promise<ReminderRule>;
+  updateReminderRule(id: string, updates: Partial<ReminderRule>): Promise<ReminderRule>;
+  deleteReminderRule(id: string): Promise<boolean>;
+
   // RBAC helper methods
   getWorkerAssignments(workerId: string): Promise<Assignment[]>;
   getWorkerProfile(workerId: string): Promise<Worker | undefined>;
@@ -1531,6 +1538,37 @@ export class DatabaseStorage implements IStorage {
     }
 
     return inconsistentAssignments.length;
+  }
+
+  // Reminder Rules operations
+  async getAllReminderRules(): Promise<ReminderRule[]> {
+    return await db.select().from(reminderRules).orderBy(desc(reminderRules.createdAt));
+  }
+
+  async getReminderRule(id: string): Promise<ReminderRule | undefined> {
+    const [rule] = await db.select().from(reminderRules).where(eq(reminderRules.id, id));
+    return rule;
+  }
+
+  async createReminderRule(rule: Omit<ReminderRule, 'id' | 'createdAt'>): Promise<ReminderRule> {
+    const [newRule] = await db.insert(reminderRules).values(rule).returning();
+    return newRule;
+  }
+
+  async updateReminderRule(id: string, updates: Partial<ReminderRule>): Promise<ReminderRule> {
+    const [updatedRule] = await db
+      .update(reminderRules)
+      .set(updates)
+      .where(eq(reminderRules.id, id))
+      .returning();
+    return updatedRule;
+  }
+
+  async deleteReminderRule(id: string): Promise<boolean> {
+    const result = await db
+      .delete(reminderRules)
+      .where(eq(reminderRules.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 }
 

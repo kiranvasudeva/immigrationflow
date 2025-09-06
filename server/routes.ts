@@ -1445,6 +1445,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reminder Rules API endpoint - only ADMIN and OWNER can manage reminder rules
+  app.get('/api/reminder-rules', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const reminderRules = await storage.getAllReminderRules();
+      res.json(reminderRules);
+    } catch (error) {
+      console.error('Error fetching reminder rules:', error);
+      res.status(500).json({ message: "Failed to fetch reminder rules" });
+    }
+  });
+
+  app.post('/api/reminder-rules', isAuthenticated, requireRole('ADMIN', 'OWNER'), async (req: any, res) => {
+    try {
+      const rule = await storage.createReminderRule({
+        ...req.body,
+        createdByUserId: req.user?.id || req.user?.claims?.sub
+      });
+      res.status(201).json(rule);
+    } catch (error) {
+      console.error('Error creating reminder rule:', error);
+      res.status(500).json({ message: "Failed to create reminder rule" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
