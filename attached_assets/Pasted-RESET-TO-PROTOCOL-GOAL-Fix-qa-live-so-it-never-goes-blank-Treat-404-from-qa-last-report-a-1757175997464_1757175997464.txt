@@ -1,0 +1,64 @@
+RESET TO PROTOCOL.
+
+GOAL
+Fix /qa/live so it never goes blank:
+- Treat 404 from /qa/last-report as a valid “empty” state (not an error to retry).
+- Show a visible empty state with a “Run QA Tests” button.
+- On click, POST /qa/run, cache the report, re-render the table + JSON.
+- Keep minimal diffs and do not break working features.
+
+STEP 1 — AUDIT (NO EDITS)
+- Open client/src/pages/qa-live.tsx (or the file used for /qa/live).
+- Show:
+  - the useQuery call for /qa/last-report,
+  - the fetcher,
+  - the retry config,
+  - the render branches for loading/error/empty/data.
+- Open server qa report cache holder (e.g., server/services/qaReportCache.ts or where lastReport lives) and show:
+  - initial value,
+  - setter invoked by POST /qa/run,
+  - the GET /qa/last-report handler.
+- Confirm POST /qa/run sets cache before responding.
+
+STOP. Await plan.
+
+STEP 2 — PLAN (MINIMAL DIFFS)
+- Frontend: modify the useQuery for /qa/last-report to:
+  - use a fetcher that inspects response.status:
+    - 200 → return JSON.
+    - 404 → return { ok:false, reason:"NoReport" } and mark it as “empty”, not an error.
+    - else → throw an Error with status+snippet for proper error display.
+  - Set `retry` to a function: retry only when status !== 404 and failureCount < 2.
+  - Add explicit UI states:
+    - Loading skeleton,
+    - Empty state when NoReport → show “No report yet” and a “Run QA Tests” button,
+    - Error banner for non-404 errors (status + first 120 chars of body),
+    - Data view (PASS/FAIL table + raw JSON).
+- Wire the “Run QA Tests” button to POST /qa/run, then invalidate/refetch the last-report query.
+- Optional: if you already created `/qa/last-report` and `/qa/public`, keep paths unchanged.
+
+- Backend: ensure POST /qa/run:
+  - serializes runs (await ongoing run; no 409s),
+  - sets the in-memory lastReport cache before returning 200 { ok:true, report }.
+  - GET /qa/last-report returns 404 JSON only when cache is truly empty.
+
+STEP 3 — IMPLEMENT & VERIFY
+Frontend changes (qa-live.tsx):
+- Implement safe fetcher and retry predicate.
+- Implement four render branches (loading/empty/error/data).
+- Ensure the page renders a header + buttons immediately (never blank).
+
+Backend:
+- Verify POST /qa/run sets cache and returns JSON.
+- Verify GET /qa/last-report returns 404 JSON when no cache, 200 after run.
+
+VERIFY:
+- Load /qa/live → see header + buttons immediately.
+- If no report yet, see “No report yet” + “Run QA Tests” button (not a spinner forever).
+- Click “Run QA Tests” → after completion, table + raw JSON appear.
+- Refresh /qa/public → returns cached JSON (200).
+- Browser console: no uncaught errors; Network: JSON content-type (no <!DOCTYPE).
+
+OUTPUT:
+- List files changed and short summary of diffs.
+- If any step fails, STOP and report exact file + error text.
