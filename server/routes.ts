@@ -13,6 +13,11 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { setupSecurityHeaders, createRateLimiter, validateInput, createEmergencyAdminAccess } from "./middleware/security";
 import { createStructuredLogger, performanceMonitoring, errorTracking, setupHealthChecks } from "./middleware/monitoring";
 import { ROMANIAN_WORK_PERMIT_WORKFLOW, mapWorkflowStepToAPI } from "./config/mapping";
+import { authService } from "./services/authService";
+import { gdprService } from "./services/gdprService";
+import { csrfMiddleware } from "./middleware/csrf";
+import rateLimit from 'express-rate-limit';
+import cookieParser from 'cookie-parser';
 
 let devAuthBypass: any;
 
@@ -31,8 +36,171 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
 
-  // Set up authentication
-  await setupAuth(app);
+  // Set up cookie parser
+  app.use(cookieParser());
+
+  // Rate limiting for auth routes
+  const authRateLimit = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 10, // Limit each IP to 10 requests per windowMs
+    message: { error: 'Too many login attempts, please try again later' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => req.path.includes('/healthz'),
+  });
+
+  // Apply CSRF middleware
+  app.use(csrfMiddleware.generateToken);
+  app.use(csrfMiddleware.verifyToken);
+
+  // Set up authentication (feature flag based)
+  if (process.env.AUTH_MODE === 'password') {
+    // Password-based authentication
+    
+    // Enhanced auth endpoints with feature flag
+    app.post('/auth/login', authRateLimit, async (req, res) => {
+      try {
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+          return res.status(400).json({ 
+            error: 'Email and password are required' 
+          });
+        }
+
+        // Authenticate user
+        const user = await authService.authenticateUser(email, password);
+        if (!user) {
+          return res.status(401).json({ 
+            error: 'Invalid credentials' 
+          });
+        }
+
+        // Generate token pair
+        const tokenPair = await authService.generateTokenPair(user);
+
+        // Set secure cookies
+        res.cookie('access_token', tokenPair.accessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 15 * 60 * 1000, // 15 minutes
+        });
+
+        res.cookie('refresh_token', tokenPair.refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        });
+
+        res.json({
+          user: {
+            id: user.id,
+            email: authService.maskEmail(user.email),
+            role: user.role,
+            firstName: user.firstName,
+            lastName: user.lastName,
+          },
+          message: 'Login successful',
+        });
+
+      } catch (error: any) {
+        console.error('Login error:', error.message);
+        res.status(400).json({ 
+          error: error.message || 'Login failed' 
+        });
+      }
+    });
+
+    app.post('/auth/refresh', async (req, res) => {
+      try {
+        const refreshToken = req.cookies.refresh_token;
+
+        if (!refreshToken) {
+          return res.status(401).json({ error: 'Refresh token required' });
+        }
+
+        // Rotate refresh token
+        const tokenPair = await authService.rotateRefreshToken(refreshToken);
+        if (!tokenPair) {
+          return res.status(401).json({ error: 'Invalid refresh token' });
+        }
+
+        // Set new cookies
+        res.cookie('access_token', tokenPair.accessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 15 * 60 * 1000,
+        });
+
+        res.cookie('refresh_token', tokenPair.refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
+
+        res.json({ message: 'Token refreshed successfully' });
+
+      } catch (error) {
+        console.error('Token refresh error:', error);
+        res.status(401).json({ error: 'Token refresh failed' });
+      }
+    });
+
+    app.post('/auth/logout', async (req, res) => {
+      try {
+        const refreshToken = req.cookies.refresh_token;
+        const accessToken = req.cookies.access_token;
+
+        // Revoke tokens if present
+        if (refreshToken) {
+          const payload = await authService.verifyRefreshToken(refreshToken);
+          if (payload) {
+            await authService.revokeRefreshTokenFamily(payload.sub, payload.family || '');
+          }
+        }
+
+        // Clear cookies
+        res.clearCookie('access_token');
+        res.clearCookie('refresh_token');
+        res.clearCookie('csrf-token');
+
+        res.json({ message: 'Logged out successfully' });
+
+      } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({ error: 'Logout failed' });
+      }
+    });
+
+    // Middleware to verify access tokens
+    app.use((req: any, res, next) => {
+      const accessToken = req.cookies.access_token;
+      
+      if (accessToken) {
+        authService.verifyAccessToken(accessToken).then(payload => {
+          if (payload) {
+            req.user = {
+              id: payload.sub,
+              claims: { sub: payload.sub, email: payload.email },
+              role: payload.role,
+            };
+            req.isAuthenticated = () => true;
+          }
+          next();
+        }).catch(() => next());
+      } else {
+        next();
+      }
+    });
+
+  } else {
+    // Default to Replit Auth (OIDC)
+    await setupAuth(app);
+  }
 
   // Development auth bypass (only in development)
   if (process.env.NODE_ENV === 'development') {
@@ -51,6 +219,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Basic test route
   app.get('/test', (req, res) => {
     res.json({ message: 'Server is working' });
+  });
+
+  // Enhanced endpoints for new authentication system
+  
+  // WHO AM I endpoint (masked email)
+  app.get('/whoami', async (req: any, res) => {
+    try {
+      if (!req.user || !req.isAuthenticated?.()) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const user = await storage.getUserById(req.user.id || req.user.claims?.sub);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      res.json({
+        id: user.id,
+        email: authService.maskEmail(user.email),
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        lastLogin: user.lastLoginAt,
+      });
+    } catch (error) {
+      console.error('WHO AM I error:', error);
+      res.status(500).json({ error: 'Failed to get user info' });
+    }
+  });
+
+  // Health check endpoint
+  app.get('/healthz', (req, res) => {
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      environment: process.env.NODE_ENV || 'development',
+      features: {
+        authMode: process.env.AUTH_MODE || 'oidc',
+        privacyBanner: process.env.PRIVACY_BANNER === 'true',
+      }
+    });
+  });
+
+  // GDPR Data Export (stub)
+  app.get('/gdpr/export', async (req: any, res) => {
+    try {
+      if (!req.user || !req.isAuthenticated?.()) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const userId = req.user.id || req.user.claims?.sub;
+      const exportData = await gdprService.exportUserData(userId);
+
+      gdprService.generatePrivacyHeaders(res);
+      res.json({
+        message: 'GDPR data export completed',
+        data: exportData,
+        exportDate: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      console.error('GDPR export error:', error);
+      res.status(500).json({ 
+        error: 'Data export failed',
+        message: error.message 
+      });
+    }
+  });
+
+  // GDPR Data Deletion Request (stub)
+  app.post('/gdpr/delete', async (req: any, res) => {
+    try {
+      if (!req.user || !req.isAuthenticated?.()) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const userId = req.user.id || req.user.claims?.sub;
+      await gdprService.requestDataDeletion(userId);
+
+      res.json({
+        message: 'Data deletion request submitted',
+        note: 'Your account will be processed for deletion within 30 days as per GDPR requirements',
+        requestDate: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      console.error('GDPR deletion error:', error);
+      res.status(500).json({ 
+        error: 'Deletion request failed',
+        message: error.message 
+      });
+    }
+  });
+
+  // Development-only test credentials endpoint
+  app.get('/dev/test-credentials', (req, res) => {
+    // Security: Only in development mode and with secret header
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const devSecret = req.headers['x-dev-secret'];
+    if (devSecret !== process.env.DEV_SEED_SECRET) {
+      return res.status(403).json({ error: 'Invalid dev secret' });
+    }
+
+    // Return test credentials (never log passwords)
+    res.json({
+      message: 'Test credentials for development',
+      accounts: [
+        { email: 'admin@demo.law', role: 'ADMIN', note: 'System administrator' },
+        { email: 'client@demo.law', role: 'OWNER', note: 'Client owner account' },
+        { email: 'worker@demo.law', role: 'WORKER', note: 'Worker account' },
+      ],
+      password: 'Demo!2345',
+      note: 'These credentials are only for development testing',
+      seeded: new Date().toISOString(),
+    });
   });
 
   // User authentication status endpoint
