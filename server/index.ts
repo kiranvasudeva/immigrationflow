@@ -109,7 +109,9 @@ app.use(httpMetricsMiddleware());
     const PORT = Number(process.env.PORT || 3000);
     
     server.listen(PORT, "0.0.0.0", () => {
-      logInfo(`Server listening on PORT=${PORT} HOST=0.0.0.0`);
+      const address = server.address();
+      console.log(`Server listening on PORT=${PORT} HOST=0.0.0.0 PID=${process.pid} NODE_ENV=${process.env.NODE_ENV || 'development'}`);
+      console.log(`Resolved address:`, address);
       logInfo(`Environment: ${process.env.NODE_ENV || 'development'}`);
       logInfo(`Health check available at /health`);
       logInfo(`Database health check available at /health/db`);
