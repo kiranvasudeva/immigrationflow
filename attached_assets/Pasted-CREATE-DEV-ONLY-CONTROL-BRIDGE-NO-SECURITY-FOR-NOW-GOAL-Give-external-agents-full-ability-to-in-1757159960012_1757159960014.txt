@@ -1,0 +1,57 @@
+CREATE DEV-ONLY CONTROL BRIDGE (NO SECURITY FOR NOW):
+
+GOAL:
+Give external agents full ability to inspect and control the Replit project for debugging and stabilization.
+
+IMPLEMENT:
+1. Add a new route: /qa/bridge
+   - Accepts POST requests with payload: { action, params }.
+   - Supported actions:
+
+     a) listFiles
+        - Returns full directory tree.
+
+     b) readFile
+        - Returns raw contents of any file at params.path.
+
+     c) writeFile
+        - Overwrites file at params.path with provided content.
+
+     d) listRoutes
+        - Scans frontend (React Router) and backend (Express) and returns all available routes.
+
+     e) queryDB
+        - Executes safe SELECT queries against PostgreSQL.
+        - Example: params = { table: "workflow_templates", limit: 10 }.
+
+     f) runCommand
+        - Executes shell commands from a safe allowlist:
+          ["npm run dev", "npm run build", "npx prisma migrate status", "npx prisma db pull", "npx prisma studio"]
+
+     g) runAI
+        - Forwards a code-refactoring prompt directly to Replit AI internally.
+        - Params: { prompt: "…" }
+        - Returns the AI’s response.
+
+     h) qaTests
+        - Runs automated QA checks:
+          - GET /healthz
+          - POST /auth/login for ADMIN, OWNER, WORKER (from TEST_CREDENTIALS.md)
+          - GET /whoami for all roles
+          - GET /clients, /workers, /workflows → confirm DB-driven, no mocks
+          - Verify sequential workflows: later step can't be completed if earlier pending
+          - Validate document uploads and admin verification toggles.
+
+2. Logging:
+   - Log all actions to qa_bridge.log (timestamp + action + params).
+
+3. Docs:
+   - Update replit.md to explain the /qa/bridge capabilities.
+
+DO NOT add authentication, secrets, or restrictions yet. We'll lock it down later.
+
+VERIFY:
+- Start server and confirm POST /qa/bridge is reachable.
+- Call with { "action": "listFiles" } → expect full project tree.
+- Call with { "action": "queryDB", "params": { "table": "workflow_templates" } } → expect seeded workflows.
+- Call with { "action": "qaTests" } → expect JSON report showing pass/fail for auth, DB data, workflows, and uploads.

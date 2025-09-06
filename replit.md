@@ -74,6 +74,41 @@ The system includes:
 
 The agent should never mark a task complete without running through this verification process. Documentation must be updated after task completion. The agent should never break existing working functionality.
 
+## QA Bridge API
+
+The system includes a development-only control bridge at `/qa/bridge` that provides external agents full access to inspect and control the project for debugging and stabilization.
+
+### Endpoint: POST /qa/bridge
+
+Accepts JSON payloads with `{ action, params }` structure.
+
+**Supported Actions:**
+
+- `listFiles` - Returns full directory tree
+- `readFile` - Returns raw contents of any file (params: `{path}`)
+- `writeFile` - Overwrites file content (params: `{path, content}`)
+- `listRoutes` - Scans and returns all frontend/backend routes
+- `queryDB` - Executes safe SELECT queries (params: `{table, limit}`)
+- `runCommand` - Runs allowlisted shell commands (params: `{command}`)
+- `runAI` - Placeholder for AI integration (not implemented)
+- `qaTests` - Runs automated QA checks for auth, DB, and workflows
+
+**Usage Examples:**
+```bash
+# List all files
+curl -X POST /qa/bridge -d '{"action":"listFiles"}' -H "Content-Type: application/json"
+
+# Query database
+curl -X POST /qa/bridge -d '{"action":"queryDB","params":{"table":"users","limit":5}}' -H "Content-Type: application/json"
+
+# Run QA tests
+curl -X POST /qa/bridge -d '{"action":"qaTests"}' -H "Content-Type: application/json"
+```
+
+**Logging:** All actions are logged to `qa_bridge.log` with timestamps.
+
+**Security:** Currently has NO authentication or restrictions - development only.
+
 ## System Architecture
 
 ### Frontend Architecture

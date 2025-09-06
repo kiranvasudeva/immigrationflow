@@ -7,6 +7,7 @@ import { auditMiddleware } from "./middleware/auth";
 import { requireRole, devRbacBypass } from "./middleware/rbac";
 import { storage } from "./storage";
 import { db } from "./db";
+import { handleQABridge } from "./qa-bridge";
 import { sql, eq, like, count, isNotNull } from "drizzle-orm";
 import { users, clientProfiles, workers, stages, assignments, sessions, requirements, documentFiles, auditLogs, workflowStepTypeEnum, assignedToRoleEnum } from "../shared/schema";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -230,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: 'Not authenticated' });
       }
 
-      const user = await storage.getUserById(req.user.id || req.user.claims?.sub);
+      const user = await storage.getUser(req.user.id || req.user.claims?.sub);
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
@@ -253,6 +254,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/healthz', (req, res) => {
     res.json({ ok: true });
   });
+
+  // QA Bridge endpoint - DEV ONLY, NO SECURITY
+  app.post('/qa/bridge', express.json({ limit: '50mb' }), handleQABridge);
 
   // GDPR Data Export (stub)
   app.get('/gdpr/export', async (req: any, res) => {
@@ -341,7 +345,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         try {
           const payload = await authService.verifyAccessToken(accessToken);
-          const user = await storage.getUserById(payload.sub);
+          if (!payload) {
+            return res.status(401).json({ message: 'Invalid token' });
+          }
+          const user = await storage.getUser(payload.sub);
           if (!user) {
             return res.status(404).json({ message: 'User not found' });
           }
