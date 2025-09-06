@@ -176,30 +176,37 @@ curl -X POST http://localhost:5000/qa/bridge \
 
 **Logging:** All actions are logged to `qa_bridge_audit.log` with timestamps and hashed IP addresses. No secrets or PII are logged.
 
-### Live QA Dashboard
+### QA Dashboard Pages
 
-A live monitoring dashboard is available at `/qa/live` that provides:
+**QA Dashboard (`/qa/live`):**
+- Visual interface for running automated QA tests
+- "Run QA Tests" button calls QA Bridge directly with authentication
+- PASS/FAIL badges for each test check
+- Raw JSON report display for copy-paste
+- DEV-ONLY security warning banner
 
-**Features:**
-- Real-time view of last 50 bridge audit entries
-- Latest QA test report with status badges (PASS/FAIL)
-- "Run QA Tests" button to trigger new tests
-- JSON viewer for detailed report inspection
-- Auto-refresh every 15-30 seconds
+**QA Public (`/qa/public`):**
+- Returns cached QA report in JSON format
+- No authentication headers required
+- Returns `{ ok: false }` with 404 if no cached report available
+- Useful for external monitoring tools
 
 **Helper Endpoints:**
-- `GET /qa/last-report` - Returns cached QA test results
-- `POST /qa/run` - Server-side QA test execution (no token exposure to client)
+- `GET /qa/last-report` - Returns cached QA test results (raw JSON)
+- `GET /qa/public` - Returns cached report with ok/error wrapper
+- `POST /qa/run` - Server-side QA test execution (secure token handling)
 - `GET /qa/audit-logs` - Returns last 50 audit entries (sanitized, no PII)
 
-**Security Notice:**
-Currently public access with DEV-ONLY banner. Will be secured with authentication in future updates.
+**Report Caching:**
+- QA test results are automatically cached in memory after each run
+- Cache is updated by both direct bridge calls and server-side execution
+- Cached reports include timestamp, test count, and detailed results
 
 **Usage:**
-1. Navigate to `/qa/live` in browser
+1. Navigate to `/qa/live` for interactive dashboard
 2. Click "Run QA Tests" to execute health and database checks
-3. View real-time audit logs of all bridge activity
-4. Monitor system health status with visual indicators
+3. View PASS/FAIL badges and detailed JSON output
+4. Access `/qa/public` for programmatic report retrieval
 
 ## System Architecture
 

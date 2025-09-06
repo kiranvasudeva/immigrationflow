@@ -263,13 +263,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // QA Bridge endpoint - Secure token-gated control API
   app.post('/qa/bridge', express.json({ limit: '10mb' }), qaBridgeAuth, handleQABridge);
 
-  // QA helper endpoints for live dashboard
+  // QA helper endpoints for dashboard
   app.get('/qa/last-report', (req, res) => {
     const report = qaReportCache.getReport();
     if (!report) {
       return res.status(404).json({ error: 'No QA report available' });
     }
     res.json(report);
+  });
+
+  app.get('/qa/public', (req, res) => {
+    const report = qaReportCache.getReport();
+    if (!report) {
+      return res.status(404).json({ ok: false, error: 'No cached report available' });
+    }
+    res.json({ ok: true, data: report });
   });
 
   app.post('/qa/run', async (req, res) => {
