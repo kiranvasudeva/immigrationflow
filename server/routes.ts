@@ -1856,7 +1856,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   // QA/Smoke Test endpoints (dev/QA only)
-  app.get('/api/qa/smoke', requireAuth, requireRole(['ADMIN']), async (req, res) => {
+  app.get('/api/qa/smoke', isAuthenticated, requireRole('ADMIN'), async (req, res) => {
     try {
       // Environment gate
       const isQAEnabled = process.env.NODE_ENV === 'development' || process.env.QA_MODE === 'true';
@@ -1878,7 +1878,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Impersonation endpoints (admin + dev/QA only)
-  app.post('/admin/impersonate', requireAuth, requireRole(['ADMIN']), async (req, res) => {
+  app.post('/admin/impersonate', isAuthenticated, requireRole('ADMIN'), async (req, res) => {
     try {
       const isQAEnabled = process.env.NODE_ENV === 'development' || process.env.QA_MODE === 'true';
       if (!isQAEnabled) {
@@ -1906,7 +1906,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/admin/unimpersonate', requireAuth, requireRole(['ADMIN']), async (req, res) => {
+  app.post('/admin/unimpersonate', isAuthenticated, requireRole('ADMIN'), async (req, res) => {
     try {
       const isQAEnabled = process.env.NODE_ENV === 'development' || process.env.QA_MODE === 'true';
       if (!isQAEnabled) {

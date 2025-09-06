@@ -141,6 +141,59 @@ Demo accounts available via seeding script:
 - `viewer@demo.law` - Read-only access (VIEWER role)
 - Default password: `Demo!2345`
 
+### QA/Smoke Testing Dashboard
+
+**Admin-Only QA Testing Platform** (Development Only)
+
+The system includes a comprehensive QA dashboard accessible only to administrators in development mode, providing real-time system validation and testing capabilities.
+
+#### Access Requirements
+- **Role**: ADMIN role required
+- **Environment**: Development mode (`NODE_ENV=development`) or `QA_MODE=true` environment variable
+- **Security**: Automatic 404/403 responses in production environments
+
+#### Features
+
+**Smoke Test Suite**
+- **7 Test Categories**: Health, Authentication, Clients, Workers, Workflows, Documents, RBAC, UI validation
+- **Real Database Testing**: Uses actual seeded test data (no mocks or simulations)
+- **Comprehensive Coverage**: Tests schema compliance, data integrity, role-based access, and system health
+- **Structured Reporting**: Pass/fail status with detailed error messages and troubleshooting information
+
+**User Impersonation System**
+- **Safe Role Switching**: Securely impersonate test users (ADMIN, OWNER, WORKER, VIEWER) for RBAC testing
+- **Audit Trail**: All impersonation actions logged with timestamps and user details
+- **Session Management**: Server-side session flags with automatic safeguards
+- **Visual Indicators**: Clear impersonation banner when active with one-click termination
+
+**Security Measures**
+- **Environment Gates**: QA features disabled in production automatically
+- **Admin-Only Access**: Role verification on all QA endpoints
+- **PII Protection**: Email masking and data anonymization in reports
+- **Audit Logging**: Complete audit trail for all QA activities
+
+#### API Endpoints
+- `GET /api/qa/smoke` - Execute comprehensive smoke test suite
+- `POST /admin/impersonate` - Start user impersonation (development only)
+- `POST /admin/unimpersonate` - End active impersonation session
+
+#### Usage
+1. **Access**: Navigate to `/qa` route (visible in admin sidebar in development mode)
+2. **Run Tests**: Execute smoke test suite with "Run Smoke Tests" button
+3. **Impersonate Users**: Select from dropdown of test accounts to switch perspectives
+4. **Review Results**: Analyze detailed test results with pass/fail status and error details
+
+#### Test Categories
+1. **Health & Authentication**: System health, user authentication, rate limiting
+2. **Clients**: Data integrity, schema compliance, legacy field detection
+3. **Workers**: Worker data validation, PII protection, schema compliance
+4. **Workflows**: Stage ordering, status validation, assignment flow verification
+5. **Documents**: Object storage configuration, upload capabilities, requirements
+6. **RBAC**: Role distribution, test user availability, access control validation
+7. **UI/UX**: Internationalization, component structure, translation system
+
+The QA dashboard provides a production-grade testing environment for validating system integrity, user flows, and security compliance without impacting production data or systems.
+
 ## External Dependencies
 
 ### Cloud Infrastructure

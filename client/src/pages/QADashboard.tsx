@@ -61,7 +61,7 @@ const QAEnvironmentGuard = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default function QADashboard() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [impersonatedUser, setImpersonatedUser] = useState<TestUser | null>(null);
   const queryClient = useQueryClient();
 
@@ -123,8 +123,8 @@ function QADashboardContent({
   // Run smoke tests mutation
   const runTestsMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('/api/qa/smoke');
-      return response;
+      const response = await apiRequest('GET', '/api/qa/smoke');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/qa/smoke'] });
@@ -134,12 +134,8 @@ function QADashboardContent({
   // Impersonation mutation
   const impersonateMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiRequest('/admin/impersonate', {
-        method: 'POST',
-        body: JSON.stringify({ userId }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-      return response;
+      const response = await apiRequest('POST', '/admin/impersonate', { userId });
+      return response.json();
     },
     onSuccess: (data) => {
       setImpersonatedUser(data.user);
@@ -150,11 +146,8 @@ function QADashboardContent({
   // Stop impersonation mutation
   const stopImpersonationMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('/admin/unimpersonate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      return response;
+      const response = await apiRequest('POST', '/admin/unimpersonate');
+      return response.json();
     },
     onSuccess: () => {
       setImpersonatedUser(null);
