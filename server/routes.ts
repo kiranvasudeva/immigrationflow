@@ -2064,6 +2064,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Defensive 404 JSON handler for unknown /api/* paths
+  // This prevents the Vite catch-all from serving HTML for API endpoints
+  app.use('/api/*', (req, res, next) => {
+    if (!res.headersSent) {
+      res.status(404).json({ 
+        error: 'API endpoint not found',
+        path: req.originalUrl,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      next();
+    }
+  });
+
   const httpServer = createServer(app);
   // QA/Smoke Test endpoints (dev/QA only)
   app.get('/api/qa/smoke', isAuthenticated, requireRole('ADMIN'), async (req, res) => {
