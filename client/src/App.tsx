@@ -12,7 +12,7 @@ import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { useRoleBasedLanguage } from "@/hooks/useRoleBasedLanguage";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
-import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
+import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/layout/sidebar";
 import RoleBasedDashboard from "@/components/RoleBasedDashboard";
 import TemplatesPage from "@/pages/templates";
@@ -74,6 +74,12 @@ function Router() {
           <SidebarProvider>
             <AppSidebar userRole={user?.role || 'VIEWER'} />
             <SidebarInset>
+              {/* Mobile menu trigger */}
+              <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+                <div className="flex items-center gap-2 px-4">
+                  <SidebarTrigger className="-ml-1" />
+                </div>
+              </header>
               <Switch>
                 <Route path="/" component={RoleBasedDashboard} />
                 <Route path="/dashboard" component={RoleBasedDashboard} />
