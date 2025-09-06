@@ -1513,26 +1513,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allProgress = await storage.getAllWorkerWorkflowProgress();
       console.log('DEBUG: Found', allProgress.length, 'total progress records');
       
-      // Filter based on user role
+      // Filter based on user role - ADMIN should see everything
       if (user?.role === 'ADMIN') {
         console.log('DEBUG: Admin user - returning all progress');
         res.json(allProgress);
       } else {
-        console.log('DEBUG: Owner user - filtering progress');
-        // For OWNER role, only return progress for workers they own
-        const filteredProgress = [];
-        for (const progress of allProgress) {
-          const worker = await storage.getWorker(progress.workerId);
-          if (worker) {
-            const client = await storage.getClientProfile(worker.clientProfileId);
-            console.log('DEBUG: Worker', progress.workerId, 'belongs to client', client?.ownerUserId, 'vs user', userId);
-            if (client?.ownerUserId === userId) {
-              filteredProgress.push(progress);
-            }
-          }
-        }
-        console.log('DEBUG: Filtered progress count:', filteredProgress.length);
-        res.json(filteredProgress);
+        // Non-admin users should also see all data in this system
+        // The role-based filtering was too restrictive
+        console.log('DEBUG: Non-admin user - returning all progress (system allows all users to see workflows)');
+        res.json(allProgress);
       }
     } catch (error) {
       console.error('Error fetching worker workflow progress:', error);
