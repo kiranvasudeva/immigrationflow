@@ -1,0 +1,14 @@
+{
+  "login": {
+    "title": "Acces ImmigrationFlow",
+    "subtitle": "Conectează-te la contul tău",
+    "adminTitle": "Pentru administratori",
+    "adminDesc": "Dacă ești nou, înregistrarea îți va oferi automat acces de administrator pentru a gestiona fluxurile de lucru pentru imigrație.",
+    "adminButton": "Login / Înregistrare administrator",
+    "workerTitle": "Pentru lucrători",
+    "workerDesc": "Dacă ai un link de invitație de la angajator, folosește-l pentru a accesa progresul tău de imigrație.",
+    "invitationText": "Verifică emailul pentru un link de invitație",
+    "supportText": "Ai nevoie de ajutor? Contactează administratorul sau",
+    "supportLink": "echipa de suport"
+  }
+}

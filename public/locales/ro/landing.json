@@ -1,0 +1,25 @@
+{
+  "hero": {
+    "title": "Eficientizați procesul de imigrație română",
+    "subtitle": "Gestionarea profesională a fluxurilor de lucru pentru permise de muncă, vize și permise de ședere",
+    "ctaButton": "Începe acum",
+    "loginButton": "Conectează-te"
+  },
+  "features": {
+    "title": "De ce să alegi ImmigrationFlow",
+    "workflow": "Gestionarea fluxurilor de lucru",
+    "workflowDesc": "Proces complet de imigrație română de la AJOFM la permise de ședere",
+    "documents": "Gestionarea documentelor",
+    "documentsDesc": "Încărcare securizată, urmărire și generare PDF pentru toate documentele necesare",
+    "tracking": "Urmărire în timp real",
+    "trackingDesc": "Monitorizarea stării aplicației de la depunere la aprobare",
+    "compliance": "Pregătit pentru conformitate",
+    "complianceDesc": "Construit pentru a îndeplini cerințele biroului de imigrație român",
+    "smartReminders": "Memento-uri inteligente",
+    "smartRemindersDesc": "Notificări automate pentru termene și reînnoiri de documente",
+    "gdprCompliant": "Conform GDPR",
+    "gdprCompliantDesc": "Gestionarea securizată a datelor personale cu conformitate UE",
+    "advancedSearch": "Căutare avansată",
+    "advancedSearchDesc": "Găsește rapid clienți, documente și cazuri cu căutare puternică"
+  }
+}

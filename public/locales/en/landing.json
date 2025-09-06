@@ -1,0 +1,25 @@
+{
+  "hero": {
+    "title": "Streamline Your Romanian Immigration Process",
+    "subtitle": "Professional workflow management for work permits, visas, and residence permits",
+    "ctaButton": "Get Started",
+    "loginButton": "Sign In"
+  },
+  "features": {
+    "title": "Why Choose ImmigrationFlow",
+    "workflow": "Workflow Management",
+    "workflowDesc": "Complete Romanian immigration process from AJOFM to residence permits",
+    "documents": "Document Management",
+    "documentsDesc": "Secure upload, tracking, and PDF generation for all required documents",
+    "tracking": "Real-time Tracking",
+    "trackingDesc": "Monitor application status from submission to approval",
+    "compliance": "Compliance Ready",
+    "complianceDesc": "Built to meet Romanian immigration office requirements",
+    "smartReminders": "Smart Reminders",
+    "smartRemindersDesc": "Automated notifications for deadlines and document renewals",
+    "gdprCompliant": "GDPR Compliant",
+    "gdprCompliantDesc": "Secure personal data management with EU compliance",
+    "advancedSearch": "Advanced Search",
+    "advancedSearchDesc": "Quickly find clients, documents, and cases with powerful search"
+  }
+}
