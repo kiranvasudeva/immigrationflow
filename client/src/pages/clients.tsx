@@ -540,7 +540,6 @@ export default function ClientsPage() {
 
 
         {/* Edit Client Form */}
-        {console.log('Render: editingClient state:', editingClient)}
         {editingClient && (
           <Card className="border-2 border-blue-200 bg-blue-50">
             <CardHeader>
