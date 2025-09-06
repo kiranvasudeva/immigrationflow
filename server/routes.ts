@@ -1507,22 +1507,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
 
-      console.log('DEBUG: Fetching workflow progress for user:', userId, 'role:', user?.role);
-
       // Get all workflow progress data
       const allProgress = await storage.getAllWorkerWorkflowProgress();
-      console.log('DEBUG: Found', allProgress.length, 'total progress records');
       
-      // Filter based on user role - ADMIN should see everything
-      if (user?.role === 'ADMIN') {
-        console.log('DEBUG: Admin user - returning all progress');
-        res.json(allProgress);
-      } else {
-        // Non-admin users should also see all data in this system
-        // The role-based filtering was too restrictive
-        console.log('DEBUG: Non-admin user - returning all progress (system allows all users to see workflows)');
-        res.json(allProgress);
-      }
+      // All authenticated users can view workflow progress data
+      res.json(allProgress);
     } catch (error) {
       console.error('Error fetching worker workflow progress:', error);
       res.status(500).json({ message: 'Failed to fetch workflow progress' });
