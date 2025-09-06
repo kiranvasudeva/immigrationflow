@@ -77,8 +77,12 @@ export default function ClientProfile() {
   });
   const [editedWorkerData, setEditedWorkerData] = useState<any>(null);
   
-  // Extract client ID from URL
-  const clientId = location.split('/clients/')[1];
+  // Extract client ID from URL - handle potential extra path segments or query params
+  const pathSegments = location.split('/');
+  const clientsIndex = pathSegments.indexOf('clients');
+  const clientId = clientsIndex !== -1 && clientsIndex + 1 < pathSegments.length 
+    ? pathSegments[clientsIndex + 1].split('?')[0] // Remove query params if present
+    : null;
   
   // Form states
   const [formData, setFormData] = useState({
