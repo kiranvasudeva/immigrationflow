@@ -1,0 +1,83 @@
+APPROVE PLAN — IMPLEMENT & VERIFY (MINIMAL DIFFS).
+
+FIX 1 — Template Step Metadata (server)
+- In GET /api/workflows/templates, map DB to the canonical JSON expected by QA:
+  [
+    {
+      "id":"…",
+      "name":"…",
+      "description":"…",
+      "steps":[
+        {
+          "id":"…",
+          "stepOrder": <number>,          // ensure ordered asc
+          "name":"…",                     // map title->name if needed
+          "requiresUpload": <boolean>,    // map/derive from db column
+          "requiresVerification": <boolean>
+        }
+      ]
+    }
+  ]
+- Add ORDER BY on the step order column.
+- Ensure Content-Type: application/json and no HTML fallback.
+- Update mapping if columns are named differently (e.g., step_order → stepOrder, title → name).
+
+FIX 2 — Worker Assignments API (server)
+- Implement/repair GET /api/workers/:workerId/workflows to return the canonical shape:
+  [
+    {
+      "workflowTemplateId":"…",
+      "name":"…",
+      "progress":{
+        "overallStatus":"PENDING"|"IN_PROGRESS"|"COMPLETED"|"REJECTED",
+        "steps":[
+          {
+            "stepId":"…",
+            "stepOrder":<number>,
+            "name":"…",
+            "status":"PENDING"|"IN_PROGRESS"|"COMPLETED"|"REJECTED"
+          }
+        ]
+      }
+    }
+  ]
+- Sequential rule enforcement (server-side):
+  - Sort steps by stepOrder.
+  - Traverse; once a step with status !== COMPLETED is found:
+      - Any later steps with status === COMPLETED must be coerced to IN_PROGRESS or PENDING (pick IN_PROGRESS if a doc exists; else PENDING). Do not mutate DB here; just enforce in response.
+- Compute overallStatus from steps:
+  - COMPLETED if all steps COMPLETED
+  - REJECTED if any step REJECTED
+  - IN_PROGRESS if any step IN_PROGRESS or any earlier step COMPLETED
+  - PENDING otherwise
+- Ensure API route is mounted BEFORE any SPA catch-all and returns JSON.
+
+FIX 3 — UI Hydration & i18n (client)
+- Ensure a single i18n provider at the app root (remove/disable duplicates). Confirm only one Sidebar/Layout is rendered globally.
+- Preload translations before first render:
+  - If using i18next: await init in main.tsx before ReactDOM.createRoot.
+  - Provide English fallback so missing keys do not show raw keys.
+- Add missing keys for /dashboard, /clients, /workers that QA flagged (populate en and ro at minimum).
+- Replace any remaining mock initial state with:
+  - `const [data,setData] = useState<... | null>(null)` and show Skeleton until data loads.
+- Confirm lists use stable keys: `key={entity.id}` (not index, not random).
+- Verify no duplicate sidebars: ensure layout is rendered once at the top-level.
+
+FIX 4 — QA assertions alignment (small)
+- If the templates endpoint uses a different path, update the QA test to call the canonical path you implemented.
+- If worker workflows path differs, same adjustment in QA tests.
+- Add a tiny ping check in the QA test to assert Content-Type includes "application/json" for both endpoints.
+
+VERIFY
+- Re-run /qa/live → Run QA Tests.
+- Expect the three tests to PASS:
+  - Template Step Metadata
+  - Worker Assignments API
+  - UI Hydration Sanity (no raw i18n keys, one sidebar, stable keys)
+- Confirm other tests remain green (auth, upload preflight, checklist, mock data).
+- Print a brief summary: files changed, endpoint paths, count of templates/steps returned.
+
+If any still fail, STOP and report:
+- failing test name,
+- response status/body (for API),
+- the exact missing key(s) or duplicate provider/sidebar component names (for UI).
