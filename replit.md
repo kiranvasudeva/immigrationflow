@@ -88,9 +88,10 @@ Accepts JSON payloads with `{ action, params }` structure.
 - `readFile` - Returns raw contents of any file (params: `{path}`)
 - `writeFile` - Overwrites file content (params: `{path, content}`)
 - `listRoutes` - Scans and returns all frontend/backend routes
-- `queryDB` - Executes safe SELECT queries (params: `{table, limit}`)
+- `queryDB` - Executes safe SELECT queries (params: `{table, limit?, where?}`)
 - `runCommand` - Runs allowlisted shell commands (params: `{command}`)
-- `runAI` - Placeholder for AI integration (not implemented)
+- `runAI` - Placeholder for AI integration (params: `{prompt}`)
+- `getLogs` - Returns recent logs (params: `{type}` - 'qa' or 'server')
 - `qaTests` - Runs automated QA checks for auth, DB, and workflows
 
 **Usage Examples:**
@@ -98,11 +99,20 @@ Accepts JSON payloads with `{ action, params }` structure.
 # List all files
 curl -X POST /qa/bridge -d '{"action":"listFiles"}' -H "Content-Type: application/json"
 
-# Query database
-curl -X POST /qa/bridge -d '{"action":"queryDB","params":{"table":"users","limit":5}}' -H "Content-Type: application/json"
+# Read specific file
+curl -X POST /qa/bridge -d '{"action":"readFile","params":{"path":"client/src/pages/clients.tsx"}}' -H "Content-Type: application/json"
+
+# Query database with WHERE clause
+curl -X POST /qa/bridge -d '{"action":"queryDB","params":{"table":"users","limit":5,"where":"role='\''ADMIN'\''"}}' -H "Content-Type: application/json"
+
+# Get recent QA logs
+curl -X POST /qa/bridge -d '{"action":"getLogs","params":{"type":"qa"}}' -H "Content-Type: application/json"
 
 # Run QA tests
 curl -X POST /qa/bridge -d '{"action":"qaTests"}' -H "Content-Type: application/json"
+
+# Execute allowed commands
+curl -X POST /qa/bridge -d '{"action":"runCommand","params":{"command":"npm run build"}}' -H "Content-Type: application/json"
 ```
 
 **Logging:** All actions are logged to `qa_bridge.log` with timestamps.

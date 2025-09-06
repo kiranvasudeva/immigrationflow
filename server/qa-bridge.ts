@@ -144,10 +144,19 @@ export async function handleQABridge(req: Request, res: Response) {
         }
         try {
           const limit = params.limit || 10;
-          const query = sql.raw(`SELECT * FROM ${params.table} LIMIT ${limit}`);
+          let queryStr = `SELECT * FROM ${params.table}`;
+          
+          if (params.where) {
+            queryStr += ` WHERE ${params.where}`;
+          }
+          
+          queryStr += ` LIMIT ${limit}`;
+          
+          const query = sql.raw(queryStr);
           const dbResult = await db.execute(query);
           result = {
             table: params.table,
+            query: queryStr,
             rows: dbResult.rows,
             count: dbResult.rows.length
           };
@@ -165,11 +174,10 @@ export async function handleQABridge(req: Request, res: Response) {
           'npm run dev',
           'npm run build', 
           'npx prisma migrate status',
-          'npx prisma db pull',
-          'npx prisma studio'
+          'npx prisma db pull'
         ];
         
-        if (!allowedCommands.includes(params.command)) {
+        if (!allowedCommands.some(cmd => params.command.startsWith(cmd))) {
           return res.status(400).json({ error: 'Command not in allowlist' });
         }
         
@@ -197,8 +205,39 @@ export async function handleQABridge(req: Request, res: Response) {
       case 'runAI':
         result = {
           error: 'AI integration not available in this environment',
-          prompt: params?.prompt || 'No prompt provided'
+          prompt: params?.prompt || 'No prompt provided',
+          suggestion: 'Use external AI tools and provide specific technical questions to the QA bridge instead'
         };
+        break;
+        
+      case 'getLogs':
+        const logType = params?.type || 'qa';
+        try {
+          if (logType === 'qa') {
+            if (fs.existsSync('qa_bridge.log')) {
+              const logContent = fs.readFileSync('qa_bridge.log', 'utf8');
+              const lines = logContent.split('\n').filter(line => line.trim());
+              result = {
+                type: 'qa',
+                lines: lines.slice(-50), // Last 50 entries
+                total: lines.length
+              };
+            } else {
+              result = { type: 'qa', lines: [], total: 0 };
+            }
+          } else if (logType === 'server') {
+            // Get recent server logs from console (simulated)
+            result = {
+              type: 'server',
+              info: 'Server logs available in workflow console',
+              suggestion: 'Check workflow logs for detailed server output'
+            };
+          } else {
+            result = { error: 'Invalid log type. Use: qa, server' };
+          }
+        } catch (error) {
+          result = { error: `Failed to get logs: ${error}` };
+        }
         break;
         
       case 'qaTests':
