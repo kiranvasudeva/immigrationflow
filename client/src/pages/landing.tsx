@@ -8,10 +8,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "@/contexts/I18nProvider";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 export default function Landing() {
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { setLanguage, t } = useTranslation();
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
   
   // Set page title
   usePageTitle('landing.title', 'Welcome to ImmigrationFlow');
@@ -25,7 +33,57 @@ export default function Landing() {
   }, [setLanguage]);
 
   const handleLogin = () => {
-    window.location.href = "/api/login";
+    // Open the login modal instead of redirecting
+    setShowLoginModal(true);
+  };
+
+  const handleAdminLogin = () => {
+    setShowLoginForm(true);
+  };
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Login successful",
+          description: `Welcome back, ${data.user?.firstName || 'User'}!`,
+        });
+        setShowLoginModal(false);
+        setShowLoginForm(false);
+        // Redirect to dashboard
+        setLocation('/dashboard');
+        // Force a page reload to update auth state
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Login failed",
+          description: error.error || "Invalid credentials",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: "Connection error. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -158,51 +216,119 @@ export default function Landing() {
             </div>
           </DialogHeader>
 
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <i className="fas fa-user-shield text-blue-600"></i>
-                  <h4 className="font-semibold text-blue-900">{t('modal.login.adminTitle') || 'For Administrators'}</h4>
-                </div>
-                <p className="text-blue-700 text-sm mb-3">
-                  {t('modal.login.adminDesc') || "If you're new, signing up will automatically give you admin access to manage your immigration workflows."}
-                </p>
-                <Button 
-                  onClick={handleLogin} 
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                  data-testid="button-admin-login"
-                >
-                  <i className="fas fa-sign-in-alt mr-2"></i>
-                  {t('modal.login.adminButton') || 'Admin Login / Register'}
-                </Button>
-              </div>
-
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <i className="fas fa-user-tie text-green-600"></i>
-                  <h4 className="font-semibold text-green-900">{t('modal.login.workerTitle') || 'For Workers'}</h4>
-                </div>
-                <p className="text-green-700 text-sm mb-3">
-                  {t('modal.login.workerDesc') || "If you have an invitation link from your employer, use it to access your immigration progress."}
-                </p>
-                <div className="text-center">
-                  <p className="text-green-600 text-sm font-medium">
-                    {t('modal.login.invitationText') || 'Check your email for an invitation link'}
+          {!showLoginForm ? (
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <i className="fas fa-user-shield text-blue-600"></i>
+                    <h4 className="font-semibold text-blue-900">{t('modal.login.adminTitle') || 'For Administrators'}</h4>
+                  </div>
+                  <p className="text-blue-700 text-sm mb-3">
+                    {t('modal.login.adminDesc') || "If you're new, signing up will automatically give you admin access to manage your immigration workflows."}
                   </p>
+                  <Button 
+                    onClick={handleAdminLogin} 
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    data-testid="button-admin-login"
+                  >
+                    <i className="fas fa-sign-in-alt mr-2"></i>
+                    {t('modal.login.adminButton') || 'Admin Login / Register'}
+                  </Button>
+                </div>
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <i className="fas fa-user-tie text-green-600"></i>
+                    <h4 className="font-semibold text-green-900">{t('modal.login.workerTitle') || 'For Workers'}</h4>
+                  </div>
+                  <p className="text-green-700 text-sm mb-3">
+                    {t('modal.login.workerDesc') || "If you have an invitation link from your employer, use it to access your immigration progress."}
+                  </p>
+                  <div className="text-center">
+                    <p className="text-green-600 text-sm font-medium">
+                      {t('modal.login.invitationText') || 'Check your email for an invitation link'}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="text-center pt-4 border-t">
-              <p className="text-xs text-secondary">
-                {t('modal.login.supportText') || 'Need help? Contact your administrator or'}{" "}
-                <Button variant="link" className="p-0 h-auto text-xs" data-testid="link-support">
-                  {t('modal.login.supportLink') || 'support team'}
-                </Button>
-              </p>
+              <div className="text-center pt-4 border-t">
+                <p className="text-xs text-secondary">
+                  {t('modal.login.supportText') || 'Need help? Contact your administrator or'}{" "}
+                  <Button variant="link" className="p-0 h-auto text-xs" data-testid="link-support">
+                    {t('modal.login.supportLink') || 'support team'}
+                  </Button>
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@demo.law"
+                  required
+                  data-testid="input-email"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Demo!2345"
+                  required
+                  data-testid="input-password"
+                />
+              </div>
+
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <p className="text-xs text-gray-600">
+                  <strong>Test credentials:</strong><br />
+                  Email: admin@demo.law<br />
+                  Password: Demo!2345
+                </p>
+              </div>
+
+              <div className="flex space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowLoginForm(false)}
+                  className="flex-1"
+                  data-testid="button-back"
+                >
+                  Back
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1"
+                  data-testid="button-submit-login"
+                >
+                  {isLoading ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin mr-2"></i>
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-sign-in-alt mr-2"></i>
+                      Sign In
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </div>
