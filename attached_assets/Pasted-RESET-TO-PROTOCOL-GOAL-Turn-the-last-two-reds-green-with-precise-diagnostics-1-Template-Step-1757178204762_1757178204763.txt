@@ -1,0 +1,107 @@
+RESET TO PROTOCOL.
+
+GOAL
+Turn the last two reds green with precise diagnostics:
+1) Template Step Metadata — FAIL (1/7 templates off)
+2) UI Hydration Sanity — FAIL (false positives vs real missing keys)
+
+RULES
+- Minimal diffs. Don’t regress any passing tests.
+- Prefer diagnostics first; only then fix the minimal root causes.
+- All API responses must be JSON with correct Content-Type.
+
+STEP 1 — AUDIT (NO EDITS)
+- Open server/services/qaTests.ts and print:
+  • The Template Step Metadata test function (full).
+  • The UI Hydration test function (full).
+- Print GET /api/workflows/templates handler (mapping) and show a sample of all 7 templates (ids, names, step counts).
+- Print one full example of steps for EACH template (id, name, stepOrder, requiresUpload, requiresVerification).
+- Confirm the i18n initialization file and active providers (list file paths).
+STOP. Await plan.
+
+STEP 2 — PLAN (DIAGNOSTICS + MINIMAL FIXES)
+A) Template Step Metadata — DIAGNOSTIC UPGRADE
+- In the QA test, before failing, log an array of failing templates with exact reasons:
+  • templateId, templateName
+  • missingFields: list of fields missing on ANY step
+  • wrongTypes: e.g. { requiresUpload: "string", stepOrder: "null" }
+  • nullOrEmptyNames: count of steps with blank name
+  • notSorted: whether stepOrder is not strictly ascending
+  • malformedSteps: array of step indices that don’t meet schema
+- Return details in the QA report details field (truncate long arrays to 10 items).
+
+B) UI Hydration — DIAGNOSTIC UPGRADE
+- Change detection to reduce false positives:
+  • Fetch /dashboard, /clients, /workers HTML.
+  • For each page, parse textContent from main root (strip <script> and inline JS).
+  • Detect only:
+     - “{{“ / “}}” handlebars-like placeholders,
+     - “i18n:” markers rendered literally,
+     - exact raw keys from our i18n catalogs (keys present in JSON but displayed verbatim),
+  • DO NOT flag “t(…)” substrings from minified JS bundles.
+- If failures remain, include:
+  • page, snippet (±40 chars), suspectedKey, reason (“raw key” | “placeholder”).
+- Put a short list (max 10) into QA details.
+
+STOP. Await approval to implement.
+
+STEP 3 — IMPLEMENT & VERIFY (MINIMAL DIFFS)
+
+APPROVE PLAN — IMPLEMENT.
+
+A) Template Step Metadata — IMPLEMENT
+- In GET /api/workflows/templates, add a strict normalizer for steps:
+  normalizeStep(s, i):
+    return {
+      id: String(s.id ?? ""),
+      stepOrder: Number(
+        s.step_order ?? s.order ?? s.position ?? (i+1)
+      ) || (i+1),
+      name: String(s.name ?? s.title ?? "").trim(),
+      requiresUpload: !!(
+        s.requires_upload ??
+        s.needs_upload ??
+        (typeof s.requiresUpload === "string" ? s.requiresUpload === "true" : s.requiresUpload) ??
+        (s.stepType && ["DOCUMENT_COLLECTION","DOCUMENT_REVIEW","UPLOAD"].includes(s.stepType))
+      ),
+      requiresVerification: !!(
+        s.requires_verification ??
+        s.needs_verification ??
+        (typeof s.requiresVerification === "string" ? s.requiresVerification === "true" : s.requiresVerification) ??
+        (s.requiresApproval === true) ??
+        (s.stepType && ["APPROVAL","REVIEW"].includes(s.stepType))
+      )
+    }
+- Filter invalid steps: require name.length > 0.
+- Sort by stepOrder asc. Ensure integers (Math.max(1, Math.floor(stepOrder))).
+- Apply normalizer to ALL 7 templates.
+- Do NOT mutate DB; only shape the response.
+
+B) QA test — Template Step Metadata validator
+- Replace current boolean checks with explicit type checks:
+  • typeof step.stepOrder === 'number' && Number.isFinite(step.stepOrder)
+  • typeof step.name === 'string' && step.name.trim().length > 0
+  • typeof step.requiresUpload === 'boolean'
+  • typeof step.requiresVerification === 'boolean'
+- If failing, push diagnostics into the test’s details as specified above.
+
+C) UI Hydration — IMPLEMENT
+- In the UI hydration QA test:
+  • Strip <script>…</script> and inline JS from HTML before scanning.
+  • When checking “untranslated keys”, load known keys from en JSON files and flag only if an exact known key appears surrounded by non-word chars (e.g., \bkey\b) in textContent.
+  • Also flag obvious template placeholders like “{{ … }}”.
+  • Do not flag “t(…)”.
+- Add details: { page, key, snippet } (truncate snippet to 80 chars).
+
+D) I18N fallback (only if still failing)
+- Ensure i18n init has a missingKey handler that returns English fallback and logs a dev-only console.warn; do not render raw keys.
+
+VERIFY
+- Run POST /qa/run (or click Run QA Tests on /qa/live).
+- Expect:
+  • Template Step Metadata — PASS (7/7 valid), OR report exactly which template/field failed with specific reason.
+  • UI Hydration — PASS, OR show only real raw keys/placeholder diagnostics (no “t(…)” false positives).
+- Confirm other tests stay green.
+
+OUTPUT
+- Summarize: which files changed, and the exact failing template id/name if any remain, plus the exact missing key(s) if i18n still fails.
