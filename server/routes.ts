@@ -1854,6 +1854,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Development-only test credentials endpoint
+  app.get('/dev/test-credentials', (req, res) => {
+    // Environment gate
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(404).json({ error: 'Endpoint not available' });
+    }
+
+    // Header-based authentication
+    const devSecret = req.headers['x-dev-secret'];
+    if (!devSecret || devSecret !== process.env.DEV_SEED_SECRET) {
+      return res.status(403).json({ error: 'Invalid or missing X-Dev-Secret header' });
+    }
+
+    try {
+      // Read and serve TEST_CREDENTIALS.md
+      const fs = require('fs');
+      const path = require('path');
+      const credentialsPath = path.resolve(process.cwd(), 'TEST_CREDENTIALS.md');
+      
+      if (fs.existsSync(credentialsPath)) {
+        const content = fs.readFileSync(credentialsPath, 'utf8');
+        res.setHeader('Content-Type', 'text/plain');
+        res.send(content);
+      } else {
+        res.status(404).json({ 
+          error: 'TEST_CREDENTIALS.md not found',
+          hint: 'Run npm run seed:test to generate test credentials'
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        error: 'Failed to read credentials',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   // QA/Smoke Test endpoints (dev/QA only)
   app.get('/api/qa/smoke', isAuthenticated, requireRole('ADMIN'), async (req, res) => {
