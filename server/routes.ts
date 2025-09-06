@@ -1509,8 +1509,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get all workflow progress data
       const allProgress = await storage.getAllWorkerWorkflowProgress();
-      
-      // All authenticated users can view workflow progress data
       res.json(allProgress);
     } catch (error) {
       console.error('Error fetching worker workflow progress:', error);
