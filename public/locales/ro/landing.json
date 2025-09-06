@@ -1,4 +1,10 @@
 {
+  "title": "Managementul Imigrației Românești",
+  "subtitle": "Eficientizați fluxurile de imigrare românești",
+  "description": "Soluție completă pentru gestionarea permiselor de muncă, vizelor și permiselor de ședere",
+  "login": "Autentificare",
+  "trial": "Încercare gratuită",
+  "demo": "Demo",
   "hero": {
     "title": "Eficientizați procesul de imigrație română",
     "subtitle": "Gestionarea profesională a fluxurilor de lucru pentru permise de muncă, vize și permise de ședere",
@@ -7,6 +13,13 @@
   },
   "features": {
     "title": "De ce să alegi ImmigrationFlow",
+    "subtitle": "Caracteristici avansate pentru gestionarea imigrației",
+    "clientManagement": "Gestionarea clienților",
+    "clientManagementDesc": "Gestionarea completă a datelor clienților și lucrătorilor",
+    "workflowTracking": "Urmărirea fluxurilor de lucru", 
+    "workflowTrackingDesc": "Monitorizarea în timp real a progresului aplicațiilor",
+    "documentGeneration": "Generarea documentelor",
+    "documentGenerationDesc": "Crearea automată de documente și formulare",
     "workflow": "Gestionarea fluxurilor de lucru",
     "workflowDesc": "Proces complet de imigrație română de la AJOFM la permise de ședere",
     "documents": "Gestionarea documentelor",

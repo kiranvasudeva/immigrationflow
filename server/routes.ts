@@ -945,8 +945,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { workerId } = req.query;
       
       if (workerId) {
-        // Get assignments for specific worker
-        const assignments = await storage.getAssignmentsByWorkerId(workerId);
+        // Get assignments for specific worker using the correct method name
+        const assignments = await storage.getWorkerAssignments(workerId);
         res.json(assignments);
       } else {
         // Get all assignments 
