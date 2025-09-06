@@ -1469,6 +1469,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Worker Workflow Progress API endpoints - new template-based system
+  app.get('/api/worker/:workerId/workflow-progress', isAuthenticated, requireRole('ADMIN', 'OWNER', 'WORKER'), async (req: any, res) => {
+    try {
+      const { workerId } = req.params;
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+
+      // Verify access rights
+      const worker = await storage.getWorker(workerId);
+      if (!worker) {
+        return res.status(404).json({ message: 'Worker not found' });
+      }
+
+      if (user?.role !== 'ADMIN') {
+        const client = await storage.getClientProfile(worker.clientProfileId);
+        const isOwner = client?.ownerUserId === userId;
+        const isWorker = worker.id === userId;
+        
+        if (!isOwner && !isWorker) {
+          return res.status(403).json({ message: 'Unauthorized' });
+        }
+      }
+
+      // Get active workflow progress for this worker
+      const workflowProgress = await storage.getWorkerWorkflowProgress(workerId, ''); 
+      
+      if (!workflowProgress) {
+        return res.json({
+          worker,
+          workflowProgress: null,
+          steps: []
+        });
+      }
+
+      // Get step progress for this workflow
+      const stepProgress = await storage.getWorkerStepProgress(workflowProgress.id);
+      
+      // Get workflow template for context
+      const workflowTemplate = await storage.getWorkflowTemplate(workflowProgress.workflowTemplateId);
+
+      res.json({
+        worker,
+        workflowProgress,
+        workflowTemplate,
+        steps: stepProgress
+      });
+
+    } catch (error) {
+      console.error('Error fetching worker workflow progress:', error);
+      res.status(500).json({ message: 'Failed to fetch workflow progress' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

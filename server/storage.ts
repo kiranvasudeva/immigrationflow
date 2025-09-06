@@ -258,6 +258,7 @@ export interface IStorage {
   
   // Worker Workflow Progress operations
   getWorkerWorkflowProgress(workerId: string, templateId: string): Promise<WorkerWorkflowProgress | undefined>;
+  getWorkerWorkflowProgressById(id: string): Promise<WorkerWorkflowProgress | undefined>;
   createWorkerWorkflowProgress(progress: InsertWorkerWorkflowProgress): Promise<WorkerWorkflowProgress>;
   updateWorkerWorkflowProgress(id: string, updates: Partial<InsertWorkerWorkflowProgress>): Promise<WorkerWorkflowProgress>;
   getWorkerStepProgress(workerWorkflowProgressId: string): Promise<WorkerStepProgress[]>;
@@ -1379,6 +1380,12 @@ export class DatabaseStorage implements IStorage {
   async getWorkerWorkflowProgress(workerId: string, templateId: string): Promise<WorkerWorkflowProgress | undefined> {
     const [progress] = await db.select().from(workerWorkflowProgress)
       .where(and(eq(workerWorkflowProgress.workerId, workerId), eq(workerWorkflowProgress.workflowTemplateId, templateId)));
+    return progress;
+  }
+
+  async getWorkerWorkflowProgressById(id: string): Promise<WorkerWorkflowProgress | undefined> {
+    const [progress] = await db.select().from(workerWorkflowProgress)
+      .where(eq(workerWorkflowProgress.id, id));
     return progress;
   }
 
