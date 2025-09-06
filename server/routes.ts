@@ -1855,5 +1855,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  // QA/Smoke Test endpoints (dev/QA only)
+  app.get('/api/qa/smoke', requireAuth, requireRole(['ADMIN']), async (req, res) => {
+    try {
+      // Environment gate
+      const isQAEnabled = process.env.NODE_ENV === 'development' || process.env.QA_MODE === 'true';
+      if (!isQAEnabled) {
+        return res.status(404).json({ error: 'QA endpoints not available' });
+      }
+
+      const { QAService } = await import('./services/qaService');
+      const qaService = new QAService();
+      const report = await qaService.runSmokeTests();
+      
+      res.json(report);
+    } catch (error) {
+      res.status(500).json({ 
+        error: 'QA smoke test failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Impersonation endpoints (admin + dev/QA only)
+  app.post('/admin/impersonate', requireAuth, requireRole(['ADMIN']), async (req, res) => {
+    try {
+      const isQAEnabled = process.env.NODE_ENV === 'development' || process.env.QA_MODE === 'true';
+      if (!isQAEnabled) {
+        return res.status(404).json({ error: 'Impersonation not available in production' });
+      }
+
+      const { userId } = req.body;
+      if (!userId) {
+        return res.status(400).json({ error: 'userId is required' });
+      }
+
+      const { ImpersonationService } = await import('./services/impersonationService');
+      const result = await ImpersonationService.startImpersonation(req, userId);
+      
+      if (result.success) {
+        res.json({ success: true, user: result.user });
+      } else {
+        res.status(400).json({ error: result.error });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        error: 'Impersonation failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.post('/admin/unimpersonate', requireAuth, requireRole(['ADMIN']), async (req, res) => {
+    try {
+      const isQAEnabled = process.env.NODE_ENV === 'development' || process.env.QA_MODE === 'true';
+      if (!isQAEnabled) {
+        return res.status(404).json({ error: 'Impersonation not available in production' });
+      }
+
+      const { ImpersonationService } = await import('./services/impersonationService');
+      const result = await ImpersonationService.stopImpersonation(req);
+      
+      if (result.success) {
+        res.json({ success: true, user: result.user });
+      } else {
+        res.status(400).json({ error: result.error });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        error: 'Stop impersonation failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   return httpServer;
 }
