@@ -109,6 +109,7 @@ function Router() {
                 <Route path="/health-check" component={HealthCheckPage} />
                 <Route path="/qa" component={QADashboard} />
                 <Route path="/qa/live" component={QALivePage} />
+                <Route path="/qa/public" component={QALivePage} />
                 <Route path="/privacy" component={PrivacyPolicy} />
                 <Route path="/cookies" component={CookiePolicy} />
                 <Route component={NotFound} />
