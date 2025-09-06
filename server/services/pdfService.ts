@@ -3,7 +3,7 @@ import { s3Service } from './s3Service';
 
 export interface TemplateData {
   client?: {
-    companyName: string;
+    legalName: string;
     cui: string;
     address: string;
     caen: string;
@@ -64,7 +64,7 @@ export class PDFService {
       // Employer section
       doc.fontSize(14).text('ANGAJATOR:', { underline: true });
       doc.fontSize(12);
-      doc.text(`Nume: ${data.client?.companyName || '[COMPANY_NAME]'}`);
+      doc.text(`Nume: ${data.client?.legalName || '[COMPANY_NAME]'}`);
       doc.text(`CUI: ${data.client?.cui || '[CUI]'}`);
       doc.text(`Adresa: ${data.client?.address || '[ADDRESS]'}`);
       doc.text(`CAEN: ${data.client?.caen || '[CAEN]'}`);
@@ -179,7 +179,7 @@ export class PDFService {
       // Company info
       doc.fontSize(14).text('ANGAJATOR:', { underline: true });
       doc.fontSize(12);
-      doc.text(`Compania: ${data.client?.companyName || '[COMPANY_NAME]'}`);
+      doc.text(`Compania: ${data.client?.legalName || '[COMPANY_NAME]'}`);
       doc.text(`CUI: ${data.client?.cui || '[CUI]'}`);
       doc.text(`Adresa: ${data.client?.address || '[ADDRESS]'}`);
       doc.text(`Domeniu de activitate (CAEN): ${data.client?.caen || '[CAEN]'}`);
@@ -258,7 +258,7 @@ export class PDFService {
       // Employer data
       doc.fontSize(14).text('DATE ANGAJATOR:', { underline: true });
       doc.fontSize(12);
-      doc.text(`Compania: ${data.client?.companyName || '[COMPANY_NAME]'}`);
+      doc.text(`Compania: ${data.client?.legalName || '[COMPANY_NAME]'}`);
       doc.text(`CUI: ${data.client?.cui || '[CUI]'}`);
       doc.text(`Adresa: ${data.client?.address || '[ADDRESS]'}`);
       doc.moveDown();
@@ -317,7 +317,7 @@ export class PDFService {
       // Employment data
       doc.fontSize(14).text('DATE PRIVIND ACTIVITATEA:', { underline: true });
       doc.fontSize(12);
-      doc.text(`Angajator: ${data.client?.companyName || '[COMPANY_NAME]'}`);
+      doc.text(`Angajator: ${data.client?.legalName || '[COMPANY_NAME]'}`);
       doc.text(`CUI angajator: ${data.client?.cui || '[CUI]'}`);
       doc.text(`Funcția: [JOB_TITLE]`);
       doc.text(`Perioada contractului: [CONTRACT_PERIOD]`);
@@ -364,7 +364,7 @@ export class PDFService {
     });
   }
 
-  private addWatermark(doc: PDFDocument, text: string): void {
+  private addWatermark(doc: any, text: string): void {
     if (process.env.WATERMARK_TOGGLE === 'false') return;
 
     doc.save();

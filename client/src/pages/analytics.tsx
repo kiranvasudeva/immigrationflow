@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
                   <SelectItem value="all">{t('analytics.options.allClients') || 'All Clients'}</SelectItem>
                   {(clients as any[]).map((client: any) => (
                     <SelectItem key={client.id} value={client.id}>
-                      {client.companyName}
+                      {client.legalName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -346,7 +346,7 @@ export default function AnalyticsPage() {
                       {assignment.requirement?.title || 'Unknown Requirement'}
                     </p>
                     <p className="text-sm text-gray-600">
-                      {assignment.worker?.firstName} {assignment.worker?.lastName} • {assignment.clientProfile?.companyName}
+                      {assignment.worker?.firstName} {assignment.worker?.lastName} • {assignment.clientProfile?.legalName}
                     </p>
                   </div>
                 </div>
