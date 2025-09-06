@@ -75,8 +75,8 @@ function Router() {
             <AppSidebar userRole={user?.role || 'VIEWER'} />
             <SidebarInset>
               {/* Mobile menu trigger */}
-              <header className="flex h-16 shrink-0 items-center gap-2 px-4 border-b border-border bg-background">
-                <SidebarTrigger className="h-8 w-8 hover:bg-accent hover:text-accent-foreground rounded-md" data-testid="button-mobile-menu" />
+              <header className="flex h-16 shrink-0 items-center gap-2 px-4 border-b border-border bg-background relative z-10">
+                <SidebarTrigger className="h-9 w-9 hover:bg-accent hover:text-accent-foreground rounded-md md:hidden" data-testid="button-mobile-menu" />
                 <div className="flex-1" />
               </header>
               <Switch>
