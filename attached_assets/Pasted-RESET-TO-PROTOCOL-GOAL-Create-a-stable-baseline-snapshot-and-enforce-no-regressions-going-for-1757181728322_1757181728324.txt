@@ -1,0 +1,114 @@
+RESET TO PROTOCOL.
+
+GOAL
+Create a stable baseline snapshot and enforce “no regressions” going forward.
+
+DELIVERABLES
+1) Git snapshot:
+   - Branch: baseline/qa-green-2025-09-06
+   - Annotated tag: v0.1.0-stable (message includes QA summary: 13/13 PASS with timestamp)
+
+2) Regression guard:
+   - Add script: scripts/regression-check.mjs that:
+     • Starts dev server if not running (or hits existing one)
+     • Calls POST /qa/run and waits until report is ready
+     • Verifies JSON report has totalTests=13 and failed=0
+     • Prints a compact summary table
+     • Exits 1 if anything < 13/13 PASS (or endpoints not reachable)
+   - Add npm scripts:
+     • "qa:run": "node scripts/regression-check.mjs"
+     • "typecheck": "tsc -p . --noEmit"
+     • "lint": "eslint ."
+     • "verify": "npm run typecheck && npm run lint && npm run qa:run"
+   - Add lightweight server script scripts/wait-on.mjs to poll /healthz and /qa/last-report.
+
+3) Git hooks (husky):
+   - pre-commit: "npm run typecheck && npm run lint"
+   - pre-push:    "npm run qa:run"
+   - If husky is not present, install minimal Husky and wire hooks.
+
+4) Docs:
+   - Update replit.md with:
+     • How to run regression test locally: `npm run qa:run`
+     • How hooks work and how to bypass in emergencies (`--no-verify`)
+     • How to create feature branches and run verify before merging
+     • How to rollback to stable tag
+
+5) Status endpoint:
+   - Add GET /qa/status returning { ok:true, baseline:"v0.1.0-stable", tests:13, passed:13, failed:0, at:"<timestamp>" } AFTER a passing run is cached.
+
+PROCESS — DO NOT SKIP STEPS
+
+STEP 1 — AUDIT (NO EDITS)
+- Print current branch and git status.
+- Print existing tags.
+- Confirm last QA report: GET /qa/last-report (expect totalTests=13, failed=0). If empty, POST /qa/run once.
+
+STOP if QA is not 13/13 PASS and report BLOCKER.
+
+STEP 2 — SNAPSHOT
+- Create branch baseline/qa-green-2025-09-06 at current HEAD.
+- Create annotated tag v0.1.0-stable with message:
+  "Baseline stable — QA 13/13 PASS at <UTC timestamp>. URL: /qa/public"
+
+STEP 3 — REGRESSION SCRIPTS
+- Create scripts/wait-on.mjs:
+  • Poll http://localhost:$PORT/healthz until 200 or timeout (60s).
+- Create scripts/regression-check.mjs:
+  • If /healthz not 200, try to start the server (use dev command in package.json if available) or warn if already managed by Replit.
+  • Wait for /healthz 200.
+  • POST /qa/run and wait for JSON response.
+  • Validate totalTests===13 and failed===0.
+  • Print a one-line summary: "QA PASS 13/13 at <time>" or "QA FAIL X/Y".
+  • Exit with code 0 on pass, 1 on fail.
+  • If endpoints not reachable, exit 1.
+
+- Update package.json scripts (create if missing):
+  "qa:run": "node scripts/regression-check.mjs",
+  "typecheck": "tsc -p . --noEmit",
+  "lint": "eslint .",
+  "verify": "npm run typecheck && npm run lint && npm run qa:run"
+
+If package.json is write-protected, create scripts/README.md with manual “how to run” instructions and add a note in replit.md.
+
+STEP 4 — HUSKY HOOKS
+- If Husky isn’t installed, add it minimally.
+- Create .husky/pre-commit with: "npm run typecheck && npm run lint"
+- Create .husky/pre-push with: "npm run qa:run"
+- Ensure executable perms on hook files.
+
+STEP 5 — QA STATUS ENDPOINT
+- Add GET /qa/status that:
+  • Reads last cached report (same cache as /qa/last-report)
+  • If cache present: return JSON { ok:true, baseline:"v0.1.0-stable", tests: report.totalTests, passed: report.passed, failed: report.failed, at: report.timestamp }
+  • If no cache: { ok:false, reason:"NoReportYet" } with 404.
+
+STEP 6 — VERIFY
+- Run: node scripts/wait-on.mjs → expect /healthz 200.
+- Run: npm run qa:run → expect PASS 13/13 and exit 0.
+- Test hooks:
+  • Make a trivial commit — pre-commit should run typecheck+lint.
+  • Simulate push — pre-push should run qa:run and block if failing.
+- GET /qa/status → expect JSON with baseline and 13/13.
+
+STEP 7 — OUTPUT
+- Print:
+  • Current branch and HEAD commit
+  • Tag v0.1.0-stable SHA and message
+  • Hook files created
+  • Commands to rollback and branch for features:
+
+ROLLBACK (one command):
+  git checkout -B hotfix/from-stable v0.1.0-stable
+
+NEW FEATURE FLOW:
+  git checkout -b feature/<name>
+  # work, then:
+  npm run verify
+  git push
+
+BYPASS (emergency only):
+  git commit -m "wip" --no-verify
+  git push --no-verify
+
+STOP if any step fails and report exact file + error.

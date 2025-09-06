@@ -1,0 +1,93 @@
+RESET TO PROTOCOL.
+
+GOAL
+Fix the suddenly blank /qa/live page. Diagnose first, then apply minimal, targeted fixes so the page can NEVER be blank (error boundary + visible banners + safe fetch + plain fallback).
+
+STEP 1 — AUDIT (NO EDITS)
+Frontend
+- Print the router registration for /qa/live (file + Route snippet). Confirm the import path and that the page has a DEFAULT export.
+- Open client/src/pages/qa-live.tsx and show:
+  • top 40 lines (imports)
+  • component definition header
+  • the export line
+- Show client/src/main.tsx (or the app root) to see if we wrap the router in an ErrorBoundary and/or StrictMode.
+- Dump the last 200 lines of the browser console logs for /qa/live (dev server log).
+- List network calls when navigating to /qa/live (URL, status, content-type, first 150 chars of body).
+- Confirm whether the page fetches /qa/run or /qa/last-report on load.
+
+Backend
+- Confirm these handlers exist and return JSON with proper content-type:
+  • POST /qa/run
+  • GET  /qa/last-report
+  • GET  /qa/public
+- Print any SPA catch-all route; verify API routers mount BEFORE it.
+- Print any recent errors from server logs.
+
+STOP and summarize the likely root cause (pick one or more):
+- Route import/export mismatch
+- Component throws during render/effect
+- Lazy route without Suspense fallback
+- Fetch expects JSON but gets HTML
+- Feature flag hides UI
+- CSS hides content (white on white)
+- React StrictMode double render causing state crash
+
+STEP 2 — IMPLEMENT (MINIMAL DIFFS)
+
+A) ErrorBoundary at app root
+- If missing, create client/src/components/dev/ErrorBoundary.tsx (simple class component) and wrap <RouterProvider/> in client/src/main.tsx.
+- The boundary should render a red panel with:
+  • “Runtime error on this page”
+  • error.message (first line)
+  • buttons: “Copy stack”, “Reload”
+- Keep StrictMode if present, but if the audit shows a StrictMode-specific crash, disable StrictMode temporarily around the QA routes only (comment with TODO to re-enable later).
+
+B) Suspense fallback for lazy routes
+- If /qa/live is lazy-loaded, ensure it is wrapped in <Suspense fallback={<div className="p-4">Loading…</div>}> in the router.
+
+C) Page-level hardening (qa-live.tsx)
+- Add a small “mounted” badge: const [mounted,setMounted]=useState(false); useEffect(()=>setMounted(true),[]); render a tiny 🟢 “mounted” tag so we can see it renders.
+- Never leave the page blank:
+  • Always render header + buttons synchronously.
+  • Wrap all fetches in try/catch.
+  • If /qa/last-report returns 404 → show “No report yet” with a big “Run QA Tests” button (NO infinite retry).
+  • If non-404 error → show red banner with status + first 120 chars of body.
+- Add a ?debug=1 panel showing:
+  • mounted flag
+  • last fetch status codes
+  • last error string
+  • first 1KB of last JSON
+
+D) Plain fallback page (no React) to isolate frontend vs backend
+- Add GET /qa/live-plain that serves minimal HTML (no SPA) with three buttons:
+  • Run → POST /qa/run
+  • Last Report → GET /qa/last-report
+  • Public → GET /qa/public
+- Each prints status + first 2KB into a <pre id="out">.
+- This must work even if React is broken.
+
+E) Fetch safety
+- Guard the qa-live fetcher: check content-type starts with "application/json". If not, read text and throw Error("Non-JSON response: " + snippet).
+
+F) CSS visibility sanity
+- Ensure qa-live root has visible styles: className="min-h-screen bg-background text-foreground p-4"
+- Ensure no parent container uses display:none for the route outlet.
+
+STEP 3 — VERIFY
+- Open /qa/live?debug=1:
+  • You should see title, buttons, and either:
+    – No report yet + Run button, or
+    – PASS/FAIL table + JSON, or
+    – Red error panel with the actual error (never blank).
+- Click “Run QA Tests” → should complete; results should render.
+- Open /qa/live-plain → ensure all three endpoint buttons work.
+- Browser console: no uncaught exceptions; Network: QA endpoints return application/json (no <!DOCTYPE).
+- Confirm /dashboard, /clients, /workers still render normally.
+
+OUTPUT
+- List files changed and the exact fix (ErrorBoundary added? Suspense? fetch guard?).
+- If still blank, STOP and print:
+  • first 50 lines of qa-live.tsx
+  • the router snippet for /qa/live
+  • last 100 lines of browser console
+  • status + first 150 chars for /qa/last-report and /qa/run
