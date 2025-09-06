@@ -69,7 +69,7 @@ export default function WorkerWorkflowAssignments() {
   const [selectedWorkers, setSelectedWorkers] = useState<string[]>([]);
 
   // Fetch workers with workflow progress
-  const { data: workers = [], isLoading: workersLoading } = useQuery({
+  const { data: workers = [], isLoading: workersLoading } = useQuery<Worker[]>({
     queryKey: ['/api/workers'],
     staleTime: 5 * 60 * 1000,
   });
@@ -90,7 +90,7 @@ export default function WorkerWorkflowAssignments() {
   // Link worker to workflow mutation
   const linkMutation = useMutation({
     mutationFn: async ({ workerId, templateId }: { workerId: string; templateId: string }) => {
-      return apiRequest(`/api/workers/${workerId}/workflows/${templateId}/link`, 'POST');
+      return apiRequest('POST', `/api/workers/${workerId}/workflows/${templateId}/link`);
     },
     onSuccess: () => {
       toast({
@@ -114,7 +114,7 @@ export default function WorkerWorkflowAssignments() {
   // Unlink worker from workflow mutation
   const unlinkMutation = useMutation({
     mutationFn: async ({ workerId, templateId }: { workerId: string; templateId: string }) => {
-      return apiRequest(`/api/workers/${workerId}/workflows/${templateId}/unlink`, 'DELETE');
+      return apiRequest('DELETE', `/api/workers/${workerId}/workflows/${templateId}/unlink`);
     },
     onSuccess: () => {
       toast({
