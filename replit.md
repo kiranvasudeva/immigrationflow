@@ -176,6 +176,31 @@ curl -X POST http://localhost:5000/qa/bridge \
 
 **Logging:** All actions are logged to `qa_bridge_audit.log` with timestamps and hashed IP addresses. No secrets or PII are logged.
 
+### Live QA Dashboard
+
+A live monitoring dashboard is available at `/qa/live` that provides:
+
+**Features:**
+- Real-time view of last 50 bridge audit entries
+- Latest QA test report with status badges (PASS/FAIL)
+- "Run QA Tests" button to trigger new tests
+- JSON viewer for detailed report inspection
+- Auto-refresh every 15-30 seconds
+
+**Helper Endpoints:**
+- `GET /qa/last-report` - Returns cached QA test results
+- `POST /qa/run` - Server-side QA test execution (no token exposure to client)
+- `GET /qa/audit-logs` - Returns last 50 audit entries (sanitized, no PII)
+
+**Security Notice:**
+Currently public access with DEV-ONLY banner. Will be secured with authentication in future updates.
+
+**Usage:**
+1. Navigate to `/qa/live` in browser
+2. Click "Run QA Tests" to execute health and database checks
+3. View real-time audit logs of all bridge activity
+4. Monitor system health status with visual indicators
+
 ## System Architecture
 
 ### Frontend Architecture

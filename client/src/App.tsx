@@ -33,6 +33,7 @@ import ClientsPage from "@/pages/clients";
 import WorkflowAssignmentsPage from "@/pages/workflow-assignments";
 import HealthCheckPage from "@/pages/health-check";
 import QADashboard from "@/pages/QADashboard";
+import QALivePage from "@/pages/qa-live";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import CookiePolicy from "@/pages/CookiePolicy";
 import { User } from "@shared/schema";
@@ -107,6 +108,7 @@ function Router() {
                 <Route path="/settings" component={SettingsPage} />
                 <Route path="/health-check" component={HealthCheckPage} />
                 <Route path="/qa" component={QADashboard} />
+                <Route path="/qa/live" component={QALivePage} />
                 <Route path="/privacy" component={PrivacyPolicy} />
                 <Route path="/cookies" component={CookiePolicy} />
                 <Route component={NotFound} />

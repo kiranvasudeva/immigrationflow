@@ -450,6 +450,14 @@ export async function handleQABridge(req: Request, res: Response) {
           failed: tests.filter(t => t.status === 'FAIL').length,
           tests
         };
+
+        // Cache the report for the live dashboard
+        try {
+          const { qaReportCache } = await import('../services/qaReportCache');
+          qaReportCache.setReport(result);
+        } catch (cacheError) {
+          console.warn('Failed to cache QA report:', cacheError);
+        }
         break;
         
       default:

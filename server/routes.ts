@@ -8,6 +8,7 @@ import { requireRole, devRbacBypass } from "./middleware/rbac";
 import { storage } from "./storage";
 import { db } from "./db";
 import { handleQABridge, qaBridgeAuth } from "./routes/qaBridge";
+import { qaReportCache, type QAReport } from "./services/qaReportCache";
 import { sql, eq, like, count, isNotNull } from "drizzle-orm";
 import { users, clientProfiles, workers, stages, assignments, sessions, requirements, documentFiles, auditLogs, workflowStepTypeEnum, assignedToRoleEnum } from "../shared/schema";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -261,6 +262,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // QA Bridge endpoint - Secure token-gated control API
   app.post('/qa/bridge', express.json({ limit: '10mb' }), qaBridgeAuth, handleQABridge);
+
+  // QA helper endpoints for live dashboard
+  app.get('/qa/last-report', (req, res) => {
+    const report = qaReportCache.getReport();
+    if (!report) {
+      return res.status(404).json({ error: 'No QA report available' });
+    }
+    res.json(report);
+  });
+
+  app.post('/qa/run', async (req, res) => {
+    try {
+      // Use internal bridge token to run QA tests
+      const bridgeToken = process.env.BRIDGE_TOKEN;
+      if (!bridgeToken || process.env.QA_MODE !== 'true') {
+        return res.status(503).json({ error: 'QA mode not enabled' });
+      }
+
+      const timestamp = Date.now().toString();
+      const nonce = `internal-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${process.pid}`;
+
+      const response = await fetch(`http://localhost:5000/qa/bridge`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${bridgeToken}`,
+          'X-Timestamp': timestamp,
+          'X-Nonce': nonce,
+        },
+        body: JSON.stringify({ action: 'qaTests' })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.ok && result.data) {
+          qaReportCache.setReport(result.data);
+          res.json(result.data);
+        } else {
+          res.status(500).json({ error: 'QA test failed' });
+        }
+      } else {
+        res.status(response.status).json({ error: 'Failed to run QA tests' });
+      }
+    } catch (error) {
+      console.error('Error running QA tests:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.get('/qa/audit-logs', (req, res) => {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const auditLogPath = path.join(process.cwd(), 'qa_bridge_audit.log');
+      
+      if (!fs.existsSync(auditLogPath)) {
+        return res.json([]);
+      }
+
+      const logContent = fs.readFileSync(auditLogPath, 'utf8');
+      const lines = logContent.trim().split('\n').filter((line: string) => line.length > 0);
+      
+      const entries = lines.slice(-50).map((line: string) => {
+        try {
+          const parts = line.split(' - ');
+          if (parts.length >= 4) {
+            const timestamp = parts[0];
+            const ip = parts[1].replace('IP:', '');
+            const action = parts[2].replace('ACTION:', '');
+            const result = parts[3].replace('RESULT:', '');
+            const error = parts[4] ? parts[4].replace('ERROR:', '') : undefined;
+            
+            return {
+              timestamp,
+              ip: ip.length > 10 ? ip.substring(0, 8) + '...' : ip, // Truncate hash for display
+              action,
+              result,
+              error
+            };
+          }
+        } catch (e) {
+          // Skip malformed lines
+        }
+        return null;
+      }).filter((entry: any) => entry !== null).reverse(); // Most recent first
+
+      res.json(entries);
+    } catch (error) {
+      console.error('Error reading audit logs:', error);
+      res.status(500).json({ error: 'Failed to read audit logs' });
+    }
+  });
 
   // GDPR Data Export (stub)
   app.get('/gdpr/export', async (req: any, res) => {
