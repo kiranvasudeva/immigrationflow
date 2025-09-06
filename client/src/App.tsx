@@ -10,6 +10,7 @@ import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { useRoleBasedLanguage } from "@/hooks/useRoleBasedLanguage";
+import { CookieBanner } from "@/components/CookieBanner";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -31,6 +32,8 @@ import WorkersPage from "@/pages/workers";
 import ClientsPage from "@/pages/clients";
 import WorkflowAssignmentsPage from "@/pages/workflow-assignments";
 import HealthCheckPage from "@/pages/health-check";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import CookiePolicy from "@/pages/CookiePolicy";
 import { User } from "@shared/schema";
 
 function Router() {
@@ -69,7 +72,11 @@ function Router() {
       
       <Switch>
         {!isAuthenticated ? (
-          <Route path="/" component={Landing} />
+          <>
+            <Route path="/" component={Landing} />
+            <Route path="/privacy" component={PrivacyPolicy} />
+            <Route path="/cookies" component={CookiePolicy} />
+          </>
         ) : (
           <SidebarProvider>
             <AppSidebar userRole={user?.role || 'VIEWER'} />
@@ -98,6 +105,8 @@ function Router() {
                 <Route path="/deadlines" component={DeadlinesPage} />
                 <Route path="/settings" component={SettingsPage} />
                 <Route path="/health-check" component={HealthCheckPage} />
+                <Route path="/privacy" component={PrivacyPolicy} />
+                <Route path="/cookies" component={CookiePolicy} />
                 <Route component={NotFound} />
               </Switch>
             </SidebarInset>
@@ -116,6 +125,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
+            <CookieBanner />
           </TooltipProvider>
         </BreadcrumbProvider>
       </I18nProvider>
