@@ -37,6 +37,7 @@ import QALivePage from "@/pages/qa-live";
 import QADashboard from "@/pages/qa-dashboard";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import CookiePolicy from "@/pages/CookiePolicy";
+import AuthCallback from "@/pages/auth-callback";
 import { User } from "@shared/schema";
 
 function Router() {
@@ -77,6 +78,7 @@ function Router() {
         {!isAuthenticated ? (
           <>
             <Route path="/" component={Landing} />
+            <Route path="/auth/callback" component={AuthCallback} />
             <Route path="/privacy" component={PrivacyPolicy} />
             <Route path="/cookies" component={CookiePolicy} />
           </>
