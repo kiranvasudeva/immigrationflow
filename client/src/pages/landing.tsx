@@ -305,9 +305,9 @@ export default function Landing() {
           {!showLoginForm ? (
             <Tabs defaultValue="otp" className="w-full">
               <TabsList className="grid w-full grid-cols-3 mb-4">
-                <TabsTrigger value="otp">Email Code</TabsTrigger>
-                <TabsTrigger value="magic-link">Magic Link</TabsTrigger>
-                <TabsTrigger value="admin">Admin/Worker</TabsTrigger>
+                <TabsTrigger value="otp" data-testid="tab-otp">Email Code</TabsTrigger>
+                <TabsTrigger value="magic-link" data-testid="tab-magic-link">Magic Link</TabsTrigger>
+                <TabsTrigger value="admin" data-testid="tab-admin">Admin/Worker</TabsTrigger>
               </TabsList>
               
               <TabsContent value="otp" className="space-y-4">

@@ -14,15 +14,15 @@ test.describe('Supabase OTP Authentication', () => {
       }
     });
 
-    await page.goto('https://immigration-workflow-app-1yneaxuy.devinapps.com/');
+    await page.goto('http://localhost:5173/');
     
-    await page.getByText('Login').click();
+    await page.getByTestId('button-login').click();
     
-    await page.waitForSelector('text=Email Code');
-    await page.getByRole('tab', { name: /email code/i }).click();
+    await page.waitForSelector('[data-testid="tab-otp"]');
+    await page.getByTestId('tab-otp').click();
     
-    await page.fill('input[type="email"]#otp-email', 'test-otp@example.com');
-    await page.click('button:has-text("Send Code")');
+    await page.getByTestId('input-otp-email').fill('test-otp@example.com');
+    await page.getByTestId('button-send-otp').click();
     
     await page.waitForTimeout(2000);
     
@@ -31,11 +31,10 @@ test.describe('Supabase OTP Authentication', () => {
       r.url.includes('/auth/v1/otp')
     );
     
-    if (otpRequest) {
-      expect(otpRequest.postData).toBeDefined();
-      expect(otpRequest.postData).not.toContain('redirect_to');
-      expect(otpRequest.postData).not.toContain('emailRedirectTo');
-    }
+    expect(otpRequest).toBeDefined();
+    expect(otpRequest?.postData).toBeDefined();
+    expect(otpRequest?.postData).not.toContain('redirect_to');
+    expect(otpRequest?.postData).not.toContain('emailRedirectTo');
   });
 
   test('Magic Link request should include redirect_to parameter', async ({ page }) => {
@@ -51,15 +50,15 @@ test.describe('Supabase OTP Authentication', () => {
       }
     });
 
-    await page.goto('https://immigration-workflow-app-1yneaxuy.devinapps.com/');
+    await page.goto('http://localhost:5173/');
     
-    await page.getByText('Login').click();
+    await page.getByTestId('button-login').click();
     
-    await page.waitForSelector('text=Magic Link');
-    await page.getByRole('tab', { name: /magic link/i }).click();
+    await page.waitForSelector('[data-testid="tab-magic-link"]');
+    await page.getByTestId('tab-magic-link').click();
     
-    await page.fill('input[type="email"]#magic-link-email', 'test-magic@example.com');
-    await page.click('button:has-text("Send Magic Link")');
+    await page.getByTestId('input-magic-link-email').fill('test-magic@example.com');
+    await page.getByTestId('button-send-magic-link').click();
     
     await page.waitForTimeout(2000);
     
@@ -68,17 +67,16 @@ test.describe('Supabase OTP Authentication', () => {
       r.url.includes('/auth/v1/otp')
     );
     
-    if (magicLinkRequest) {
-      expect(magicLinkRequest.postData).toBeDefined();
-      const postData = magicLinkRequest.postData || '';
-      expect(postData).toContain('redirect');
-    }
+    expect(magicLinkRequest).toBeDefined();
+    expect(magicLinkRequest?.postData).toBeDefined();
+    const postData = magicLinkRequest?.postData || '';
+    expect(postData).toContain('redirect');
   });
 
   test('should display OTP tab as default', async ({ page }) => {
-    await page.goto('https://immigration-workflow-app-1yneaxuy.devinapps.com/');
+    await page.goto('http://localhost:5173/');
     
-    await page.getByText('Login').click();
+    await page.getByTestId('button-login').click();
     
     await page.waitForSelector('[role="tab"][data-state="active"]');
     
@@ -87,11 +85,14 @@ test.describe('Supabase OTP Authentication', () => {
   });
 
   test('should show OTP input after sending code', async ({ page }) => {
-    await page.goto('https://immigration-workflow-app-1yneaxuy.devinapps.com/');
+    await page.goto('http://localhost:5173/');
     
-    await page.getByText('Login').click();
-    await page.fill('input[type="email"]#otp-email', 'test@example.com');
-    await page.click('button:has-text("Send Code")');
+    await page.getByTestId('button-login').click();
+    
+    await page.waitForSelector('[data-testid="tab-otp"]');
+    
+    await page.getByTestId('input-otp-email').fill('test@example.com');
+    await page.getByTestId('button-send-otp').click();
     
     await page.waitForSelector('text=Enter 6-digit code', { timeout: 5000 });
     
