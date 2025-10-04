@@ -68,6 +68,45 @@ cp .env.example .env
 4. Start the development server:
 ```bash
 npm run dev
+
+## Authentication Methods
+
+ImmigrationFlow supports multiple authentication methods:
+
+### Supabase Passwordless Authentication (New Users)
+
+#### OTP (One-Time Password) - Default
+Users receive a 6-digit code via email. No redirect URL is used, making this suitable for mobile and cross-device authentication.
+
+**Flow:**
+1. User enters email address
+2. System sends 6-digit code via email
+3. User enters code to verify
+4. Session created
+
+**Implementation:** Uses `supabase.auth.signInWithOtp()` without `emailRedirectTo` parameter.
+
+#### Magic Link - Alternative  
+Users receive a clickable link via email that redirects to `/auth/callback`. Best for desktop users who have email and browser on the same device.
+
+**Flow:**
+1. User enters email address
+2. System sends clickable link via email
+3. User clicks link
+4. Redirected to `/auth/callback` and session created
+
+**Implementation:** Uses `supabase.auth.signInWithOtp()` with `emailRedirectTo` parameter.
+
+### JWT/OIDC Authentication (Existing System)
+Admin and worker login still use the existing JWT/OIDC authentication system. This will be gradually migrated to Supabase Auth.
+
+### Configuration
+- Supabase authentication configured via GoTrue Admin API (see `scripts/configure-supabase.ts`)
+- Email templates support both OTP codes and Magic Links using conditional logic
+- Environment variables required: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- Testing: Run `npm run test` for unit tests, `npm run test:e2e` for end-to-end tests
+
+
 ```
 
 ## Production Deployment with Docker
