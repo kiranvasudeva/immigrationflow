@@ -13,6 +13,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { supabase, buildAuthOptions } from "@/lib/supabase";
+import { normalizeEmail, isValidEmail } from "@/utils/normalizeEmail";
 
 export default function Landing() {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -97,7 +98,22 @@ export default function Landing() {
     e.preventDefault();
     setOtpLoading(true);
     try {
-      const authOptions = buildAuthOptions('otp', otpEmail);
+      const emailToUse = normalizeEmail(otpEmail);
+      
+      if (!isValidEmail(emailToUse)) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Email",
+          description: "Please enter a valid email address.",
+        });
+        return;
+      }
+      
+      if (import.meta.env.DEV) {
+        console.debug("[auth] OTP submit", { email: emailToUse });
+      }
+      
+      const authOptions = buildAuthOptions('otp', emailToUse);
       const { error } = await supabase.auth.signInWithOtp(authOptions);
       
       if (error) throw error;
@@ -122,9 +138,11 @@ export default function Landing() {
     e.preventDefault();
     setOtpLoading(true);
     try {
+      const emailToUse = normalizeEmail(otpEmail);
+      
       const { error } = await supabase.auth.verifyOtp({
         type: 'email',
-        email: otpEmail.toLowerCase().trim(),
+        email: emailToUse,
         token: otpCode,
       });
       
@@ -151,7 +169,22 @@ export default function Landing() {
     e.preventDefault();
     setMagicLinkLoading(true);
     try {
-      const authOptions = buildAuthOptions('magic-link', magicLinkEmail);
+      const emailToUse = normalizeEmail(magicLinkEmail);
+      
+      if (!isValidEmail(emailToUse)) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Email",
+          description: "Please enter a valid email address.",
+        });
+        return;
+      }
+      
+      if (import.meta.env.DEV) {
+        console.debug("[auth] Magic-link submit", { email: emailToUse });
+      }
+      
+      const authOptions = buildAuthOptions('magic-link', emailToUse);
       const { error } = await supabase.auth.signInWithOtp(authOptions);
       
       if (error) throw error;
@@ -321,6 +354,10 @@ export default function Landing() {
                         placeholder="you@example.com"
                         value={otpEmail}
                         onChange={(e) => setOtpEmail(e.target.value)}
+                        onBlur={(e) => setOtpEmail(normalizeEmail(e.target.value))}
+                        inputMode="email"
+                        autoComplete="email"
+                        pattern='[^\s"<>@]+@[^\s"<>@]+\.[^\s"<>@]+'
                         required
                         data-testid="input-otp-email"
                       />
@@ -386,6 +423,10 @@ export default function Landing() {
                         placeholder="you@example.com"
                         value={magicLinkEmail}
                         onChange={(e) => setMagicLinkEmail(e.target.value)}
+                        onBlur={(e) => setMagicLinkEmail(normalizeEmail(e.target.value))}
+                        inputMode="email"
+                        autoComplete="email"
+                        pattern='[^\s"<>@]+@[^\s"<>@]+\.[^\s"<>@]+'
                         required
                         data-testid="input-magic-link-email"
                       />
