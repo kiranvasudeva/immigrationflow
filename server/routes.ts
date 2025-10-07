@@ -177,6 +177,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(500).json({ error: 'Logout failed' });
       }
     });
+  app.post('/api/auth/supabase-session', async (req: any, res) => {
+    try {
+      const { access_token } = req.body;
+      
+      if (!access_token) {
+        return res.status(400).json({ error: 'Access token required' });
+      }
+
+      const { supabaseAdmin } = await import('./lib/supabaseAdmin');
+      const { data: { user }, error } = await supabaseAdmin.auth.getUser(access_token);
+      
+      if (error || !user || !user.email) {
+        return res.status(401).json({ error: 'Invalid Supabase token' });
+      }
+
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, user.email))
+        .limit(1);
+      
+      let dbUser;
+      if (existingUser) {
+        const [updated] = await db
+          .update(users)
+          .set({ lastLoginAt: new Date() })
+          .where(eq(users.id, existingUser.id))
+          .returning();
+        dbUser = updated;
+      } else {
+        const [newUser] = await db.insert(users).values({
+          email: user.email,
+          firstName: user.user_metadata?.first_name || user.email.split('@')[0],
+          lastName: user.user_metadata?.last_name || '',
+          role: 'VIEWER',
+          lastLoginAt: new Date(),
+        }).returning();
+        dbUser = newUser;
+      }
+
+      const tokenPair = await authService.generateTokenPair(dbUser);
+
+      res.cookie('access_token', tokenPair.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 15 * 60 * 1000,
+      });
+
+      res.cookie('refresh_token', tokenPair.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
+
+      res.json({
+        user: {
+          id: dbUser.id,
+          email: dbUser.email,
+          role: dbUser.role,
+          firstName: dbUser.firstName,
+          lastName: dbUser.lastName,
+        }
+      });
+    } catch (error) {
+      console.error('Supabase session bridge error:', error);
+      res.status(500).json({ error: 'Session creation failed' });
+    }
+  });
+
+
 
     // Middleware to verify access tokens
     app.use((req: any, res, next) => {

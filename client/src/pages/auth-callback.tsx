@@ -23,11 +23,28 @@ export default function AuthCallback() {
         }
 
         if (data.session) {
+          const response = await fetch('/api/auth/supabase-session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              access_token: data.session.access_token
+            }),
+            credentials: 'include'
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create session');
+          }
+
           toast({
             title: 'Success',
             description: 'You have been logged in successfully!'
           });
-          setLocation('/dashboard');
+          
+          window.location.href = '/dashboard';
         } else {
           setLocation('/');
         }
@@ -36,7 +53,7 @@ export default function AuthCallback() {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'An error occurred during authentication'
+          description: err.message || 'An error occurred during authentication'
         });
         setLocation('/');
       }

@@ -82,9 +82,13 @@ Users receive a 6-digit code via email. No redirect URL is used, making this sui
 1. User enters email address
 2. System sends 6-digit code via email
 3. User enters code to verify
-4. Session created
+4. Frontend calls `/api/auth/supabase-session` with Supabase token
+5. Backend validates Supabase token and creates JWT session
+6. User can access dashboard with JWT cookies
 
-**Implementation:** Uses `supabase.auth.signInWithOtp()` without `emailRedirectTo` parameter.
+**Implementation:** 
+- Frontend: Uses `supabase.auth.signInWithOtp()` without `emailRedirectTo` parameter
+- Backend: `/api/auth/supabase-session` endpoint bridges Supabase and JWT sessions
 
 #### Magic Link - Alternative  
 Users receive a clickable link via email that redirects to `/auth/callback`. Best for desktop users who have email and browser on the same device.
@@ -93,9 +97,26 @@ Users receive a clickable link via email that redirects to `/auth/callback`. Bes
 1. User enters email address
 2. System sends clickable link via email
 3. User clicks link
-4. Redirected to `/auth/callback` and session created
+4. Redirected to `/auth/callback` which calls `/api/auth/supabase-session`
+5. Backend validates Supabase token and creates JWT session
+6. User can access dashboard with JWT cookies
 
-**Implementation:** Uses `supabase.auth.signInWithOtp()` with `emailRedirectTo` parameter.
+**Implementation:** 
+- Frontend: Uses `supabase.auth.signInWithOtp()` with `emailRedirectTo` parameter
+- Backend: Same session bridge as OTP
+
+### Session Bridge Architecture
+
+The `/api/auth/supabase-session` endpoint integrates Supabase Auth with the existing JWT/OIDC system:
+
+1. **Accepts**: Supabase access token from frontend
+2. **Validates**: Token using Supabase service role key
+3. **Creates/Updates**: User in database with default VIEWER role
+4. **Generates**: JWT token pair (access + refresh tokens)
+5. **Sets**: HttpOnly cookies for backend authentication
+6. **Returns**: User data for frontend state
+
+This allows new Supabase users to seamlessly access the application alongside existing JWT/OIDC users.
 
 ### JWT/OIDC Authentication (Existing System)
 Admin and worker login still use the existing JWT/OIDC authentication system. This will be gradually migrated to Supabase Auth.
@@ -103,8 +124,14 @@ Admin and worker login still use the existing JWT/OIDC authentication system. Th
 ### Configuration
 - Supabase authentication configured via GoTrue Admin API (see `scripts/configure-supabase.ts`)
 - Email templates support both OTP codes and Magic Links using conditional logic
-- Environment variables required: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- Environment variables required: 
+  - Client: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+  - Server: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE`
+- New Supabase users default to VIEWER role
 - Testing: Run `npm run test` for unit tests, `npm run test:e2e` for end-to-end tests
+
+### Logout
+Logout clears both Supabase session and JWT cookies to ensure complete session termination
 
 
 ```

@@ -140,7 +140,7 @@ export default function Landing() {
     try {
       const emailToUse = normalizeEmail(otpEmail);
       
-      const { error } = await supabase.auth.verifyOtp({
+      const { data, error } = await supabase.auth.verifyOtp({
         type: 'email',
         email: emailToUse,
         token: otpCode,
@@ -148,12 +148,29 @@ export default function Landing() {
       
       if (error) throw error;
       
-      toast({
-        title: "Success",
-        description: "You have been logged in successfully!",
-      });
-      setShowLoginModal(false);
-      setLocation("/dashboard");
+      if (data.session) {
+        const response = await fetch('/api/auth/supabase-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            access_token: data.session.access_token
+          }),
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create session');
+        }
+
+        toast({
+          title: "Success",
+          description: "You have been logged in successfully!",
+        });
+        
+        window.location.href = '/dashboard';
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",

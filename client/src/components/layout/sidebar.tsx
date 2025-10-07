@@ -25,7 +25,9 @@ export default function AppSidebar({ userRole, onSectionChange, currentSection }
   const { t } = useTranslation();
   const [location] = useLocation();
   
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const { supabase } = await import('@/lib/supabase');
+    await supabase.auth.signOut();
     window.location.href = "/api/logout";
   };
 
