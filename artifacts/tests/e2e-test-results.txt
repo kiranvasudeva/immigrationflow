@@ -1,0 +1,53 @@
+
+> rest-express@1.0.0 test:e2e
+> playwright test
+
+TypeError: Cannot redefine property: Symbol($$jest-matchers-object)
+    at /home/ubuntu/repos/immigrationflow/node_modules/@vitest/expect/dist/index.js:667:9
+TypeError: Cannot redefine property: Symbol($$jest-matchers-object)
+    at /home/ubuntu/repos/immigrationflow/node_modules/@vitest/expect/dist/index.js:667:9
+TypeError: Cannot redefine property: Symbol($$jest-matchers-object)
+    at /home/ubuntu/repos/immigrationflow/node_modules/@vitest/expect/dist/index.js:667:9
+SyntaxError: The requested module '../server/index' does not provide an export named 'app'
+SyntaxError: The requested module '../server/index' does not provide an export named 'app'
+SyntaxError: The requested module '../../server/index' does not provide an export named 'app'
+TypeError: Cannot redefine property: Symbol($$jest-matchers-object)
+    at /home/ubuntu/repos/immigrationflow/node_modules/@vitest/expect/dist/index.js:667:9
+SyntaxError: The requested module '../../server/index' does not provide an export named 'app'
+TypeError: Cannot redefine property: Symbol($$jest-matchers-object)
+    at /home/ubuntu/repos/immigrationflow/node_modules/@vitest/expect/dist/index.js:667:9
+TypeError: Cannot redefine property: Symbol($$jest-matchers-object)
+    at /home/ubuntu/repos/immigrationflow/node_modules/@vitest/expect/dist/index.js:667:9
+SyntaxError: /home/ubuntu/repos/immigrationflow/tests/integration/frontend-api-integration.test.ts: Unexpected token, expected "," (167:25)
+
+  165 |
+  166 |   return render(
+> 167 |     <QueryClientProvider client={queryClient}>
+      |                          ^
+  168 |       {ui}
+  169 |     </QueryClientProvider>
+  170 |   );
+
+   at tests/integration/frontend-api-integration.test.ts:167
+
+  165 |
+  166 |   return render(
+> 167 |     <QueryClientProvider client={queryClient}>
+      |                         ^
+  168 |       {ui}
+  169 |     </QueryClientProvider>
+  170 |   );
+SyntaxError: The requested module '../../server/index' does not provide an export named 'app'
+TypeError: Cannot redefine property: Symbol($$jest-matchers-object)
+    at /home/ubuntu/repos/immigrationflow/node_modules/@vitest/expect/dist/index.js:667:9
+TypeError: Cannot redefine property: Symbol($$jest-matchers-object)
+    at /home/ubuntu/repos/immigrationflow/node_modules/@vitest/expect/dist/index.js:667:9
+TypeError: Cannot redefine property: Symbol($$jest-matchers-object)
+    at /home/ubuntu/repos/immigrationflow/node_modules/@vitest/expect/dist/index.js:667:9
+TypeError: Cannot redefine property: Symbol($$jest-matchers-object)
+    at /home/ubuntu/repos/immigrationflow/node_modules/@vitest/expect/dist/index.js:667:9
+TypeError: Cannot redefine property: Symbol($$jest-matchers-object)
+    at /home/ubuntu/repos/immigrationflow/node_modules/@vitest/expect/dist/index.js:667:9
+TypeError: Cannot redefine property: Symbol($$jest-matchers-object)
+    at /home/ubuntu/repos/immigrationflow/node_modules/@vitest/expect/dist/index.js:667:9
+
