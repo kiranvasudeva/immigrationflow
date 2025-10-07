@@ -483,7 +483,7 @@ export async function seedDatabase() {
     const insertedTemplates = await db.insert(documentTemplates).values(templatesData).returning();
     console.log(`✅ Created ${insertedTemplates.length} test document templates`);
 
-    // Create sample document files for testing
+    // Create sample document files for testing (stored in Supabase Storage) (important-comment)
     const sampleDocuments = [
       {
         fileName: 'test-work-contract.pdf',

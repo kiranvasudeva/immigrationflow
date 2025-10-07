@@ -29,7 +29,7 @@ A comprehensive SaaS platform for managing Romanian immigration workflows includ
 - Prisma ORM with PostgreSQL
 - BullMQ + Redis for job processing
 - JWT authentication with Replit Auth
-- AWS S3 compatible storage
+- Supabase Storage for file management
 - Mailjet/Postmark for emails
 
 ### Development
@@ -45,7 +45,6 @@ A comprehensive SaaS platform for managing Romanian immigration workflows includ
 - Node.js 18+
 - PostgreSQL 14+
 - Redis 6+
-- S3-compatible storage (MinIO for development)
 
 ### Installation
 
@@ -133,6 +132,24 @@ Admin and worker login still use the existing JWT/OIDC authentication system. Th
 ### Logout
 Logout clears both Supabase session and JWT cookies to ensure complete session termination
 
+## File Storage with Supabase Storage
+
+ImmigrationFlow uses Supabase Storage for secure document management:
+
+### Features
+- **Secure Storage**: Private bucket with role-based access control
+- **Signed URLs**: Pre-signed upload and download URLs for direct client access
+- **File Management**: Upload, download, and delete documents via REST API
+- **Metadata**: Track file size, MIME type, and custom metadata
+- **Integration**: Seamlessly integrates with Supabase Auth
+
+### Configuration
+Set the following environment variables:
+- `SUPABASE_URL`: Your Supabase project URL
+- `SUPABASE_SERVICE_ROLE`: Service role key for server-side operations
+- `SUPABASE_STORAGE_BUCKET`: Bucket name (default: 'documents')
+
+The storage service will automatically create the bucket if it doesn't exist on first use.
 
 ```
 
@@ -154,7 +171,8 @@ docker compose up --build
 
 This command will:
 - Build the production Docker image
-- Start PostgreSQL, Redis, MinIO (S3), ClamAV, and MailHog services
+- Start PostgreSQL, Redis, ClamAV, and MailHog services
+- Uses Supabase Storage for document management
 - Run the application on port 5000 with health checks
 - Include proper service dependencies and restart policies
 
@@ -165,7 +183,7 @@ The application will be available at `http://localhost:5000` once all services a
 The Docker setup includes:
 - **Database**: PostgreSQL 15 with health checks
 - **Cache/Queue**: Redis 7 for BullMQ job processing
-- **File Storage**: MinIO for S3-compatible object storage
+- **File Storage**: Supabase Storage for secure document storage with signed URLs
 - **Email Testing**: MailHog for development email testing
 - **Security**: ClamAV for file scanning and malware detection
 
@@ -182,11 +200,9 @@ The application includes comprehensive health checks:
 |----------|-------------|----------|---------|
 | `DATABASE_URL` | PostgreSQL connection string | ✅ | - |
 | `REDIS_URL` | Redis connection string for job queues | ✅ | - |
-| `S3_ENDPOINT` | S3-compatible storage endpoint | ✅ | `http://localhost:9000` (dev) |
-| `S3_REGION` | S3 region | ❌ | `eu-central-1` |
-| `S3_BUCKET` | S3 bucket name | ❌ | `immigration-flow-documents` |
-| `S3_ACCESS_KEY` | S3 access key | ✅ | `minioadmin` (dev) |
-| `S3_SECRET_KEY` | S3 secret key | ✅ | `minioadmin` (dev) |
+| `SUPABASE_URL` | Supabase project URL | ✅ | - |
+| `SUPABASE_SERVICE_ROLE` | Supabase service role key | ✅ | - |
+| `SUPABASE_STORAGE_BUCKET` | Supabase storage bucket name | ❌ | `documents` |
 | `JWT_SECRET` | JWT signing secret | ✅ | - |
 | `SESSION_SECRET` | Session encryption secret | ✅ | - |
 | `REPLIT_DOMAINS` | Authorized domains for Replit Auth | ✅ | - |
@@ -279,7 +295,7 @@ The application uses BullMQ for background job processing:
 **App won't start:**
 1. Check `DATABASE_URL` is set and accessible
 2. Verify `REDIS_URL` for queue functionality
-3. Ensure `S3_ENDPOINT` and credentials are configured
+3. Ensure `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE` are configured
 4. Check logs for specific error messages
 
 **Database connection failed:**
@@ -294,7 +310,7 @@ curl http://localhost:5000/health/db
 3. Monitor queue depth via metrics endpoint
 
 **File uploads failing:**
-1. Verify S3 configuration
+1. Verify Supabase Storage configuration (SUPABASE_URL, SUPABASE_SERVICE_ROLE, SUPABASE_STORAGE_BUCKET)
 2. Check ClamAV is running (for production)
 3. Validate file size and type restrictions
 
@@ -323,7 +339,7 @@ curl http://localhost:5000/health/db
 - **Access Control**: Role-based permissions (Admin, Owner, Worker, Viewer)
 - **Audit Trail**: Complete activity logging for compliance
 - **Session Security**: HTTP-only cookies with secure session storage
-- **Data Encryption**: S3 server-side encryption enabled
+- **Data Encryption**: Supabase Storage server-side encryption enabled
 - **Input Validation**: Zod schemas for all API endpoints
 
 ## Development Setup

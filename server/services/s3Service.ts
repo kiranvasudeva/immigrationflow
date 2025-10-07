@@ -1,104 +1,74 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, CreateBucketCommand, HeadBucketCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { supabaseStorage, getStorageBucket } from '../lib/supabaseStorage';
+import { Readable } from 'stream';
 
-export class S3Service {
-  private s3Client: S3Client;
-  private bucket: string;
-
-  constructor() {
-    const endpoint = process.env.S3_ENDPOINT;
-    const region = process.env.S3_REGION || 'eu-central-1';
-    
-    if (!endpoint) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('⚠️  S3_ENDPOINT not configured, using development defaults');
-        // Use localhost MinIO defaults for development
-        process.env.S3_ENDPOINT = 'http://localhost:9000';
-        process.env.S3_ACCESS_KEY = process.env.S3_ACCESS_KEY || 'minioadmin';
-        process.env.S3_SECRET_KEY = process.env.S3_SECRET_KEY || 'minioadmin';
-      } else {
-        throw new Error('S3_ENDPOINT environment variable is required');
-      }
-    }
-
-    this.s3Client = new S3Client({
-      endpoint: process.env.S3_ENDPOINT,
-      region,
-      credentials: {
-        accessKeyId: process.env.S3_ACCESS_KEY!,
-        secretAccessKey: process.env.S3_SECRET_KEY!,
-      },
-      forcePathStyle: true, // Required for MinIO
-    });
-
-    this.bucket = process.env.S3_BUCKET || 'immigration-flow-documents';
-  }
-
+export class SupabaseStorageService {
   async generateUploadUrl(key: string, contentType: string, expiresIn = 3600): Promise<string> {
-    const command = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-      ContentType: contentType,
-      ACL: 'private', // Ensure private access only
-      ServerSideEncryption: 'AES256', // Enable server-side encryption
-      Metadata: {
-        'uploaded-via': 'patra-security-service',
-        'encryption-enabled': 'true'
-      }
-    });
-
-    return await getSignedUrl(this.s3Client, command, { expiresIn });
+    const bucket = getStorageBucket();
+    
+    const { data, error } = await bucket.createSignedUploadUrl(key);
+    
+    if (error) {
+      throw new Error(`Failed to generate upload URL: ${error.message}`);
+    }
+    
+    return data.signedUrl;
   }
 
   async generateDownloadUrl(key: string, expiresIn = 3600): Promise<string> {
-    const command = new GetObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-    });
-
-    return await getSignedUrl(this.s3Client, command, { expiresIn });
+    const bucket = getStorageBucket();
+    
+    const { data, error } = await bucket.createSignedUrl(key, expiresIn);
+    
+    if (error) {
+      throw new Error(`Failed to generate download URL: ${error.message}`);
+    }
+    
+    return data.signedUrl;
   }
 
   async uploadFile(key: string, buffer: Buffer, contentType: string, metadata?: Record<string, string>): Promise<void> {
-    const command = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-      Body: buffer,
-      ContentType: contentType,
-      ACL: 'private', // Ensure private access only
-      ServerSideEncryption: 'AES256', // Enable server-side encryption
-      Metadata: {
-        'uploaded-via': 'patra-security-service',
-        'encryption-enabled': 'true',
-        ...metadata // Allow additional metadata
-      }
+    const bucket = getStorageBucket();
+    
+    const { error } = await bucket.upload(key, buffer, {
+      contentType,
+      upsert: false,
+      cacheControl: '3600',
+      ...(metadata && { 
+        metadata: {
+          'uploaded-via': 'supabase-storage-service',
+          ...metadata
+        }
+      })
     });
-
-    await this.s3Client.send(command);
+    
+    if (error) {
+      throw new Error(`Failed to upload file: ${error.message}`);
+    }
   }
 
   async deleteFile(key: string): Promise<void> {
-    const command = new DeleteObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-    });
-
-    await this.s3Client.send(command);
+    const bucket = getStorageBucket();
+    
+    const { error } = await bucket.remove([key]);
+    
+    if (error) {
+      throw new Error(`Failed to delete file: ${error.message}`);
+    }
   }
 
   async getFileStream(key: string): Promise<NodeJS.ReadableStream> {
-    const command = new GetObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-    });
-
-    const response = await this.s3Client.send(command);
+    const bucket = getStorageBucket();
     
-    if (!response.Body) {
-      throw new Error('File not found or empty response');
+    const { data, error } = await bucket.download(key);
+    
+    if (error || !data) {
+      throw new Error(`Failed to download file: ${error?.message || 'No data returned'}`);
     }
-
-    return response.Body as NodeJS.ReadableStream;
+    
+    const arrayBuffer = await data.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    return Readable.from(buffer);
   }
 
   generateFileKey(prefix: string, filename: string): string {
@@ -110,50 +80,53 @@ export class S3Service {
   }
 
   async ensureBucketExists(): Promise<void> {
-    try {
-      // Check if bucket exists
-      const headCommand = new HeadBucketCommand({
-        Bucket: this.bucket,
-      });
-      await this.s3Client.send(headCommand);
-      console.log(`✓ S3 bucket exists: ${this.bucket}`);
-    } catch (error: any) {
-      if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
-        try {
-          // Create bucket if it doesn't exist
-          const createCommand = new CreateBucketCommand({
-            Bucket: this.bucket,
-          });
-          await this.s3Client.send(createCommand);
-          console.log(`✓ S3 bucket created: ${this.bucket}`);
-        } catch (createError) {
-          console.warn(`⚠️  Could not create bucket ${this.bucket}:`, createError);
-          // Continue anyway - bucket might exist but we don't have HeadBucket permission
+    const { data: buckets, error } = await supabaseStorage.storage.listBuckets();
+    
+    if (error) {
+      console.warn('⚠️  Could not list buckets:', error.message);
+      return;
+    }
+    
+    const bucketName = process.env.SUPABASE_STORAGE_BUCKET || 'documents';
+    const bucketExists = buckets?.some(b => b.name === bucketName);
+    
+    if (bucketExists) {
+      console.log(`✓ Supabase Storage bucket exists: ${bucketName}`);
+    } else {
+      try {
+        const { error: createError } = await supabaseStorage.storage.createBucket(bucketName, {
+          public: false,
+          fileSizeLimit: 10485760,
+          allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+        });
+        
+        if (createError) {
+          console.warn(`⚠️  Could not create bucket ${bucketName}:`, createError.message);
+        } else {
+          console.log(`✓ Supabase Storage bucket created: ${bucketName}`);
         }
-      } else {
-        console.warn(`⚠️  Could not verify bucket ${this.bucket}:`, error.message);
-        // Continue anyway - bucket might exist but we don't have HeadBucket permission
+      } catch (createError) {
+        console.warn(`⚠️  Could not create bucket ${bucketName}:`, createError);
       }
     }
   }
 }
 
-let _s3ServiceInstance: S3Service | null = null;
+let _storageServiceInstance: SupabaseStorageService | null = null;
 
-export function getS3Service(): S3Service {
-  if (!_s3ServiceInstance) {
-    _s3ServiceInstance = new S3Service();
+export function getStorageService(): SupabaseStorageService {
+  if (!_storageServiceInstance) {
+    _storageServiceInstance = new SupabaseStorageService();
   }
-  return _s3ServiceInstance;
+  return _storageServiceInstance;
 }
 
-// For backwards compatibility
 export const s3Service = {
-  get generateUploadUrl() { return getS3Service().generateUploadUrl.bind(getS3Service()); },
-  get generateDownloadUrl() { return getS3Service().generateDownloadUrl.bind(getS3Service()); },
-  get uploadFile() { return getS3Service().uploadFile.bind(getS3Service()); },
-  get deleteFile() { return getS3Service().deleteFile.bind(getS3Service()); },
-  get getFileStream() { return getS3Service().getFileStream.bind(getS3Service()); },
-  get generateFileKey() { return getS3Service().generateFileKey.bind(getS3Service()); },
-  get ensureBucketExists() { return getS3Service().ensureBucketExists.bind(getS3Service()); },
+  get generateUploadUrl() { return getStorageService().generateUploadUrl.bind(getStorageService()); },
+  get generateDownloadUrl() { return getStorageService().generateDownloadUrl.bind(getStorageService()); },
+  get uploadFile() { return getStorageService().uploadFile.bind(getStorageService()); },
+  get deleteFile() { return getStorageService().deleteFile.bind(getStorageService()); },
+  get getFileStream() { return getStorageService().getFileStream.bind(getStorageService()); },
+  get generateFileKey() { return getStorageService().generateFileKey.bind(getStorageService()); },
+  get ensureBucketExists() { return getStorageService().ensureBucketExists.bind(getStorageService()); },
 };

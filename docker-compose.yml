@@ -29,23 +29,6 @@ services:
       timeout: 10s
       retries: 5
 
-  minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    volumes:
-      - minio_data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
   mailhog:
     image: mailhog/mailhog:latest
     ports:
@@ -79,11 +62,9 @@ services:
       - PORT=5000
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/immigration_flow
       - REDIS_URL=redis://redis:6379
-      - S3_ENDPOINT=http://minio:9000
-      - S3_REGION=eu-central-1
-      - S3_BUCKET=immigration-flow-documents
-      - S3_ACCESS_KEY=minioadmin
-      - S3_SECRET_KEY=minioadmin
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE=${SUPABASE_SERVICE_ROLE}
+      - SUPABASE_STORAGE_BUCKET=documents
       - MAIL_FROM=noreply@immigrationflow.local
       - MAIL_API_KEY=test-key
       - JWT_SECRET=your-jwt-secret-for-production-change-this
@@ -99,8 +80,6 @@ services:
       db:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      minio:
         condition: service_healthy
       clamav:
         condition: service_healthy
@@ -122,11 +101,9 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/immigration_flow
       - REDIS_URL=redis://redis:6379
-      - S3_ENDPOINT=http://minio:9000
-      - S3_REGION=eu-central-1
-      - S3_BUCKET=immigration-flow-documents
-      - S3_ACCESS_KEY=minioadmin
-      - S3_SECRET_KEY=minioadmin
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE=${SUPABASE_SERVICE_ROLE}
+      - SUPABASE_STORAGE_BUCKET=documents
       - MAIL_FROM=noreply@immigrationflow.local
       - MAIL_API_KEY=test-key
       - JWT_SECRET=your-jwt-secret-for-production-change-this
@@ -136,12 +113,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      minio:
-        condition: service_healthy
     restart: unless-stopped
 
 volumes:
   postgres_data:
   redis_data:
-  minio_data:
   clamav_data:

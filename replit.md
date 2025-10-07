@@ -92,7 +92,7 @@ The agent should never mark a task complete without running through this verific
 
 ### Data Storage Solutions
 - **Primary Database**: PostgreSQL for relational data.
-- **File Storage**: S3-compatible storage for documents, using signed URLs.
+- **File Storage**: Supabase Storage for documents, using signed URLs.
 - **Session Storage**: PostgreSQL sessions table.
 - **Cache Layer**: Redis for job queues and temporary data caching.
 
@@ -104,7 +104,7 @@ The agent should never mark a task complete without running through this verific
 
 ### Document Management
 - **PDF Generation**: Server-side PDF creation using PDFKit, with template auto-population.
-- **File Upload**: Secure signed URL approach for direct S3 uploads, with metadata tracking and validation.
+- **File Upload**: Secure signed URL approach for direct Supabase Storage uploads, with metadata tracking and validation.
 - **Document Workflow**: Tracks status from upload to institutional submission.
 
 ### Background Processing
@@ -132,7 +132,7 @@ The system includes a secure, token-gated control bridge at `/qa/bridge` for ext
 
 ### Cloud Infrastructure
 - **Database Hosting**: Neon serverless PostgreSQL.
-- **File Storage**: S3-compatible object storage (AWS S3, MinIO, or Hetzner).
+- **File Storage**: Supabase Storage for secure document management.
 - **Redis Service**: Redis instance.
 
 ### Communication Services

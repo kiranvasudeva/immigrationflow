@@ -115,7 +115,7 @@ export class SecureUploadService {
         return;
       }
 
-      // Step 2: Generate secure S3 key with proper structure
+      // Step 2: Generate secure storage key with proper structure
       const userId = (req.user as any)?.claims?.sub || 'anonymous';
       const fileExtension = path.extname(req.file.originalname);
       const s3Key = s3Service.generateFileKey(
@@ -123,7 +123,7 @@ export class SecureUploadService {
         `${uuidv4()}${fileExtension}`
       );
 
-      // Step 3: Upload to S3 with encryption and private ACL
+      // Step 3: Upload to Supabase Storage with encryption and private access
       const fileBuffer = fs.readFileSync(tempFilePath);
       const uploadMetadata = {
         'original-filename': req.file.originalname,
@@ -140,7 +140,7 @@ export class SecureUploadService {
         uploadMetadata
       );
 
-      console.log(`🔐 File securely uploaded to S3: ${s3Key}`);
+      console.log(`🔐 File securely uploaded to Supabase Storage: ${s3Key}`);
 
       // Step 4: Store file metadata in database with scan results
       const fileRecord = await db.insert(documentFiles).values({
@@ -281,25 +281,25 @@ export class SecureUploadService {
     try {
       const fileScannerHealth = await fileScanningService.healthCheck();
       
-      // Check S3 connectivity
-      let s3Healthy = false;
+      // Check Supabase Storage connectivity
+      let storageHealthy = false;
       try {
         await s3Service.ensureBucketExists();
-        s3Healthy = true;
-      } catch (s3Error) {
-        console.error('S3 health check failed:', s3Error);
+        storageHealthy = true;
+      } catch (storageError) {
+        console.error('Supabase Storage health check failed:', storageError);
       }
 
-      const overall = fileScannerHealth.healthy && s3Healthy;
+      const overall = fileScannerHealth.healthy && storageHealthy;
 
       res.status(overall ? 200 : 503).json({
         healthy: overall,
         services: {
           fileScanning: fileScannerHealth,
-          s3Storage: {
-            healthy: s3Healthy,
-            bucket: process.env.S3_BUCKET,
-            endpoint: process.env.S3_ENDPOINT
+          supabaseStorage: {
+            healthy: storageHealthy,
+            bucket: process.env.SUPABASE_STORAGE_BUCKET,
+            url: process.env.SUPABASE_URL
           }
         },
         configuration: fileScanningService.getConfiguration()
