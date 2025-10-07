@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-10-07T12:49:48.169Z",
+  "totalCalls": 3,
+  "violations": 0,
+  "passed": 3,
+  "details": [
+    {
+      "file": "client/src/pages/__tests__/landing.test.tsx",
+      "line": 14,
+      "isOtpMode": true,
+      "hasEmailRedirectTo": false,
+      "isViolation": false,
+      "context": "}));\n\nvi.mock('@/lib/supabase', () => ({\n  supabase: {\n    auth: {\n      signInWithOtp: mockSignInWithOtp,\n      verifyOtp: mockVerifyOtp,\n    },\n  },\n  buildAuthOptions: vi.fn((mode: string) => ({\n  ..."
+    },
+    {
+      "file": "client/src/pages/landing.tsx",
+      "line": 117,
+      "isOtpMode": true,
+      "hasEmailRedirectTo": false,
+      "isViolation": false,
+      "context": "      if (import.meta.env.DEV) {\n        console.debug(\"[auth] OTP submit\", { email: emailToUse });\n      }\n      \n      const authOptions = buildAuthOptions('otp', emailToUse);\n      const { error } ..."
+    },
+    {
+      "file": "client/src/pages/landing.tsx",
+      "line": 188,
+      "isOtpMode": true,
+      "hasEmailRedirectTo": false,
+      "isViolation": false,
+      "context": "      if (import.meta.env.DEV) {\n        console.debug(\"[auth] Magic-link submit\", { email: emailToUse });\n      }\n      \n      const authOptions = buildAuthOptions('magic-link', emailToUse);\n      co..."
+    }
+  ]
+}

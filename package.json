@@ -13,7 +13,8 @@
     "supabase:configure": "tsx scripts/configure-supabase.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "audit:auth": "tsx scripts/audit-auth.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.37.0",

@@ -1,0 +1,31 @@
+{
+  "otp": {
+    "description": "Email Code (OTP) - User enters 6-digit code",
+    "endpoint": "/auth/v1/otp",
+    "method": "POST",
+    "payload": {
+      "email": "user@example.com",
+      "options": {
+        "shouldCreateUser": true
+      }
+    },
+    "verification": {
+      "type": "email",
+      "email": "user@example.com",
+      "token": "123456"
+    }
+  },
+  "magicLink": {
+    "description": "Magic Link - User clicks link in email",
+    "endpoint": "/auth/v1/otp",
+    "method": "POST",
+    "payload": {
+      "email": "user@example.com",
+      "options": {
+        "shouldCreateUser": true,
+        "emailRedirectTo": "https://immigration-workflow-app-1yneaxuy.devinapps.com/auth/callback"
+      }
+    },
+    "verification": "Automatic upon clicking link"
+  }
+}

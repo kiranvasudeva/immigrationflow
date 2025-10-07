@@ -1,0 +1,18 @@
+{
+  "url": "https://oeluqgiqqemknwxettym.supabase.co/auth/v1/otp",
+  "method": "POST",
+  "payload": {
+    "email": "test.magiclink@example.com",
+    "data": {
+      "name": "test.magiclink"
+    },
+    "create_user": true,
+    "options": {
+      "emailRedirectTo": "https://immigration-workflow-app-1yneaxuy.devinapps.com/auth/callback"
+    },
+    "gotrue_meta_security": {},
+    "code_challenge": null,
+    "code_challenge_method": null
+  },
+  "timestamp": "2025-10-07T12:51:00.000Z"
+}

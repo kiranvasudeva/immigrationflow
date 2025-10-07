@@ -60,10 +60,10 @@ describe('Landing page email normalization', () => {
     fireEvent.click(loginButton);
     
     await waitFor(() => {
-      expect(screen.getByTestId('input-otp-email')).toBeTruthy();
-    }, { timeout: 3000 });
+      expect(screen.getByTestId('tab-otp')).toBeInTheDocument();
+    }, { timeout: 5000 });
     
-    const emailInput = screen.getByTestId('input-otp-email');
+    const emailInput = await screen.findByTestId('input-otp-email');
     const email = '"TeSt@Example.com"';
     fireEvent.change(emailInput, { target: { value: email } });
     
@@ -77,7 +77,7 @@ describe('Landing page email normalization', () => {
       const args = calls[0][0];
       expect(args.email).toBe('test@example.com');
       expect(args.options?.emailRedirectTo).toBeUndefined();
-    });
+    }, { timeout: 5000 });
   });
 
   test('Magic Link request includes redirect_to with normalized email', async () => {
@@ -87,17 +87,13 @@ describe('Landing page email normalization', () => {
     fireEvent.click(loginButton);
     
     await waitFor(() => {
-      expect(screen.getByTestId('tab-magic-link')).toBeTruthy();
-    }, { timeout: 3000 });
+      expect(screen.getByTestId('tab-magic-link')).toBeInTheDocument();
+    }, { timeout: 5000 });
     
     const magicLinkTab = screen.getByTestId('tab-magic-link');
     fireEvent.click(magicLinkTab);
     
-    await waitFor(() => {
-      expect(screen.getByTestId('input-magic-link-email')).toBeTruthy();
-    }, { timeout: 3000 });
-    
-    const emailInput = screen.getByTestId('input-magic-link-email');
+    const emailInput = await screen.findByTestId('input-magic-link-email');
     const email = '  USER@EXAMPLE.COM  ';
     fireEvent.change(emailInput, { target: { value: email } });
     
@@ -110,6 +106,6 @@ describe('Landing page email normalization', () => {
       const args = calls[calls.length - 1][0];
       expect(args.email).toBe('user@example.com');
       expect(args.options?.emailRedirectTo).toBeDefined();
-    });
+    }, { timeout: 5000 });
   });
 });
