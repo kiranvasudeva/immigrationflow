@@ -1,17 +1,17 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { s3Service } from '../server/services/s3Service';
+import { storageService } from '../server/services/storageService';
 import { storage } from '../server/storage';
 
 describe('Supabase Storage Service', () => {
   beforeAll(async () => {
-    await s3Service.ensureBucketExists();
+    await storageService.ensureBucketExists();
   });
 
   it('should generate signed upload URL', async () => {
     const key = 'documents/test-file.pdf';
     const contentType = 'application/pdf';
     
-    const uploadUrl = await s3Service.generateUploadUrl(key, contentType, 3600);
+    const uploadUrl = await storageService.generateUploadUrl(key, contentType, 3600);
     
     expect(uploadUrl).toBeTruthy();
     expect(typeof uploadUrl).toBe('string');
@@ -21,7 +21,7 @@ describe('Supabase Storage Service', () => {
   it('should generate signed download URL', async () => {
     const key = 'documents/test-file.pdf';
     
-    const downloadUrl = await s3Service.generateDownloadUrl(key, 3600);
+    const downloadUrl = await storageService.generateDownloadUrl(key, 3600);
     
     expect(downloadUrl).toContain('supabase');
     expect(typeof downloadUrl).toBe('string');
@@ -31,9 +31,9 @@ describe('Supabase Storage Service', () => {
     const testContent = Buffer.from('Test file content');
     const key = 'test/upload-test.txt';
     
-    await s3Service.uploadFile(key, testContent, 'text/plain');
+    await storageService.uploadFile(key, testContent, 'text/plain');
     
-    await s3Service.deleteFile(key);
+    await storageService.deleteFile(key);
     
     expect(true).toBe(true);
   });
@@ -58,8 +58,8 @@ describe('Supabase Storage Service', () => {
   });
 
   it('should generate unique file keys', () => {
-    const key1 = s3Service.generateFileKey('documents', 'test.pdf');
-    const key2 = s3Service.generateFileKey('documents', 'test.pdf');
+    const key1 = storageService.generateFileKey('documents', 'test.pdf');
+    const key2 = storageService.generateFileKey('documents', 'test.pdf');
     
     expect(key1).not.toBe(key2);
     expect(key1).toContain('documents/');

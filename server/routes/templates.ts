@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { isAuthenticated } from '../replitAuth';
 import { auditMiddleware } from '../middleware/auth';
 import { pdfService } from '../services/pdfService';
-import { s3Service } from '../services/s3Service';
+import { storageService } from '../services/storageService';
 import { storage } from '../storage';
 import { z } from 'zod';
 
@@ -117,12 +117,12 @@ router.post('/generate', isAuthenticated, auditMiddleware, async (req: any, res)
     // Generate PDF
     const pdfBuffer = await pdfService.generatePDF(templateKey, templateData);
     
-    // Save to S3
-    const s3Key = s3Service.generateFileKey('generated', `${templateKey}.pdf`);
-    await pdfService.savePDFToS3(pdfBuffer, s3Key);
+    // Save to Supabase Storage
+    const s3Key = storageService.generateFileKey('generated', `${templateKey}.pdf`);
+    await pdfService.savePDFToStorage(pdfBuffer, s3Key);
     
     // Generate download URL
-    const downloadUrl = await s3Service.generateDownloadUrl(s3Key, 3600);
+    const downloadUrl = await storageService.generateDownloadUrl(s3Key, 3600);
 
     res.json({
       downloadUrl,

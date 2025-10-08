@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { fileScanningService, ScanResult, FileValidationError } from './fileScanningService';
-import { s3Service } from './s3Service';
+import { storageService } from './storageService';
 import { db } from '../db';
 import { documentFiles, assignments } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
@@ -118,7 +118,7 @@ export class SecureUploadService {
       // Step 2: Generate secure storage key with proper structure
       const userId = (req.user as any)?.claims?.sub || 'anonymous';
       const fileExtension = path.extname(req.file.originalname);
-      const s3Key = s3Service.generateFileKey(
+      const s3Key = storageService.generateFileKey(
         `secure-uploads/${assignmentId}`, 
         `${uuidv4()}${fileExtension}`
       );
@@ -133,7 +133,7 @@ export class SecureUploadService {
         'assignment-id': assignmentId
       };
 
-      await s3Service.uploadFile(
+      await storageService.uploadFile(
         s3Key, 
         fileBuffer, 
         scanResult.mimeType || req.file.mimetype, 
@@ -161,7 +161,7 @@ export class SecureUploadService {
       console.log(`📝 File metadata stored in database: ${fileRecord[0].id}`);
 
       // Step 5: Generate secure download URL (valid for 1 hour)
-      const downloadUrl = await s3Service.generateDownloadUrl(s3Key, 3600);
+      const downloadUrl = await storageService.generateDownloadUrl(s3Key, 3600);
 
       // Step 6: Return success response
       const result: SecureUploadResult = {
@@ -249,7 +249,7 @@ export class SecureUploadService {
       }
 
       // Generate secure download URL
-      const downloadUrl = await s3Service.generateDownloadUrl(fileRecord.s3Key, 3600);
+      const downloadUrl = await storageService.generateDownloadUrl(fileRecord.s3Key, 3600);
 
       res.status(200).json({
         success: true,
@@ -284,7 +284,7 @@ export class SecureUploadService {
       // Check Supabase Storage connectivity
       let storageHealthy = false;
       try {
-        await s3Service.ensureBucketExists();
+        await storageService.ensureBucketExists();
         storageHealthy = true;
       } catch (storageError) {
         console.error('Supabase Storage health check failed:', storageError);

@@ -121,7 +121,7 @@ export function getStorageService(): SupabaseStorageService {
   return _storageServiceInstance;
 }
 
-export const s3Service = {
+export const storageService = {
   get generateUploadUrl() { return getStorageService().generateUploadUrl.bind(getStorageService()); },
   get generateDownloadUrl() { return getStorageService().generateDownloadUrl.bind(getStorageService()); },
   get uploadFile() { return getStorageService().uploadFile.bind(getStorageService()); },

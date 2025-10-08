@@ -5,7 +5,7 @@ import { storage } from '../storage';
 import { emailService } from '../services/emailService';
 import { z } from 'zod';
 import multer from 'multer';
-import { s3Service } from '../services/s3Service';
+import { storageService } from '../services/storageService';
 import { v4 as uuidv4 } from 'uuid';
 import Tesseract from 'tesseract.js';
 import fs from 'fs';
@@ -253,13 +253,13 @@ router.post('/:id/documents', isAuthenticated, auditMiddleware, upload.array('fi
 
     for (const file of files) {
       try {
-        // Generate S3 key
+        // Generate storage key
         const fileExtension = path.extname(file.originalname);
-        const s3Key = s3Service.generateFileKey('documents', `${uuidv4()}${fileExtension}`);
+        const s3Key = storageService.generateFileKey('documents', `${uuidv4()}${fileExtension}`);
         
-        // Upload to S3
+        // Upload to Supabase Storage
         const fileBuffer = fs.readFileSync(file.path);
-        await s3Service.uploadFile(s3Key, fileBuffer, file.mimetype);
+        await storageService.uploadFile(s3Key, fileBuffer, file.mimetype);
 
         // Create document file record
         const documentFile = await storage.createDocumentFile({
