@@ -27,10 +27,7 @@ const ProductionConfigSchema = z.object({
   AJOFM_API_KEY: z.string().optional(),
   
   // File Storage
-  S3_BUCKET_NAME: z.string().min(1).optional(),
-  S3_REGION: z.string().min(1).optional(),
-  S3_ACCESS_KEY_ID: z.string().min(1).optional(),
-  S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+  SUPABASE_STORAGE_BUCKET: z.string().min(1).default('documents'),
   
   // Monitoring & Logging
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
@@ -62,10 +59,6 @@ export function validateProductionConfig(): ProductionConfig {
         JWT_SECRET: config.JWT_SECRET || 'dev-jwt-secret-32-characters-long-minimum',
         ENCRYPTION_KEY: config.ENCRYPTION_KEY || 'dev-encryption-key-32-chars-long-min',
         SESSION_SECRET: config.SESSION_SECRET || 'dev-session-secret-32-chars-long-min',
-        S3_BUCKET_NAME: config.S3_BUCKET_NAME || 'dev-bucket',
-        S3_REGION: config.S3_REGION || 'us-east-1',
-        S3_ACCESS_KEY_ID: config.S3_ACCESS_KEY_ID || 'dev-access-key',
-        S3_SECRET_ACCESS_KEY: config.S3_SECRET_ACCESS_KEY || 'dev-secret-key'
       };
     }
     

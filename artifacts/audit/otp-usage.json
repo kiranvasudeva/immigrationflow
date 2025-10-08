@@ -1,0 +1,24 @@
+{
+  "timestamp": "2025-10-08T10:12:47.259Z",
+  "totalCalls": 2,
+  "violations": 0,
+  "passed": 2,
+  "details": [
+    {
+      "file": "client/src/pages/landing.tsx",
+      "line": 117,
+      "isOtpMode": true,
+      "hasEmailRedirectTo": false,
+      "isViolation": false,
+      "context": "      if (import.meta.env.DEV) {\n        console.debug(\"[auth] OTP submit\", { email: emailToUse });\n      }\n      \n      const authOptions = buildAuthOptions('otp', emailToUse);\n      const { error } ..."
+    },
+    {
+      "file": "client/src/pages/landing.tsx",
+      "line": 205,
+      "isOtpMode": true,
+      "hasEmailRedirectTo": false,
+      "isViolation": false,
+      "context": "      if (import.meta.env.DEV) {\n        console.debug(\"[auth] Magic-link submit\", { email: emailToUse });\n      }\n      \n      const authOptions = buildAuthOptions('magic-link', emailToUse);\n      co..."
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { isAuthenticated } from '../replitAuth';
 import { auditMiddleware } from '../middleware/auth';
-import { s3Service } from '../services/s3Service';
+import { storageService } from '../services/storageService';
 import { storage } from '../storage';
 import { z } from 'zod';
 
@@ -38,9 +38,9 @@ router.post('/upload-url', isAuthenticated, auditMiddleware, async (req: any, re
       }
     }
 
-    // Generate S3 key and signed URL
-    const key = s3Service.generateFileKey('documents', fileName);
-    const uploadUrl = await s3Service.generateUploadUrl(key, contentType, 3600);
+    // Generate storage key and signed URL
+    const key = storageService.generateFileKey('documents', fileName);
+    const uploadUrl = await storageService.generateUploadUrl(key, contentType, 3600);
 
     res.json({
       uploadUrl,
@@ -121,7 +121,7 @@ router.get('/:fileId/download', isAuthenticated, auditMiddleware, async (req: an
       }
     }
 
-    const downloadUrl = await s3Service.generateDownloadUrl(documentFile.s3Key, 3600);
+    const downloadUrl = await storageService.generateDownloadUrl(documentFile.s3Key, 3600);
     
     res.json({
       downloadUrl,
@@ -163,8 +163,8 @@ router.get('/:fileId/view', isAuthenticated, auditMiddleware, async (req: any, r
       }
     }
 
-    // Get the file from S3 and stream it directly
-    const fileStream = await s3Service.getFileStream(documentFile.s3Key);
+    // Get the file from Supabase Storage and stream it directly
+    const fileStream = await storageService.getFileStream(documentFile.s3Key);
     
     // Set appropriate headers for viewing in browser
     res.setHeader('Content-Type', documentFile.mimeType || 'application/octet-stream');
@@ -283,8 +283,8 @@ router.delete('/:documentId', isAuthenticated, auditMiddleware, async (req: any,
       }
     }
 
-    // Delete from S3 and database
-    await s3Service.deleteFile(documentFile.s3Key);
+    // Delete from Supabase Storage and database
+    await storageService.deleteFile(documentFile.s3Key);
     await storage.deleteDocumentFile(documentId);
     
     res.json({ success: true, message: 'Document deleted successfully' });

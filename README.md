@@ -29,7 +29,7 @@ A comprehensive SaaS platform for managing Romanian immigration workflows includ
 - Prisma ORM with PostgreSQL
 - BullMQ + Redis for job processing
 - JWT authentication with Replit Auth
-- AWS S3 compatible storage
+- Supabase Storage for file management
 - Mailjet/Postmark for emails
 
 ### Development
@@ -45,7 +45,6 @@ A comprehensive SaaS platform for managing Romanian immigration workflows includ
 - Node.js 18+
 - PostgreSQL 14+
 - Redis 6+
-- S3-compatible storage (MinIO for development)
 
 ### Installation
 
@@ -68,6 +67,90 @@ cp .env.example .env
 4. Start the development server:
 ```bash
 npm run dev
+
+## Authentication Methods
+
+ImmigrationFlow supports multiple authentication methods:
+
+### Supabase Passwordless Authentication (New Users)
+
+#### OTP (One-Time Password) - Default
+Users receive a 6-digit code via email. No redirect URL is used, making this suitable for mobile and cross-device authentication.
+
+**Flow:**
+1. User enters email address
+2. System sends 6-digit code via email
+3. User enters code to verify
+4. Frontend calls `/api/auth/supabase-session` with Supabase token
+5. Backend validates Supabase token and creates JWT session
+6. User can access dashboard with JWT cookies
+
+**Implementation:** 
+- Frontend: Uses `supabase.auth.signInWithOtp()` without `emailRedirectTo` parameter
+- Backend: `/api/auth/supabase-session` endpoint bridges Supabase and JWT sessions
+
+#### Magic Link - Alternative  
+Users receive a clickable link via email that redirects to `/auth/callback`. Best for desktop users who have email and browser on the same device.
+
+**Flow:**
+1. User enters email address
+2. System sends clickable link via email
+3. User clicks link
+4. Redirected to `/auth/callback` which calls `/api/auth/supabase-session`
+5. Backend validates Supabase token and creates JWT session
+6. User can access dashboard with JWT cookies
+
+**Implementation:** 
+- Frontend: Uses `supabase.auth.signInWithOtp()` with `emailRedirectTo` parameter
+- Backend: Same session bridge as OTP
+
+### Session Bridge Architecture
+
+The `/api/auth/supabase-session` endpoint integrates Supabase Auth with the existing JWT/OIDC system:
+
+1. **Accepts**: Supabase access token from frontend
+2. **Validates**: Token using Supabase service role key
+3. **Creates/Updates**: User in database with default VIEWER role
+4. **Generates**: JWT token pair (access + refresh tokens)
+5. **Sets**: HttpOnly cookies for backend authentication
+6. **Returns**: User data for frontend state
+
+This allows new Supabase users to seamlessly access the application alongside existing JWT/OIDC users.
+
+### JWT/OIDC Authentication (Existing System)
+Admin and worker login still use the existing JWT/OIDC authentication system. This will be gradually migrated to Supabase Auth.
+
+### Configuration
+- Supabase authentication configured via GoTrue Admin API (see `scripts/configure-supabase.ts`)
+- Email templates support both OTP codes and Magic Links using conditional logic
+- Environment variables required: 
+  - Client: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+  - Server: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE`
+- New Supabase users default to VIEWER role
+- Testing: Run `npm run test` for unit tests, `npm run test:e2e` for end-to-end tests
+
+### Logout
+Logout clears both Supabase session and JWT cookies to ensure complete session termination
+
+## File Storage with Supabase Storage
+
+ImmigrationFlow uses Supabase Storage for secure document management:
+
+### Features
+- **Secure Storage**: Private bucket with role-based access control
+- **Signed URLs**: Pre-signed upload and download URLs for direct client access
+- **File Management**: Upload, download, and delete documents via REST API
+- **Metadata**: Track file size, MIME type, and custom metadata
+- **Integration**: Seamlessly integrates with Supabase Auth
+
+### Configuration
+Set the following environment variables:
+- `SUPABASE_URL`: Your Supabase project URL
+- `SUPABASE_SERVICE_ROLE`: Service role key for server-side operations
+- `SUPABASE_STORAGE_BUCKET`: Bucket name (default: 'documents')
+
+The storage service will automatically create the bucket if it doesn't exist on first use.
+
 ```
 
 ## Production Deployment with Docker
@@ -88,7 +171,8 @@ docker compose up --build
 
 This command will:
 - Build the production Docker image
-- Start PostgreSQL, Redis, MinIO (S3), ClamAV, and MailHog services
+- Start PostgreSQL, Redis, ClamAV, and MailHog services
+- Uses Supabase Storage for document management
 - Run the application on port 5000 with health checks
 - Include proper service dependencies and restart policies
 
@@ -99,7 +183,7 @@ The application will be available at `http://localhost:5000` once all services a
 The Docker setup includes:
 - **Database**: PostgreSQL 15 with health checks
 - **Cache/Queue**: Redis 7 for BullMQ job processing
-- **File Storage**: MinIO for S3-compatible object storage
+- **File Storage**: Supabase Storage for secure document storage with signed URLs
 - **Email Testing**: MailHog for development email testing
 - **Security**: ClamAV for file scanning and malware detection
 
@@ -116,11 +200,9 @@ The application includes comprehensive health checks:
 |----------|-------------|----------|---------|
 | `DATABASE_URL` | PostgreSQL connection string | ✅ | - |
 | `REDIS_URL` | Redis connection string for job queues | ✅ | - |
-| `S3_ENDPOINT` | S3-compatible storage endpoint | ✅ | `http://localhost:9000` (dev) |
-| `S3_REGION` | S3 region | ❌ | `eu-central-1` |
-| `S3_BUCKET` | S3 bucket name | ❌ | `immigration-flow-documents` |
-| `S3_ACCESS_KEY` | S3 access key | ✅ | `minioadmin` (dev) |
-| `S3_SECRET_KEY` | S3 secret key | ✅ | `minioadmin` (dev) |
+| `SUPABASE_URL` | Supabase project URL | ✅ | - |
+| `SUPABASE_SERVICE_ROLE` | Supabase service role key | ✅ | - |
+| `SUPABASE_STORAGE_BUCKET` | Supabase storage bucket name | ❌ | `documents` |
 | `JWT_SECRET` | JWT signing secret | ✅ | - |
 | `SESSION_SECRET` | Session encryption secret | ✅ | - |
 | `REPLIT_DOMAINS` | Authorized domains for Replit Auth | ✅ | - |
@@ -213,7 +295,7 @@ The application uses BullMQ for background job processing:
 **App won't start:**
 1. Check `DATABASE_URL` is set and accessible
 2. Verify `REDIS_URL` for queue functionality
-3. Ensure `S3_ENDPOINT` and credentials are configured
+3. Ensure `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE` are configured
 4. Check logs for specific error messages
 
 **Database connection failed:**
@@ -228,7 +310,7 @@ curl http://localhost:5000/health/db
 3. Monitor queue depth via metrics endpoint
 
 **File uploads failing:**
-1. Verify S3 configuration
+1. Verify Supabase Storage configuration (SUPABASE_URL, SUPABASE_SERVICE_ROLE, SUPABASE_STORAGE_BUCKET)
 2. Check ClamAV is running (for production)
 3. Validate file size and type restrictions
 
@@ -257,7 +339,7 @@ curl http://localhost:5000/health/db
 - **Access Control**: Role-based permissions (Admin, Owner, Worker, Viewer)
 - **Audit Trail**: Complete activity logging for compliance
 - **Session Security**: HTTP-only cookies with secure session storage
-- **Data Encryption**: S3 server-side encryption enabled
+- **Data Encryption**: Supabase Storage server-side encryption enabled
 - **Input Validation**: Zod schemas for all API endpoints
 
 ## Development Setup

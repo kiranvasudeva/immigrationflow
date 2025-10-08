@@ -6,8 +6,8 @@ import path from 'path';
 import crypto from 'crypto';
 
 // Mock dependencies
-vi.mock('../server/services/s3Service', () => ({
-  s3Service: {
+vi.mock('../server/services/storageService', () => ({
+  storageService: {
     uploadFile: vi.fn().mockResolvedValue(undefined),
     generateDownloadUrl: vi.fn().mockResolvedValue('https://signed-url.com/file'),
     generateFileKey: vi.fn().mockImplementation((prefix, filename) => `${prefix}/${filename}`),
@@ -361,16 +361,16 @@ describe('Upload Security & Compliance Tests', () => {
     });
   });
 
-  describe('S3 Security Integration', () => {
-    it('should configure S3 uploads with encryption and private ACL', async () => {
-      const { s3Service } = await import('../server/services/s3Service');
+  describe('Storage Security Integration', () => {
+    it('should configure storage uploads with encryption and private access', async () => {
+      const { storageService } = await import('../server/services/storageService');
       
-      await s3Service.uploadFile('test-key', Buffer.from('test'), 'text/plain', {
+      await storageService.uploadFile('test-key', Buffer.from('test'), 'text/plain', {
         'scan-result': 'CLEAN',
         'file-hash': 'testhash'
       });
 
-      expect(s3Service.uploadFile).toHaveBeenCalledWith(
+      expect(storageService.uploadFile).toHaveBeenCalledWith(
         'test-key',
         expect.any(Buffer),
         'text/plain',
@@ -382,9 +382,9 @@ describe('Upload Security & Compliance Tests', () => {
     });
 
     it('should generate secure upload URLs with proper settings', async () => {
-      const { s3Service } = await import('../server/services/s3Service');
+      const { storageService } = await import('../server/services/storageService');
       
-      const url = await s3Service.generateUploadUrl('test-key', 'application/pdf');
+      const url = await storageService.generateUploadUrl('test-key', 'application/pdf');
       
       expect(url).toBe('https://signed-url.com/file');
     });

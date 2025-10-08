@@ -5,11 +5,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useTranslation } from "@/contexts/I18nProvider";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { supabase, buildAuthOptions } from "@/lib/supabase";
+import { normalizeEmail, isValidEmail } from "@/utils/normalizeEmail";
 
 export default function Landing() {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -21,10 +25,16 @@ export default function Landing() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
-  // Set page title
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [magicLinkEmail, setMagicLinkEmail] = useState("");
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [magicLinkLoading, setMagicLinkLoading] = useState(false);
+  
   usePageTitle('landing.title', 'Welcome to ImmigrationFlow');
   
-  // Set Romanian as default for landing page
   useEffect(() => {
     const saved = localStorage.getItem('immigration-app-language');
     if (!saved) {
@@ -63,9 +73,7 @@ export default function Landing() {
         });
         setShowLoginModal(false);
         setShowLoginForm(false);
-        // Redirect to dashboard
         setLocation('/dashboard');
-        // Force a page reload to update auth state
         window.location.reload();
       } else {
         const error = await response.json();
@@ -83,6 +91,134 @@ export default function Landing() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOtpLoading(true);
+    try {
+      const emailToUse = normalizeEmail(otpEmail);
+      
+      if (!isValidEmail(emailToUse)) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Email",
+          description: "Please enter a valid email address.",
+        });
+        return;
+      }
+      
+      if (import.meta.env.DEV) {
+        console.debug("[auth] OTP submit", { email: emailToUse });
+      }
+      
+      const authOptions = buildAuthOptions('otp', emailToUse);
+      const { error } = await supabase.auth.signInWithOtp(authOptions);
+      
+      if (error) throw error;
+      
+      setOtpSent(true);
+      toast({
+        title: "Code Sent",
+        description: "Check your email for a 6-digit verification code.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to send verification code.",
+      });
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOtpLoading(true);
+    try {
+      const emailToUse = normalizeEmail(otpEmail);
+      
+      const { data, error } = await supabase.auth.verifyOtp({
+        type: 'email',
+        email: emailToUse,
+        token: otpCode,
+      });
+      
+      if (error) throw error;
+      
+      if (data.session) {
+        const response = await fetch('/api/auth/supabase-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            access_token: data.session.access_token
+          }),
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create session');
+        }
+
+        toast({
+          title: "Success",
+          description: "You have been logged in successfully!",
+        });
+        
+        window.location.href = '/dashboard';
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Verification Failed",
+        description: error.message || "Invalid or expired code.",
+      });
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleSendMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMagicLinkLoading(true);
+    try {
+      const emailToUse = normalizeEmail(magicLinkEmail);
+      
+      if (!isValidEmail(emailToUse)) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Email",
+          description: "Please enter a valid email address.",
+        });
+        return;
+      }
+      
+      if (import.meta.env.DEV) {
+        console.debug("[auth] Magic-link submit", { email: emailToUse });
+      }
+      
+      const authOptions = buildAuthOptions('magic-link', emailToUse);
+      const { error } = await supabase.auth.signInWithOtp(authOptions);
+      
+      if (error) throw error;
+      
+      setMagicLinkSent(true);
+      toast({
+        title: "Magic Link Sent",
+        description: "Check your email and click the link to sign in.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to send magic link.",
+      });
+    } finally {
+      setMagicLinkLoading(false);
     }
   };
 
@@ -217,51 +353,175 @@ export default function Landing() {
           </DialogHeader>
 
           {!showLoginForm ? (
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <i className="fas fa-user-shield text-blue-600"></i>
-                    <h4 className="font-semibold text-blue-900">{t('modal.login.adminTitle') || 'For Administrators'}</h4>
+            <Tabs defaultValue="otp" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsTrigger value="otp" data-testid="tab-otp">Email Code</TabsTrigger>
+                <TabsTrigger value="magic-link" data-testid="tab-magic-link">Magic Link</TabsTrigger>
+                <TabsTrigger value="admin" data-testid="tab-admin">Admin/Worker</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="otp" className="space-y-4">
+                {!otpSent ? (
+                  <form onSubmit={handleSendOtp} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="otp-email">Email</Label>
+                      <Input
+                        id="otp-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={otpEmail}
+                        onChange={(e) => setOtpEmail(e.target.value)}
+                        onBlur={(e) => setOtpEmail(normalizeEmail(e.target.value))}
+                        inputMode="email"
+                        autoComplete="email"
+                        pattern='[^\s"<>@]+@[^\s"<>@]+\.[^\s"<>@]+'
+                        required
+                        data-testid="input-otp-email"
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={otpLoading} data-testid="button-send-otp">
+                      {otpLoading ? "Sending..." : "Send Code"}
+                    </Button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleVerifyOtp} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="otp-code">Enter 6-digit code</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Check your email ({otpEmail}) for the verification code
+                      </p>
+                      <div className="flex justify-center">
+                        <InputOTP
+                          maxLength={6}
+                          value={otpCode}
+                          onChange={setOtpCode}
+                          data-testid="input-otp-code"
+                        >
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          setOtpSent(false);
+                          setOtpCode("");
+                        }}
+                        data-testid="button-otp-back"
+                      >
+                        Back
+                      </Button>
+                      <Button type="submit" className="w-full" disabled={otpLoading || otpCode.length !== 6} data-testid="button-verify-otp">
+                        {otpLoading ? "Verifying..." : "Verify"}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="magic-link" className="space-y-4">
+                {!magicLinkSent ? (
+                  <form onSubmit={handleSendMagicLink} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="magic-link-email">Email</Label>
+                      <Input
+                        id="magic-link-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={magicLinkEmail}
+                        onChange={(e) => setMagicLinkEmail(e.target.value)}
+                        onBlur={(e) => setMagicLinkEmail(normalizeEmail(e.target.value))}
+                        inputMode="email"
+                        autoComplete="email"
+                        pattern='[^\s"<>@]+@[^\s"<>@]+\.[^\s"<>@]+'
+                        required
+                        data-testid="input-magic-link-email"
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={magicLinkLoading} data-testid="button-send-magic-link">
+                      {magicLinkLoading ? "Sending..." : "Send Magic Link"}
+                    </Button>
+                  </form>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="text-center space-y-2">
+                      <p className="text-sm font-medium">Magic link sent!</p>
+                      <p className="text-sm text-muted-foreground">
+                        Check your email ({magicLinkEmail}) and click the link to sign in.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        setMagicLinkSent(false);
+                        setMagicLinkEmail("");
+                      }}
+                      data-testid="button-magic-link-back"
+                    >
+                      Send Another Link
+                    </Button>
                   </div>
-                  <p className="text-blue-700 text-sm mb-3">
-                    {t('modal.login.adminDesc') || "If you're new, signing up will automatically give you admin access to manage your immigration workflows."}
-                  </p>
-                  <Button 
-                    onClick={handleAdminLogin} 
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                    data-testid="button-admin-login"
-                  >
-                    <i className="fas fa-sign-in-alt mr-2"></i>
-                    {t('modal.login.adminButton') || 'Admin Login / Register'}
-                  </Button>
-                </div>
-
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <i className="fas fa-user-tie text-green-600"></i>
-                    <h4 className="font-semibold text-green-900">{t('modal.login.workerTitle') || 'For Workers'}</h4>
-                  </div>
-                  <p className="text-green-700 text-sm mb-3">
-                    {t('modal.login.workerDesc') || "If you have an invitation link from your employer, use it to access your immigration progress."}
-                  </p>
-                  <div className="text-center">
-                    <p className="text-green-600 text-sm font-medium">
-                      {t('modal.login.invitationText') || 'Check your email for an invitation link'}
+                )}
+              </TabsContent>
+              
+              <TabsContent value="admin" className="space-y-4">
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <i className="fas fa-user-shield text-blue-600"></i>
+                      <h4 className="font-semibold text-blue-900">{t('modal.login.adminTitle') || 'For Administrators'}</h4>
+                    </div>
+                    <p className="text-blue-700 text-sm mb-3">
+                      {t('modal.login.adminDesc') || "If you're new, signing up will automatically give you admin access to manage your immigration workflows."}
                     </p>
+                    <Button 
+                      onClick={handleAdminLogin} 
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      data-testid="button-admin-login"
+                    >
+                      <i className="fas fa-sign-in-alt mr-2"></i>
+                      {t('modal.login.adminButton') || 'Admin Login / Register'}
+                    </Button>
+                  </div>
+
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <i className="fas fa-user-tie text-green-600"></i>
+                      <h4 className="font-semibold text-green-900">{t('modal.login.workerTitle') || 'For Workers'}</h4>
+                    </div>
+                    <p className="text-green-700 text-sm mb-3">
+                      {t('modal.login.workerDesc') || "If you have an invitation link from your employer, use it to access your immigration progress."}
+                    </p>
+                    <div className="text-center">
+                      <p className="text-green-600 text-sm font-medium">
+                        {t('modal.login.invitationText') || 'Check your email for an invitation link'}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="text-center pt-4 border-t">
-                <p className="text-xs text-secondary">
-                  {t('modal.login.supportText') || 'Need help? Contact your administrator or'}{" "}
-                  <Button variant="link" className="p-0 h-auto text-xs" data-testid="link-support">
-                    {t('modal.login.supportLink') || 'support team'}
-                  </Button>
-                </p>
-              </div>
-            </div>
+                <div className="text-center pt-4 border-t">
+                  <p className="text-xs text-secondary">
+                    {t('modal.login.supportText') || 'Need help? Contact your administrator or'}{" "}
+                    <Button variant="link" className="p-0 h-auto text-xs" data-testid="link-support">
+                      {t('modal.login.supportLink') || 'support team'}
+                    </Button>
+                  </p>
+                </div>
+              </TabsContent>
+            </Tabs>
           ) : (
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div className="space-y-2">

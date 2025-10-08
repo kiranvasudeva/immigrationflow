@@ -35,18 +35,17 @@ describe('Secure Upload Integration', () => {
       'CLAMAV_HOST',
       'MAX_FILE_SIZE', 
       'ALLOWED_FILE_TYPES',
-      'S3_ENDPOINT',
-      'S3_BUCKET',
-      'S3_ACCESS_KEY',
-      'S3_SECRET_KEY'
+      'SUPABASE_URL',
+      'SUPABASE_SERVICE_ROLE',
+      'SUPABASE_STORAGE_BUCKET'
     ];
 
     const config = {
       clamavHost: process.env.CLAMAV_HOST || 'localhost',
       maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760'),
       allowedTypes: (process.env.ALLOWED_FILE_TYPES || 'pdf,doc,docx,jpg,jpeg,png').split(','),
-      s3Endpoint: process.env.S3_ENDPOINT,
-      s3Bucket: process.env.S3_BUCKET,
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseBucket: process.env.SUPABASE_STORAGE_BUCKET,
     };
 
     expect(config.maxFileSize).toBeGreaterThan(0);
@@ -57,7 +56,7 @@ describe('Secure Upload Integration', () => {
       maxFileSizeMB: Math.round(config.maxFileSize / (1024 * 1024)),
       allowedTypes: config.allowedTypes,
       clamavHost: config.clamavHost,
-      s3Configured: !!config.s3Endpoint
+      storageConfigured: !!config.supabaseUrl
     });
   });
 
@@ -136,8 +135,8 @@ describe('Secure Upload Integration', () => {
         'Scan results logged in database'
       ],
       'Secure Storage': [
-        'S3-compatible storage with server-side encryption (AES256)',
-        'Private ACL enforcement (no public access)',
+        'Supabase Storage with server-side encryption',
+        'Private bucket enforcement (no public access)',
         'Signed URLs for time-limited access'
       ],
       'Audit Trail': [
@@ -172,8 +171,8 @@ describe('Secure Upload Integration', () => {
       authorization: 'Role-based access control (RBAC)',
       fileValidation: 'Multi-layer validation (size, type, content)',
       virusScanning: 'Real-time ClamAV malware detection',
-      encryption: 'S3 server-side encryption (AES256)',
-      accessControl: 'Private ACL with signed URL access',
+      encryption: 'Supabase Storage server-side encryption',
+      accessControl: 'Private bucket with signed URL access',
       auditLogging: 'Complete upload and access audit trail',
       errorHandling: 'Comprehensive error reporting and cleanup',
       performanceOptimization: 'Concurrent scanning and async processing',
@@ -188,10 +187,10 @@ describe('Secure Upload Integration', () => {
 
     // Verify critical security environment is properly configured
     const criticalConfig = [
-      process.env.NODE_ENV === 'development', // Development mode for testing
-      !!process.env.CLAMAV_HOST, // ClamAV configured
-      !!process.env.S3_ENDPOINT, // S3 storage configured
-      parseInt(process.env.MAX_FILE_SIZE || '0') > 0 // File size limits set
+      process.env.NODE_ENV === 'development',
+      !!process.env.CLAMAV_HOST,
+      !!process.env.SUPABASE_URL,
+      parseInt(process.env.MAX_FILE_SIZE || '0') > 0
     ];
 
     const configuredCount = criticalConfig.filter(Boolean).length;

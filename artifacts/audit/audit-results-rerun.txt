@@ -1,0 +1,30 @@
+
+> rest-express@1.0.0 audit:auth
+> tsx scripts/audit-auth.ts
+
+🔍 Auditing Supabase Auth Calls
+================================
+
+Found 3 signInWithOtp call(s)
+
+✅ PASS: OTP mode without emailRedirectTo
+   File: client/src/pages/__tests__/landing.test.tsx:14
+
+✅ PASS: OTP mode without emailRedirectTo
+   File: client/src/pages/landing.tsx:117
+
+✅ PASS: OTP mode without emailRedirectTo
+   File: client/src/pages/landing.tsx:188
+
+
+📊 Summary:
+============
+Total calls: 3
+Violations:  0
+Passed:      3
+
+Report saved to: artifacts/audit/otp-usage.json
+Summary saved to: artifacts/audit/summary.md
+
+
+✅ AUDIT PASSED: All authentication calls follow correct patterns

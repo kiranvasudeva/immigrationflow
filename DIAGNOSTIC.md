@@ -544,7 +544,7 @@ The agent should never mark a task complete without running through this verific
 
 ### Data Storage Solutions
 - **Primary Database**: PostgreSQL for relational data (users, clients, workers, assignments).
-- **File Storage**: S3-compatible storage (configurable for AWS S3, MinIO, or Hetzner) for documents, utilizing signed URLs for secure direct uploads.
+- **File Storage**: Supabase Storage for documents with signed URLs for secure direct uploads.
 - **Session Storage**: PostgreSQL sessions table for authentication state.
 - **Cache Layer**: Redis for job queues and temporary data caching.
 
@@ -556,7 +556,7 @@ The agent should never mark a task complete without running through this verific
 
 ### Document Management
 - **PDF Generation**: Server-side PDF creation using PDFKit, with auto-population of predefined Romanian immigration templates.
-- **File Upload**: Secure signed URL approach for direct S3 uploads, including metadata tracking, virus scanning, and validation.
+- **File Upload**: Secure signed URL approach for direct Supabase Storage uploads, including metadata tracking, virus scanning, and validation.
 - **Document Workflow**: Tracks document status from user upload through institutional submission.
 
 ### Background Processing
@@ -574,7 +574,7 @@ The agent should never mark a task complete without running through this verific
 
 ### Cloud Infrastructure
 - **Database Hosting**: Neon serverless PostgreSQL for scalable database operations.
-- **File Storage**: S3-compatible object storage (AWS S3, MinIO for development, or Hetzner).
+- **File Storage**: Supabase Storage for secure document management.
 - **Redis Service**: Redis instance for job queues and session caching.
 
 ### Communication Services
@@ -583,7 +583,7 @@ The agent should never mark a task complete without running through this verific
 
 ### Development & Deployment
 - **Package Manager**: npm for dependency management within a monorepo structure.
-- **Development Environment**: Docker Compose for local development (PostgreSQL, Redis, MinIO).
+- **Development Environment**: Docker Compose for local development (PostgreSQL, Redis, ClamAV, MailHog).
 - **Build System**: Vite for frontend bundling and esbuild for backend compilation.
 - **Testing Framework**: Vitest for unit tests, Playwright for end-to-end testing.
 
@@ -612,12 +612,8 @@ REPLIT_DOMAINS=your-repl-domain.replit.dev
 # Redis Configuration (for BullMQ)
 REDIS_URL=redis://localhost:6379
 
-# S3 Storage Configuration
-S3_ENDPOINT=https://your-s3-endpoint.com
-S3_BUCKET=immigration-flow-documents
-S3_ACCESS_KEY=your-access-key
-S3_SECRET_KEY=your-secret-key
-S3_REGION=eu-central-1
+# Supabase Storage Configuration
+SUPABASE_STORAGE_BUCKET=documents
 
 # Email Configuration
 # Choose one provider: development, smtp, or resend

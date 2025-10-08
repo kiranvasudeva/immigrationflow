@@ -1,5 +1,5 @@
 import PDFDocument from 'pdfkit';
-import { s3Service } from './s3Service';
+import { storageService } from './storageService';
 
 export interface TemplateData {
   client?: {
@@ -410,8 +410,8 @@ export class PDFService {
     doc.restore();
   }
 
-  async savePDFToS3(buffer: Buffer, key: string): Promise<string> {
-    await s3Service.uploadFile(key, buffer, 'application/pdf');
+  async savePDFToStorage(buffer: Buffer, key: string): Promise<string> {
+    await storageService.uploadFile(key, buffer, 'application/pdf');
     return key;
   }
 }
