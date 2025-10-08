@@ -1,17 +1,9 @@
 {
-  "timestamp": "2025-10-07T12:49:48.169Z",
-  "totalCalls": 3,
+  "timestamp": "2025-10-08T08:48:41.630Z",
+  "totalCalls": 2,
   "violations": 0,
-  "passed": 3,
+  "passed": 2,
   "details": [
-    {
-      "file": "client/src/pages/__tests__/landing.test.tsx",
-      "line": 14,
-      "isOtpMode": true,
-      "hasEmailRedirectTo": false,
-      "isViolation": false,
-      "context": "}));\n\nvi.mock('@/lib/supabase', () => ({\n  supabase: {\n    auth: {\n      signInWithOtp: mockSignInWithOtp,\n      verifyOtp: mockVerifyOtp,\n    },\n  },\n  buildAuthOptions: vi.fn((mode: string) => ({\n  ..."
-    },
     {
       "file": "client/src/pages/landing.tsx",
       "line": 117,
@@ -22,7 +14,7 @@
     },
     {
       "file": "client/src/pages/landing.tsx",
-      "line": 188,
+      "line": 205,
       "isOtpMode": true,
       "hasEmailRedirectTo": false,
       "isViolation": false,
