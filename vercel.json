@@ -1,17 +1,6 @@
 {
-  "builds": [
-    {
-      "src": "vite.config.ts",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist/public"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ]
+  "framework": "vite",
+  "buildCommand": "npm ci && npm run build:client",
+  "outputDirectory": "dist/public",
+  "installCommand": "npm ci"
 }
