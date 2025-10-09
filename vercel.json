@@ -2,5 +2,8 @@
   "framework": "vite",
   "buildCommand": "npm ci && npm run build:client",
   "outputDirectory": "dist/public",
-  "installCommand": "npm ci"
+  "installCommand": "npm ci",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://RENDER_API_URL_PLACEHOLDER/$1" }
+  ]
 }
