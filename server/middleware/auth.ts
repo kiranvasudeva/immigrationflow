@@ -22,7 +22,7 @@ export const auditMiddleware = (req: Request, res: Response, next: NextFunction)
   // Capture original end method
   const originalEnd = res.end;
   
-  res.end = function(chunk?: any, encoding?: any): Response {
+  res.end = function(this: Response, chunk?: any, encoding?: any): Response {
     // Log the request after response is sent
     const user = (req as any).user;
     const userId = user?.claims?.sub;
