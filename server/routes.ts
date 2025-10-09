@@ -11,9 +11,9 @@ import { handleQABridge, qaBridgeAuth } from "./routes/qaBridge";
 import { qaReportCache, type QAReport } from "./services/qaReportCache";
 import { sql, eq, like, count, isNotNull } from "drizzle-orm";
 import { users, clientProfiles, workers, stages, assignments, sessions, requirements, documentFiles, auditLogs, workflowStepTypeEnum, assignedToRoleEnum } from "../shared/schema";
-import { setupAuth, isAuthenticated } from "./replitAuth";
 import { setupSecurityHeaders, createRateLimiter, validateInput, createEmergencyAdminAccess } from "./middleware/security";
 import { createStructuredLogger, performanceMonitoring, errorTracking, setupHealthChecks } from "./middleware/monitoring";
+import { isAuthenticated } from "./middleware/auth";
 import { ROMANIAN_WORK_PERMIT_WORKFLOW, mapWorkflowStepToAPI } from "./config/mapping";
 import { authService } from "./services/authService";
 import { gdprService } from "./services/gdprService";
@@ -199,24 +199,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
-  } else {
-    // Default to Replit Auth (OIDC)
-    await setupAuth(app);
   }
 
-  // Development auth bypass (only in development)
-  if (process.env.NODE_ENV === 'development') {
-    devAuthBypass = (req: any, res: any, next: any) => {
-      req.user = { 
-        id: 'dev-user', 
-        claims: { sub: 'dev-user' },
-        roles: ['ADMIN'] 
-      };
-      next();
-    };
-  } else {
-    devAuthBypass = isAuthenticated;
-  }
+  devAuthBypass = isAuthenticated;
 
   // Basic test route
   app.get('/test', (req, res) => {

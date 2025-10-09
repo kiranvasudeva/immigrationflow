@@ -28,7 +28,7 @@ A comprehensive SaaS platform for managing Romanian immigration workflows includ
 - Express.js with TypeScript
 - Prisma ORM with PostgreSQL
 - BullMQ + Redis for job processing
-- JWT authentication with Replit Auth
+- JWT password-based authentication
 - AWS S3 compatible storage
 - Mailjet/Postmark for emails
 
@@ -123,7 +123,6 @@ The application includes comprehensive health checks:
 | `S3_SECRET_KEY` | S3 secret key | ✅ | `minioadmin` (dev) |
 | `JWT_SECRET` | JWT signing secret | ✅ | - |
 | `SESSION_SECRET` | Session encryption secret | ✅ | - |
-| `REPLIT_DOMAINS` | Authorized domains for Replit Auth | ✅ | - |
 | `NODE_ENV` | Environment mode | ❌ | `development` |
 | `PORT` | Server port | ❌ | `5000` |
 | `LOG_LEVEL` | Logging level (debug, info, warn, error) | ❌ | `info` |

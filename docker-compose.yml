@@ -94,7 +94,6 @@ services:
       - CLAMAV_PORT=3310
       - MAX_FILE_SIZE=10485760
       - ALLOWED_FILE_TYPES=pdf,doc,docx,jpg,jpeg,png,gif,txt
-      - REPLIT_DOMAINS=localhost
     depends_on:
       db:
         condition: service_healthy

@@ -1,6 +1,5 @@
 import { Router } from 'express';
-import { isAuthenticated } from '../replitAuth';
-import { auditMiddleware } from '../middleware/auth';
+import { isAuthenticated, auditMiddleware } from '../middleware/auth';
 import { pdfService } from '../services/pdfService';
 import { s3Service } from '../services/s3Service';
 import { storage } from '../storage';
