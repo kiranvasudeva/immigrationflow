@@ -86,7 +86,7 @@ The agent should never mark a task complete without running through this verific
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js and TypeScript.
 - **Database**: PostgreSQL with Drizzle ORM.
-- **Authentication**: JWT-based, integrated with Replit Auth.
+- **Authentication**: JWT password-based authentication with Argon2id hashing.
 - **Job Processing**: BullMQ with Redis for background tasks.
 - **API Design**: RESTful with role-based access control and audit middleware.
 
@@ -97,7 +97,7 @@ The agent should never mark a task complete without running through this verific
 - **Cache Layer**: Redis for job queues and temporary data caching.
 
 ### Authentication & Authorization
-- **Dual Authentication Mode**: Supports both password-based (Argon2id, JWT) and Replit Auth (OIDC).
+- **Authentication**: Password-based authentication using Argon2id hashing with JWT tokens.
 - **Session Management**: Server-side sessions with PostgreSQL, secure httpOnly cookies.
 - **Access Control**: Role-based permissions (ADMIN, OWNER, WORKER, VIEWER).
 - **Security**: CSRF protection, rate limiting, comprehensive audit logging.
@@ -144,9 +144,6 @@ The system includes a secure, token-gated control bridge at `/qa/bridge` for ext
 - **Development Environment**: Docker Compose.
 - **Build System**: Vite (frontend) and esbuild (backend).
 - **Testing Framework**: Vitest (unit) and Playwright (E2E).
-
-### Authentication Integration
-- **Replit Auth**: Primary authentication provider.
 
 ### Romanian Government Integration
 - **Target Systems**: Designed to interact with IGI (Romanian Immigration Office), AJOFM/ANOFM (Employment Agency), and Romanian consulates.

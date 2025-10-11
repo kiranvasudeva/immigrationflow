@@ -84,25 +84,46 @@ export function validateInput(req: Request, res: Response, next: NextFunction) {
 
 // CORS Configuration
 export function setupCORS() {
+  const allowed = (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+
   return (req: Request, res: Response, next: NextFunction) => {
     const origin = req.headers.origin;
-    const allowedOrigins = productionConfig.ALLOWED_ORIGINS;
     
-    if (allowedOrigins.length > 0 && allowedOrigins.includes(origin || '')) {
+    // Allow server-to-server / curl (no origin)
+    if (!origin) {
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+      if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+      }
+      return next();
+    }
+    
+    // Check if origin is in allowlist
+    if (allowed.includes(origin)) {
       res.header('Access-Control-Allow-Origin', origin);
-    } else if (productionConfig.NODE_ENV !== 'production') {
-      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Credentials', 'true');
+    } else if (process.env.NODE_ENV !== 'production') {
+      // Allow all origins in development
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+    } else {
+      // Reject in production
+      return res.status(403).json({ error: 'Not allowed by CORS' });
     }
     
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
     
     if (req.method === 'OPTIONS') {
-      res.sendStatus(200);
-    } else {
-      next();
+      return res.sendStatus(200);
     }
+    
+    next();
   };
 }
 

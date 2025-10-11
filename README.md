@@ -28,7 +28,7 @@ A comprehensive SaaS platform for managing Romanian immigration workflows includ
 - Express.js with TypeScript
 - Prisma ORM with PostgreSQL
 - BullMQ + Redis for job processing
-- JWT authentication with Replit Auth
+- JWT password-based authentication
 - AWS S3 compatible storage
 - Mailjet/Postmark for emails
 
@@ -123,7 +123,6 @@ The application includes comprehensive health checks:
 | `S3_SECRET_KEY` | S3 secret key | ✅ | `minioadmin` (dev) |
 | `JWT_SECRET` | JWT signing secret | ✅ | - |
 | `SESSION_SECRET` | Session encryption secret | ✅ | - |
-| `REPLIT_DOMAINS` | Authorized domains for Replit Auth | ✅ | - |
 | `NODE_ENV` | Environment mode | ❌ | `development` |
 | `PORT` | Server port | ❌ | `5000` |
 | `LOG_LEVEL` | Logging level (debug, info, warn, error) | ❌ | `info` |
@@ -259,5 +258,53 @@ curl http://localhost:5000/health/db
 - **Session Security**: HTTP-only cookies with secure session storage
 - **Data Encryption**: S3 server-side encryption enabled
 - **Input Validation**: Zod schemas for all API endpoints
+
+## Vercel Deployment
+
+### Configuration
+
+The application frontend is deployed on Vercel with the following settings:
+
+**Framework:** Vite
+
+**Build Command:** `npm ci && npm run build:client`
+
+**Output Directory:** `dist/public`
+
+**Install Command:** `npm ci`
+
+### Required Environment Variables
+
+Set these in your Vercel project settings:
+
+**Client Variables (VITE_* prefix):**
+- All client-side environment variables must be prefixed with `VITE_` to be accessible in the browser
+- Example: `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+
+**Server Variables:**
+- `SUPABASE_URL` - Supabase project URL
+- `SUPABASE_ANON_KEY` - Supabase anonymous key
+- `SUPABASE_SERVICE_ROLE` - Supabase service role key
+- `SUPABASE_PROJECT_REF` - Supabase project reference ID
+- `SUPABASE_ACCESS_TOKEN` - Supabase access token
+- `JWT_SECRET` - JWT signing secret
+- `SESSION_SECRET` - Session encryption secret
+
+**Note:** The Vercel deployment only builds the frontend. The backend server must be deployed separately (e.g., using Docker, Fly.io, or another Node.js hosting service).
+
+### Manual Deployment Steps
+
+1. Connect your GitHub repository to Vercel
+2. Configure the settings above in Vercel dashboard
+3. Set all required environment variables
+4. Deploy - Vercel will automatically build on push to main branch
+
+### Build Process
+
+The `build:client` script runs only `vite build`, which:
+- Compiles the React frontend from `client/` directory
+- Outputs static files to `dist/public/`
+- Does not bundle or check server TypeScript code
+- Uses path aliases defined in `vite.config.ts`
 
 ## Development Setup
