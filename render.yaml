@@ -2,23 +2,26 @@ services:
   - type: web
     name: immigrationflow-api
     env: node
-    buildCommand: |
-      npm ci
-      npm run build
-    startCommand: |
-      npm run start
+    buildCommand: npm ci --omit=dev=false && npm run build
+    startCommand: npm run start
     autoDeploy: true
     plan: free
     healthCheckPath: /healthz
     envVars:
       - key: NODE_ENV
         value: production
+      - key: DATABASE_URL
+        sync: false
       - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
         sync: false
       - key: SUPABASE_SERVICE_ROLE
         sync: false
-      - key: DATABASE_URL
+      - key: SUPABASE_PROJECT_REF
         sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: documents
       - key: JWT_SECRET
         sync: false
       - key: SESSION_SECRET
