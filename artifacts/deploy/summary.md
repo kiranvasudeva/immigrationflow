@@ -30,8 +30,9 @@
 ### Step 2: Configure Build Settings
 Render should automatically detect the `render.yaml` file. Verify these settings:
 - **Name:** immigrationflow-api
+- **Root Directory:** `.` (repository root)
 - **Environment:** Node
-- **Build Command:** `npm ci && npm run build`
+- **Build Command:** `npm ci --omit=dev=false && npm run build`
 - **Start Command:** `npm run start`
 - **Plan:** Free
 - **Health Check Path:** `/healthz`
